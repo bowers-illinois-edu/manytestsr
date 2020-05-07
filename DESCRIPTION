@@ -31,3 +31,4 @@ LinkingTo: Rcpp, RcppArmadillo, RcppEigen
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
+Remotes: bowers-illinois-edu/manytestr
