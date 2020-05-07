@@ -3,9 +3,9 @@
 
 # context("Simulation Functions")
 
-library(here)
-source(here::here("tests/testthat", "make_test_data.R"))
-devtools::load_all() ## comment this out for production
+# library(here)
+# source(here::here("tests/testthat", "make_test_data.R"))
+# devtools::load_all() ## comment this out for production
 setDTthreads(1)
 options(digits = 4)
 #####
@@ -30,6 +30,18 @@ idat[, Y_null := y1test_null * Z + y0 * (1 - Z)]
 oneway_test(Y_null ~ ZF | bF, data = idat)
 ## Should reject: half blocks are 0 but they are big enough and the effects are large enough
 
+alpha_and_splits <- expand.grid(
+  afn = c("alpha_investing", "alpha_saffron", "NULL"),
+  sfn = c(
+    "splitCluster", "splitEqualApprox", "splitLOO",
+    "splitSpecifiedFactor"
+  ),
+  stringsAsFactors = FALSE
+)
+alpha_and_splits$splitby <- "hwt"
+alpha_and_splits$splitby[grep("Specified", alpha_and_splits$sfn)] <- "lvs"
+
+###
 ### Test the padj sim function that we use.
 ## p_sims_res <- parSapplyLB(cl,1:nrow(simparms), FUN=function(i) {
 set.seed(12345)
@@ -61,18 +73,6 @@ p_sims_tab <- padj_test_fn(
 oneway_test(Y_zeros ~ ZF | bF, data = idat)
 ####
 
-alpha_and_splits <- expand.grid(
-  afn = c("alpha_investing", "alpha_saffron", "NULL"),
-  sfn = c(
-    "splitCluster", "splitEqualApprox", "splitLOO",
-    "splitSpecifiedFactor"
-  ),
-  stringsAsFactors = FALSE
-)
-alpha_and_splits$splitby <- "hwt"
-alpha_and_splits$splitby[grep("Specified", alpha_and_splits$sfn)] <- "lvs"
-
-###
 
 ## Half blocks null
 tausb_zeros <- idat[, .(truetau_zeros = mean(y1test_zeros - y0)), by = bF]
@@ -161,8 +161,10 @@ siufinal_norm_inc
 siures_norm_inc_g <- make_graph(make_tree(siures_norm_inc))
 
 norm_inc_det <- report_detections(siures_norm_inc, fwer = FALSE, only_hits = FALSE)
-norm_inc_det[, .(hit_grp, hit, bF, biggrp, nodenum_current, max_p,
-                 fin_parent_p, ate_norm_inc, max_alpha, parent_alpha)][order(ate_norm_inc), ]
+norm_inc_det[, .(
+  hit_grp, hit, bF, biggrp, nodenum_current, max_p,
+  fin_parent_p, ate_norm_inc, max_alpha, parent_alpha
+)][order(ate_norm_inc), ]
 
 ## These are the tests:
 norm_inc_det_fin_nodes <- norm_inc_det[, .(
@@ -244,192 +246,214 @@ err_testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3,
     parallel = "no", copydts = TRUE, splitby = sby
   )
 
-  detects <- report_detections(theres,only_hits = FALSE, fwer = is.null(afn))
+  detects <- report_detections(theres, only_hits = FALSE, fwer = is.null(afn))
 
-  nodes <- detects[, .(hit = as.numeric(unique(hit)),
-                       numnull = sum(get(truevar_name) == 0),
-                       anynull = as.numeric(any(get(truevar_name) == 0)),
-                       allnull = as.numeric(all(get(truevar_name) == 0)),
-                       numnotnull = sum(get(truevar_name) != 0),
-                       anynotnull = as.numeric(any(get(truevar_name) != 0))
-                       ), by = hit_grp]
+  nodes <- detects[, .(
+    hit = as.numeric(unique(hit)),
+    numnull = sum(get(truevar_name) == 0),
+    anynull = as.numeric(any(get(truevar_name) == 0)),
+    allnull = as.numeric(all(get(truevar_name) == 0)),
+    numnotnull = sum(get(truevar_name) != 0),
+    anynotnull = as.numeric(any(get(truevar_name) != 0))
+  ), by = hit_grp]
 
   # err_tab1 <- with(nodes1 , table(hit, anynotnull, exclude = c()))
-  err_tab0 <- with(nodes , table(hit, allnull, exclude = c()))
+  err_tab0 <- with(nodes, table(hit, allnull, exclude = c()))
 
-  if(!identical(dim(err_tab0),as.integer(c(2,2)))){
-      blank_mat <- matrix(0,2,2,dimnames=list(c("0","1"),c("0","1")))
-      blank_mat[rownames(err_tab0),colnames(err_tab0)] <- err_tab0
-      err_tab <- blank_mat
+  if (!identical(dim(err_tab0), as.integer(c(2, 2)))) {
+    blank_mat <- matrix(0, 2, 2, dimnames = list(c("0", "1"), c("0", "1")))
+    blank_mat[rownames(err_tab0), colnames(err_tab0)] <- err_tab0
+    err_tab <- blank_mat
   } else {
-      err_tab <- err_tab0
+    err_tab <- err_tab0
   }
 
   errs <- calc_errs(theres,
-                    truevar_name = truevar_name,
-                    trueeffect_tol = .Machine$double.eps)
+    truevar_name = truevar_name,
+    trueeffect_tol = .Machine$double.eps
+  )
 
-      expect_equal(errs$true_pos_prop , err_tab["1", "0"] / sum(err_tab))
-      expect_equal(errs$true_neg_prop , err_tab["0", "1"] / sum(err_tab))
-      expect_equal(errs$false_pos_prop , err_tab["1", "1"] / sum(err_tab))
-      expect_equal(errs$false_neg_prop , err_tab["0", "0"] / sum(err_tab))
-      expect_equal(errs$true_disc_prop , err_tab["1", "0"] / max(1, sum(err_tab["1", ])))
-      expect_equal(errs$false_disc_prop , err_tab["1", "1"] / max(1, sum(err_tab["1", ])))
-      expect_equal(errs$true_nondisc_prop , err_tab["0", "1"] / max(1, sum(err_tab["0", ])))
-      expect_equal(errs$false_nondisc_prop , err_tab["0", "0"] / max(1, sum(err_tab["0", ])))
-
+  expect_equal(errs$true_pos_prop, err_tab["1", "0"] / sum(err_tab))
+  expect_equal(errs$true_neg_prop, err_tab["0", "1"] / sum(err_tab))
+  expect_equal(errs$false_pos_prop, err_tab["1", "1"] / sum(err_tab))
+  expect_equal(errs$false_neg_prop, err_tab["0", "0"] / sum(err_tab))
+  expect_equal(errs$true_disc_prop, err_tab["1", "0"] / max(1, sum(err_tab["1", ])))
+  expect_equal(errs$false_disc_prop, err_tab["1", "1"] / max(1, sum(err_tab["1", ])))
+  expect_equal(errs$true_nondisc_prop, err_tab["0", "1"] / max(1, sum(err_tab["0", ])))
+  expect_equal(errs$false_nondisc_prop, err_tab["0", "0"] / max(1, sum(err_tab["0", ])))
 }
 
 
-err_testing_fn2 <- function(fmla = Ytauv2 ~ ZF, idat = idat3, bdat = bdat4, truevar_name, thealpha=.05) {
+err_testing_fn2 <- function(fmla = Ytauv2 ~ ZF, idat = idat3, bdat = bdat4, truevar_name, thealpha = .05) {
   ## afn and sfn and sby are character names
-  theres <- adjust_block_tests(idat = idat, bdat = bdat, blockid = "bF", p_adj_method="BH",
-                               pfn = pIndepDist, fmla = fmla, copydts = TRUE)
- 
-  theres[,hit:=max_p < .05] ## doing FDR==.05 for now. All that really matters is some fixed number.
+  theres <- adjust_block_tests(
+    idat = idat, bdat = bdat, blockid = "bF", p_adj_method = "BH",
+    pfn = pIndepDist, fmla = fmla, copydts = TRUE
+  )
 
-  nodes <- theres[, .(bF=bF,
-                      hit = as.numeric(hit),
-                       anynull = as.numeric(get(truevar_name) == 0),
-                       allnull = as.numeric(get(truevar_name) == 0),
-                       anynotnull = as.numeric(get(truevar_name) != 0)
-                       )]
+  theres[, hit := max_p < .05] ## doing FDR==.05 for now. All that really matters is some fixed number.
+
+  nodes <- theres[, .(
+    bF = bF,
+    hit = as.numeric(hit),
+    anynull = as.numeric(get(truevar_name) == 0),
+    allnull = as.numeric(get(truevar_name) == 0),
+    anynotnull = as.numeric(get(truevar_name) != 0)
+  )]
 
   # err_tab1 <- with(nodes1 , table(hit, anynotnull, exclude = c()))
-  err_tab0 <- with(nodes , table(hit, allnull, exclude = c()))
+  err_tab0 <- with(nodes, table(hit, allnull, exclude = c()))
 
-  if(!identical(dim(err_tab0),as.integer(c(2,2)))){
-      blank_mat <- matrix(0,2,2,dimnames=list(c("0","1"),c("0","1")))
-      blank_mat[rownames(err_tab0),colnames(err_tab0)] <- err_tab0
-      err_tab <- blank_mat
+  if (!identical(dim(err_tab0), as.integer(c(2, 2)))) {
+    blank_mat <- matrix(0, 2, 2, dimnames = list(c("0", "1"), c("0", "1")))
+    blank_mat[rownames(err_tab0), colnames(err_tab0)] <- err_tab0
+    err_tab <- blank_mat
   } else {
-      err_tab <- err_tab0
+    err_tab <- err_tab0
   }
 
-  errs <- calc_errs(testobj=theres,
-                    truevar_name = truevar_name,
-                    trueeffect_tol = .Machine$double.eps)
+  errs <- calc_errs(
+    testobj = theres,
+    truevar_name = truevar_name,
+    trueeffect_tol = .Machine$double.eps
+  )
 
-      expect_equal(errs$true_pos_prop , err_tab["1", "0"] / sum(err_tab))
-      expect_equal(errs$true_neg_prop , err_tab["0", "1"] / sum(err_tab))
-      expect_equal(errs$false_pos_prop , err_tab["1", "1"] / sum(err_tab))
-      expect_equal(errs$false_neg_prop , err_tab["0", "0"] / sum(err_tab))
-      expect_equal(errs$true_disc_prop , err_tab["1", "0"] / max(1, sum(err_tab["1", ])))
-      expect_equal(errs$false_disc_prop , err_tab["1", "1"] / max(1, sum(err_tab["1", ])))
-      expect_equal(errs$true_nondisc_prop , err_tab["0", "1"] / max(1, sum(err_tab["0", ])))
-      expect_equal(errs$false_nondisc_prop , err_tab["0", "0"] / max(1, sum(err_tab["0", ])))
-
+  expect_equal(errs$true_pos_prop, err_tab["1", "0"] / sum(err_tab))
+  expect_equal(errs$true_neg_prop, err_tab["0", "1"] / sum(err_tab))
+  expect_equal(errs$false_pos_prop, err_tab["1", "1"] / sum(err_tab))
+  expect_equal(errs$false_neg_prop, err_tab["0", "0"] / sum(err_tab))
+  expect_equal(errs$true_disc_prop, err_tab["1", "0"] / max(1, sum(err_tab["1", ])))
+  expect_equal(errs$false_disc_prop, err_tab["1", "1"] / max(1, sum(err_tab["1", ])))
+  expect_equal(errs$true_nondisc_prop, err_tab["0", "1"] / max(1, sum(err_tab["0", ])))
+  expect_equal(errs$false_nondisc_prop, err_tab["0", "0"] / max(1, sum(err_tab["0", ])))
 }
 
-#err_testing_fn2(fmla = Ytauv2 ~ ZF, idat = idat3, bdat = bdat4, truevar_name="ate_tauv2")
+# err_testing_fn2(fmla = Ytauv2 ~ ZF, idat = idat3, bdat = bdat4, truevar_name="ate_tauv2")
 
 resnms <- apply(alpha_and_splits, 1, function(x) {
-                    paste(x, collapse = "_", sep = "")
-                    })
+  paste(x, collapse = "_", sep = "")
+})
 
 
-test_that("Error calculations for a given set of tests work: No effects at all",{
-              ### No effects at all
-              test_lst <- mapply(FUN = function(afn = afn, sfn = sfn, sby = sby, truevar_name='ate_null') {
-                                     message(paste(afn, sfn, sby, collapse = ","))
-                                     err_testing_fn(afn = afn, sfn = sfn, sby = sby, idat = idat3, bdat = bdat4,
-                                                    fmla = Ynull ~ ZF | bF,truevar_name=truevar_name)
-                                 },
-                                 afn = alpha_and_splits$afn,
-                                 sfn = alpha_and_splits$sfn,
-                                 sby = alpha_and_splits$splitby, SIMPLIFY = FALSE
-              )
-              ## names(tau_null) <- resnms
+test_that("Error calculations for a given set of tests work: No effects at all", {
+  ### No effects at all
+  test_lst <- mapply(
+    FUN = function(afn = afn, sfn = sfn, sby = sby, truevar_name = "ate_null") {
+      message(paste(afn, sfn, sby, collapse = ","))
+      err_testing_fn(
+        afn = afn, sfn = sfn, sby = sby, idat = idat3, bdat = bdat4,
+        fmla = Ynull ~ ZF | bF, truevar_name = truevar_name
+      )
+    },
+    afn = alpha_and_splits$afn,
+    sfn = alpha_and_splits$sfn,
+    sby = alpha_and_splits$splitby, SIMPLIFY = FALSE
+  )
+  ## names(tau_null) <- resnms
 })
 
 test_that("Error calculations for a given set of tests work: large and homogenous effects", {
- test_lst <- mapply(FUN = function(afn = afn, sfn = sfn, sby = sby, truevar_name='ate_homog') {
-                                     message(paste(afn, sfn, sby, collapse = ","))
-                                     err_testing_fn(afn = afn, sfn = sfn, sby = sby, idat = idat3, bdat = bdat4,
-                                                    fmla = Yhomog ~ ZF | bF,truevar_name=truevar_name)
-                                 },
-                                 afn = alpha_and_splits$afn,
-                                 sfn = alpha_and_splits$sfn,
-                                 sby = alpha_and_splits$splitby, SIMPLIFY = FALSE
-              )
-
+  test_lst <- mapply(
+    FUN = function(afn = afn, sfn = sfn, sby = sby, truevar_name = "ate_homog") {
+      message(paste(afn, sfn, sby, collapse = ","))
+      err_testing_fn(
+        afn = afn, sfn = sfn, sby = sby, idat = idat3, bdat = bdat4,
+        fmla = Yhomog ~ ZF | bF, truevar_name = truevar_name
+      )
+    },
+    afn = alpha_and_splits$afn,
+    sfn = alpha_and_splits$sfn,
+    sby = alpha_and_splits$splitby, SIMPLIFY = FALSE
+  )
 })
 
 
 test_that("Error calculations for a given set of tests work: individually heteogeneous effects and increase with block size. Also some completely null blocks.", {
- test_lst <- mapply(FUN = function(afn = afn, sfn = sfn, sby = sby, truevar_name='ate_norm_inc') {
-                                     message(paste(afn, sfn, sby, collapse = ","))
-                                     err_testing_fn(afn = afn, sfn = sfn, sby = sby, idat = idat3, bdat = bdat4,
-                                                    fmla = Ynorm_inc ~ ZF | bF,truevar_name=truevar_name)
-                                 },
-                                 afn = alpha_and_splits$afn,
-                                 sfn = alpha_and_splits$sfn,
-                                 sby = alpha_and_splits$splitby, SIMPLIFY = FALSE
-              )
-
+  test_lst <- mapply(
+    FUN = function(afn = afn, sfn = sfn, sby = sby, truevar_name = "ate_norm_inc") {
+      message(paste(afn, sfn, sby, collapse = ","))
+      err_testing_fn(
+        afn = afn, sfn = sfn, sby = sby, idat = idat3, bdat = bdat4,
+        fmla = Ynorm_inc ~ ZF | bF, truevar_name = truevar_name
+      )
+    },
+    afn = alpha_and_splits$afn,
+    sfn = alpha_and_splits$sfn,
+    sby = alpha_and_splits$splitby, SIMPLIFY = FALSE
+  )
 })
 
 
 test_that("Error calculations for a given set of tests work:individually heteogeneous effects and decrease with block size. Also some completely null blocks.", {
- test_lst <- mapply(FUN = function(afn = afn, sfn = sfn, sby = sby, truevar_name='ate_norm_dec') {
-                                     message(paste(afn, sfn, sby, collapse = ","))
-                                     err_testing_fn(afn = afn, sfn = sfn, sby = sby, idat = idat3, bdat = bdat4,
-                                                    fmla = Ynorm_dec ~ ZF | bF,truevar_name=truevar_name)
-                                 },
-                                 afn = alpha_and_splits$afn,
-                                 sfn = alpha_and_splits$sfn,
-                                 sby = alpha_and_splits$splitby, SIMPLIFY = FALSE
-              )
-
+  test_lst <- mapply(
+    FUN = function(afn = afn, sfn = sfn, sby = sby, truevar_name = "ate_norm_dec") {
+      message(paste(afn, sfn, sby, collapse = ","))
+      err_testing_fn(
+        afn = afn, sfn = sfn, sby = sby, idat = idat3, bdat = bdat4,
+        fmla = Ynorm_dec ~ ZF | bF, truevar_name = truevar_name
+      )
+    },
+    afn = alpha_and_splits$afn,
+    sfn = alpha_and_splits$sfn,
+    sby = alpha_and_splits$splitby, SIMPLIFY = FALSE
+  )
 })
 
-test_that("Error calculations for a given set of tests work:constant effect that cancel out at the high level (half large and positive, half large and negative)." , {
- test_lst <- mapply(FUN = function(afn = afn, sfn = sfn, sby = sby, truevar_name='ate_tau') {
-                                     message(paste(afn, sfn, sby, collapse = ","))
-                                     err_testing_fn(afn = afn, sfn = sfn, sby = sby, idat = idat3, bdat = bdat4,
-                                                    fmla = Y ~ ZF | bF,truevar_name=truevar_name)
-                                 },
-                                 afn = alpha_and_splits$afn,
-                                 sfn = alpha_and_splits$sfn,
-                                 sby = alpha_and_splits$splitby, SIMPLIFY = FALSE
-              )
-
+test_that("Error calculations for a given set of tests work:constant effect that cancel out at the high level (half large and positive, half large and negative).", {
+  test_lst <- mapply(
+    FUN = function(afn = afn, sfn = sfn, sby = sby, truevar_name = "ate_tau") {
+      message(paste(afn, sfn, sby, collapse = ","))
+      err_testing_fn(
+        afn = afn, sfn = sfn, sby = sby, idat = idat3, bdat = bdat4,
+        fmla = Y ~ ZF | bF, truevar_name = truevar_name
+      )
+    },
+    afn = alpha_and_splits$afn,
+    sfn = alpha_and_splits$sfn,
+    sby = alpha_and_splits$splitby, SIMPLIFY = FALSE
+  )
 })
 
 
 
-test_that("Error calculations for a given set of tests work:individually heterogeneous effects block-fixed effects and some completely null blocks." , {
- test_lst <- mapply(FUN = function(afn = afn, sfn = sfn, sby = sby, truevar_name='ate_tauv2') {
-                                     message(paste(afn, sfn, sby, collapse = ","))
-                                     err_testing_fn(afn = afn, sfn = sfn, sby = sby, idat = idat3, bdat = bdat4,
-                                                    fmla = Ytauv2 ~ ZF | bF,truevar_name=truevar_name)
-                                 },
-                                 afn = alpha_and_splits$afn,
-                                 sfn = alpha_and_splits$sfn,
-                                 sby = alpha_and_splits$splitby, SIMPLIFY = FALSE
-              )
+test_that("Error calculations for a given set of tests work:individually heterogeneous effects block-fixed effects and some completely null blocks.", {
+  test_lst <- mapply(
+    FUN = function(afn = afn, sfn = sfn, sby = sby, truevar_name = "ate_tauv2") {
+      message(paste(afn, sfn, sby, collapse = ","))
+      err_testing_fn(
+        afn = afn, sfn = sfn, sby = sby, idat = idat3, bdat = bdat4,
+        fmla = Ytauv2 ~ ZF | bF, truevar_name = truevar_name
+      )
+    },
+    afn = alpha_and_splits$afn,
+    sfn = alpha_and_splits$sfn,
+    sby = alpha_and_splits$splitby, SIMPLIFY = FALSE
+  )
 })
 
 
 ## START HERE: Add bottom up testing.
-err_testing_fn2(fmla = Ynorm_inc  ~ ZF, idat = idat3, bdat = bdat4, truevar_name="ate_norm_inc")
+err_testing_fn2(fmla = Ynorm_inc ~ ZF, idat = idat3, bdat = bdat4, truevar_name = "ate_norm_inc")
 
-test_that("Error calculations for a given set of tests work: Testing in every block and adjusting p-values via FDR/BH." , {
-              truevar_names <- grep("^ate",names(bdat4),value=TRUE)
-              outcome_names <- paste0("Y",gsub("ate_","",truevar_names))
-              outcome_names[1] <- "Y"
-              stopifnot(all(outcome_names %in% names(idat3)))
+test_that("Error calculations for a given set of tests work: Testing in every block and adjusting p-values via FDR/BH.", {
+  truevar_names <- grep("^ate", names(bdat4), value = TRUE)
+  outcome_names <- paste0("Y", gsub("ate_", "", truevar_names))
+  outcome_names[1] <- "Y"
+  stopifnot(all(outcome_names %in% names(idat3)))
 
-              test_lst <- mapply(FUN = function(truevar_name,outcome_name) {
-                                     fmla <- reformulate("ZF",response=outcome_name)
-                                     message(paste(truevar_name, collapse = ","))
-                                     err_testing_fn2(idat = idat3, bdat = bdat4,
-                                                     fmla = fmla,truevar_name=truevar_name)
-              },
-              truevar_name = truevar_names,
-              outcome_name = outcome_names,
-              SIMPLIFY = FALSE
-              )
+  test_lst <- mapply(
+    FUN = function(truevar_name, outcome_name) {
+      fmla <- reformulate("ZF", response = outcome_name)
+      message(paste(truevar_name, collapse = ","))
+      err_testing_fn2(
+        idat = idat3, bdat = bdat4,
+        fmla = fmla, truevar_name = truevar_name
+      )
+    },
+    truevar_name = truevar_names,
+    outcome_name = outcome_names,
+    SIMPLIFY = FALSE
+  )
 })
 
 

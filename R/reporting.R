@@ -57,7 +57,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
   if (any(res$hit)) {
     res[(hit), fin_grp := ifelse(single_hit, fin_nodenum, fin_parent)]
     res[(hit), hit_grp := factor(fin_grp)] #, labels = 1:length(unique(fin_grp)))]
-    res[!(hit), hit_grp := factor(nodenum_current)]
+    res[!(hit), hit_grp := factor(fin_nodenum)]
     ## Make sure that no  hit_grp includes *both* detections and misses/skips/acceptances
     test <- res[,.(hitmix= length(unique(hit))==1),by=hit_grp]
     stopifnot(all(test$hitmix))

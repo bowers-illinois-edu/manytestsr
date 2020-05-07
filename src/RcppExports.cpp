@@ -9,7 +9,7 @@ using namespace Rcpp;
 
 // armaMatMult
 SEXP armaMatMult(arma::mat A, arma::mat B);
-RcppExport SEXP _manytests_armaMatMult(SEXP ASEXP, SEXP BSEXP) {
+RcppExport SEXP _manytestsr_armaMatMult(SEXP ASEXP, SEXP BSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -21,7 +21,7 @@ END_RCPP
 }
 // eigenMatMult
 SEXP eigenMatMult(Eigen::MatrixXd A, Eigen::MatrixXd B);
-RcppExport SEXP _manytests_eigenMatMult(SEXP ASEXP, SEXP BSEXP) {
+RcppExport SEXP _manytestsr_eigenMatMult(SEXP ASEXP, SEXP BSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -33,7 +33,7 @@ END_RCPP
 }
 // eigenMapMatMult
 SEXP eigenMapMatMult(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B);
-RcppExport SEXP _manytests_eigenMapMatMult(SEXP ASEXP, SEXP BSEXP) {
+RcppExport SEXP _manytestsr_eigenMapMatMult(SEXP ASEXP, SEXP BSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -45,7 +45,7 @@ END_RCPP
 }
 // fastMean
 double fastMean(const arma::vec X);
-RcppExport SEXP _manytests_fastMean(SEXP XSEXP) {
+RcppExport SEXP _manytestsr_fastMean(SEXP XSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -56,7 +56,7 @@ END_RCPP
 }
 // fastcolMeans
 arma::vec fastcolMeans(const arma::mat& X);
-RcppExport SEXP _manytests_fastcolMeans(SEXP XSEXP) {
+RcppExport SEXP _manytestsr_fastcolMeans(SEXP XSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -67,15 +67,15 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_manytests_armaMatMult", (DL_FUNC) &_manytests_armaMatMult, 2},
-    {"_manytests_eigenMatMult", (DL_FUNC) &_manytests_eigenMatMult, 2},
-    {"_manytests_eigenMapMatMult", (DL_FUNC) &_manytests_eigenMapMatMult, 2},
-    {"_manytests_fastMean", (DL_FUNC) &_manytests_fastMean, 1},
-    {"_manytests_fastcolMeans", (DL_FUNC) &_manytests_fastcolMeans, 1},
+    {"_manytestsr_armaMatMult", (DL_FUNC) &_manytestsr_armaMatMult, 2},
+    {"_manytestsr_eigenMatMult", (DL_FUNC) &_manytestsr_eigenMatMult, 2},
+    {"_manytestsr_eigenMapMatMult", (DL_FUNC) &_manytestsr_eigenMapMatMult, 2},
+    {"_manytestsr_fastMean", (DL_FUNC) &_manytestsr_fastMean, 1},
+    {"_manytestsr_fastcolMeans", (DL_FUNC) &_manytestsr_fastcolMeans, 1},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_manytests(DllInfo *dll) {
+RcppExport void R_init_manytestsr(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

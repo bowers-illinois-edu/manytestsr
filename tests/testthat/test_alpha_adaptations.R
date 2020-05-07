@@ -13,7 +13,8 @@ context("Alpha Adjusting Performance")
 # library(ggraph)
 # library(tidygraph)
 
-
+setDTthreads(1)
+options(digits = 4)
 ## Shuffle order  of the blocks so that the first set and the second set don't  automatically go together
 set.seed(12345)
 bdat4 <- bdat3[sample(.N), ]
@@ -39,7 +40,7 @@ testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3, bda
   if (afn == "NULL") {
     theafn <- NULL
   } else {
-    theafn <- get(afn)
+    theafn <- getFromNamespace(afn, ns = "manytestsr")
   }
   ## afn and sfn and sby are character names
   theres <- findBlocks(
@@ -56,6 +57,7 @@ testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3, bda
     "biggrp", "bF", "hwt", "nb"
   )][order(biggrp)])
 }
+
 ##  Maybe make w0 more like .05.
 alpha_and_splits[c(1, 3), ]
 ## debug(findBlocks)
@@ -135,9 +137,9 @@ eval_maxp <- function(detection_obj) {
     max(dat[, .(min_max_p = min(p)), by = hit_grp]$min_max_p)
   })
   ## Adding tolerance of .01 here.
-  expect_lte(maxp[[3]], max(maxp[1:2])+.01) ## FWER should be smaller than at least one of the alpha adjusters
-  expect_lte(maxp[[6]], max(maxp[4:5])+.01)
-  expect_lte(maxp[[9]], max(maxp[7:8])+.01)
+  expect_lte(maxp[[3]], max(maxp[1:2]) + .01) ## FWER should be smaller than at least one of the alpha adjusters
+  expect_lte(maxp[[6]], max(maxp[4:5]) + .01)
+  expect_lte(maxp[[9]], max(maxp[7:8]) + .01)
 }
 
 eval_single_blocks_found <- function(detection_obj) {

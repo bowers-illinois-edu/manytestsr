@@ -88,11 +88,6 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
 
 ##' Repeat experiment, reveal treatment effects from the potential outcomes, test within partitions, summarize
 ##'
-##' The function does hypothesis tests within partitions of blocks (including individual blocks depending on the splitting algorithmn) and then summarizes the results  of this testing across the blocks. It very much depends  on padj_test_fn.
-##' @param y1var Is the name of the potential outcome to treatment
-##' @param p_adj_method Is the argument to p.adjust()
-##' @return False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
-##' @export
 ##' Repeat experiment, reveal treatment effects from the potential outcomes, test within partitions, summarize
 ##'
 ##' The function does hypothesis tests within partitions of blocks (including individual blocks depending on the splitting algorithmn) and then summarizes the results  of this testing across the blocks. It very much depends  on padj_test_fn.

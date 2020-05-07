@@ -1,4 +1,4 @@
 library(testthat)
-library(manytests)
+library(manytestsr)
 
-test_check("manytests")
+test_check("manytestsr")

@@ -20,3 +20,4 @@ tests/*.Rout.save
 .lintr
 src/README.md
 tests/testthat/JUNK
+README.md

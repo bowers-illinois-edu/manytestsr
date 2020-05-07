@@ -2,22 +2,22 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 armaMatMult <- function(A, B) {
-    .Call(`_manytests_armaMatMult`, A, B)
+    .Call(`_manytestsr_armaMatMult`, A, B)
 }
 
 eigenMatMult <- function(A, B) {
-    .Call(`_manytests_eigenMatMult`, A, B)
+    .Call(`_manytestsr_eigenMatMult`, A, B)
 }
 
 eigenMapMatMult <- function(A, B) {
-    .Call(`_manytests_eigenMapMatMult`, A, B)
+    .Call(`_manytestsr_eigenMapMatMult`, A, B)
 }
 
 fastMean <- function(X) {
-    .Call(`_manytests_fastMean`, X)
+    .Call(`_manytestsr_fastMean`, X)
 }
 
 fastcolMeans <- function(X) {
-    .Call(`_manytests_fastcolMeans`, X)
+    .Call(`_manytestsr_fastcolMeans`, X)
 }
 

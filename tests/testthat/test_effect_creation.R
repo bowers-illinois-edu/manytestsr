@@ -1,10 +1,10 @@
 # Test and develop functions to create treatment effects in simulations
 context("Treatment Effect Simulations")
 
-#library(here)
-#library(testthat)
-#devtools::load_all() ## comment this out for production
-#source("make_test_data.R")
+# library(here)
+# library(testthat)
+# devtools::load_all() ## comment this out for production
+# source("make_test_data.R")
 
 test_that("We can create effects as expected", {
   setkey(idat, bF)
