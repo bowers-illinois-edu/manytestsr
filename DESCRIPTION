@@ -1,0 +1,33 @@
+Package: manytests
+Title: Testing to detect heterogeneous effects in block-randomized experiments
+Version: 0.0.0.9000
+Authors@R:
+    person(given = "Jake",
+           family = "Bowers",
+           role = c("aut", "cre"),
+           email = "jake@jakebowers.org",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: What the package does (one paragraph).
+License: What license it uses
+Encoding: UTF-8
+LazyData: true
+Suggests:
+    testthat (>= 2.1.0),
+    nbpMatching,
+    energy,
+    randomizr
+Depends:
+    R (>= 3.5.0),
+    data.table (>= 1.12.0),
+Imports:
+    Rcpp (>= 1.0.0),
+    Rfast (>= 1.9.5),
+    stringi (>= 1.4.5),
+    onlineFDR (>= 1.5.0),
+    coin (>= 1.3.0),
+    tidygraph (>= 1.1.2),
+    ggraph (>= 2.0.2)
+LinkingTo: Rcpp, RcppArmadillo, RcppEigen
+NeedsCompilation: yes
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.0
