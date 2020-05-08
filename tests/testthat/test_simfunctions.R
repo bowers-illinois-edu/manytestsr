@@ -271,6 +271,9 @@ test_that("Error calculations for a given set of tests work: Testing in every bl
 })
 
 
+break
+### START HERE. Use calc_errs the reveal_po_and_test_siup and reveal_po_and_test functions
+
 ###
 ### Test the padj sim function that we use.
 ## p_sims_res <- parSapplyLB(cl,1:nrow(simparms), FUN=function(i) {
