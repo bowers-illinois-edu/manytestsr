@@ -12,7 +12,8 @@ matrixNotation.Rnw
 # unit tests & related material that we don't care to share w/ CRAN
 tests/testthat/test.notforCRAN.R
 tests/testthat/test.tidiers.R
-tests/testthat/tricky_rectangular_matrix.rda
+tests/testthat/res1nodes.pdf
+tests/testthat/res3nodes.pdf
 tests/*.R
 tests/*.Rout.save
 ^.*\.Rproj$

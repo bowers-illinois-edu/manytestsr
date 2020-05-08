@@ -6,3 +6,5 @@ RITOOLS_TIMESTAMP
 revdep/checks.rds
 .Rproj.user
 .Rhistory
+tests/testthat/res1nodes.pdf
+tests/testthat/res3nodes.pdf
