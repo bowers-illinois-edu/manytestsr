@@ -100,7 +100,8 @@ err_testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3,
 
 err_testing_fn2 <- function(fmla = Ytauv2 ~ ZF, idat = idat3, bdat = bdat4, truevar_name, thealpha = .05) {
   ## afn and sfn and sby are character names
-  theres <- adjust_block_tests(
+
+    theres <- adjust_block_tests(
     idat = idat, bdat = bdat, blockid = "bF", p_adj_method = "BH",
     pfn = pIndepDist, fmla = fmla, copydts = TRUE
   )
@@ -246,9 +247,6 @@ test_that("Error calculations for a given set of tests work:individually heterog
 })
 
 
-## START HERE: Add bottom up testing.
-err_testing_fn2(fmla = Ynorm_inc ~ ZF, idat = idat3, bdat = bdat4, truevar_name = "ate_norm_inc")
-
 test_that("Error calculations for a given set of tests work: Testing in every block and adjusting p-values via FDR/BH.", {
   truevar_names <- grep("^ate", names(bdat4), value = TRUE)
   outcome_names <- paste0("Y", gsub("ate_", "", truevar_names))
@@ -271,25 +269,27 @@ test_that("Error calculations for a given set of tests work: Testing in every bl
 })
 
 
-break
 ### START HERE. Use calc_errs the reveal_po_and_test_siup and reveal_po_and_test functions
 
+simparms <- cbind(alpha_and_splits,reveal_and_test_fn=rep("reveal_po_and_test_siup",nrow(alpha_and_splits)))
+simparms <- rbind(simparms,c("NULL","NULL","NULL","reveal_po_and_test"))
 ###
 ### Test the padj sim function that we use.
 ## p_sims_res <- parSapplyLB(cl,1:nrow(simparms), FUN=function(i) {
 set.seed(12345)
 i <- 1
-x <- alpha_and_splits[i, ]
+x <- simparms[i, ]
 xnm <- paste(x, collapse = "_")
 message(xnm)
 nsims <- 10
-
+break
+### START Here. make sure it actually varies.
 p_sims_tab <- padj_test_fn(
   idat = idat3,
   bdat = bdat4,
   blockid = "bF",
   trtid = "Z",
-  fmla = Ynorm_inc ~ ZF | blockF,
+  fmla = Y ~ ZF | blockF,
   ybase = "y0",
   prop_blocks_0 = .5,
   tau_fn = tau_norm_covariate_outliers,
@@ -299,7 +299,7 @@ p_sims_tab <- padj_test_fn(
   afn = getFromNamespace(x[["afn"]], ns = "manytestsr"),
   nsims = nsims,
   ncores = 1, ## parallelize over the  rows of simparms
-  reveal_and_test_fn = reveal_po_and_test_siup,
+  reveal_and_test_fn = getFromNamespace(x[["reveal_and_test_fn"]],ns="manytestsr"),
   splitfn = getFromNamespace(x[["sfn"]], ns = "manytestsr"),
   splitby = x[["splitby"]]
 )
