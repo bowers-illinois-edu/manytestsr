@@ -184,6 +184,7 @@ reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF
 calc_errs <- function(testobj,
                       truevar_name,
                       trueeffect_tol = .Machine$double.eps,
+                      blockid="bF",
                       thealpha = .05) {
   ## testobj <- copy(testobj)
 
@@ -202,7 +203,7 @@ calc_errs <- function(testobj,
    prop_hits <- mean(detobj$hit)
 
   ## This next is very inefficient. I just couldn't figure it out within the data.table j statement
-   if(prop_hits < 1 && prop_hits > 0){ 
+   if(prop_hits < 1 && prop_hits > 0){
        detnodes_effects <- detobj[,.(meaneffectdet = mean(get(truevar_name)[hit]),
                                    medeffectdet =  median(get(truevar_name)[hit]),
                                    mineffectdet =  min(get(truevar_name)[hit]),
@@ -241,27 +242,31 @@ calc_errs <- function(testobj,
 
   } else {
       ## This is for the bottom-up/test every block method
-      testobj[, hit := max_p < thealpha]
+      detobj <- testobj[,.(blockid=get(blockid),hit = max_p < thealpha,truevar_name=get(truevar_name))]
+      setnames(detobj,"truevar_name",truevar_name)
 
       detnodes <- detobj[, .(hit = as.numeric(hit),
                              anynull = as.numeric(abs(get(truevar_name)) <= trueeffect_tol),
                              allnull = as.numeric(abs(get(truevar_name)) <= trueeffect_tol),
                              anynotnull = as.numeric(abs(get(truevar_name)) > trueeffect_tol),
                              trueeffect = get(truevar_name),
-                             grpsize = 1
+                             grpsize = 1,
+                             blockid=blockid
                              )]
+      setkey(detnodes,blockid)
+
    prop_hits <- mean(detobj$hit)
 
   ## This next is very inefficient. I just couldn't figure it out within the data.table j statement
-   if(prop_hits < 1 && prop_hits > 0){ 
+   if(prop_hits < 1 && prop_hits > 0){
        detnodes_effects <- detobj[,.(meaneffectdet = mean(get(truevar_name)[hit]),
                                    medeffectdet =  median(get(truevar_name)[hit]),
                                    mineffectdet =  min(get(truevar_name)[hit]),
                                    maxeffectdet =  max(get(truevar_name)[hit]),
                                    mineffectmiss = min(get(truevar_name)[!hit]),
-                                   maxeffectmiss = max(get(truevar_name)[!hit])),
-                                   by=hit_grp]
-    setkey(detnodes_effects,hit_grp)
+                                   maxeffectmiss = max(get(truevar_name)[!hit]),
+                                   blockid=blockid)]
+    setkey(detnodes_effects,blockid)
     detnodes <- detnodes[detnodes_effects,]
    }
    if(identical(prop_hits,1)){
@@ -270,9 +275,9 @@ calc_errs <- function(testobj,
                                    mineffectdet =  min(get(truevar_name)[hit]),
                                    maxeffectdet =  max(get(truevar_name)[hit]),
                                    mineffectmiss = NA,
-                                   maxeffectmiss = NA),
-                                   by=hit_grp]
-    setkey(detnodes_effects,hit_grp)
+                                   maxeffectmiss = NA,
+                                   blockid=blockid)]
+    setkey(detnodes_effects,blockid)
     detnodes <- detnodes[detnodes_effects,]
    }
    if(identical(prop_hits,0)){
@@ -281,11 +286,10 @@ calc_errs <- function(testobj,
                                    mineffectdet =  NA,
                                    maxeffectdet =  NA,
                                    mineffectmiss = min(get(truevar_name)[!hit]),
-                                   maxeffectmiss = max(get(truevar_name)[!hit])),
-                                   by=hit_grp]
-    setkey(detnodes_effects,hit_grp)
+                                   maxeffectmiss = max(get(truevar_name)[!hit]),
+                                 blockid=blockid)]
+    setkey(detnodes_effects,blockid)
     detnodes <- detnodes[detnodes_effects,]
-
    }
 
   }
