@@ -178,7 +178,8 @@ reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF
 ##' and returns the proportions of errors made. This means that the input to findBlocks includes a column containing a true block-level effect.
 ##' Repeated uses of this function allow us to assess false discovery rates and family wise error rates among other metrics of testing success.
 ##' @param testobj Is an object arising from [findBlocks] or [bottom_up].
-##' @param p_adj_method Is the argument to p.adjust()
+##' @param truevar_name Is a string indicating the name of the variable containing the true underlying causal effect (at the block level).
+##' @param trueeffect_tol Is the smallest effect size below which we consider the effect to be zero (by default is it floating point zero).
 ##' @return False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
 ##' @export
 calc_errs <- function(testobj,
@@ -186,59 +187,29 @@ calc_errs <- function(testobj,
                       trueeffect_tol = .Machine$double.eps,
                       blockid="bF",
                       thealpha = .05) {
-  ## testobj <- copy(testobj)
+simp_summary <- function(x){
+      list(min(x,na.rm=TRUE),mean(x,na.rm=TRUE),median(x,na.rm=TRUE),max(x,na.rm=TRUE))
+  }
 
   if (length(grep("biggrp", names(testobj))) > 0) {
     ## this is for the top-down/split and test method
     detobj <- report_detections(testobj, fwer = FALSE, only_hits = FALSE)
+   detobj[,hit:=as.numeric(detobj$hit)]
 
-  detnodes <- detobj[, .(hit = as.numeric(unique(hit)),
+  detnodes <- detobj[, .(hit = unique(hit),
                          anynull = as.numeric(any(abs(get(truevar_name)) <= trueeffect_tol)),
                          allnull = as.numeric(all(abs(get(truevar_name)) <= trueeffect_tol)),
                          anynotnull = as.numeric(any(abs(get(truevar_name)) > trueeffect_tol)),
                          grpsize = .N
                          ), by = hit_grp]
   setkey(detnodes,hit_grp)
+  ##prop_hits <- mean(detobj$hit)
 
-   prop_hits <- mean(detobj$hit)
-
-  ## This next is very inefficient. I just couldn't figure it out within the data.table j statement
-   if(prop_hits < 1 && prop_hits > 0){
-       detnodes_effects <- detobj[,.(meaneffectdet = mean(get(truevar_name)[hit]),
-                                   medeffectdet =  median(get(truevar_name)[hit]),
-                                   mineffectdet =  min(get(truevar_name)[hit]),
-                                   maxeffectdet =  max(get(truevar_name)[hit]),
-                                   mineffectmiss = min(get(truevar_name)[!hit]),
-                                   maxeffectmiss = max(get(truevar_name)[!hit])),
-                                   by=hit_grp]
-    setkey(detnodes_effects,hit_grp)
-    detnodes <- detnodes[detnodes_effects,]
-   }
-   if(identical(prop_hits , 1)){
-             detnodes_effects <- detobj[,.(meaneffectdet = mean(get(truevar_name)[hit]),
-                                   medeffectdet =  median(get(truevar_name)[hit]),
-                                   mineffectdet =  min(get(truevar_name)[hit]),
-                                   maxeffectdet =  max(get(truevar_name)[hit]),
-                                   mineffectmiss = NA,
-                                   maxeffectmiss = NA),
-                                   by=hit_grp]
-    setkey(detnodes_effects,hit_grp)
-    detnodes <- detnodes[detnodes_effects,]
-   }
-   if(identical(prop_hits,0)){
-   detnodes_effects <- detobj[,.(meaneffectdet = NA,
-                                   medeffectdet =  NA,
-                                   mineffectdet =  NA,
-                                   maxeffectdet =  NA,
-                                   mineffectmiss = min(get(truevar_name)[!hit]),
-                                   maxeffectmiss = max(get(truevar_name)[!hit])),
-                                   by=hit_grp]
-    setkey(detnodes_effects,hit_grp)
-    detnodes <- detnodes[detnodes_effects,]
-
-   }
-
-
+    detnodes_effects <- detobj[,simp_summary(get(truevar_name)),by=list(hit,hit_grp)]
+  setnames(detnodes_effects, c("hit","hit_grp","minate","meanate","medianate","maxate"))
+  #detnodes_effects <- cbind(detnodes_effects1[hit==1,],detnodes_effects1[hit==0,.(min0=minate,mean0=meanate,median0=medianate,max0=maxate)])
+  setkey(detnodes_effects,hit_grp)
+  detnodes <- detnodes[detnodes_effects,]
 
   } else {
       ## This is for the bottom-up/test every block method
@@ -254,76 +225,57 @@ calc_errs <- function(testobj,
                              blockid=blockid
                              )]
       setkey(detnodes,blockid)
-
-   prop_hits <- mean(detobj$hit)
-
-  ## This next is very inefficient. I just couldn't figure it out within the data.table j statement
-   if(prop_hits < 1 && prop_hits > 0){
-       detnodes_effects <- detobj[,.(meaneffectdet = mean(get(truevar_name)[hit]),
-                                   medeffectdet =  median(get(truevar_name)[hit]),
-                                   mineffectdet =  min(get(truevar_name)[hit]),
-                                   maxeffectdet =  max(get(truevar_name)[hit]),
-                                   mineffectmiss = min(get(truevar_name)[!hit]),
-                                   maxeffectmiss = max(get(truevar_name)[!hit]),
-                                   blockid=blockid)]
-    setkey(detnodes_effects,blockid)
-    detnodes <- detnodes[detnodes_effects,]
-   }
-   if(identical(prop_hits,1)){
-             detnodes_effects <- detobj[,.(meaneffectdet = mean(get(truevar_name)[hit]),
-                                   medeffectdet =  median(get(truevar_name)[hit]),
-                                   mineffectdet =  min(get(truevar_name)[hit]),
-                                   maxeffectdet =  max(get(truevar_name)[hit]),
-                                   mineffectmiss = NA,
-                                   maxeffectmiss = NA,
-                                   blockid=blockid)]
-    setkey(detnodes_effects,blockid)
-    detnodes <- detnodes[detnodes_effects,]
-   }
-   if(identical(prop_hits,0)){
-   detnodes_effects <- detobj[,.(meaneffectdet = NA,
-                                   medeffectdet =  NA,
-                                   mineffectdet =  NA,
-                                   maxeffectdet =  NA,
-                                   mineffectmiss = min(get(truevar_name)[!hit]),
-                                   maxeffectmiss = max(get(truevar_name)[!hit]),
-                                 blockid=blockid)]
-    setkey(detnodes_effects,blockid)
-    detnodes <- detnodes[detnodes_effects,]
-   }
-
+  detnodes_effects <- detobj[,as.list(simp_summary(get(truevar_name))),by=list(hit,hit_grp)]
+  setnames(detnodes_effects1, c("hit","hit_grp","minate","meanate","medianate","maxate"))
+  ##detnodes_effects <- cbind(detnodes_effects1[hit==1,],detnodes_effects1[hit==0,.(min0=minate,mean0=meanate,median0=medianate,max0=maxate)])
+  setkey(detnodes_effects,hit_grp)
+  detnodes <- detnodes[detnodes_effects,]
   }
 
-deterrs <- detnodes[, .(nreject = sum(hit),
-    naccept = sum(1 - hit),
-    prop_reject = mean(hit),
-    prop_accept = mean(1 - hit), # or 1-prop_reject
-    ## rejections of false null /detections of true non-null
-    ## (if any of the blocks have an effect, then we count this as a correct rejection or correct detection)
-    true_pos_prop = mean(hit * anynotnull),
-    ## If we reject but *all* of the blocks have no effects, this is a false positive error
-    ## If we reject but only one of them has no effects but the other has effects,
-    ## then this is not an error --- but a correct detection
-    false_pos_prop = mean(hit * allnull),
-    ## If we do not reject and all blocks are truly null, then we have no error.
-    true_neg_prop = mean((1 - hit) * allnull),
-    ## If we do not reject/detect and at least one of the blocks actually has an effect, we have
-    ## a false negative error --- a failure to detect the truth
-    false_neg_prop = mean((1 - hit) * anynotnull),
-    ## Now look at false and true discoveries: false rejections as a proportion of rejections
-    false_disc_prop = sum(hit * allnull) / max(1, sum(hit)),
-    true_disc_prop = sum(hit * anynotnull) / max(1, sum(hit)),
-    true_nondisc_prop = sum((1 - hit) * allnull) / max(1, sum(1 - hit)),
-    false_nondisc_prop = sum((1 - hit) * anynotnull) / max(1, sum(1 - hit)),
-    meangrpsize = mean(grpsize),
-    medgrpsize = median(grpsize),
-    meaneffectdet = mean(meaneffectdet),
-    medeffectdet = median(medeffectdet),
-    mineffectdet = min(mineffectdet),
-    maxeffectdet = max(maxeffectdet),
-    mineffectmiss = min(mineffectmiss),
-    maxeffectmiss = max(maxeffectmiss)
-    )]
+#blah <- detnodes[,lapply(.SD,simp_summary),.SDcols=c("meanate","medianate","minate","maxate"),by=hit]
+#tmp <- dcast(detnodes,hit~.,value.var=c("minate","meanate","medianate","maxate"),fun.aggregate=mean)
 
-  return(deterrs)
+detates1 <- detnodes[,.(minate=min(minate),
+                       meanate=mean(meanate),
+                       medate=median(medianate),
+                       maxate=max(maxate)),by=hit]
+if(nrow(detates1)==1){
+    detates2 <- rbind(detates1,list(1-detates1$hit,NA,NA,NA,NA))
+}
+
+detates <- do.call("cbind",lapply(c(1,0),function(i){ 
+                                obj <- detates1[hit==i,]
+    setnames(obj,paste0(names(obj),i))
+    return(obj)
+    }))
+
+deterrs <- detnodes[, .(nreject = sum(hit),
+                        naccept = sum(1 - hit),
+                        prop_reject = mean(hit),
+                        prop_accept = mean(1 - hit), # or 1-prop_reject
+                        ## rejections of false null /detections of true non-null
+                        ## (if any of the blocks have an effect, then we count this as a correct rejection or correct detection)
+                        true_pos_prop = mean(hit * anynotnull),
+                        ## If we reject but *all* of the blocks have no effects, this is a false positive error
+                        ## If we reject but only one of them has no effects but the other has effects,
+                        ## then this is not an error --- but a correct detection
+                        false_pos_prop = mean(hit * allnull),
+                        ## If we do not reject and all blocks are truly null, then we have no error.
+                        true_neg_prop = mean((1 - hit) * allnull),
+                        ## If we do not reject/detect and at least one of the blocks actually has an effect, we have
+                        ## a false negative error --- a failure to detect the truth
+                        false_neg_prop = mean((1 - hit) * anynotnull),
+                        ## Now look at false and true discoveries: false rejections as a proportion of rejections
+                        false_disc_prop = sum(hit * allnull) / max(1, sum(hit)),
+                        true_disc_prop = sum(hit * anynotnull) / max(1, sum(hit)),
+                        true_nondisc_prop = sum((1 - hit) * allnull) / max(1, sum(1 - hit)),
+                        false_nondisc_prop = sum((1 - hit) * anynotnull) / max(1, sum(1 - hit)),
+                        meangrpsize = mean(grpsize),
+                        medgrpsize = median(grpsize)
+                        )]
+
+## One row of results at the end.
+detresults <- cbind(deterrs,detates)
+
+return(detresults)
 }

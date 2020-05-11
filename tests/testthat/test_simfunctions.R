@@ -246,7 +246,8 @@ test_that("Error calculations for a given set of tests work:individually heterog
   )
 })
 
-
+break
+##START HERE
 test_that("Error calculations for a given set of tests work: Testing in every block and adjusting p-values via FDR/BH.", {
   truevar_names <- grep("^ate", names(bdat4), value = TRUE)
   outcome_names <- paste0("Y", gsub("ate_", "", truevar_names))
@@ -283,6 +284,8 @@ xnm <- paste(x, collapse = "_")
 message(xnm)
 nsims <- 10
 
+#options(warn=2, error=recover)
+options(warn=0, error=NULL)
 ### START Here. make sure it actually varies.
 p_sims_tab <- padj_test_fn(
   idat = idat3,
@@ -303,25 +306,3 @@ p_sims_tab <- padj_test_fn(
   splitfn = getFromNamespace(x[["sfn"]], ns = "manytestsr"),
   splitby = x[["splitby"]]
 )
-
-## Testing the error simulation function (deprecated I think. Not used anymore)
-## set.seed(12345)
-## errsimres1 <- errsimfn(
-##   idat = idat, bdat = bdat, afn = NULL, pfn = pIndepDist, splitfn = splitLOO,
-##   fmla = Y ~ ZF | bF,
-##   block = "bF",
-##   trt = "Z", ## must be a binary numeric variable
-##   ybase = "y0",
-##   thealpha = 0.05, tau_fn = tau_norm, tau_size = 5, prop_blocks_0 = .5,
-##   sims = 1000
-## )
-## set.seed(12345)
-## errsimres2 <- errsimfn(
-##   idat = idat, bdat = bdat, afn = alpha_saffron, pfn = pIndepDist, splitfn = splitLOO,
-##   fmla = Y ~ ZF | bF,
-##   block = "bF",
-##   trt = "Z", ## must be a binary numeric variable
-##   ybase = "y0",
-##   thealpha = 0.05, tau_fn = tau_norm, tau_size = 5, prop_blocks_0 = .5,
-##   sims = 1000
-## )
