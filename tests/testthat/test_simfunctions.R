@@ -246,7 +246,6 @@ test_that("Error calculations for a given set of tests work:individually heterog
   )
 })
 
-break
 ##START HERE
 test_that("Error calculations for a given set of tests work: Testing in every block and adjusting p-values via FDR/BH.", {
   truevar_names <- grep("^ate", names(bdat4), value = TRUE)
@@ -270,23 +269,19 @@ test_that("Error calculations for a given set of tests work: Testing in every bl
 })
 
 
-### START HERE. Use calc_errs the reveal_po_and_test_siup and reveal_po_and_test functions
-
+### This next is less of a test with expected results and more to ensure that the code runs without error.
 simparms <- cbind(alpha_and_splits,reveal_and_test_fn=rep("reveal_po_and_test_siup",nrow(alpha_and_splits)))
 simparms <- rbind(simparms,c("NULL","NULL","NULL","reveal_po_and_test"))
-###
-### Test the padj sim function that we use.
-## p_sims_res <- parSapplyLB(cl,1:nrow(simparms), FUN=function(i) {
+simresnms <- apply(simparms, 1, function(x) {
+  paste(x, collapse = "_", sep = "")
+})
+
 set.seed(12345)
-i <- 1
+p_sims_res <- lapply(1:nrow(simparms), FUN=function(i) {
 x <- simparms[i, ]
 xnm <- paste(x, collapse = "_")
 message(xnm)
-nsims <- 10
-
-#options(warn=2, error=recover)
-options(warn=0, error=NULL)
-### START Here. make sure it actually varies.
+nsims <- 10 ##100
 p_sims_tab <- padj_test_fn(
   idat = idat3,
   bdat = bdat4,
@@ -299,10 +294,27 @@ p_sims_tab <- padj_test_fn(
   tau_size = .5,
   covariate = "v4",
   pfn = pIndepDist,
-  afn = getFromNamespace(x[["afn"]], ns = "manytestsr"),
+  afn = ifelse(x[["afn"]]!="NULL",getFromNamespace(x[["afn"]], ns = "manytestsr"),"NULL"),
   nsims = nsims,
   ncores = 1, ## parallelize over the  rows of simparms
-  reveal_and_test_fn = getFromNamespace(x[["reveal_and_test_fn"]],ns="manytestsr"),
-  splitfn = getFromNamespace(x[["sfn"]], ns = "manytestsr"),
+  reveal_and_test_fn = ifelse(x[["reveal_and_test_fn"]]!="NULL",getFromNamespace(x[["reveal_and_test_fn"]],ns="manytestsr"),"NULL"),
+  splitfn = ifelse(x[["sfn"]]!="NULL",getFromNamespace(x[["sfn"]], ns = "manytestsr"),"NULL"),
   splitby = x[["splitby"]]
 )
+#p_sims_tab <- p_sims_tab[1,,]
+return(p_sims_tab)
+})
+
+names(p_sims_res) <- simresnms
+
+p_sims_obj <- rbindlist(p_sims_res,idcol = TRUE)
+
+err_rates <- p_sims_obj[,lapply(.SD,mean),.SDcols=c("true_pos_prop","false_pos_prop",
+                                    "true_neg_prop","false_neg_prop",
+                                    "true_disc_prop","false_disc_prop",
+                                    "true_nondisc_prop","false_nondisc_prop"),by=.id]
+
+
+
+
+

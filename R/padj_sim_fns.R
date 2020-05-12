@@ -53,11 +53,12 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
     #  tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method, splitfn = splitfn, splitby = splitby, thealpha=thealpha
     # ))
   } else {
-    p_sims <- replicate(nsims, reveal_and_test_fn(
+    p_sims_lst <- replicate(nsims, reveal_and_test_fn(
       idat = datnew, bdat = bdatnew, blockid = blockid, trtid = trtid, y1var = "y1new",
       fmla = fmla, ybase = ybase, prop_blocks_0 = prop_blocks_0,
       tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method, splitfn = splitfn, splitby = splitby, thealpha = thealpha
-    ))
+    ),simplify=FALSE)
+  p_sims <- data.table::rbindlist(p_sims_lst)
     # ,mc.cores=ncores)
   }
   return(p_sims)
@@ -73,8 +74,8 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
 ##' @return False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
 ##' @export
 reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y1var,
-                               prop_blocks_0, tau_fn, tau_size, pfn, p_adj_method = "fdr", splitfn = NULL, splitby = NULL, thealpha = .05, copydts = FALSE) {
-  stopifnot(is.null(splitfn))
+                               prop_blocks_0, tau_fn, tau_size, pfn, p_adj_method = "fdr", afn=NULL, splitfn = NULL, splitby = NULL, thealpha = .05, copydts = FALSE) {
+  stopifnot(is.null(splitfn)|splitfn=="NULL")
   idat[, newZ := sample(get(trtid)), by = blockid] ## make no effects within block by shuffling treatment, this is the engine of variability in the sim
   idat[, Y := get(y1var) * newZ + get(ybase) * (1 - newZ)] ## reveal relevant potential outcomes with possible known effect
   idat[, newZF := factor(newZ)] ## the pvalue functions want a factor
@@ -213,7 +214,10 @@ simp_summary <- function(x){
 
   } else {
       ## This is for the bottom-up/test every block method
-      detobj <- testobj[,.(blockid=get(blockid),hit = max_p < thealpha,truevar_name=get(truevar_name))]
+      detobj <- testobj[,.(blockid=get(blockid),
+                           hit = max_p < thealpha,
+                           hit_grp = get(blockid),
+                           truevar_name=get(truevar_name))]
       setnames(detobj,"truevar_name",truevar_name)
 
       detnodes <- detobj[, .(hit = as.numeric(hit),
@@ -226,7 +230,7 @@ simp_summary <- function(x){
                              )]
       setkey(detnodes,blockid)
   detnodes_effects <- detobj[,as.list(simp_summary(get(truevar_name))),by=list(hit,hit_grp)]
-  setnames(detnodes_effects1, c("hit","hit_grp","minate","meanate","medianate","maxate"))
+  setnames(detnodes_effects, c("hit","hit_grp","minate","meanate","medianate","maxate"))
   ##detnodes_effects <- cbind(detnodes_effects1[hit==1,],detnodes_effects1[hit==0,.(min0=minate,mean0=meanate,median0=medianate,max0=maxate)])
   setkey(detnodes_effects,hit_grp)
   detnodes <- detnodes[detnodes_effects,]
