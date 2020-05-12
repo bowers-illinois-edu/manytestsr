@@ -2,8 +2,8 @@
 #include <RcppEigen.h>
 using namespace Rcpp;
 using namespace arma;
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::depends(RcppEigen)]]
+// [[Rcpp::depends(RcppArmadillo)]]
 
 // next from https://yiransblog.com/2019/05/08/article1/
 

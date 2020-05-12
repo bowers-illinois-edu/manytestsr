@@ -33,6 +33,10 @@ padj_test_fn(
 
 \item{fmla}{is a simple formula with no blocks --- we are calculating tests within all blocks.}
 
+\item{reveal_and_test_fn}{Is a function that reveals observed outcomes given the potential outcomes
+produced here and does tests and adjustments (using either findBlocks for the top-down method or
+adjust_block_tests for the bottom-up method, for example)}
+
 \item{covariate}{is the name of a covariate to be used in created covariate dependent treatment effects}
 }
 \value{

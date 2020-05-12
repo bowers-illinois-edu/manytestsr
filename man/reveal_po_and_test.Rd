@@ -17,9 +17,11 @@ reveal_po_and_test(
   tau_size,
   pfn,
   p_adj_method = "fdr",
+  afn = NULL,
   splitfn = NULL,
   splitby = NULL,
-  thealpha = 0.05
+  thealpha = 0.05,
+  copydts = FALSE
 )
 }
 \arguments{

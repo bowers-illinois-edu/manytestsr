@@ -8,13 +8,16 @@ calc_errs(
   testobj,
   truevar_name,
   trueeffect_tol = .Machine$double.eps,
+  blockid = "bF",
   thealpha = 0.05
 )
 }
 \arguments{
 \item{testobj}{Is an object arising from \link{findBlocks} or \link{bottom_up}.}
 
-\item{p_adj_method}{Is the argument to p.adjust()}
+\item{truevar_name}{Is a string indicating the name of the variable containing the true underlying causal effect (at the block level).}
+
+\item{trueeffect_tol}{Is the smallest effect size below which we consider the effect to be zero (by default is it floating point zero).}
 }
 \value{
 False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
