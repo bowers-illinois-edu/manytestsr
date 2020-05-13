@@ -73,20 +73,30 @@ errsimfn <- function(idat, bdat, pfn, splitfn,
 ##' @return A data.table with a single column containing potential outcome to treatment.
 ##' @export
 create_effects <- function(idat, ybase, blockid, tau_fn, tau_size, covariate = NULL, prop_blocks_0 = 0, by_block = TRUE) {
-  if ( ( !is.null(covariate) & is.character(covariate) ) | covariate=="NULL"){
-    if(covariate == "") {
+  if ( ( !is.null(covariate) & is.character(covariate) & covariate=="" ) | covariate=="NULL"){
     covariate <- NULL
-  }}
+  }
   stopifnot(is.null(covariate) | is.vector(covariate))
   ## assume that ybase already has block-level shifts in it
   idatnew <- copy(idat) ## to avoid updating the bdat and idat inputs outside of the function
   stopifnot(prop_blocks_0 >= 0 & prop_blocks_0 <= 1)
   setkeyv(idatnew, blockid)
+
+  if(is.null(covariate)){
+if (by_block) {
+    idatnew[, y1sim := get(ybase) + tau_fn(get(ybase), tau_size), by = blockid]
+  } else {
+    idatnew[, y1sim := get(ybase) + tau_fn(get(ybase), tau_size)]
+  }
+
+  } else {
   if (by_block) {
     idatnew[, y1sim := get(ybase) + tau_fn(get(ybase), tau_size, get(covariate)), by = blockid]
   } else {
     idatnew[, y1sim := get(ybase) + tau_fn(get(ybase), tau_size, get(covariate))]
   }
+  }
+
   ## We could choose blocks at random to zero out but not sure we want to add noise that is hard to replicate.
   blocks <- sort(as.character(unique(idatnew[[blockid]])))
   num_blocks <- length(blocks)
