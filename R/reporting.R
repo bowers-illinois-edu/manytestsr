@@ -14,7 +14,7 @@
 ##' @importFrom stringi stri_count_fixed stri_split_fixed
 ##' @export
 report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, autofwer=TRUE) {
-  require(stringi) ## comment out for production
+  ## require(stringi) ## comment out for production
   res <- copy(orig_res)
   res_nodeids <- stri_split_fixed(as.character(res$biggrp), pattern = ".", simplify = TRUE)
   class(res_nodeids) <- "integer"

@@ -73,7 +73,7 @@ errsimfn <- function(idat, bdat, pfn, splitfn,
 ##' @return A data.table with a single column containing potential outcome to treatment.
 ##' @export
 create_effects <- function(idat, ybase, blockid, tau_fn, tau_size, covariate = NULL, prop_blocks_0 = 0, by_block = TRUE) {
-  if (!is.null(covariate) & is.character(covariate)){
+  if ( ( !is.null(covariate) & is.character(covariate) ) | covariate=="NULL"){
     if(covariate == "") {
     covariate <- NULL
   }}
