@@ -270,8 +270,8 @@ test_that("Error calculations for a given set of tests work: Testing in every bl
 
 
 ### This next is less of a test with expected results and more to ensure that the code runs without error.
-simparms <- cbind(alpha_and_splits,reveal_and_test_fn=rep("reveal_po_and_test_siup",nrow(alpha_and_splits)))
-simparms <- rbind(simparms,c("NULL","NULL","NULL","reveal_po_and_test"))
+simparms <- cbind(alpha_and_splits,p_adj_method=rep("split",nrow(alpha_and_splits)))
+simparms <- rbind(simparms,c("NULL","NULL","NULL","fdr"))
 simresnms <- apply(simparms, 1, function(x) {
   paste(x, collapse = "_", sep = "")
 })
@@ -294,10 +294,10 @@ p_sims_tab <- padj_test_fn(
   tau_size = .5,
   covariate = "v4",
   pfn = pIndepDist,
-  afn = ifelse(x[["afn"]]!="NULL",getFromNamespace(x[["afn"]], ns = "manytestsr"),"NULL"),
   nsims = nsims,
   ncores = 1, ## parallelize over the  rows of simparms
-  reveal_and_test_fn = ifelse(x[["reveal_and_test_fn"]]!="NULL",getFromNamespace(x[["reveal_and_test_fn"]],ns="manytestsr"),"NULL"),
+  afn = ifelse(x[["afn"]]!="NULL",getFromNamespace(x[["afn"]], ns = "manytestsr"),"NULL"),
+  p_adj_method= x[["p_adj_method"]],
   splitfn = ifelse(x[["sfn"]]!="NULL",getFromNamespace(x[["sfn"]], ns = "manytestsr"),"NULL"),
   splitby = x[["splitby"]]
 )

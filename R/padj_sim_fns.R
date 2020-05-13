@@ -14,8 +14,8 @@
 ##' @return A pvalue for each block
 ##' @export
 padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | blockF, ybase,
-                         prop_blocks_0, tau_fn, tau_size, pfn, afn, p_adj_method = "fdr", nsims, ncores = 1,
-                         reveal_and_test_fn, splitfn = NULL, covariate = NULL, splitby = NULL, thealpha = .05) {
+                         prop_blocks_0, tau_fn, tau_size, pfn, afn, p_adj_method, nsims, ncores = 1,
+                         splitfn = NULL, covariate = NULL, splitby = NULL, thealpha = .05) {
   if (!is.null(afn) & is.character(afn)) {
     if (afn == "NULL") {
       afn <- NULL
@@ -45,21 +45,26 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
   bdatnew <- bdatnew[bdat_effects,]
   #bdatnew$trueblocks <- bdat_effects$trueblocks
 
-  if (ncores > 1) {
-      message("Not parallelizing this part of the loop.")
-    # p_sims <- future_replicate(nsims, reveal_and_test_fn(
-    #  idat = datnew, bdat = bdatnew, blockid = blockid, trtid = trtid, y1var = "y1new",
-    #  fmla = fmla, ybase = ybase, prop_blocks_0 = prop_blocks_0,
-    #  tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method, splitfn = splitfn, splitby = splitby, thealpha=thealpha
-    # ))
+  if(p_adj_method=="split"){
+      reveal_and_test_fn <- reveal_po_and_test_siup
+  } else {
+      reveal_and_test_fn <- reveal_po_and_test
+  }
+
+  if 	(ncores > 1) {
+     	 message("Not parallelizing this part of the loop.")
+    #	 p_sims <- future_replicate(nsims, reveal_and_test_fn(
+    #	  idat = datnew, bdat = bdatnew, blockid = blockid, trtid = trtid, y1var = "y1new",
+    #	  fmla = fmla, ybase = ybase, prop_blocks_0 = prop_blocks_0,
+    #	  tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method, splitfn = splitfn, splitby = splitby, thealpha=thealpha
+    #	 ))
   } else {
     p_sims_lst <- replicate(nsims, reveal_and_test_fn(
-      idat = datnew, bdat = bdatnew, blockid = blockid, trtid = trtid, y1var = "y1new",
-      fmla = fmla, ybase = ybase, prop_blocks_0 = prop_blocks_0,
-      tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method, splitfn = splitfn, splitby = splitby, thealpha = thealpha
+     	 idat = datnew, bdat = bdatnew, blockid = blockid, trtid = trtid, y1var = "y1new",
+     	 fmla = fmla, ybase = ybase, prop_blocks_0 = prop_blocks_0,
+     	 tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method, splitfn = splitfn, splitby = splitby, thealpha = thealpha
     ),simplify=FALSE)
   p_sims <- data.table::rbindlist(p_sims_lst)
-    # ,mc.cores=ncores)
   }
   return(p_sims)
 }
@@ -68,7 +73,7 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
 ##'
 ##' The function does hypothesis tests within blocks and then summarizes the results  of this testing across the blocks. It is designed for use by padj_test_fn.
 ##' @param y1var Is the name of the potential outcome to treatment
-##' @param p_adj_method Is the argument to p.adjust()
+##' @param p_adj_method Is the argument to stats::p.adjust() and also indicates whether to use findBlocks or to test within each block.
 ##' @param splitfn Must be null. Only exists so that we can use the same efffect creation and testing function for both approaches.
 ##' @param splitby Must be null. Only exists so that we can use the same efffect creation and testing function for both approaches.
 ##' @return False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
@@ -119,7 +124,7 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
 ##' @return False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
 ##' @export
 reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF | blockF, ybase, y1var,
-                                    prop_blocks_0, tau_fn, tau_size, pfn, afn, p_adj_method = NULL, copydts = FALSE, splitfn, splitby, thealpha = .05) {
+                                    prop_blocks_0, tau_fn, tau_size, pfn, afn, p_adj_method = "split", copydts = FALSE, splitfn, splitby, thealpha = .05) {
   if (!is.null(afn) & is.character(afn)) {
     if (afn == "NULL") {
       afn <- NULL
