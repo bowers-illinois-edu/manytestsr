@@ -39,7 +39,8 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   if (is.null(alphafn)) {
     bdat[, alpha1 := thealpha]
   } else {
-    ## Current thought: the FDR controlling procedure should not be more conservative than the FWER controlling procedure.
+    ## Current thought: the FDR controlling procedure should not be more conservative 
+    ## than the FWER controlling procedure.
     ## So, use which ever alpha is bigger at the overall root.
     bdat[, alpha1 := max(alphafn(pval = unique(p1), batch = unique(g1), nodesize=sum(get(blocksize))), thealpha)]
   }
@@ -47,13 +48,13 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   # If p1 > alpha1 then stop testing and return the data.
   bdat[, testable := (pfinalb < alpha1)]
   pbtracker <- data.table(
-    p = unique(bdat$p1), biggrp = factor("1"), ## biggrpC = "1",
+    p = unique(bdat$p1), biggrp = factor("1"),
     alpha1 = unique(bdat$alpha1), batch = "p1",
     testable = unique(bdat$testable),
-    nodenum = 1, depth = 1,
+    nodenum = bit64::as.integer64(1), depth = 1L,
     nodesize=sum(bdat[,get(blocksize)])
   )
-  bdat[, nodenum_current := 1]
+  bdat[, nodenum_current := bit64::as.integer64(1)]
   ## there is only one test at this root level.
   ## stopifnot(length(unique(dat$testable))==1)
   setkeyv(idat, blockid)
@@ -80,10 +81,12 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     ## https://stackoverflow.com/questions/33689098/interactions-between-factors-in-data-table
     if (i == 2) {
       bdat[(testable), nodenum_prev := nodenum_current]
-      bdat[(testable), nodenum_current := ifelse(get(gnm) == "0", 2 * nodenum_prev, 2 * nodenum_prev + 1)] ## 2*1, 2*1 + 1 with parent node=node number 1
+      bdat[(testable), nodenum_current := ifelse(get(gnm) == "0", bit64::as.integer64(2L * nodenum_prev), 
+                                                 bit64::as.integer64(2L * nodenum_prev + 1L))]
     } else {
-      bdat[(testable), nodenum_prev := nodenum_current] ## as.numeric(stri_split(biggrp,fixed=".",simplify=TRUE)[,i-1])]
-      bdat[(testable), nodenum_current := ifelse(get(gnm) == "0", 2 * nodenum_prev, 2 * nodenum_prev + 1), by = biggrp] ## 2*1, 2*1 + 1 with parent node=node number 1
+      bdat[(testable), nodenum_prev := nodenum_current]
+      bdat[(testable), nodenum_current := ifelse(get(gnm) == "0", bit64::as.integer64(2L * nodenum_prev), 
+                                                 bit64::as.integer64(2L * nodenum_prev + 1L)), by = biggrp]
     }
     bdat[(testable), biggrp := interaction(biggrp, nodenum_current, drop = TRUE)]
     bdat[, biggrp := droplevels(biggrp)] ## annoying to need this extra step given drop=TRUE
@@ -96,9 +99,10 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
       sims = sims, parallel = parallel
     )), by = biggrp]
     pb[, depth := i]
-    pb[, nodenum := as.numeric(stri_split(biggrp, fixed = ".", simplify = TRUE)[, i])] ## as.numeric(stri_sub(as.character(biggrp),from=-1L,to=-1L))]
+    ## This next could be made more efficient without string splitting
+    pb[, nodenum := bit64::as.integer64(stri_split(biggrp, fixed = ".", simplify = TRUE)[, i])]
     ## call "locksize" the sum of the block sizes within group
-    pb[bdat,nodesize:=i.nodesize,on="biggrp"]
+    pb[bdat, nodesize:=i.nodesize, on="biggrp"]
     pbtracker <- rbind(pbtracker[, .(p, biggrp, batch, testable, nodenum, depth, nodesize)],
       pb[, batch := pnm],
       fill = TRUE
@@ -125,27 +129,24 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     } else {
       if (i == 2) {
         pbtracker[, (alphanm) := alphafn(pval = p, batch = batch, nodesize=nodesize)]
-        ## pbtracker[, biggrpC := gsub("\\.", "", as.character(biggrp))]
       } else {
-        ## pbtracker[, depth := as.numeric(stri_sub(batch, 2, 2))]
         mid_roots <- pbtracker[depth == (i - 1) & (testable), nodenum]
         paths <- lapply(mid_roots, lv = i, FUN = function(x, lv) {
           ## Each mid root has two children
-          kids <- c(x, 2 * x, 2 * x + 1) ## mid_root is part of kids vector
+          kids <- bit64::as.integer64(c(x, 2L * x, 2L * x + 1L)) ## mid_root is part of kids vector
           ## But each mid root may have many parents
-          parents <- rep(NA, length = lv - 2)
-          parents[lv - 2] <- floor(x / 2) # l = level - 1
-          l <- lv - 3
+          parents <- rep(NA, length = lv - 2L)
+          parents[lv - 2] <- bit64::as.integer64(floor(x / 2L)) # l = level - 1
+          l <- lv - 3L
           while (l > 0) {
-            parents[l] <- floor(min(parents, na.rm = TRUE) / 2)
-            l <- l - 1
+            parents[l] <- bit64::as.integer64(floor(min(parents, na.rm = TRUE) / 2L))
+            l <- l - 1L
           }
           return(c(parents, kids))
         })
         setkeyv(pbtracker, "nodenum")
         for (j in 1:length(paths)) {
-          ## pbtracker[paths[j], (alphanm) := alphafn(pval = p, batch = batch)]
-          pbtracker[paths[j], (alphanm) := alphafn(pval = p, batch = depth, nodesize=nodesize)]
+          pbtracker[paths[j], (alphanm) := alphafn(pval = p, batch = depth, nodesize = nodesize)]
         }
       }
       setkey(pbtracker, biggrp)

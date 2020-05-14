@@ -15,15 +15,16 @@
 ##' @export
 report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, autofwer=TRUE) {
   ## require(stringi) ## comment out for production
+    require(bit64)
   res <- copy(orig_res)
   res_nodeids <- stri_split_fixed(as.character(res$biggrp), pattern = ".", simplify = TRUE)
-  class(res_nodeids) <- "integer"
+  class(res_nodeids) <- "integer64"
   ## Extract final node number (findBlocks uses the canonical binary tree node numbering system)
   res_fin_nodenum <- apply(res_nodeids, 1, function(x) {
     max(x, na.rm = TRUE)
   })
-  res[, fin_nodenum := res_fin_nodenum]
-  res[, fin_parent := floor(fin_nodenum / 2)]
+  res[, fin_nodenum := bit64::as.integer64(res_fin_nodenum)]
+  res[, fin_parent := bit64::as.integer64(floor(fin_nodenum / 2))]
   ## Maximum tree depth for a node encoded in the biggrp string: basically number of dots+1 or number of node numbers
   ## (where node numbers are separated by a dot)
   res[, maxdepth := stri_count_fixed(biggrp, ".") + 1]
