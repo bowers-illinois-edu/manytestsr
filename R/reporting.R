@@ -65,6 +65,8 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
     res[, fin_grp := NA]
     res[, hit_grp := NA]
   }
+  ## Later return fewer columns to save memory
+  returncols <- names(res)
   if (only_hits) {
     res <- droplevels(res[(hit), .SD, .SDcols = returncols])
   }
