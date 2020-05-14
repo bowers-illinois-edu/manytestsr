@@ -20,17 +20,17 @@ alpha_investing <- function(pval, batch, nodesize) {
   stopifnot(length(batch)==length(nodesize))
   ## Later just use batch when we fork onlineFDR.
   ## For now the onlineFDR functions want dates to indicate batches. A hassle
-  ## Can we sort the p-values within "batch" so that the first one is the smallest? This will give us more power.
+  ### Since we sometimes have more than 31 batches we just convert into days since 01-01-0001.
   if (is.numeric(batch)) {
-    batchuniq <- as.Date(as.character(batch), "%d")
+    batchuniq <- as.Date(batch, origin="0001-01-01")
   } else {
-    batchuniq <- as.Date(as.character(as.numeric(as.factor(batch))), "%d")
+    batchuniq <- as.Date(as.numeric(as.factor(batch)), origin="0001-01-01")
   }
   ## id is required by Alpha_investing although it is meaningless for us
-  df <- data.table(id = seq(1, length(pval)), pval = pval, date = batchuniq, nodesize=nodesize)
+  thedf <- data.table(id = seq(1, length(pval)), pval = pval, date = batchuniq, nodesize=nodesize)
   ## Order tests by nodesize within batch: bigger nodes come first, they should have more power and thus smaller alpha
-  df <- df[order(date,-nodesize),]
-  res <- Alpha_investing(d = df, random = FALSE)
+  thedf <- thedf[order(date,-nodesize),]
+  res <- Alpha_investing(d = thedf, random = FALSE)
   return(res$alphai)
 }
 
@@ -52,14 +52,14 @@ alpha_saffron <- function(pval, batch, nodesize) {
   stopifnot(length(batch)==length(nodesize))
   ## Later just use batch. For now the onlineFDR functions want dates to indicate batches
   if (is.numeric(batch)) {
-    batchuniq <- as.Date(as.character(batch), "%d")
+    batchuniq <- as.Date(batch, origin="0001-01-01")
   } else {
-    batchuniq <- as.Date(as.character(as.numeric(as.factor(batch))), "%d")
+    batchuniq <- as.Date(as.numeric(as.factor(batch)), origin="0001-01-01")
   }
   ## id is required by Alpha_investing although it is meaningless for us
-  df <- data.table(id = seq(1, length(pval)), pval = pval, date = batchuniq, nodesize=nodesize)
+  thedf <- data.table(id = seq(1, length(pval)), pval = pval, date = batchuniq, nodesize=nodesize)
   ## Order tests by nodesize within batch: bigger nodes come first, they should have more power and thus smaller alpha
-  df <- df[order(date,-nodesize),]
-  res <- SAFFRON(d = df, random = FALSE)
+  thedf <- thedf[order(date,-nodesize),]
+  res <- SAFFRON(d = thedf, random = FALSE)
   return(res$alphai)
 }
