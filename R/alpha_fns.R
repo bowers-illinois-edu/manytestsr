@@ -31,7 +31,7 @@ alpha_investing <- function(pval, batch, nodesize) {
   ## Order tests by nodesize within batch: bigger nodes come first, they should have more power and thus smaller alpha
   thedf <- thedf[order(date,-nodesize),]
   res <- Alpha_investing(d = thedf, random = FALSE)
-  return(res$alphai)
+  return(res$alphai[thedf$id])
 }
 
 ##' Alpha adjustment function: SAFFRON
@@ -61,5 +61,5 @@ alpha_saffron <- function(pval, batch, nodesize) {
   ## Order tests by nodesize within batch: bigger nodes come first, they should have more power and thus smaller alpha
   thedf <- thedf[order(date,-nodesize),]
   res <- SAFFRON(d = thedf, random = FALSE)
-  return(res$alphai)
+  return(res$alphai[thedf$id])
 }
