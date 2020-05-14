@@ -39,7 +39,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   if (is.null(alphafn)) {
     bdat[, alpha1 := thealpha]
   } else {
-    ## Current thought: the FDR controlling procedure should not be more conservative 
+    ## Current thought: the FDR controlling procedure should not be more conservative
     ## than the FWER controlling procedure.
     ## So, use which ever alpha is bigger at the overall root.
     bdat[, alpha1 := max(alphafn(pval = unique(p1), batch = unique(g1), nodesize=sum(get(blocksize))), thealpha)]
@@ -81,12 +81,10 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     ## https://stackoverflow.com/questions/33689098/interactions-between-factors-in-data-table
     if (i == 2) {
       bdat[(testable), nodenum_prev := nodenum_current]
-      bdat[(testable), nodenum_current := ifelse(get(gnm) == "0", bit64::as.integer64(2L * nodenum_prev), 
-                                                 bit64::as.integer64(2L * nodenum_prev + 1L))]
+      bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev * 2L , ( nodenum_prev * 2L )  + 1L)]
     } else {
       bdat[(testable), nodenum_prev := nodenum_current]
-      bdat[(testable), nodenum_current := ifelse(get(gnm) == "0", bit64::as.integer64(2L * nodenum_prev), 
-                                                 bit64::as.integer64(2L * nodenum_prev + 1L)), by = biggrp]
+      bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev * 2L , ( nodenum_prev * 2L )  + 1L), by = biggrp]
     }
     bdat[(testable), biggrp := interaction(biggrp, nodenum_current, drop = TRUE)]
     bdat[, biggrp := droplevels(biggrp)] ## annoying to need this extra step given drop=TRUE
@@ -125,35 +123,41 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     if (is.null(alphafn)) {
       bdat[, (alphanm) := thealpha]
       ## Recall that := **updates** values. So, it doesn't overwrite (testable==FALSE) values
-      bdat[, testable := ifelse((pfinalb <= get(alphanm)) & (blocksbygroup > 1), TRUE, FALSE)]
+      bdat[, testable := fifelse((pfinalb <= get(alphanm)) & (blocksbygroup > 1), TRUE, FALSE)]
     } else {
       if (i == 2) {
         pbtracker[, (alphanm) := alphafn(pval = p, batch = batch, nodesize=nodesize)]
       } else {
         mid_roots <- pbtracker[depth == (i - 1) & (testable), nodenum]
-        paths <- lapply(mid_roots, lv = i, FUN = function(x, lv) {
+        find_paths <- function(x,lv=i){
+          stopifnot(is.integer64(x))
           ## Each mid root has two children
-          kids <- bit64::as.integer64(c(x, 2L * x, 2L * x + 1L)) ## mid_root is part of kids vector
+          kids <- c(x, x * 2L, ( x * 2L ) + 1L) ## mid_root is part of kids vector
           ## But each mid root may have many parents
-          parents <- rep(NA, length = lv - 2L)
-          parents[lv - 2] <- bit64::as.integer64(floor(x / 2L)) # l = level - 1
+          parents <- rep(as.integer64(NA), length = lv - 2L)
+          parents[lv - 2] <- floor(x / 2L) # l = level - 1
           l <- lv - 3L
           while (l > 0) {
-            parents[l] <- bit64::as.integer64(floor(min(parents, na.rm = TRUE) / 2L))
+            parents[l] <- floor(min(parents, na.rm = TRUE) / 2L)
             l <- l - 1L
           }
           return(c(parents, kids))
-        })
+        }
+        ## lapply/etc.. makes everything numeric
+        ## https://stackoverflow.com/questions/46164985/why-does-it-appear-in-r-that-lapply-is-decaying-integer64-to-numeric-and-how-can
+        ## https://stackoverflow.com/questions/22906843/how-to-void-type-conversion-in-rs-apply-bit64-example
+        ## paths <- lapply(mid_roots, FUN = function(x) { find_paths(x) })
         setkeyv(pbtracker, "nodenum")
-        for (j in 1:length(paths)) {
-          pbtracker[paths[j], (alphanm) := alphafn(pval = p, batch = depth, nodesize = nodesize)]
+        for (j in 1:length(mid_roots)) {
+          thepath <- find_paths(mid_roots[j])
+          pbtracker[J(thepath), (alphanm) := alphafn(pval = p, batch = depth, nodesize = nodesize)]
         }
       }
       setkey(pbtracker, biggrp)
       bdat[pbtracker, (alphanm) := get(paste0("i.", alphanm)), on = "biggrp"]
       ## Recall that := **updates** values. So, it doesn't overwrite
       ## (testable==FALSE) values. Here we use current p rather than max of previous p.
-      bdat[, testable := ifelse((get(pnm) <= get(alphanm)) & (blocksbygroup > 1), TRUE, FALSE)]
+      bdat[, testable := fifelse((get(pnm) <= get(alphanm)) & (blocksbygroup > 1), TRUE, FALSE)]
       testable_grps <- bdat[!is.na(testable), .(testable = unique(testable)), keyby = "biggrp"]
       pbtracker[testable_grps, testable := get("i.testable")]
     }

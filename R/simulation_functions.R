@@ -73,9 +73,11 @@ errsimfn <- function(idat, bdat, pfn, splitfn,
 ##' @return A data.table with a single column containing potential outcome to treatment.
 ##' @export
 create_effects <- function(idat, ybase, blockid, tau_fn, tau_size, covariate = NULL, prop_blocks_0 = 0, by_block = TRUE) {
-  if ( ( !is.null(covariate) & is.character(covariate) & covariate=="" ) | covariate=="NULL"){
+  if ( !is.null(covariate) & is.character(covariate) ) {
+    if( covariate==""  | covariate=="NULL"){
     covariate <- NULL
-  }
+    }
+}
   stopifnot(is.null(covariate) | is.vector(covariate))
   ## assume that ybase already has block-level shifts in it
   idatnew <- copy(idat) ## to avoid updating the bdat and idat inputs outside of the function
