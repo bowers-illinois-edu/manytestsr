@@ -17,7 +17,7 @@ reveal_po_and_test_siup(
   tau_size,
   pfn,
   afn,
-  p_adj_method = NULL,
+  p_adj_method = "split",
   copydts = FALSE,
   splitfn,
   splitby,

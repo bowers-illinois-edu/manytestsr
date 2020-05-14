@@ -16,10 +16,9 @@ padj_test_fn(
   tau_size,
   pfn,
   afn,
-  p_adj_method = "fdr",
+  p_adj_method,
   nsims,
   ncores = 1,
-  reveal_and_test_fn,
   splitfn = NULL,
   covariate = NULL,
   splitby = NULL,
@@ -33,11 +32,11 @@ padj_test_fn(
 
 \item{fmla}{is a simple formula with no blocks --- we are calculating tests within all blocks.}
 
+\item{covariate}{is the name of a covariate to be used in created covariate dependent treatment effects}
+
 \item{reveal_and_test_fn}{Is a function that reveals observed outcomes given the potential outcomes
 produced here and does tests and adjustments (using either findBlocks for the top-down method or
 adjust_block_tests for the bottom-up method, for example)}
-
-\item{covariate}{is the name of a covariate to be used in created covariate dependent treatment effects}
 }
 \value{
 A pvalue for each block

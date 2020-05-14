@@ -27,7 +27,7 @@ reveal_po_and_test(
 \arguments{
 \item{y1var}{Is the name of the potential outcome to treatment}
 
-\item{p_adj_method}{Is the argument to p.adjust()}
+\item{p_adj_method}{Is the argument to stats::p.adjust() and also indicates whether to use findBlocks or to test within each block.}
 
 \item{splitfn}{Must be null. Only exists so that we can use the same efffect creation and testing function for both approaches.}
 

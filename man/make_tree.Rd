@@ -4,7 +4,7 @@
 \alias{make_tree}
 \title{Make a node level binary tree object}
 \usage{
-make_tree(orig_res)
+make_tree(orig_res, blockid = "bF")
 }
 \arguments{
 \item{orig_res}{results data.table output from the \code{\link{findBlocks}} function.}

@@ -65,7 +65,6 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
     res[, fin_grp := NA]
     res[, hit_grp := NA]
   }
-  returncols <- names(res) ##c("bF", "biggrp", "hit", "hit_grp", "fin_grp", "max_p", "max_alpha", "fin_parent_p", "parent_alpha", grep("^ate", names(res), value = TRUE))
   if (only_hits) {
     res <- droplevels(res[(hit), .SD, .SDcols = returncols])
   }
@@ -83,7 +82,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 ##' @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent
 ##' @importFrom data.table melt
 ##' @export
-make_tree <- function(orig_res) {
+make_tree <- function(orig_res,blockid="bF") {
   require(ggraph)
   require(tidygraph)
   ## We have to make a node level data set and an edge level data set in order to define the graph
@@ -98,14 +97,14 @@ make_tree <- function(orig_res) {
   nodenums <- sort(grep("^nodenum[0-9]", names(res), value = TRUE))
   ## Right now we go from wide to long to node. It would be nicer to go directly from wide to node.
   reslong <- melt(res,
-    id = c("biggrp", "bF"),
+    id = c("biggrp", blockid),
     measure.vars = list(p = pnms, a = anms, nodenum = nodenums),
     variable.name = "depth"
   )
   reslong$depth <- as.numeric(as.character(reslong$depth))
-  reslong$bFC <- as.character(reslong$bF)
+  reslong$bFC <- as.character(reslong[[blockid]])
   reslong <- droplevels(reslong[!is.na(nodenum) & !is.na(p), ])
-  res_nodes_df <- reslong[, .(p = unique(p), a = unique(a), bF = paste(as.character(unlist(sort(bF))), collapse = ","), depth = unique(depth)), by = nodenum]
+  res_nodes_df <- reslong[, .(p = unique(p), a = unique(a), bF = paste(as.character(unlist(sort(get(blockid)))), collapse = ","), depth = unique(depth)), by = nodenum]
   res_nodes_df$name <- res_nodes_df$nodenum
   ## Make an edge data.frame
   res_edges_lst <- list()

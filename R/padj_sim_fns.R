@@ -97,7 +97,8 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
   errs <- calc_errs(
     testobj = res,
     truevar_name = "trueate",
-    trueeffect_tol = .Machine$double.eps
+    trueeffect_tol = .Machine$double.eps,
+    blockid=blockid
   )
 
   return(errs)
@@ -153,7 +154,8 @@ reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF
   errs <- calc_errs(
     testobj = res,
     truevar_name = "trueate",
-    trueeffect_tol = .Machine$double.eps
+    trueeffect_tol = .Machine$double.eps,
+    blockid=blockid
   )
 
   return(errs)
