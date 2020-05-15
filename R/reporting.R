@@ -15,16 +15,19 @@
 ##' @export
 report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, autofwer=TRUE) {
   ## require(stringi) ## comment out for production
-    require(bit64)
+  ##  require(bit64)
   res <- copy(orig_res)
-  res_nodeids <- stri_split_fixed(as.character(res$biggrp), pattern = ".", simplify = TRUE)
-  class(res_nodeids) <- "integer64"
+  ## res_nodeids <- stri_split_fixed(as.character(res$biggrp), pattern = ".", simplify = TRUE)
+  ## class(res_nodeids) <- "integer64"
   ## Extract final node number (findBlocks uses the canonical binary tree node numbering system)
-  res_fin_nodenum <- apply(res_nodeids, 1, function(x) {
-    max(x, na.rm = TRUE)
-  })
-  res[, fin_nodenum := bit64::as.integer64(res_fin_nodenum)]
-  res[, fin_parent := bit64::as.integer64(floor(fin_nodenum / 2))]
+  ## res_fin_nodenum <- apply(res_nodeids, 1, function(x) {
+  ##   max(x, na.rm = TRUE)
+  ## })
+  ## res[, fin_nodenum := bit64::as.integer64(res_fin_nodenum)]
+  res[, fin_nodenum := nodenum_current]
+  res[, fin_parent := as.integer64( floor(fin_nodenum / 2L) )]
+  stopifnot(is.integer64(res$fin_nodenum))
+  stopifnot(is.integer64(res$fin_parent))
   ## Maximum tree depth for a node encoded in the biggrp string: basically number of dots+1 or number of node numbers
   ## (where node numbers are separated by a dot)
   res[, maxdepth := stri_count_fixed(biggrp, ".") + 1]
@@ -55,10 +58,12 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
   res[(!single_hit), group_hit := all(max_p > max_alpha) & fin_parent_p < parent_alpha & length(unique(fin_nodenum)) == 2, by = fin_parent]
   res[, hit := single_hit | group_hit]
   ## This records the group of blocks or individual blocks detected
+  ## For some reason data.table fifelse() is  making fin_grp numeric so we initialize it.
+  res[,fin_grp:=as.integer64(rep(NA,.N))]
   if (any(res$hit)) {
-    res[(hit), fin_grp := ifelse(single_hit, fin_nodenum, fin_parent)]
-    res[(hit), hit_grp := factor(fin_grp)] #, labels = 1:length(unique(fin_grp)))]
-    res[!(hit), hit_grp := factor(fin_nodenum)]
+    res[(hit), fin_grp := fifelse(single_hit, fin_nodenum, fin_parent)]
+    res[(hit), hit_grp := fin_grp] #, labels = 1:length(unique(fin_grp)))]
+    res[!(hit), hit_grp := fin_nodenum]
     ## Make sure that no  hit_grp includes *both* detections and misses/skips/acceptances
     test <- res[,.(hitmix= length(unique(hit))==1),by=hit_grp]
     stopifnot(all(test$hitmix))
@@ -107,7 +112,9 @@ make_tree <- function(orig_res,blockid="bF") {
   reslong$depth <- as.numeric(as.character(reslong$depth))
   reslong$bFC <- as.character(reslong[[blockid]])
   reslong <- droplevels(reslong[!is.na(nodenum) & !is.na(p), ])
-  res_nodes_df <- reslong[, .(p = unique(p), a = unique(a), bF = paste(as.character(unlist(sort(get(blockid)))), collapse = ","), depth = unique(depth)), by = nodenum]
+  res_nodes_df <- reslong[, .(p = unique(p), a = unique(a),
+                              bF = paste(as.character(unlist(sort(get(blockid)))), collapse = ","),
+                              depth = unique(depth)), by = nodenum]
   res_nodes_df$name <- res_nodes_df$nodenum
   ## Make an edge data.frame
   res_edges_lst <- list()

@@ -1,17 +1,9 @@
 ## Test and develop functions to adapt alpha levels as the tree grows
 context("Alpha Adjusting Performance")
 
-# library(data.table)
-# setDTthreads(1)
-# library(testthat)
 # library(here)
-# library(coin)
 # source(here::here("tests/testthat", "make_test_data.R"))
-## devtools::load_all() ## comment this out for production
-# library(dtplyr)
-# library(dplyr)
-# library(ggraph)
-# library(tidygraph)
+# devtools::load_all() ## comment this out for production
 
 setDTthreads(1)
 options(digits = 4)
@@ -49,13 +41,14 @@ testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3, bda
     fmla = fmla, # Ynorm_inc ~ ZF | bF,
     parallel = "no", copydts = TRUE, splitby = sby
   )
-  theps <- grep("^p[0-9]", names(theres), value = TRUE)
-  theas <- grep("^alpha", names(theres), value = TRUE)
-  truth <- grep("^ate", names(theres), value = TRUE)
-  return(theres[, .SD, .SDcols = c(
-    theps, theas, truth, "pfinalb", "blocksbygroup",
-    "biggrp", "bF", "hwt", "nb"
-  )][order(biggrp)])
+  return(theres)[order(biggrp)]
+  #theps <- grep("^p[0-9]", names(theres), value = TRUE)
+  #theas <- grep("^alpha", names(theres), value = TRUE)
+  #truth <- grep("^ate", names(theres), value = TRUE)
+  #return(theres[, .SD, .SDcols = c(
+  #  theps, theas, truth, "pfinalb", "blocksbygroup",
+  #  "biggrp", "bF", "hwt", "nb"
+  #)][order(biggrp)])
 }
 
 ##  Maybe make w0 more like .05.
@@ -107,15 +100,15 @@ res1new <- report_detections(res1, fwer = FALSE)
 ## So we can say that we discovered hits in the following blocks or groups of blocks
 res1new[(hit), .(biggrp, bF, hit_grp, max_p, fin_parent_p, max_alpha, parent_alpha)][order(hit_grp)]
 
-res3_tree <- make_tree(res3)
-res1_tree <- make_tree(res1)
+res3_tree <- make_tree(res3,blockid="bF")
+res1_tree <- make_tree(res1,blockid="bF")
 
 res3_g <- make_graph(res3_tree)
 res1_g <- make_graph(res1_tree)
 
 ## Compare these graphs to the results in res1new and res3new above.
-ggsave(res3_g, file = "res3nodes.pdf", bg = "transparent", width = 12, height = 7)
-ggsave(res1_g, file = "res1nodes.pdf", bg = "transparent", width = 13, height = 7)
+#ggsave(res3_g, file = "res3nodes.pdf", bg = "transparent", width = 12, height = 7)
+#ggsave(res1_g, file = "res1nodes.pdf", bg = "transparent", width = 13, height = 7)
 
 ## Criteria for comparisons:
 ## These functions can be used to run the tests for the different scenarios.
