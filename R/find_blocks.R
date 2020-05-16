@@ -25,7 +25,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   }
 
   ## Step 1: Root of tree. One test. We are numbering simply following literature on complete or perfect binary trees
-  i <- 1
+  i <- 1L
   bdat[, p1 := pfn(
     fmla = fmla, dat = idat,
     simthresh = simthresh, sims = sims, parallel = parallel
@@ -65,12 +65,13 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     ## bdat[, biggrp := gl(1, nrow(bdat), labels = "1")] ## initialize the biggrp var
     return(bdat)
   }
-  # else {
+  # Step 2: Iterate through the tree
   ## Keep testing until no testing possible: criteria all blocks all size 1 and or
   ## all p_i > alpha_i or there is no change in the final p-values OR simulation
   ## limits reached (for testing of the algorithm).
   while (any(bdat$testable, na.rm = TRUE) & i < maxtest) { # & !samep) {
-    i <- i + 1
+      if(i==10){ browser() }
+    i <- i + 1L
     # if (i == 1 | i > 10) {  message("Split number: ", i) }
     gnm <- paste0("g", i) ## name of the grouping variable for the current split
     pnm <- paste0("p", i) ## name of the p-value variable for the current split
@@ -81,10 +82,12 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     ## https://stackoverflow.com/questions/33689098/interactions-between-factors-in-data-table
     if (i == 2) {
       bdat[(testable), nodenum_prev := nodenum_current]
-      bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev * 2L , ( nodenum_prev * 2L )  + 1L)]
+      #bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev * 2L , ( nodenum_prev * 2L )  + 1L)]
+      bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev + 2L , nodenum_prev + 3L)]
     } else {
       bdat[(testable), nodenum_prev := nodenum_current]
-      bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev * 2L , ( nodenum_prev * 2L )  + 1L), by = biggrp]
+      ## bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev * 2L , ( nodenum_prev * 2L )  + 1L), by = biggrp]
+      bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev + 2L , nodenum_prev + 3L), by = biggrp]
     }
     bdat[(testable), biggrp := interaction(biggrp, nodenum_current, drop = TRUE)]
     bdat[, biggrp := droplevels(biggrp)] ## annoying to need this extra step given drop=TRUE
@@ -98,7 +101,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     )), by = biggrp]
     pb[, depth := i]
     ## This next could be made more efficient without string splitting
-    pb[, nodenum := bit64::as.integer64(stri_split(biggrp, fixed = ".", simplify = TRUE)[, i])]
+    pb[, nodenum := bit64::as.integer64(stri_split_fixed(biggrp, ".", simplify = TRUE)[, i])]
     ## call "locksize" the sum of the block sizes within group
     pb[bdat, nodesize:=i.nodesize, on="biggrp"]
     pbtracker <- rbind(pbtracker[, .(p, biggrp, batch, testable, nodenum, depth, nodesize)],
@@ -128,28 +131,49 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
       if (i == 2) {
         pbtracker[, (alphanm) := alphafn(pval = p, batch = batch, nodesize=nodesize)]
       } else {
+          tmp <- pbtracker[depth==i,]
+          tmp[,leaves:= stri_extract_last(as.character(biggrp),regex="\\.[0-9]*")]
+          tmp[,paths:=stri_replace_all(as.character(biggrp),replacement="",fixed=leaves)]
+          ##tmp[,leaves:= stri_replace_all(leaves,replacement="",fixed=".")]
+          path_dat <-tmp[,.(thepath=paste(unique(paths),paste(leaves,sep="",collapse=""),sep="")),by=paths]
+          path_vec <- stri_split_fixed(path_dat$thepath,".",simplify=TRUE)
+          pbtracker[,depth2:=stri_count_fixed(biggrp,".")]
+          ##pbtracker[,nodenum1:=stri_split_fixed(as.character(biggrp),".",simplify=TRUE)]
+          pbtracker[,nodenumC=as.character(nodenum)]
+          ### START HERE##
+         break 
+          
         mid_roots <- pbtracker[depth == (i - 1) & (testable), nodenum]
-        find_paths <- function(x,lv=i){
+        find_paths <- function(x,biggrp,lv=i){
           stopifnot(is.integer64(x))
           ## Each mid root has two children
-          kids <- c(x, x * 2L, ( x * 2L ) + 1L) ## mid_root is part of kids vector
+          kids <- c(x * 2L, ( x * 2L ) + 1L) ## mid_root is part of kids vector
           ## But each mid root may have many parents
-          parents <- rep(as.integer64(NA), length = lv - 2L)
-          parents[lv - 2] <- floor(x / 2L) # l = level - 1
-          l <- lv - 3L
-          while (l > 0) {
-            parents[l] <- floor(min(parents, na.rm = TRUE) / 2L)
-            l <- l - 1L
-          }
-          return(c(parents, kids))
+          ## parents <- rep(as.integer64(NA), length = lv - 2L)
+          ## parent_poss <- as.integer64(c(floor(x / 2L),floor(x/2L)-1))
+          ## parents[lv - 2] <- parent_poss[which(parent_poss %in% pbtracker$nodenum)]
+          ## ## parents[lv - 2] <- as.integer64(floor(x / 2L)) # l = level - 1
+          ## l <- lv - 3L
+          ## while (l > 0L) {
+          ##   parents[l] <- floor(min(parents, na.rm = TRUE) / 2L)
+          ##   l <- l - 1L
+          ## }
+          ## ## Remove one of these two methods during profiling.
+          ## ## Also remove some of the checks
+          parents_and_mid_root <- as.integer64(stri_split_fixed(biggrp,".")[[1]])
+          ## path2 <- c(parents,x)
+          ## stopifnot(all.equal(path2,path_to_mid_root))
+          thepath <- c(parents_and_mid_root,kids)
+          stopifnot(all(thepath %in% pbtracker$nodenum))
+          return(thepath)
         }
-        ## lapply/etc.. makes everything numeric
+        ## lapply/etc.. makes everything numeric even if it is an integer or integer64
         ## https://stackoverflow.com/questions/46164985/why-does-it-appear-in-r-that-lapply-is-decaying-integer64-to-numeric-and-how-can
         ## https://stackoverflow.com/questions/22906843/how-to-void-type-conversion-in-rs-apply-bit64-example
         ## paths <- lapply(mid_roots, FUN = function(x) { find_paths(x) })
-        setkeyv(pbtracker, "nodenum")
+        setkey(pbtracker, nodenum)
         for (j in 1:length(mid_roots)) {
-          thepath <- find_paths(mid_roots[j])
+          thepath <- find_paths(mid_roots[j],biggrp=pbtracker[nodenum==mid_roots[j],biggrp])
           pbtracker[J(thepath), (alphanm) := alphafn(pval = p, batch = depth, nodesize = nodesize)]
         }
       }
