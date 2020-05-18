@@ -13,7 +13,8 @@
 ##' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))
 ##' @param blocksize A string with the name of the column in bdat contains information about the size of the block (or other determinant of the power of tests within that block, such as harmonic mean weight of the block or variance of the outcome within the block.)
 ##' @return A data.table containing information about the sequence of splitting and testing
-##' @importFrom stringi stri_count_fixed stri_split_fixed stri_split stri_sub
+##' @importFrom stringi stri_count_fixed stri_split_fixed stri_split stri_sub stri_replace_all stri_extract_last
+##' @importFrom digest digest getVDigest
 ##' @export
 findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NULL, simthresh = 20,
                        sims = 1000, maxtest = 100, thealpha = 0.05,
@@ -51,10 +52,11 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     p = unique(bdat$p1), biggrp = factor("1"),
     alpha1 = unique(bdat$alpha1), batch = "p1",
     testable = unique(bdat$testable),
-    nodenum = bit64::as.integer64(1), depth = 1L,
+    nodenum = "1",
+    depth = 1L,
     nodesize=sum(bdat[,get(blocksize)])
   )
-  bdat[, nodenum_current := bit64::as.integer64(1)]
+  bdat[, nodenum_current := "1"] 
   ## there is only one test at this root level.
   ## stopifnot(length(unique(dat$testable))==1)
   setkeyv(idat, blockid)
@@ -62,15 +64,19 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   bdat[, blocksbygroup := length(unique(get(blockid))), by = biggrp]
   ## samep <- FALSE ## initialize tracking of p-values to check if they begin to be repeated
   if (!all(bdat$testable)) {
-    ## bdat[, biggrp := gl(1, nrow(bdat), labels = "1")] ## initialize the biggrp var
     return(bdat)
   }
   # Step 2: Iterate through the tree
   ## Keep testing until no testing possible: criteria all blocks all size 1 and or
   ## all p_i > alpha_i or there is no change in the final p-values OR simulation
   ## limits reached (for testing of the algorithm).
-  while (any(bdat$testable, na.rm = TRUE) & i < maxtest) { # & !samep) {
-      if(i==10){ browser() }
+nodeidfn <- function(d){
+      crc32hash <- getVDigest(algo = "crc32")
+      crc32hash(d)
+  }
+
+  while (any(bdat$testable, na.rm = TRUE) & i < maxtest) {
+   ##   if(i==10){ browser() }
     i <- i + 1L
     # if (i == 1 | i > 10) {  message("Split number: ", i) }
     gnm <- paste0("g", i) ## name of the grouping variable for the current split
@@ -83,11 +89,14 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     if (i == 2) {
       bdat[(testable), nodenum_prev := nodenum_current]
       #bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev * 2L , ( nodenum_prev * 2L )  + 1L)]
-      bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev + 2L , nodenum_prev + 3L)]
+      bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodeidfn( paste0(nodenum_prev,"0") ) ,
+                                                  nodeidfn(paste0(nodenum_prev,"1")))]
     } else {
       bdat[(testable), nodenum_prev := nodenum_current]
       ## bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev * 2L , ( nodenum_prev * 2L )  + 1L), by = biggrp]
-      bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev + 2L , nodenum_prev + 3L), by = biggrp]
+      bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodeidfn( paste0(nodenum_prev,"0") ) ,
+                                                  nodeidfn(paste0(nodenum_prev,"1"))), by = biggrp]
+      ## How to test/efficiently or periodically for duplicated nodenums?
     }
     bdat[(testable), biggrp := interaction(biggrp, nodenum_current, drop = TRUE)]
     bdat[, biggrp := droplevels(biggrp)] ## annoying to need this extra step given drop=TRUE
@@ -101,8 +110,8 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     )), by = biggrp]
     pb[, depth := i]
     ## This next could be made more efficient without string splitting
-    pb[, nodenum := bit64::as.integer64(stri_split_fixed(biggrp, ".", simplify = TRUE)[, i])]
-    ## call "locksize" the sum of the block sizes within group
+    pb[, nodenum := stri_split_fixed(biggrp, ".", simplify = TRUE)[, i]]
+    ## call "blocksize" the sum of the block sizes within group
     pb[bdat, nodesize:=i.nodesize, on="biggrp"]
     pbtracker <- rbind(pbtracker[, .(p, biggrp, batch, testable, nodenum, depth, nodesize)],
       pb[, batch := pnm],
@@ -131,49 +140,19 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
       if (i == 2) {
         pbtracker[, (alphanm) := alphafn(pval = p, batch = batch, nodesize=nodesize)]
       } else {
-          tmp <- pbtracker[depth==i,]
-          tmp[,leaves:= stri_extract_last(as.character(biggrp),regex="\\.[0-9]*")]
-          tmp[,paths:=stri_replace_all(as.character(biggrp),replacement="",fixed=leaves)]
-          ##tmp[,leaves:= stri_replace_all(leaves,replacement="",fixed=".")]
-          path_dat <-tmp[,.(thepath=paste(unique(paths),paste(leaves,sep="",collapse=""),sep="")),by=paths]
-          path_vec <- stri_split_fixed(path_dat$thepath,".",simplify=TRUE)
-          pbtracker[,depth2:=stri_count_fixed(biggrp,".")]
-          ##pbtracker[,nodenum1:=stri_split_fixed(as.character(biggrp),".",simplify=TRUE)]
-          pbtracker[,nodenumC=as.character(nodenum)]
-          ### START HERE##
-         break 
-          
         mid_roots <- pbtracker[depth == (i - 1) & (testable), nodenum]
-        find_paths <- function(x,biggrp,lv=i){
-          stopifnot(is.integer64(x))
-          ## Each mid root has two children
-          kids <- c(x * 2L, ( x * 2L ) + 1L) ## mid_root is part of kids vector
-          ## But each mid root may have many parents
-          ## parents <- rep(as.integer64(NA), length = lv - 2L)
-          ## parent_poss <- as.integer64(c(floor(x / 2L),floor(x/2L)-1))
-          ## parents[lv - 2] <- parent_poss[which(parent_poss %in% pbtracker$nodenum)]
-          ## ## parents[lv - 2] <- as.integer64(floor(x / 2L)) # l = level - 1
-          ## l <- lv - 3L
-          ## while (l > 0L) {
-          ##   parents[l] <- floor(min(parents, na.rm = TRUE) / 2L)
-          ##   l <- l - 1L
-          ## }
-          ## ## Remove one of these two methods during profiling.
-          ## ## Also remove some of the checks
-          parents_and_mid_root <- as.integer64(stri_split_fixed(biggrp,".")[[1]])
-          ## path2 <- c(parents,x)
-          ## stopifnot(all.equal(path2,path_to_mid_root))
-          thepath <- c(parents_and_mid_root,kids)
-          stopifnot(all(thepath %in% pbtracker$nodenum))
-          return(thepath)
-        }
-        ## lapply/etc.. makes everything numeric even if it is an integer or integer64
-        ## https://stackoverflow.com/questions/46164985/why-does-it-appear-in-r-that-lapply-is-decaying-integer64-to-numeric-and-how-can
-        ## https://stackoverflow.com/questions/22906843/how-to-void-type-conversion-in-rs-apply-bit64-example
-        ## paths <- lapply(mid_roots, FUN = function(x) { find_paths(x) })
+        find_paths <- function(x,biggrp,i){
+          tmp <- pbtracker[depth==i,]
+          tmp[,leaves:= stri_extract_last(as.character(biggrp),regex="\\.[:alnum:]*$")]
+          tmp[,paths:= stri_replace_all(as.character(biggrp),replacement="",fixed=leaves)]
+          path_dat <-tmp[,.(thepath=paste(unique(paths),paste(leaves,sep="",collapse=""),sep="")),by=paths]
+          path_vec <- stri_split_fixed(path_dat$thepath,".",simplify=TRUE)[1,]
+          stopifnot(all(path_vec %in% pbtracker$nodenum))
+          return(path_vec)
+         }
         setkey(pbtracker, nodenum)
         for (j in 1:length(mid_roots)) {
-          thepath <- find_paths(mid_roots[j],biggrp=pbtracker[nodenum==mid_roots[j],biggrp])
+          thepath <- find_paths(mid_roots[j],biggrp=pbtracker[nodenum==mid_roots[j],biggrp],i=i)
           pbtracker[J(thepath), (alphanm) := alphafn(pval = p, batch = depth, nodesize = nodesize)]
         }
       }

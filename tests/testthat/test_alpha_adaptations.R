@@ -1,9 +1,10 @@
 ## Test and develop functions to adapt alpha levels as the tree grows
 context("Alpha Adjusting Performance")
 
+# These lines are used for development
 # library(here)
 # source(here::here("tests/testthat", "make_test_data.R"))
-# devtools::load_all() ## comment this out for production
+# devtools::load_all()
 
 setDTthreads(1)
 options(digits = 4)
@@ -102,6 +103,9 @@ res1new[(hit), .(biggrp, bF, hit_grp, max_p, fin_parent_p, max_alpha, parent_alp
 
 res3_tree <- make_tree(res3,blockid="bF")
 res1_tree <- make_tree(res1,blockid="bF")
+
+blahN <-  res3_tree %>% activate(nodes) %>% as_tibble()   
+blahE <-  res3_tree %>% activate(edges) %>% as_tibble()   
 
 res3_g <- make_graph(res3_tree)
 res1_g <- make_graph(res1_tree)

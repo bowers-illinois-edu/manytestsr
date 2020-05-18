@@ -14,8 +14,6 @@
 ##' @importFrom stringi stri_count_fixed stri_split_fixed
 ##' @export
 report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, autofwer=TRUE) {
-  ## require(stringi) ## comment out for production
-  ##  require(bit64)
   res <- copy(orig_res)
   ## res_nodeids <- stri_split_fixed(as.character(res$biggrp), pattern = ".", simplify = TRUE)
   ## class(res_nodeids) <- "integer64"
@@ -25,9 +23,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
   ## })
   ## res[, fin_nodenum := bit64::as.integer64(res_fin_nodenum)]
   res[, fin_nodenum := nodenum_current]
-  res[, fin_parent := as.integer64( floor(fin_nodenum / 2L) )]
-  stopifnot(is.integer64(res$fin_nodenum))
-  stopifnot(is.integer64(res$fin_parent))
+  res[, fin_parent := nodenum_prev] #as.integer64( floor(fin_nodenum / 2L) )]
   ## Maximum tree depth for a node encoded in the biggrp string: basically number of dots+1 or number of node numbers
   ## (where node numbers are separated by a dot)
   res[, maxdepth := stri_count_fixed(biggrp, ".") + 1]
@@ -57,9 +53,6 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
   ## A detection is also scored if the two leaves have p > alpha but the parent has p < alpha: this is a grouped detection with two blocks.
   res[(!single_hit), group_hit := all(max_p > max_alpha) & fin_parent_p < parent_alpha & length(unique(fin_nodenum)) == 2, by = fin_parent]
   res[, hit := single_hit | group_hit]
-  ## This records the group of blocks or individual blocks detected
-  ## For some reason data.table fifelse() is  making fin_grp numeric so we initialize it.
-  res[,fin_grp:=as.integer64(rep(NA,.N))]
   if (any(res$hit)) {
     res[(hit), fin_grp := fifelse(single_hit, fin_nodenum, fin_parent)]
     res[(hit), hit_grp := fin_grp] #, labels = 1:length(unique(fin_grp)))]
@@ -91,12 +84,13 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 ##' @importFrom data.table melt
 ##' @export
 make_tree <- function(orig_res,blockid="bF") {
-  require(ggraph)
-  require(tidygraph)
+  ## require(ggraph)
+  ## require(tidygraph)
   ## We have to make a node level data set and an edge level data set in order to define the graph
   res <- copy(orig_res)
   res_nodeids <- stri_split_fixed(as.character(res$biggrp), pattern = ".", simplify = TRUE)
-  class(res_nodeids) <- "integer"
+  res_nodeids[res_nodeids==""]<-NA
+  # class(res_nodeids) <- "integer"
   res[, paste("nodenum", 1:ncol(res_nodeids), sep = "") := lapply(1:ncol(res_nodeids), function(i) {
     res_nodeids[, i]
   })]
@@ -105,33 +99,44 @@ make_tree <- function(orig_res,blockid="bF") {
   nodenums <- sort(grep("^nodenum[0-9]", names(res), value = TRUE))
   ## Right now we go from wide to long to node. It would be nicer to go directly from wide to node.
   reslong <- melt(res,
-    id = c("biggrp", blockid),
+    id = c("biggrp", blockid,"nodenum_current","nodenum_prev"),
     measure.vars = list(p = pnms, a = anms, nodenum = nodenums),
     variable.name = "depth"
   )
   reslong$depth <- as.numeric(as.character(reslong$depth))
   reslong$bFC <- as.character(reslong[[blockid]])
+  reslong[, maxdepth := stri_count_fixed(biggrp, ".") + 1]
+  reslong[,parent_nodeids:=stri_split_fixed(as.character(biggrp), pattern = ".", simplify = TRUE)[cbind(1:.N, (maxdepth-1))]]
+  reslong[nodenum == 1, parent_nodeids := NA]
   reslong <- droplevels(reslong[!is.na(nodenum) & !is.na(p), ])
   res_nodes_df <- reslong[, .(p = unique(p), a = unique(a),
                               bF = paste(as.character(unlist(sort(get(blockid)))), collapse = ","),
-                              depth = unique(depth)), by = nodenum]
+                              depth = unique(depth)
+                              ), by = nodenum]
   res_nodes_df$name <- res_nodes_df$nodenum
+
+  ## uniqpaths <- unique(res_nodeids)
+
   ## Make an edge data.frame
   res_edges_lst <- list()
   for (i in 1:(ncol(res_nodeids) - 1)) {
     res_edges_lst[[i]] <- data.table(from = res_nodeids[, i], to = res_nodeids[, i + 1])
   }
   res_edges_df <- unique(na.omit(rbindlist(res_edges_lst)))
-  res_edges_df[, c("to", "from") := .(as.character(to), as.character(from))]
+  #res_edges_df[, c("to", "from") := .(as.character(to), as.character(from))]
   # res_edges_df <- res_edges_df %>% lazy_dt() %>% mutate_at(vars(to, from), as.character) %>% as.data.table()
   ## Now define the graph using the node data set and the edges dataset.
   res_graph <- tbl_graph(nodes = res_nodes_df, edges = res_edges_df)
   res_graph <- res_graph %>%
     activate(nodes) %>%
     mutate(out_degree = centrality_degree(mode = "out"))
-  res_graph <- res_graph %>%
-    activate(nodes) %>%
-    mutate(parent_name = as.character(floor(as.numeric(name) / 2)))
+
+blah <- dominator_tree(res_graph,root="1",mode="out")
+blah$dom #might be parents
+  ## res_graph <- res_graph %>%
+  ##   activate(nodes) %>%
+  ##   mutate(parent_name = lag(name,1))
+  ##   #mutate(parent_name = as.character(floor(as.numeric(name) / 2)))
   res_graph <- res_graph %>%
     activate(nodes) %>%
     group_by(parent_name) %>%
@@ -175,8 +180,7 @@ make_graph <- function(res_graph) {
       label.padding = unit(.01, "lines"), label.size = 0
     ) +
     theme(legend.position = "none") +
-    theme(
-      panel.background = element_rect(fill = "transparent"), # bg of the panel
+    theme(panel.background = element_rect(fill = "transparent"), # bg of the panel
       plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
       panel.grid.major = element_blank(), # get rid of major grid
       panel.grid.minor = element_blank(), # get rid of minor grid
