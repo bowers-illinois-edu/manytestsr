@@ -51,3 +51,24 @@ bdat4[lv1 != "l1_1", gf9 := splitSpecifiedFactor(bF, x = lvs)]
 with(bdat4, table(lvs, gf9, exclude = c()))
 bdat4[lv1 != "l1_1" & lv2 != "l2_2", gf10 := splitSpecifiedFactor(bF, x = lvs)]
 with(bdat4, table(lvs, gf10, exclude = c()))
+
+
+## Testing node id functions here for now
+ nodeidfn <- function(d){
+      crc32hash <- digest::getVDigest(algo = "crc32")
+      crc32hash(d)
+  }
+
+i <- 1
+node_id1<- list()
+node_id2<- list()
+for(i in 1:3){
+    if(i==1){
+        node_id1[[i]] <- c(i*2, i*2 +1)
+        node_id2[[i]] <- nodeidfn(c(i, i+1))
+    } else {
+        node_id1[[i]] <- lapply(node_id1[[i-1]],function(j){ c(j*2,j*2 +1) })
+        node_id2[[i]] <- lapply(node_id2[[i-1]],function(j){ nodeidfn( paste0(j,c(0,1)) )  })
+    }
+}
+
