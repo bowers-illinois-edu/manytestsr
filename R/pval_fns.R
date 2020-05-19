@@ -10,6 +10,9 @@
 ##' @param sims Either NULL (meaning use an asymptotic reference dist) or a
 ##' number (meaning sampling from the randomization distribution implied by the
 ##' formula)
+##' @param simthresh Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations
+##' @param parallel Should the function use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following `approximate` in the coin package.
+##' @param ncpu is the number of workers (for "snow") or cores (for "multicore").
 ##' @return A p-value
 ##' @importFrom coin oneway_test pvalue approximate exact asymptotic
 ##' @export

@@ -13,7 +13,7 @@ adjust_block_tests(
   simthresh = 20,
   sims = 1000,
   fmla = YContNorm ~ trtF | blockF,
-  parallel = "multicore",
+  parallel = "no",
   copydts = FALSE
 )
 }
@@ -22,9 +22,19 @@ adjust_block_tests(
 
 \item{bdat}{Data at the block level.}
 
+\item{blockid}{A character name of the column in idat and bdat indicating the block.}
+
 \item{pfn}{A function to produce pvalues --- using idat.}
 
-\item{sims}{Number of permutations for permutation-based testing}
+\item{p_adj_method}{A string indicating which method \code{p.adjust} should use.}
+
+\item{simthresh}{Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations}
+
+\item{sims}{Number of permutations for permutation-based testing when the total number of cases is below the threshold.}
+
+\item{fmla}{A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors. The tests will run within each block so that \verb{|block} part is not strictly important.}
+
+\item{parallel}{Should the pfn use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following \code{approximate} in the coin package.}
 
 \item{copydts}{TRUE or FALSE. TRUE if using standalone. Could be FALSE if copied objects are being sent to this function from other functions. Basically the question is whether we want this function to change the block or individual level datasets in the main environment or return a new object.}
 }
@@ -32,5 +42,5 @@ adjust_block_tests(
 A data.table containing information about the sequence tests
 }
 \description{
-Test every block and adjust the p-values
+This function tests a hypothesis (of no effects currently) within each and every block and then adjusts the results to control the False Discovery Rate or Family-wise Error Rate  using the base R \code{p.adjust} function.
 }

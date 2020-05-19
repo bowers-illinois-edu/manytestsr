@@ -28,7 +28,8 @@ Imports:
     tidygraph (>= 1.1.2),
     ggraph (>= 2.0.2),
     digest (>= 0.6.25),
-    dplyr
+    dplyr (>= 0.8.5),
+    ggplot2 (>= 3.3.0)
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)

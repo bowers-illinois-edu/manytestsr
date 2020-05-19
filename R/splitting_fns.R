@@ -140,7 +140,7 @@ splitSpecifiedFactor <- function(bid, x) {
   ## Split on the first column with variance from the beginning
   split_on <- which(which_varies > 1)[1]
   if (is.na(split_on)) {
-    group <- factor(rep(0, nrow(x)))
+    group <- factor(rep(0, length(x)))
   } else {
     ## as.numeric of factors creates a vector that starts a 1
     group <- factor(as.numeric(x_split[, split_on] == x_split[1, split_on]))
