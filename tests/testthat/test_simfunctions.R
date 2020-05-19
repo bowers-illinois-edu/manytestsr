@@ -43,9 +43,6 @@ alpha_and_splits$splitby[grep("Specified", alpha_and_splits$sfn)] <- "lvs"
 oneway_test(Y_zeros ~ ZF | bF, data = idat)
 ####
 
-## Now using the function:
-
-
 err_testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3, bdat = bdat4, truevar_name) {
   if (afn == "NULL") {
     theafn <- NULL
@@ -59,9 +56,7 @@ err_testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3,
     fmla = fmla, # Ynorm_inc ~ ZF | bF,
     parallel = "no", copydts = TRUE, splitby = sby
   )
-
   detects <- report_detections(theres, only_hits = FALSE, fwer = is.null(afn))
-
   nodes <- detects[, .(
     hit = as.numeric(unique(hit)),
     numnull = sum(get(truevar_name) == 0),
@@ -70,10 +65,8 @@ err_testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3,
     numnotnull = sum(get(truevar_name) != 0),
     anynotnull = as.numeric(any(get(truevar_name) != 0))
   ), by = hit_grp]
-
   # err_tab1 <- with(nodes1 , table(hit, anynotnull, exclude = c()))
   err_tab0 <- with(nodes, table(hit, allnull, exclude = c()))
-
   if (!identical(dim(err_tab0), as.integer(c(2, 2)))) {
     blank_mat <- matrix(0, 2, 2, dimnames = list(c("0", "1"), c("0", "1")))
     blank_mat[rownames(err_tab0), colnames(err_tab0)] <- err_tab0
@@ -81,12 +74,10 @@ err_testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3,
   } else {
     err_tab <- err_tab0
   }
-
   errs <- calc_errs(theres,
     truevar_name = truevar_name,
     trueeffect_tol = .Machine$double.eps
   )
-
   expect_equal(errs$true_pos_prop, err_tab["1", "0"] / sum(err_tab))
   expect_equal(errs$true_neg_prop, err_tab["0", "1"] / sum(err_tab))
   expect_equal(errs$false_pos_prop, err_tab["1", "1"] / sum(err_tab))
@@ -229,8 +220,6 @@ test_that("Error calculations for a given set of tests work:constant effect that
   )
 })
 
-
-
 test_that("Error calculations for a given set of tests work:individually heterogeneous effects block-fixed effects and some completely null blocks.", {
   test_lst <- mapply(
     FUN = function(afn = afn, sfn = sfn, sby = sby, truevar_name = "ate_tauv2") {
@@ -246,7 +235,6 @@ test_that("Error calculations for a given set of tests work:individually heterog
   )
 })
 
-##START HERE
 test_that("Error calculations for a given set of tests work: Testing in every block and adjusting p-values via FDR/BH.", {
   truevar_names <- grep("^ate", names(bdat4), value = TRUE)
   outcome_names <- paste0("Y", gsub("ate_", "", truevar_names))
@@ -314,7 +302,5 @@ err_rates <- p_sims_obj[,lapply(.SD,mean),.SDcols=c("true_pos_prop","false_pos_p
                                     "true_disc_prop","false_disc_prop",
                                     "true_nondisc_prop","false_nondisc_prop"),by=.id]
 
-
-
-
+err_rates
 

@@ -79,13 +79,15 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 ##' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
 ##' @param fwer Means that alpha is fixed otherwise use the alpha that is calculated at each step of the splitting procedure
 ##' @return A tbl_graph and igraph object with nodes and edges
-##' @importFrom stringi stri_split_fixed
-##' @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent
+##' @importFrom stringi stri_split_fixed stri_sub
+## @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent activate
+##' @import tidygraph
 ##' @importFrom data.table melt
 ##' @export
 make_tree <- function(orig_res,blockid="bF") {
-  ## require(ggraph)
-  ## require(tidygraph)
+  #require(ggraph)
+  #require(tidygraph)
+  #require(stringi)
   ## We have to make a node level data set and an edge level data set in order to define the graph
   res <- copy(orig_res)
   res_nodeids <- stri_split_fixed(as.character(res$biggrp), pattern = ".", simplify = TRUE)
@@ -105,17 +107,16 @@ make_tree <- function(orig_res,blockid="bF") {
   )
   reslong$depth <- as.numeric(as.character(reslong$depth))
   reslong$bFC <- as.character(reslong[[blockid]])
-  reslong[, maxdepth := stri_count_fixed(biggrp, ".") + 1]
-  reslong[,parent_nodeids:=stri_split_fixed(as.character(biggrp), pattern = ".", simplify = TRUE)[cbind(1:.N, (maxdepth-1))]]
-  reslong[nodenum == 1, parent_nodeids := NA]
+  #reslong[, maxdepth := stri_count_fixed(biggrp, ".") + 1]
+  #reslong[,parent_nodeids:=stri_split_fixed(as.character(biggrp), pattern = ".", simplify = TRUE)[cbind(1:.N, (maxdepth-1))]]
+  #reslong[nodenum == 1, parent_nodeids := NA]
   reslong <- droplevels(reslong[!is.na(nodenum) & !is.na(p), ])
+
   res_nodes_df <- reslong[, .(p = unique(p), a = unique(a),
                               bF = paste(as.character(unlist(sort(get(blockid)))), collapse = ","),
                               depth = unique(depth)
                               ), by = nodenum]
   res_nodes_df$name <- res_nodes_df$nodenum
-
-  ## uniqpaths <- unique(res_nodeids)
 
   ## Make an edge data.frame
   res_edges_lst <- list()
@@ -123,6 +124,12 @@ make_tree <- function(orig_res,blockid="bF") {
     res_edges_lst[[i]] <- data.table(from = res_nodeids[, i], to = res_nodeids[, i + 1])
   }
   res_edges_df <- unique(na.omit(rbindlist(res_edges_lst)))
+  ##setkey(res_nodes_df,nodenum,physical=FALSE)
+  ##setkey(res_edges_df,to,physical=FALSE)
+  res_nodes_df <- merge(res_nodes_df,res_edges_df,by.x="nodenum",by.y="to",
+                        sort=FALSE,all.x=TRUE)
+  setnames(res_nodes_df,"from","parent_name")
+
   #res_edges_df[, c("to", "from") := .(as.character(to), as.character(from))]
   # res_edges_df <- res_edges_df %>% lazy_dt() %>% mutate_at(vars(to, from), as.character) %>% as.data.table()
   ## Now define the graph using the node data set and the edges dataset.
@@ -131,8 +138,8 @@ make_tree <- function(orig_res,blockid="bF") {
     activate(nodes) %>%
     mutate(out_degree = centrality_degree(mode = "out"))
 
-blah <- dominator_tree(res_graph,root="1",mode="out")
-blah$dom #might be parents
+## blah <- igraph::dominator_tree(res_graph,root="1",mode="out")
+## blah$dom #might be parents
   ## res_graph <- res_graph %>%
   ##   activate(nodes) %>%
   ##   mutate(parent_name = lag(name,1))
@@ -151,15 +158,15 @@ blah$dom #might be parents
     mutate(hit = (out_degree == 0 & p <= a) | parent_of_ns)
   res_graph <- res_graph %>%
     activate(nodes) %>%
-    mutate(shortbf = ifelse(nchar(bF) > 6, paste0(substr(bF, 1, 5), "..."), bF))
+    mutate(shortbf = ifelse(nchar(bF) > 6, paste0(stri_sub(bF, 1, 5), "..."), bF))
   if (length(unique(res_nodes_df$a)) > 1) {
     res_graph <- res_graph %>%
       activate(nodes) %>%
-      mutate(label = paste("Node:", name, "\n Blocks:", shortbf, "\n p=", round(p, 3), ",a=", round(a, 3), sep = ""))
+      mutate(label = paste("Node:", stri_sub(name,1,4), "\n Blocks:", shortbf, "\n p=", round(p, 3), ",a=", round(a, 3), sep = ""))
   } else {
     res_graph <- res_graph %>%
       activate(nodes) %>%
-      mutate(label = paste("Node:", name, "\n Blocks:", shortbf, "\n p=", round(p, 3), sep = ""))
+      mutate(label = paste("Node:", stri_sub(name,1,4), "\n Blocks:", shortbf, "\n p=", round(p, 3), sep = ""))
   }
   return(res_graph)
 }
@@ -170,9 +177,12 @@ blah$dom #might be parents
 ##' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
 ##' @param fwer Means that alpha is fixed otherwise use the alpha that is calculated at each step of the splitting procedure
 ##' @return A ggraph object
+##' @import ggraph
+##' @import ggplot2
+##' @export
 make_graph <- function(res_graph) {
-  require(ggraph)
-  require(tidygraph)
+  # require(ggraph)
+  # require(tidygraph)
   res_g <- ggraph(res_graph, layout = "tree") +
     geom_edge_diagonal(colour = "black") +
     geom_node_label(aes(label = label, colour = hit),

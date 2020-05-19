@@ -57,6 +57,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     nodesize=sum(bdat[,get(blocksize)])
   )
   bdat[, nodenum_current := "1"] 
+  bdat[, nodenum_prev:= "0"] 
   ## there is only one test at this root level.
   ## stopifnot(length(unique(dat$testable))==1)
   setkeyv(idat, blockid)
@@ -66,14 +67,14 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   if (!all(bdat$testable)) {
     return(bdat)
   }
+  nodeidfn <- function(d){
+      crc32hash <- getVDigest(algo = "crc32")
+      crc32hash(d)
+  }
   # Step 2: Iterate through the tree
   ## Keep testing until no testing possible: criteria all blocks all size 1 and or
   ## all p_i > alpha_i or there is no change in the final p-values OR simulation
   ## limits reached (for testing of the algorithm).
-nodeidfn <- function(d){
-      crc32hash <- getVDigest(algo = "crc32")
-      crc32hash(d)
-  }
 
   while (any(bdat$testable, na.rm = TRUE) & i < maxtest) {
    ##   if(i==10){ browser() }
@@ -141,19 +142,19 @@ nodeidfn <- function(d){
         pbtracker[, (alphanm) := alphafn(pval = p, batch = batch, nodesize=nodesize)]
       } else {
         mid_roots <- pbtracker[depth == (i - 1) & (testable), nodenum]
-        find_paths <- function(x,biggrp,i){
+        find_paths <- function(){
           tmp <- pbtracker[depth==i,]
           tmp[,leaves:= stri_extract_last(as.character(biggrp),regex="\\.[:alnum:]*$")]
           tmp[,paths:= stri_replace_all(as.character(biggrp),replacement="",fixed=leaves)]
           path_dat <-tmp[,.(thepath=paste(unique(paths),paste(leaves,sep="",collapse=""),sep="")),by=paths]
-          path_vec <- stri_split_fixed(path_dat$thepath,".",simplify=TRUE)[1,]
-          stopifnot(all(path_vec %in% pbtracker$nodenum))
+          path_vec <- stri_split_fixed(path_dat$thepath,".") #,simplify=TRUE)#[1,]
+          ##stopifnot(all(path_vec %in% pbtracker$nodenum))
           return(path_vec)
          }
         setkey(pbtracker, nodenum)
-        for (j in 1:length(mid_roots)) {
-          thepath <- find_paths(mid_roots[j],biggrp=pbtracker[nodenum==mid_roots[j],biggrp],i=i)
-          pbtracker[J(thepath), (alphanm) := alphafn(pval = p, batch = depth, nodesize = nodesize)]
+        thepaths <- find_paths()
+        for (j in 1:length(thepaths)){
+          pbtracker[J(thepaths[[j]]), (alphanm) := alphafn(pval = p, batch = depth, nodesize = nodesize)]
         }
       }
       setkey(pbtracker, biggrp)
