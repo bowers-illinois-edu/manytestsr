@@ -8,7 +8,7 @@
 ##' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
 ##' @param fwer (default is TRUE) means that a block is detected (or not) using the maximum p-value associated with the
 ##' block (or the groups containing that block). fwer=FALSE to detect blocks (or groups of blocks) using FDR control.
-##' @param alpah Is the false positive rate used for detecting an effect if it is constant (i.e. not an FDR-style approach).
+##' @param alpha Is the false positive rate used for detecting an effect if it is constant (i.e. not an FDR-style approach).
 ##' @param only_hits (default FALSE) returns only the detected blocks
 ##' @param autofwer If fwer=TRUE but alpha varies, return the fdr based report.
 ##' @return A data.table adding a column \code{hit} to the \code{res} data.table indicating a "hit" or detection for that block (or group of blocks)
