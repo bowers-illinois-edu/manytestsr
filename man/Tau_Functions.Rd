@@ -25,6 +25,11 @@ tau_norm_covariate_levels(ybase, tau_sds, covariate)
 \item{ybase}{Is a vector of potential outcome to control}
 
 \item{tau_sds}{is the number of sds of ybase to shift the distrbution}
+
+\item{covariate}{Contains information about covariates currently a character name of a column in idat. It is NULL if not used.}
+}
+\value{
+A vector of individual level causal effects (taus) that we will add to ybase (potential outcome to control) to get y1var or potential outcome to treatment.
 }
 \description{
 These functions create individual level causal effects, tau_i, that can be combined with a potential outcome to control to create a potential outcome to treatment.

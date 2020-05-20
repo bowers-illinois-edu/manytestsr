@@ -8,6 +8,7 @@
 ##' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
 ##' @param fwer (default is TRUE) means that a block is detected (or not) using the maximum p-value associated with the
 ##' block (or the groups containing that block). fwer=FALSE to detect blocks (or groups of blocks) using FDR control.
+##' @param alpah Is the false positive rate used for detecting an effect if it is constant (i.e. not an FDR-style approach).
 ##' @param only_hits (default FALSE) returns only the detected blocks
 ##' @param autofwer If fwer=TRUE but alpha varies, return the fdr based report.
 ##' @return A data.table adding a column \code{hit} to the \code{res} data.table indicating a "hit" or detection for that block (or group of blocks)
@@ -77,7 +78,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 ##'
 ##' Given the results of the splitting and testing algorithm, make a node level data set for use in reporting results in terms of a binary tree graph.
 ##' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
-##' @param fwer Means that alpha is fixed otherwise use the alpha that is calculated at each step of the splitting procedure
+##' @param blockdis Is a character name for the variable containing the block id information
 ##' @return A tbl_graph and igraph object with nodes and edges
 ##' @importFrom stringi stri_split_fixed stri_sub
 ## @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent activate
@@ -85,9 +86,6 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 ##' @importFrom data.table melt
 ##' @export
 make_tree <- function(orig_res,blockid="bF") {
-  #require(ggraph)
-  #require(tidygraph)
-  #require(stringi)
   ## We have to make a node level data set and an edge level data set in order to define the graph
   res <- copy(orig_res)
   res_nodeids <- stri_split_fixed(as.character(res$biggrp), pattern = ".", simplify = TRUE)
@@ -107,9 +105,6 @@ make_tree <- function(orig_res,blockid="bF") {
   )
   reslong$depth <- as.numeric(as.character(reslong$depth))
   reslong$bFC <- as.character(reslong[[blockid]])
-  #reslong[, maxdepth := stri_count_fixed(biggrp, ".") + 1]
-  #reslong[,parent_nodeids:=stri_split_fixed(as.character(biggrp), pattern = ".", simplify = TRUE)[cbind(1:.N, (maxdepth-1))]]
-  #reslong[nodenum == 1, parent_nodeids := NA]
   reslong <- droplevels(reslong[!is.na(nodenum) & !is.na(p), ])
 
   res_nodes_df <- reslong[, .(p = unique(p), a = unique(a),
@@ -124,14 +119,9 @@ make_tree <- function(orig_res,blockid="bF") {
     res_edges_lst[[i]] <- data.table(from = res_nodeids[, i], to = res_nodeids[, i + 1])
   }
   res_edges_df <- unique(na.omit(rbindlist(res_edges_lst)))
-  ##setkey(res_nodes_df,nodenum,physical=FALSE)
-  ##setkey(res_edges_df,to,physical=FALSE)
   res_nodes_df <- merge(res_nodes_df,res_edges_df,by.x="nodenum",by.y="to",
                         sort=FALSE,all.x=TRUE)
   setnames(res_nodes_df,"from","parent_name")
-
-  #res_edges_df[, c("to", "from") := .(as.character(to), as.character(from))]
-  # res_edges_df <- res_edges_df %>% lazy_dt() %>% mutate_at(vars(to, from), as.character) %>% as.data.table()
   ## Now define the graph using the node data set and the edges dataset.
   res_graph <- tbl_graph(nodes = res_nodes_df, edges = res_edges_df)
   res_graph <- res_graph %>%
@@ -140,10 +130,6 @@ make_tree <- function(orig_res,blockid="bF") {
 
 ## blah <- igraph::dominator_tree(res_graph,root="1",mode="out")
 ## blah$dom #might be parents
-  ## res_graph <- res_graph %>%
-  ##   activate(nodes) %>%
-  ##   mutate(parent_name = lag(name,1))
-  ##   #mutate(parent_name = as.character(floor(as.numeric(name) / 2)))
   res_graph <- res_graph %>%
     activate(nodes) %>%
     group_by(parent_name) %>%
@@ -174,8 +160,7 @@ make_tree <- function(orig_res,blockid="bF") {
 ##' Make a plot of the nodes
 ##'
 ##' Given the results of the splitting and testing algorithm in the form of a , make a node level data set for use in reporting results in terms of a binary tree graph. This does not print or plot the graph. You'll need to do that with the resulting object.
-##' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
-##' @param fwer Means that alpha is fixed otherwise use the alpha that is calculated at each step of the splitting procedure
+##' @param res_graph A tidygraph object produced from make_tree
 ##' @return A ggraph object
 ##' @import ggraph
 ##' @import ggplot2

@@ -7,10 +7,11 @@
 ##' produces a p-value.
 ##'
 ##' @param dat An object inheriting from class data.frame
+##' @param fmla outcome~treatment factor | block factor (following `coin` API).
+##' @param simthresh Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations
 ##' @param sims Either NULL (meaning use an asymptotic reference dist) or a
 ##' number (meaning sampling from the randomization distribution implied by the
 ##' formula)
-##' @param simthresh Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations
 ##' @param parallel Should the function use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following `approximate` in the coin package.
 ##' @param ncpu is the number of workers (for "snow") or cores (for "multicore").
 ##' @return A p-value
@@ -52,9 +53,13 @@ pOneway <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 ##' produces a p-value.
 ##'
 ##' @param dat An object inheriting from class data.frame
+##' @param fmla outcome~treatment factor | block factor (following `coin` API).
+##' @param simthresh Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations
 ##' @param sims Either NULL (meaning use an asymptotic reference dist) or a
 ##' number (meaning sampling from the randomization distribution implied by the
 ##' formula)
+##' @param parallel Should the function use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following `approximate` in the coin package.
+##' @param ncpu is the number of workers (for "snow") or cores (for "multicore").
 ##' @return A p-value
 ##' @importFrom coin wilcox_test pvalue approximate exact asymptotic
 ##' @export
@@ -86,53 +91,6 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
   }
   return(as.numeric(thep))
 }
-
-
-
-##' P-value function: Disco
-##'
-##' These functions accept a data frame and perhaps test specific arguments
-##' (like whether or not the test will be asympotic or simulation based). It
-##' produces a p-value.
-##'
-##' @param dat An object inheriting from class data.frame
-##' @param fmla  A formula  appropriate to the function. Here it should  be something like outcome~treatment*block
-##' @param sims Either NULL (meaning use an asymptotic reference dist) or a
-##' number (meaning sampling from the randomization distribution implied by the
-##' formula)
-##' @param  index is a real number in  (0,2] to transform the inter-unit distances
-##' @return A p-value
-##' @importFrom coin wilcox_test pvalue approximate exact asymptotic
-##' @export
-pAnova <- function(dat, fmla = YContNorm ~ trtF * blockF, simthresh = 20, sims = 1000,
-                   parallel = "no", ncpu = NULL, index = 1, blocks = blockF) {
-  require(energy)
-  theresponse <- all.vars(fmla)[attr(terms(fmla), "response")]
-  ## if we get a constant outcome, then p=1.
-  ## no evidence against the null of no effects.
-  if (length(unique(dat[[theresponse]])) < 2) {
-    return(1)
-  }
-  if (is.null(simthresh) | nrow(dat) > simthresh) {
-    thep <- anova1$`Pr(>F)`
-  } else {
-    if (is.null(ncpu) & parallel != "no") {
-      ncpu <- parallel::detectCores()
-    }
-    if (parallel == "no") {
-      ncpu <- 1
-    }
-    thep <- pvalue(wilcox_test(fmla,
-      data = dat,
-      distribution = approximate(
-        nresample = sims,
-        parallel = parallel, ncpus = ncpu
-      )
-    ))[[1]]
-  }
-  return(as.numeric(thep))
-}
-
 
 ##' P-value function: Independence Treatment Distance Test
 ##'
@@ -169,14 +127,8 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
     return(1)
   }
   thetreat <- fmla_vars[[2]]
-  thedat <- copy(dat) #data.table::copy(dat) ## to avoid making changes outside the function
-  ## stopifnot(is.data.table(thedat))
+  thedat <- copy(dat)
   outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "mhY", "rankY")
-  # if(is.factor(thedat[[thetreat]])){
-  #  thedat[,ZN:={tmp<-Rfast::as_integer(levels(get(thetreat)))[get(thetreat)];tmp-1}]
-  # } else {
-  #  thedat[,ZN:=get(thetreat)]
-  #    }
   if (length(fmla_vars) == 3) {
     theblock <- fmla_vars[[3]]
     thedat[, outcome_names[-1] := c(distfn(get(theresponse)), list(Rank(get(theresponse)))), by = get(theblock)]

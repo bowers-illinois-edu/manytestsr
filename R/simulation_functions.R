@@ -9,12 +9,17 @@
 ##' @param idat Unit-level data. An object inheriting from class data.table
 ##' @param bdat Block-level data. An object inheriting from class data.table
 ##' @param pfn  A function to  produce p-values (see [pWilcox] for example).
-##' @param fmla A formula relating outcomes  to  treatment and blocks (to  be passed to  pfn).
 ##' @param splitfn A function for splitting the data, see [splitLOO] for example.
+##' @param fmla A formula relating outcomes  to  treatment and blocks (to  be passed to  pfn).
+##' @param blockid A character name of the column in idat and bdat indicating the block.
+##' @param trtvar Is the name of the treatment numeric, (0,1), variable
+##' @param ybase Is the potential outcome to control upon which the treatment effect will be built
+##' @param afn A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator.
 ##' @param thealpha The alpha level of the test.
-##' @param tau  A treatment effect: either a scale constant additive effect or a vector with a treatment effect to be
-##' added to each row in idat in blocks where the effect is not  zero.
-##' @param propblocks The proportion of blocks having any treatment effect at all.
+##' @param tau_fn Is a function that turns ybase into the potential outcome under treatment --- it is a treatment effect creating function.
+##' @param tau_size Is the parameter for the tau_fn --- like the true average effect size within a block.
+##' @param prop_blocks_0 The proportion of blocks having no treatment effect at all.
+##' @param sims Is the number of simulations to run --- each simulation uses the same treatment effects be re-assigns treatment (re-shuffles treatment and re-reveals the observed outcomes as a function of the potential outcomes)
 ##' @return A data.table with final pvalues, the associated blocks,  the true treatment effects, and the order in which the tests were conducted.
 ##' @export
 errsimfn <- function(idat, bdat, pfn, splitfn,
@@ -70,6 +75,7 @@ errsimfn <- function(idat, bdat, pfn, splitfn,
 ##' @param tau_size The rough or mean size of the treatment effect (like the mean shift), in sds probably.
 ##' @param covariate Contains information about covariates currently a character name of a column in idat. It is NULL if not used.
 ##' @param prop_blocks_0 The proportion of blocks having zero treatment effect.
+##' @param by_block TRUE if each block has a separate shift (like a mean shift) or to otherwise create the individual level treatment effect separately within block or FALSE to create the effect across all blocks (ignoring blocks).
 ##' @return A data.table with a single column containing potential outcome to treatment.
 ##' @export
 create_effects <- function(idat, ybase, blockid, tau_fn, tau_size, covariate = NULL, prop_blocks_0 = 0, by_block = TRUE) {
@@ -116,6 +122,8 @@ if (by_block) {
 ##' These functions create individual level causal effects, tau_i, that can be combined with a potential outcome to control to create a potential outcome to treatment.
 ##' @param ybase Is a vector of potential outcome to control
 ##' @param tau_sds is the number of sds of ybase to shift the distrbution
+##' @param covariate Contains information about covariates currently a character name of a column in idat. It is NULL if not used.
+##' @return A vector of individual level causal effects (taus) that we will add to ybase (potential outcome to control) to get y1var or potential outcome to treatment.
 
 ##' @describeIn Tau_Functions Draws from a Normal but also adds a few outliers.
 ##' @export

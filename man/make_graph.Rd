@@ -7,9 +7,7 @@
 make_graph(res_graph)
 }
 \arguments{
-\item{orig_res}{results data.table output from the \code{\link{findBlocks}} function.}
-
-\item{fwer}{Means that alpha is fixed otherwise use the alpha that is calculated at each step of the splitting procedure}
+\item{res_graph}{A tidygraph object produced from make_tree}
 }
 \value{
 A ggraph object

@@ -9,7 +9,7 @@ make_tree(orig_res, blockid = "bF")
 \arguments{
 \item{orig_res}{results data.table output from the \code{\link{findBlocks}} function.}
 
-\item{fwer}{Means that alpha is fixed otherwise use the alpha that is calculated at each step of the splitting procedure}
+\item{blockdis}{Is a character name for the variable containing the block id information}
 }
 \value{
 A tbl_graph and igraph object with nodes and edges

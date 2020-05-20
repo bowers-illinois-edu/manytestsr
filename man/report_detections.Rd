@@ -21,6 +21,8 @@ block (or the groups containing that block). fwer=FALSE to detect blocks (or gro
 \item{only_hits}{(default FALSE) returns only the detected blocks}
 
 \item{autofwer}{If fwer=TRUE but alpha varies, return the fdr based report.}
+
+\item{alpah}{Is the false positive rate used for detecting an effect if it is constant (i.e. not an FDR-style approach).}
 }
 \value{
 A data.table adding a column \code{hit} to the \code{res} data.table indicating a "hit" or detection for that block (or group of blocks)

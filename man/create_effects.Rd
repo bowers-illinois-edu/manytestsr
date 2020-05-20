@@ -28,6 +28,8 @@ create_effects(
 
 \item{prop_blocks_0}{The proportion of blocks having zero treatment effect.}
 
+\item{by_block}{TRUE if each block has a separate shift (like a mean shift) or to otherwise create the individual level treatment effect separately within block or FALSE to create the effect across all blocks (ignoring blocks).}
+
 \item{block}{Name of block variable (the blocking variable is a factor)}
 }
 \value{

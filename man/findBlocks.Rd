@@ -13,7 +13,7 @@ findBlocks(
   alphafn = NULL,
   simthresh = 20,
   sims = 1000,
-  maxtest = 100,
+  maxtest = 2000,
   thealpha = 0.05,
   fmla = YContNorm ~ trtF | blockF,
   parallel = "multicore",
@@ -27,13 +27,25 @@ findBlocks(
 
 \item{bdat}{Data at the block level.}
 
+\item{blockid}{A character name of the column in idat and bdat indicating the block.}
+
 \item{splitfn}{A function to split the data into two pieces --- using bdat}
 
 \item{pfn}{A function to produce pvalues --- using idat.}
 
 \item{alphafn}{A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator.}
 
+\item{simthresh}{Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations}
+
 \item{sims}{Number of permutations for permutation-based testing}
+
+\item{maxtest}{Maximum splits or tests to do}
+
+\item{thealpha}{Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)}
+
+\item{fmla}{A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors.}
+
+\item{parallel}{Should the pfn use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following \code{approximate} in the coin package.}
 
 \item{copydts}{TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.}
 

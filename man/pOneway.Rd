@@ -16,6 +16,8 @@ pOneway(
 \arguments{
 \item{dat}{An object inheriting from class data.frame}
 
+\item{fmla}{outcome~treatment factor | block factor (following \code{coin} API).}
+
 \item{simthresh}{Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations}
 
 \item{sims}{Either NULL (meaning use an asymptotic reference dist) or a

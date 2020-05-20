@@ -32,12 +32,23 @@ errsimfn(
 
 \item{fmla}{A formula relating outcomes  to  treatment and blocks (to  be passed to  pfn).}
 
+\item{blockid}{A character name of the column in idat and bdat indicating the block.}
+
+\item{trtvar}{Is the name of the treatment numeric, (0,1), variable}
+
+\item{ybase}{Is the potential outcome to control upon which the treatment effect will be built}
+
+\item{afn}{A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator.}
+
 \item{thealpha}{The alpha level of the test.}
 
-\item{tau}{A treatment effect: either a scale constant additive effect or a vector with a treatment effect to be
-added to each row in idat in blocks where the effect is not  zero.}
+\item{tau_fn}{Is a function that turns ybase into the potential outcome under treatment --- it is a treatment effect creating function.}
 
-\item{propblocks}{The proportion of blocks having any treatment effect at all.}
+\item{tau_size}{Is the parameter for the tau_fn --- like the true average effect size within a block.}
+
+\item{prop_blocks_0}{The proportion of blocks having no treatment effect at all.}
+
+\item{sims}{Is the number of simulations to run --- each simulation uses the same treatment effects be re-assigns treatment (re-shuffles treatment and re-reveals the observed outcomes as a function of the potential outcomes)}
 }
 \value{
 A data.table with final pvalues, the associated blocks,  the true treatment effects, and the order in which the tests were conducted.

@@ -28,15 +28,37 @@ padj_test_fn(
 \arguments{
 \item{idat}{Individual level data}
 
+\item{bdat}{Data at the block level.}
+
+\item{blockid}{A character name of the column in idat and bdat indicating the block.}
+
 \item{trtid}{Is the name of the treatment numeric, (0,1), variable}
 
-\item{fmla}{is a simple formula with no blocks --- we are calculating tests within all blocks.}
+\item{fmla}{A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors.}
+
+\item{ybase}{Is the potential outcome to control upon which the treatment effect will be built}
+
+\item{prop_blocks_0}{Is the proportion of blocks with no effects at all}
+
+\item{tau_fn}{Is a function that turns ybase into the potential outcome under treatment --- it is a treatment effect creating function.}
+
+\item{tau_size}{Is the parameter for the tau_fn --- like the true average effect size within a block.}
+
+\item{pfn}{A function to produce pvalues --- using idat.}
+
+\item{afn}{A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator.}
+
+\item{nsims}{Is the number of simulations to run --- each simulation uses the same treatment effects be re-assigns treatment (re-shuffles treatment and re-reveals the observed outcomes as a function of the potential outcomes)}
+
+\item{ncores}{Tells p-value functions how many cores to use. Mostly ignored in use of this function because we are tending to parallelize at higher loops.}
+
+\item{splitfn}{A function to split the data into two pieces --- using bdat}
 
 \item{covariate}{is the name of a covariate to be used in created covariate dependent treatment effects}
 
-\item{reveal_and_test_fn}{Is a function that reveals observed outcomes given the potential outcomes
-produced here and does tests and adjustments (using either findBlocks for the top-down method or
-adjust_block_tests for the bottom-up method, for example)}
+\item{splitby}{A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))}
+
+\item{thealpha}{Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)}
 }
 \value{
 A pvalue for each block

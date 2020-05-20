@@ -18,6 +18,10 @@ calc_errs(
 \item{truevar_name}{Is a string indicating the name of the variable containing the true underlying causal effect (at the block level).}
 
 \item{trueeffect_tol}{Is the smallest effect size below which we consider the effect to be zero (by default is it floating point zero).}
+
+\item{blockid}{A character name of the column in idat and bdat indicating the block.}
+
+\item{thealpha}{Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)}
 }
 \value{
 False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).

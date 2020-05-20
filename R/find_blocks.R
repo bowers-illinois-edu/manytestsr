@@ -5,19 +5,25 @@
 ##' Split and test.
 ##' @param idat Data at the unit level.
 ##' @param bdat Data at the block level.
+##' @param blockid A character name of the column in idat and bdat indicating the block.
 ##' @param splitfn A function to split the data into two pieces --- using bdat
 ##' @param pfn A function to produce pvalues --- using idat.
 ##' @param alphafn A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator.
+##' @param simthresh Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations
 ##' @param sims Number of permutations for permutation-based testing
+##' @param maxtest Maximum splits or tests to do
 ##' @param copydts TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.
 ##' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))
 ##' @param blocksize A string with the name of the column in bdat contains information about the size of the block (or other determinant of the power of tests within that block, such as harmonic mean weight of the block or variance of the outcome within the block.)
+##' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
+##' @param fmla A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors. 
+##' @param parallel Should the pfn use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following `approximate` in the coin package.
 ##' @return A data.table containing information about the sequence of splitting and testing
 ##' @importFrom stringi stri_count_fixed stri_split_fixed stri_split stri_sub stri_replace_all stri_extract_last
 ##' @importFrom digest digest getVDigest
 ##' @export
 findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NULL, simthresh = 20,
-                       sims = 1000, maxtest = 100, thealpha = 0.05,
+                       sims = 1000, maxtest = 2000, thealpha = 0.05,
                        fmla = YContNorm ~ trtF | blockF,
                        parallel = "multicore", copydts = FALSE, splitby = "hwt", blocksize="hwt") {
   if (copydts) {

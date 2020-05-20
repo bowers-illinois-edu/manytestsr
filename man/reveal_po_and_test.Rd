@@ -25,13 +25,39 @@ reveal_po_and_test(
 )
 }
 \arguments{
+\item{idat}{Individual level data}
+
+\item{bdat}{Data at the block level.}
+
+\item{blockid}{A character name of the column in idat and bdat indicating the block.}
+
+\item{trtid}{Is the name of the treatment numeric, (0,1), variable}
+
+\item{fmla}{A formula with outcome~treatment assignment  where treatment assignment is a factor}
+
+\item{ybase}{Is the potential outcome to control upon which the treatment effect will be built}
+
 \item{y1var}{Is the name of the potential outcome to treatment}
 
-\item{p_adj_method}{Is the argument to stats::p.adjust() and also indicates whether to use findBlocks or to test within each block.}
+\item{prop_blocks_0}{Is the proportion of blocks with no effects at all}
+
+\item{tau_fn}{Is a function that turns ybase into the potential outcome under treatment --- it is a treatment effect creating function.}
+
+\item{tau_size}{Is the parameter for the tau_fn --- like the true average effect size within a block.}
+
+\item{pfn}{A function to produce pvalues --- using idat.}
+
+\item{p_adj_method}{Is an input to p.adjust like "fdr" or "holm" to use adjust_block_tests}
+
+\item{afn}{NULL. Not used. Included here to enable same functions to call this function and reveal_po_and_test_siup}
 
 \item{splitfn}{Must be null. Only exists so that we can use the same efffect creation and testing function for both approaches.}
 
 \item{splitby}{Must be null. Only exists so that we can use the same efffect creation and testing function for both approaches.}
+
+\item{thealpha}{Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)}
+
+\item{copydts}{TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.}
 }
 \value{
 False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
