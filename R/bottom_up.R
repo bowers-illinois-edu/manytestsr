@@ -20,14 +20,15 @@
 adjust_block_tests <- function(idat, bdat, blockid = "block", pfn, p_adj_method, simthresh = 20,
                                sims = 1000, fmla = YContNorm ~ trtF | blockF,
                                parallel = "no", copydts = FALSE) {
-    if (copydts) {
-        bdat <- data.table::copy(bdat)
-        idat <- data.table::copy(idat)
-    }
-    theps <- idat[, .(p = pfn(fmla = fmla, dat = .SD, parallel = parallel,simthresh=simthresh,sims=sims)), by = blockid]
-    setkeyv(theps, blockid)
-    setkeyv(bdat, blockid)
-    res <- merge(theps, bdat)
-    res[, max_p := p.adjust(p, method = p_adj_method)]
-    return(res)
+  if (copydts) {
+    bdat <- data.table::copy(bdat)
+    idat <- data.table::copy(idat)
+  }
+  theps <- idat[, .(p = pfn(fmla = fmla, dat = .SD, parallel = parallel, simthresh = simthresh, sims = sims)), by = blockid]
+  setkeyv(theps, blockid)
+  setkeyv(bdat, blockid)
+  res <- merge(theps, bdat)
+  res[, max_p := p.adjust(p, method = p_adj_method)]
+  res[, nodenum_current := get(blockid)]
+  return(res)
 }

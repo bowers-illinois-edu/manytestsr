@@ -13,18 +13,26 @@
 ##' @param autofwer If fwer=TRUE but alpha varies, return the fdr based report.
 ##' @return A data.table adding a column \code{hit} to the \code{res} data.table indicating a "hit" or detection for that block (or group of blocks)
 ##' @importFrom stringi stri_count_fixed stri_split_fixed
+##' @import data.table
 ##' @export
-report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, autofwer=TRUE) {
+report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, autofwer = TRUE) {
   res <- copy(orig_res)
-  ## res_nodeids <- stri_split_fixed(as.character(res$biggrp), pattern = ".", simplify = TRUE)
-  ## class(res_nodeids) <- "integer64"
-  ## Extract final node number (findBlocks uses the canonical binary tree node numbering system)
-  ## res_fin_nodenum <- apply(res_nodeids, 1, function(x) {
-  ##   max(x, na.rm = TRUE)
-  ## })
-  ## res[, fin_nodenum := bit64::as.integer64(res_fin_nodenum)]
+  ## For the output from adjust_block_tests (the bottom-up or test all blocks method)
+  if (length(grep("biggrp", names(testobj))) == 0) {
+    ## This is for the bottom-up/test every block method
+    res[, `:=`(
+      blockid = get(blockid),
+      hit = max_p < thealpha,
+      hit_grp = get(blockid)
+    )]
+    returncols <- names(res)
+    if (only_hits) {
+      res <- droplevels(res[(hit), .SD, .SDcols = returncols])
+    }
+    return(res[, .SD, .SDcols = returncols])
+  }
   res[, fin_nodenum := nodenum_current]
-  res[, fin_parent := nodenum_prev] #as.integer64( floor(fin_nodenum / 2L) )]
+  res[, fin_parent := nodenum_prev]
   ## Maximum tree depth for a node encoded in the biggrp string: basically number of dots+1 or number of node numbers
   ## (where node numbers are separated by a dot)
   res[, maxdepth := stri_count_fixed(biggrp, ".") + 1]
@@ -56,10 +64,10 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
   res[, hit := single_hit | group_hit]
   if (any(res$hit)) {
     res[(hit), fin_grp := fifelse(single_hit, fin_nodenum, fin_parent)]
-    res[(hit), hit_grp := fin_grp] #, labels = 1:length(unique(fin_grp)))]
+    res[(hit), hit_grp := fin_grp] # , labels = 1:length(unique(fin_grp)))]
     res[!(hit), hit_grp := fin_nodenum]
     ## Make sure that no  hit_grp includes *both* detections and misses/skips/acceptances
-    test <- res[,.(hitmix= length(unique(hit))==1),by=hit_grp]
+    test <- res[, .(hitmix = length(unique(hit)) == 1), by = hit_grp]
     stopifnot(all(test$hitmix))
   } else {
     res[, fin_grp := NA]
@@ -85,11 +93,11 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 ##' @import tidygraph
 ##' @importFrom data.table melt
 ##' @export
-make_tree <- function(orig_res,blockid="bF") {
+make_tree <- function(orig_res, blockid = "bF") {
   ## We have to make a node level data set and an edge level data set in order to define the graph
   res <- copy(orig_res)
   res_nodeids <- stri_split_fixed(as.character(res$biggrp), pattern = ".", simplify = TRUE)
-  res_nodeids[res_nodeids==""]<-NA
+  res_nodeids[res_nodeids == ""] <- NA
   # class(res_nodeids) <- "integer"
   res[, paste("nodenum", 1:ncol(res_nodeids), sep = "") := lapply(1:ncol(res_nodeids), function(i) {
     res_nodeids[, i]
@@ -99,7 +107,7 @@ make_tree <- function(orig_res,blockid="bF") {
   nodenums <- sort(grep("^nodenum[0-9]", names(res), value = TRUE))
   ## Right now we go from wide to long to node. It would be nicer to go directly from wide to node.
   reslong <- melt(res,
-    id = c("biggrp", blockid,"nodenum_current","nodenum_prev"),
+    id = c("biggrp", blockid, "nodenum_current", "nodenum_prev"),
     measure.vars = list(p = pnms, a = anms, nodenum = nodenums),
     variable.name = "depth"
   )
@@ -107,10 +115,11 @@ make_tree <- function(orig_res,blockid="bF") {
   reslong$bFC <- as.character(reslong[[blockid]])
   reslong <- droplevels(reslong[!is.na(nodenum) & !is.na(p), ])
 
-  res_nodes_df <- reslong[, .(p = unique(p), a = unique(a),
-                              bF = paste(as.character(unlist(sort(get(blockid)))), collapse = ","),
-                              depth = unique(depth)
-                              ), by = nodenum]
+  res_nodes_df <- reslong[, .(
+    p = unique(p), a = unique(a),
+    bF = paste(as.character(unlist(sort(get(blockid)))), collapse = ","),
+    depth = unique(depth)
+  ), by = nodenum]
   res_nodes_df$name <- res_nodes_df$nodenum
 
   ## Make an edge data.frame
@@ -119,17 +128,19 @@ make_tree <- function(orig_res,blockid="bF") {
     res_edges_lst[[i]] <- data.table(from = res_nodeids[, i], to = res_nodeids[, i + 1])
   }
   res_edges_df <- unique(na.omit(rbindlist(res_edges_lst)))
-  res_nodes_df <- merge(res_nodes_df,res_edges_df,by.x="nodenum",by.y="to",
-                        sort=FALSE,all.x=TRUE)
-  setnames(res_nodes_df,"from","parent_name")
+  res_nodes_df <- merge(res_nodes_df, res_edges_df,
+    by.x = "nodenum", by.y = "to",
+    sort = FALSE, all.x = TRUE
+  )
+  setnames(res_nodes_df, "from", "parent_name")
   ## Now define the graph using the node data set and the edges dataset.
   res_graph <- tbl_graph(nodes = res_nodes_df, edges = res_edges_df)
   res_graph <- res_graph %>%
     activate(nodes) %>%
     mutate(out_degree = centrality_degree(mode = "out"))
 
-## blah <- igraph::dominator_tree(res_graph,root="1",mode="out")
-## blah$dom #might be parents
+  ## blah <- igraph::dominator_tree(res_graph,root="1",mode="out")
+  ## blah$dom #might be parents
   res_graph <- res_graph %>%
     activate(nodes) %>%
     group_by(parent_name) %>%
@@ -148,11 +159,11 @@ make_tree <- function(orig_res,blockid="bF") {
   if (length(unique(res_nodes_df$a)) > 1) {
     res_graph <- res_graph %>%
       activate(nodes) %>%
-      mutate(label = paste("Node:", stri_sub(name,1,4), "\n Blocks:", shortbf, "\n p=", round(p, 3), ",a=", round(a, 3), sep = ""))
+      mutate(label = paste("Node:", stri_sub(name, 1, 4), "\n Blocks:", shortbf, "\n p=", round(p, 3), ",a=", round(a, 3), sep = ""))
   } else {
     res_graph <- res_graph %>%
       activate(nodes) %>%
-      mutate(label = paste("Node:", stri_sub(name,1,4), "\n Blocks:", shortbf, "\n p=", round(p, 3), sep = ""))
+      mutate(label = paste("Node:", stri_sub(name, 1, 4), "\n Blocks:", shortbf, "\n p=", round(p, 3), sep = ""))
   }
   return(res_graph)
 }
@@ -175,7 +186,8 @@ make_graph <- function(res_graph) {
       label.padding = unit(.01, "lines"), label.size = 0
     ) +
     theme(legend.position = "none") +
-    theme(panel.background = element_rect(fill = "transparent"), # bg of the panel
+    theme(
+      panel.background = element_rect(fill = "transparent"), # bg of the panel
       plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
       panel.grid.major = element_blank(), # get rid of major grid
       panel.grid.minor = element_blank(), # get rid of minor grid

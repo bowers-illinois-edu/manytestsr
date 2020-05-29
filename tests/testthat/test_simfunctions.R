@@ -92,7 +92,7 @@ err_testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3,
 err_testing_fn2 <- function(fmla = Ytauv2 ~ ZF, idat = idat3, bdat = bdat4, truevar_name, thealpha = .05) {
   ## afn and sfn and sby are character names
 
-    theres <- adjust_block_tests(
+  theres <- adjust_block_tests(
     idat = idat, bdat = bdat, blockid = "bF", p_adj_method = "BH",
     pfn = pIndepDist, fmla = fmla, copydts = TRUE
   )
@@ -258,49 +258,50 @@ test_that("Error calculations for a given set of tests work: Testing in every bl
 
 
 ### This next is less of a test with expected results and more to ensure that the code runs without error.
-simparms <- cbind(alpha_and_splits,p_adj_method=rep("split",nrow(alpha_and_splits)))
-simparms <- rbind(simparms,c("NULL","NULL","NULL","fdr"))
+simparms <- cbind(alpha_and_splits, p_adj_method = rep("split", nrow(alpha_and_splits)))
+simparms <- rbind(simparms, c("NULL", "NULL", "NULL", "fdr"))
 simresnms <- apply(simparms, 1, function(x) {
   paste(x, collapse = "_", sep = "")
 })
 
 set.seed(12345)
-p_sims_res <- lapply(1:nrow(simparms), FUN=function(i) {
-x <- simparms[i, ]
-xnm <- paste(x, collapse = "_")
-message(xnm)
-nsims <- 10 ##100
-p_sims_tab <- padj_test_fn(
-  idat = idat3,
-  bdat = bdat4,
-  blockid = "bF",
-  trtid = "Z",
-  fmla = Y ~ ZF | blockF,
-  ybase = "y0",
-  prop_blocks_0 = .5,
-  tau_fn = tau_norm_covariate_outliers,
-  tau_size = .5,
-  covariate = "v4",
-  pfn = pIndepDist,
-  nsims = nsims,
-  ncores = 1, ## parallelize over the  rows of simparms
-  afn = ifelse(x[["afn"]]!="NULL",getFromNamespace(x[["afn"]], ns = "manytestsr"),"NULL"),
-  p_adj_method= x[["p_adj_method"]],
-  splitfn = ifelse(x[["sfn"]]!="NULL",getFromNamespace(x[["sfn"]], ns = "manytestsr"),"NULL"),
-  splitby = x[["splitby"]]
-)
-#p_sims_tab <- p_sims_tab[1,,]
-return(p_sims_tab)
+p_sims_res <- lapply(1:nrow(simparms), FUN = function(i) {
+  x <- simparms[i, ]
+  xnm <- paste(x, collapse = "_")
+  message(xnm)
+  nsims <- 10 ## 100
+  p_sims_tab <- padj_test_fn(
+    idat = idat3,
+    bdat = bdat4,
+    blockid = "bF",
+    trtid = "Z",
+    fmla = Y ~ ZF | blockF,
+    ybase = "y0",
+    prop_blocks_0 = .5,
+    tau_fn = tau_norm_covariate_outliers,
+    tau_size = .5,
+    covariate = "v4",
+    pfn = pIndepDist,
+    nsims = nsims,
+    ncores = 1, ## parallelize over the  rows of simparms
+    afn = ifelse(x[["afn"]] != "NULL", getFromNamespace(x[["afn"]], ns = "manytestsr"), "NULL"),
+    p_adj_method = x[["p_adj_method"]],
+    splitfn = ifelse(x[["sfn"]] != "NULL", getFromNamespace(x[["sfn"]], ns = "manytestsr"), "NULL"),
+    splitby = x[["splitby"]]
+  )
+  # p_sims_tab <- p_sims_tab[1,,]
+  return(p_sims_tab)
 })
 
 names(p_sims_res) <- simresnms
 
-p_sims_obj <- rbindlist(p_sims_res,idcol = TRUE)
+p_sims_obj <- rbindlist(p_sims_res, idcol = TRUE)
 
-err_rates <- p_sims_obj[,lapply(.SD,mean),.SDcols=c("true_pos_prop","false_pos_prop",
-                                    "true_neg_prop","false_neg_prop",
-                                    "true_disc_prop","false_disc_prop",
-                                    "true_nondisc_prop","false_nondisc_prop"),by=.id]
+err_rates <- p_sims_obj[, lapply(.SD, mean), .SDcols = c(
+  "true_pos_prop", "false_pos_prop",
+  "true_neg_prop", "false_neg_prop",
+  "true_disc_prop", "false_disc_prop",
+  "true_nondisc_prop", "false_nondisc_prop"
+), by = .id]
 
 err_rates
-

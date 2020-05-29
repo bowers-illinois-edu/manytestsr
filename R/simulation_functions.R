@@ -27,31 +27,31 @@ errsimfn <- function(idat, bdat, pfn, splitfn,
                      blockid,
                      trtvar,
                      ybase,
-                     afn=NULL,
+                     afn = NULL,
                      thealpha = 0.05, tau_fn, tau_size = 0, prop_blocks_0 = 0, sims) {
-    if (!is.null(afn) & is.character(afn)){
-            if(afn == "NULL") {
-                afn <- NULL
-            } else {
-                afn <- get(afn)
-            }
-                     }
-    ## require(data.table) ## not necessary now that we have  a package
-    idatnew <- copy(idat) ## to avoid updating the bdat and idat inputs outside of the function
-    bdatnew <- copy(bdat)
-    setkeyv(bdatnew, blockid)
-    setkeyv(idatnew, blockid)
+  if (!is.null(afn) & is.character(afn)) {
+    if (afn == "NULL") {
+      afn <- NULL
+    } else {
+      afn <- get(afn)
+    }
+  }
+  ## require(data.table) ## not necessary now that we have  a package
+  idatnew <- copy(idat) ## to avoid updating the bdat and idat inputs outside of the function
+  bdatnew <- copy(bdat)
+  setkeyv(bdatnew, blockid)
+  setkeyv(idatnew, blockid)
 
-    idatnew$y1new <- create_effects(idat = idatnew, ybase = ybase, blockid = blockid, tau_fn = tau_fn, tau_size = tau_size, prop_blocks_0 = prop_blocks_0)
-    idatnew[, Y := y1new * get(trtvar) + get(ybase) * (1 - get(trtvar))]
-    idatnew[, truetaui := y1new - get(ybase)]
-    tausb <- idatnew[, .(
-                         truetaub = mean(truetaui),
-                         mndiffb = mean(Y[get(trtvar) == "1"]) - mean(Y[get(trtvar) == "0"])
-                         ), by = blockid]
+  idatnew$y1new <- create_effects(idat = idatnew, ybase = ybase, blockid = blockid, tau_fn = tau_fn, tau_size = tau_size, prop_blocks_0 = prop_blocks_0)
+  idatnew[, Y := y1new * get(trtvar) + get(ybase) * (1 - get(trtvar))]
+  idatnew[, truetaui := y1new - get(ybase)]
+  tausb <- idatnew[, .(
+    truetaub = mean(truetaui),
+    mndiffb = mean(Y[get(trtvar) == "1"]) - mean(Y[get(trtvar) == "0"])
+  ), by = blockid]
   stopifnot(key(tausb) == blockid)
   res <- findBlocks(
-    idat = idatnew, bdat = bdatnew, pfn = pfn, alphafn=afn,splitfn = splitfn, thealpha = thealpha,
+    idat = idatnew, bdat = bdatnew, pfn = pfn, alphafn = afn, splitfn = splitfn, thealpha = thealpha,
     fmla = fmla, parallel = "no", blockid = blockid, sims = sims
   )
   setkeyv(res, blockid)
@@ -79,30 +79,29 @@ errsimfn <- function(idat, bdat, pfn, splitfn,
 ##' @return A data.table with a single column containing potential outcome to treatment.
 ##' @export
 create_effects <- function(idat, ybase, blockid, tau_fn, tau_size, covariate = NULL, prop_blocks_0 = 0, by_block = TRUE) {
-  if ( !is.null(covariate) & is.character(covariate) ) {
-    if( covariate==""  | covariate=="NULL"){
-    covariate <- NULL
+  if (!is.null(covariate) & is.character(covariate)) {
+    if (covariate == "" | covariate == "NULL") {
+      covariate <- NULL
     }
-}
+  }
   stopifnot(is.null(covariate) | is.vector(covariate))
   ## assume that ybase already has block-level shifts in it
   idatnew <- copy(idat) ## to avoid updating the bdat and idat inputs outside of the function
   stopifnot(prop_blocks_0 >= 0 & prop_blocks_0 <= 1)
   setkeyv(idatnew, blockid)
 
-  if(is.null(covariate)){
-if (by_block) {
-    idatnew[, y1sim := get(ybase) + tau_fn(get(ybase), tau_size), by = blockid]
+  if (is.null(covariate)) {
+    if (by_block) {
+      idatnew[, y1sim := get(ybase) + tau_fn(get(ybase), tau_size), by = blockid]
+    } else {
+      idatnew[, y1sim := get(ybase) + tau_fn(get(ybase), tau_size)]
+    }
   } else {
-    idatnew[, y1sim := get(ybase) + tau_fn(get(ybase), tau_size)]
-  }
-
-  } else {
-  if (by_block) {
-    idatnew[, y1sim := get(ybase) + tau_fn(get(ybase), tau_size, get(covariate)), by = blockid]
-  } else {
-    idatnew[, y1sim := get(ybase) + tau_fn(get(ybase), tau_size, get(covariate))]
-  }
+    if (by_block) {
+      idatnew[, y1sim := get(ybase) + tau_fn(get(ybase), tau_size, get(covariate)), by = blockid]
+    } else {
+      idatnew[, y1sim := get(ybase) + tau_fn(get(ybase), tau_size, get(covariate))]
+    }
   }
 
   ## We could choose blocks at random to zero out but not sure we want to add noise that is hard to replicate.

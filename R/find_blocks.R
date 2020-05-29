@@ -16,7 +16,7 @@
 ##' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))
 ##' @param blocksize A string with the name of the column in bdat contains information about the size of the block (or other determinant of the power of tests within that block, such as harmonic mean weight of the block or variance of the outcome within the block.)
 ##' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
-##' @param fmla A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors. 
+##' @param fmla A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors.
 ##' @param parallel Should the pfn use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following `approximate` in the coin package.
 ##' @return A data.table containing information about the sequence of splitting and testing
 ##' @importFrom stringi stri_count_fixed stri_split_fixed stri_split stri_sub stri_replace_all stri_extract_last
@@ -25,7 +25,7 @@
 findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NULL, simthresh = 20,
                        sims = 1000, maxtest = 2000, thealpha = 0.05,
                        fmla = YContNorm ~ trtF | blockF,
-                       parallel = "multicore", copydts = FALSE, splitby = "hwt", blocksize="hwt") {
+                       parallel = "multicore", copydts = FALSE, splitby = "hwt", blocksize = "hwt") {
   if (copydts) {
     bdat <- data.table::copy(bdat)
     idat <- data.table::copy(idat)
@@ -49,7 +49,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     ## Current thought: the FDR controlling procedure should not be more conservative
     ## than the FWER controlling procedure.
     ## So, use which ever alpha is bigger at the overall root.
-    bdat[, alpha1 := max(alphafn(pval = unique(p1), batch = unique(g1), nodesize=sum(get(blocksize))), thealpha)]
+    bdat[, alpha1 := max(alphafn(pval = unique(p1), batch = unique(g1), nodesize = sum(get(blocksize))), thealpha)]
   }
   ## pbprev <- bdat[,.(p=unique(p1),biggrp=unique(g1),alpha1=unique(alpha1),batch="p1")]
   # If p1 > alpha1 then stop testing and return the data.
@@ -60,10 +60,10 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     testable = unique(bdat$testable),
     nodenum = "1",
     depth = 1L,
-    nodesize=sum(bdat[,get(blocksize)])
+    nodesize = sum(bdat[, get(blocksize)])
   )
-  bdat[, nodenum_current := "1"] 
-  bdat[, nodenum_prev:= "0"] 
+  bdat[, nodenum_current := "1"]
+  bdat[, nodenum_prev := "0"]
   ## there is only one test at this root level.
   ## stopifnot(length(unique(dat$testable))==1)
   setkeyv(idat, blockid)
@@ -73,9 +73,9 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   if (!all(bdat$testable)) {
     return(bdat)
   }
-  nodeidfn <- function(d){
-      crc32hash <- getVDigest(algo = "crc32")
-      crc32hash(d)
+  nodeidfn <- function(d) {
+    crc32hash <- getVDigest(algo = "crc32")
+    crc32hash(d)
   }
   # Step 2: Iterate through the tree
   ## Keep testing until no testing possible: criteria all blocks all size 1 and or
@@ -83,7 +83,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   ## limits reached (for testing of the algorithm).
 
   while (any(bdat$testable, na.rm = TRUE) & i < maxtest) {
-   ##   if(i==10){ browser() }
+    ##   if(i==10){ browser() }
     i <- i + 1L
     # if (i == 1 | i > 10) {  message("Split number: ", i) }
     gnm <- paste0("g", i) ## name of the grouping variable for the current split
@@ -95,19 +95,23 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     ## https://stackoverflow.com/questions/33689098/interactions-between-factors-in-data-table
     if (i == 2) {
       bdat[(testable), nodenum_prev := nodenum_current]
-      #bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev * 2L , ( nodenum_prev * 2L )  + 1L)]
-      bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodeidfn( paste0(nodenum_prev,"0") ) ,
-                                                  nodeidfn(paste0(nodenum_prev,"1")))]
+      # bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev * 2L , ( nodenum_prev * 2L )  + 1L)]
+      bdat[(testable), nodenum_current := fifelse(
+        get(gnm) == "0", nodeidfn(paste0(nodenum_prev, "0")),
+        nodeidfn(paste0(nodenum_prev, "1"))
+      )]
     } else {
       bdat[(testable), nodenum_prev := nodenum_current]
       ## bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev * 2L , ( nodenum_prev * 2L )  + 1L), by = biggrp]
-      bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodeidfn( paste0(nodenum_prev,"0") ) ,
-                                                  nodeidfn(paste0(nodenum_prev,"1"))), by = biggrp]
+      bdat[(testable), nodenum_current := fifelse(
+        get(gnm) == "0", nodeidfn(paste0(nodenum_prev, "0")),
+        nodeidfn(paste0(nodenum_prev, "1"))
+      ), by = biggrp]
       ## How to test/efficiently or periodically for duplicated nodenums?
     }
     bdat[(testable), biggrp := interaction(biggrp, nodenum_current, drop = TRUE)]
     bdat[, biggrp := droplevels(biggrp)] ## annoying to need this extra step given drop=TRUE
-    bdat[, nodesize:=sum(get(blocksize)),by=biggrp]
+    bdat[, nodesize := sum(get(blocksize)), by = biggrp]
     ## Now merge idat and bdat again since the test has to be at the idat level
     idat[bdat, c("testable", "biggrp") := mget(c("i.testable", "i.biggrp")), on = blockid]
     idat[, biggrp := droplevels(biggrp)] ## annoying to need to do this
@@ -119,7 +123,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     ## This next could be made more efficient without string splitting
     pb[, nodenum := stri_split_fixed(biggrp, ".", simplify = TRUE)[, i]]
     ## call "blocksize" the sum of the block sizes within group
-    pb[bdat, nodesize:=i.nodesize, on="biggrp"]
+    pb[bdat, nodesize := i.nodesize, on = "biggrp"]
     pbtracker <- rbind(pbtracker[, .(p, biggrp, batch, testable, nodenum, depth, nodesize)],
       pb[, batch := pnm],
       fill = TRUE
@@ -145,21 +149,21 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
       bdat[, testable := fifelse((pfinalb <= get(alphanm)) & (blocksbygroup > 1), TRUE, FALSE)]
     } else {
       if (i == 2) {
-        pbtracker[, (alphanm) := alphafn(pval = p, batch = batch, nodesize=nodesize)]
+        pbtracker[, (alphanm) := alphafn(pval = p, batch = batch, nodesize = nodesize)]
       } else {
         mid_roots <- pbtracker[depth == (i - 1) & (testable), nodenum]
-        find_paths <- function(){
-          tmp <- pbtracker[depth==i,]
-          tmp[,leaves:= stri_extract_last(as.character(biggrp),regex="\\.[:alnum:]*$")]
-          tmp[,paths:= stri_replace_all(as.character(biggrp),replacement="",fixed=leaves)]
-          path_dat <-tmp[,.(thepath=paste(unique(paths),paste(leaves,sep="",collapse=""),sep="")),by=paths]
-          path_vec <- stri_split_fixed(path_dat$thepath,".") #,simplify=TRUE)#[1,]
-          ##stopifnot(all(path_vec %in% pbtracker$nodenum))
+        find_paths <- function() {
+          tmp <- pbtracker[depth == i, ]
+          tmp[, leaves := stri_extract_last(as.character(biggrp), regex = "\\.[:alnum:]*$")]
+          tmp[, paths := stri_replace_all(as.character(biggrp), replacement = "", fixed = leaves)]
+          path_dat <- tmp[, .(thepath = paste(unique(paths), paste(leaves, sep = "", collapse = ""), sep = "")), by = paths]
+          path_vec <- stri_split_fixed(path_dat$thepath, ".") # ,simplify=TRUE)#[1,]
+          ## stopifnot(all(path_vec %in% pbtracker$nodenum))
           return(path_vec)
-         }
+        }
         setkey(pbtracker, nodenum)
         thepaths <- find_paths()
-        for (j in 1:length(thepaths)){
+        for (j in 1:length(thepaths)) {
           pbtracker[J(thepaths[[j]]), (alphanm) := alphafn(pval = p, batch = depth, nodesize = nodesize)]
         }
       }
