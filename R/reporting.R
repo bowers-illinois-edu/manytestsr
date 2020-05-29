@@ -15,22 +15,19 @@
 ##' @importFrom stringi stri_count_fixed stri_split_fixed
 ##' @import data.table
 ##' @export
-report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, autofwer = TRUE) {
+report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, autofwer = TRUE,blockid="blockF") {
   res <- copy(orig_res)
   ## For the output from adjust_block_tests (the bottom-up or test all blocks method)
-  if (length(grep("biggrp", names(testobj))) == 0) {
+  if (length(grep("biggrp", names(res))) == 0) {
     ## This is for the bottom-up/test every block method
-    res[, `:=`(
-      blockid = get(blockid),
-      hit = max_p < thealpha,
-      hit_grp = get(blockid)
-    )]
-    returncols <- names(res)
-    if (only_hits) {
-      res <- droplevels(res[(hit), .SD, .SDcols = returncols])
+    ## max_p are the adjusted p-values so we can use alpha=.05 for error rate control (hoping it is fdr and not fwer)
+    res[, hit := max_p < alpha]
+    res[, hit_grp := nodenum_current]
+    if(all(!res$hit)){
+    res[, hit_grp := NA]
     }
-    return(res[, .SD, .SDcols = returncols])
-  }
+  } else {
+  ## For the splitting based methods (output  from findBlocks)
   res[, fin_nodenum := nodenum_current]
   res[, fin_parent := nodenum_prev]
   ## Maximum tree depth for a node encoded in the biggrp string: basically number of dots+1 or number of node numbers
@@ -72,6 +69,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
   } else {
     res[, fin_grp := NA]
     res[, hit_grp := NA]
+  }
   }
   ## Later return fewer columns to save memory
   returncols <- names(res)

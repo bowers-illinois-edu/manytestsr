@@ -9,7 +9,8 @@ report_detections(
   fwer = TRUE,
   alpha = 0.05,
   only_hits = FALSE,
-  autofwer = TRUE
+  autofwer = TRUE,
+  blockid = "blockF"
 )
 }
 \arguments{
