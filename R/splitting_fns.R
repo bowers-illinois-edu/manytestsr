@@ -8,15 +8,30 @@
 ##' @param bid Block id
 ##' @param x A vector that we can use to order the blocks
 ##' @return A factor categorizing blocks into groups.
+##' @importFrom ClusterR KMeans_rcpp
 ##' @export
 splitCluster <- function(bid, x) {
   if (length(x) == 2) {
     group <- factor(c(0, 1))
     return(group)
   }
-  clus <- kmeans(x, centers = 2, nstart = 10)
-  group <- factor(as.numeric(clus$cluster == 1))
-  names(group) <- bid
+  if(length(x) == 3){
+    mnx <- fastMean(x)
+    rank_dists <- rank(abs(x - mnx))
+    group <- factor(rank_dists==max(rank_dists))
+    return(group)
+  }
+  if(length(unique(x))==1){
+    ## Sometimes when the split-by vector is constant within a group, kmeans fails.
+    ## So just split in half
+    group <- factor(rep_len(c(0,1),length.out=length(x)))
+    return(group)
+  }
+  # clus <- kmeans(x, centers = 2, nstart = 10)
+  # ## Trying to handle some edge cases with this function
+  clus <- KMeans_rcpp(as.matrix(x),clusters=2,num_init=2,initializer = "optimal_init")
+  group <- factor(as.numeric(clus$clusters == 1))
+  ## names(group) <- bid (no longer necessary)
   return(group)
 }
 ## debug(splitEqualApprox) testSplitEqualApprox <-
@@ -140,7 +155,7 @@ splitSpecifiedFactor <- function(bid, x) {
   ## Split on the first column with variance from the beginning
   split_on <- which(which_varies > 1)[1]
   if (is.na(split_on)) {
-    group <- factor(rep(0, length(x)))
+    group <- factor(rep_len(0, length.out=length(x)))
   } else {
     ## as.numeric of factors creates a vector that starts a 1
     group <- factor(as.numeric(x_split[, split_on] == x_split[1, split_on]))
@@ -167,7 +182,7 @@ splitSpecified <- function(bid, x) {
   ## Split on the first column with variance from the beginning
   split_on <- names(which_varies)[as.vector(which_varies > 1)][1]
   if (is.na(split_on)) {
-    group <- factor(rep(0, nrow(x)))
+    group <- factor(rep_len(0, length.out=nrow(x)))
   } else {
     ## as.numeric of factors creates a vector that starts a 1
     group <- factor(as.numeric(x[, get(split_on)]) - 1)

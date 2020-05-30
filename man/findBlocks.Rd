@@ -19,7 +19,8 @@ findBlocks(
   parallel = "multicore",
   copydts = FALSE,
   splitby = "hwt",
-  blocksize = "hwt"
+  blocksize = "hwt",
+  trace = FALSE
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ findBlocks(
 \item{splitby}{A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))}
 
 \item{blocksize}{A string with the name of the column in bdat contains information about the size of the block (or other determinant of the power of tests within that block, such as harmonic mean weight of the block or variance of the outcome within the block.)}
+
+\item{trace}{Logical, FALSE (default) to not print split number. TRUE prints the split number.}
 }
 \value{
 A data.table containing information about the sequence of splitting and testing

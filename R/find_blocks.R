@@ -18,6 +18,7 @@
 ##' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
 ##' @param fmla A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors.
 ##' @param parallel Should the pfn use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following `approximate` in the coin package.
+##' @param trace Logical, FALSE (default) to not print split number. TRUE prints the split number.
 ##' @return A data.table containing information about the sequence of splitting and testing
 ##' @importFrom stringi stri_count_fixed stri_split_fixed stri_split stri_sub stri_replace_all stri_extract_last
 ##' @importFrom digest digest getVDigest
@@ -25,7 +26,7 @@
 findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NULL, simthresh = 20,
                        sims = 1000, maxtest = 2000, thealpha = 0.05,
                        fmla = YContNorm ~ trtF | blockF,
-                       parallel = "multicore", copydts = FALSE, splitby = "hwt", blocksize = "hwt") {
+                       parallel = "multicore", copydts = FALSE, splitby = "hwt", blocksize = "hwt", trace=FALSE) {
   if (copydts) {
     bdat <- data.table::copy(bdat)
     idat <- data.table::copy(idat)
@@ -85,7 +86,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   while (any(bdat$testable, na.rm = TRUE) & i < maxtest) {
     ##   if(i==10){ browser() }
     i <- i + 1L
-    # if (i == 1 | i > 10) {  message("Split number: ", i) }
+    if (trace) {  message("Split number: ", i) }
     gnm <- paste0("g", i) ## name of the grouping variable for the current split
     pnm <- paste0("p", i) ## name of the p-value variable for the current split
     alphanm <- paste0("alpha", i)
