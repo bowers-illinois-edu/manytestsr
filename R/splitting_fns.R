@@ -29,8 +29,11 @@ splitCluster <- function(bid, x) {
   }
   # clus <- kmeans(x, centers = 2, nstart = 10)
   # ## Trying to handle some edge cases with this function
-  clus <- KMeans_rcpp(as.matrix(x),clusters=2,num_init=2,initializer = "optimal_init")
-  group <- factor(as.numeric(clus$clusters == 1))
+  clus <- tryCatch(KMeans_rcpp(as.matrix(x),clusters=2,num_init=2,
+                               initializer = "optimal_init")$clusters,
+                   error=function(e){ kmeans(x,centers=2)$cluster})
+
+  group <- factor(as.numeric(clus == 1))
   ## names(group) <- bid (no longer necessary)
   return(group)
 }
