@@ -20,6 +20,7 @@ bdat4[, g1 := splitCluster(bid = as.character(bF), x = hwt)]
 bdat4[, g2 := splitEqualApprox(bid = as.character(bF), x = hwt)]
 bdat4[, g3 := splitEqual(bid = as.character(bF), x = hwt)]
 bdat4[, g4 := splitEqual(bid = as.character(bF), x = v1)]
+bdat4[, g5 := splitCluster(bid = as.character(bF), x = v4)]
 
 # Maybe we want something from splitCLuster like the difference between the  means is bigger than any random split?
 bdat4[, .(mn = mean(hwt), sd = sd(hwt)), by = g1]
@@ -52,6 +53,9 @@ with(bdat4, table(lvs, gf9, exclude = c()))
 bdat4[lv1 != "l1_1" & lv2 != "l2_2", gf10 := splitSpecifiedFactor(bF, x = lvs)]
 with(bdat4, table(lvs, gf10, exclude = c()))
 
+
+## Will findBlocks stop once there is no more variation in the splitby vector? 
+## I think we want this: at least for splitSpecified perhaps something like splitCluster too --- but with a switch to say "Stop within a branch once there is no variation in the splitby vector? Versus Split into equal pieces once you have constant values in splitby."
 
 ## Testing node id functions here for now
 nodeidfn <- function(d) {

@@ -80,7 +80,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   }
   # Step 2: Iterate through the tree
   ## Keep testing until no testing possible: criteria all blocks all size 1 and or
-  ## all p_i > alpha_i or there is no change in the final p-values OR simulation
+  ## all p_i > alpha_i  OR simulation
   ## limits reached (for testing of the algorithm).
 
   while (any(bdat$testable, na.rm = TRUE) & i < maxtest) {
