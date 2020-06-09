@@ -10,7 +10,6 @@ context("Performance of Splitting Functions")
 set.seed(12345)
 bdat4 <- bdat3[sample(.N), ]
 
-
 ## The test of leave one out splitting is easiest.
 testSplitLOO <- splitLOO(bdat4$bF, bdat4$hwt)
 stopifnot(sum(testSplitLOO == "1") == length(testSplitLOO) - 1)
@@ -53,9 +52,30 @@ with(bdat4, table(lvs, gf9, exclude = c()))
 bdat4[lv1 != "l1_1" & lv2 != "l2_2", gf10 := splitSpecifiedFactor(bF, x = lvs)]
 with(bdat4, table(lvs, gf10, exclude = c()))
 
+set.seed(12355)
+idat$y1test_null <- create_effects(idat = idat, ybase = "y0", blockid = "bF", tau_fn = tau_norm, tau_size = 0, prop_blocks_0 = .5)
+idat$y1test_zeros <- create_effects(idat = idat, ybase = "y0", blockid = "bF", tau_fn = tau_norm, tau_size = 2, prop_blocks_0 = .5)
+idat[, Y_zeros := y1test_zeros * Z + y0 * (1 - Z)]
+idat[, Y_null := y1test_null * Z + y0 * (1 - Z)]
 
-## Will findBlocks stop once there is no more variation in the splitby vector? 
+
+## Will findBlocks stop once there is no more variation in the splitby vector?
 ## I think we want this: at least for splitSpecified perhaps something like splitCluster too --- but with a switch to say "Stop within a branch once there is no variation in the splitby vector? Versus Split into equal pieces once you have constant values in splitby."
+
+## A splitting variable with little variation.
+### START HERE
+set.seed(12345)
+bdat4[,twosplits:=rbinom(.N,1,.5)]
+bdat4[,twosplitsF:=factor(twosplits)]
+
+splittingfns <- c("splitLOO", "splitEqualApprox", "splitCluster", "splitSpecifiedFactor")
+
+ theres1 <- findBlocks(idat = idat3, bdat = bdat4, blockid = "bF", splitfn = splitSpecifiedFactor,
+    pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
+    fmla =  Ytauv2 ~ ZF | bF,
+    parallel = "no", copydts = TRUE, splitby = 'twosplitsF'
+  )
+
 
 ## Testing node id functions here for now
 nodeidfn <- function(d) {

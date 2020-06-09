@@ -11,7 +11,7 @@
 ##' @param alphafn A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator.
 ##' @param simthresh Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations
 ##' @param sims Number of permutations for permutation-based testing
-##' @param maxtest Maximum splits or tests to do
+##' @param maxtest Maximum splits or tests to do. Should probably not be smaller than the number of experimental blocks.
 ##' @param copydts TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.
 ##' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))
 ##' @param blocksize A string with the name of the column in bdat contains information about the size of the block (or other determinant of the power of tests within that block, such as harmonic mean weight of the block or variance of the outcome within the block.)
@@ -52,7 +52,6 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     ## So, use which ever alpha is bigger at the overall root.
     bdat[, alpha1 := max(alphafn(pval = unique(p1), batch = unique(g1), nodesize = sum(get(blocksize))), thealpha)]
   }
-  ## pbprev <- bdat[,.(p=unique(p1),biggrp=unique(g1),alpha1=unique(alpha1),batch="p1")]
   # If p1 > alpha1 then stop testing and return the data.
   bdat[, testable := (pfinalb < alpha1)]
   pbtracker <- data.table(
@@ -65,24 +64,16 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   )
   bdat[, nodenum_current := "1"]
   bdat[, nodenum_prev := "0"]
-  ## there is only one test at this root level.
-  ## stopifnot(length(unique(dat$testable))==1)
   setkeyv(idat, blockid)
   setkeyv(bdat, "testable")
   bdat[, blocksbygroup := length(unique(get(blockid))), by = biggrp]
-  ## samep <- FALSE ## initialize tracking of p-values to check if they begin to be repeated
   if (!all(bdat$testable)) {
     return(bdat)
-  }
-  nodeidfn <- function(d) {
-    crc32hash <- getVDigest(algo = "crc32")
-    crc32hash(d)
   }
   # Step 2: Iterate through the tree
   ## Keep testing until no testing possible: criteria all blocks all size 1 and or
   ## all p_i > alpha_i  OR simulation
   ## limits reached (for testing of the algorithm).
-
   while (any(bdat$testable, na.rm = TRUE) & i < maxtest) {
     ##   if(i==10){ browser() }
     i <- i + 1L
@@ -183,3 +174,17 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   return(bdat)
   ## }
 }
+
+
+##' Use hashing to make a node id
+##'
+##' This is an internal function used by findBlocks.
+##' @param d A vector
+##' @return a vector of hashes
+##' @importFrom digest digest getVDigest
+##' @export
+nodeidfn <- function(d) {
+    crc32hash <- getVDigest(algo = "crc32")
+    crc32hash(d)
+}
+
