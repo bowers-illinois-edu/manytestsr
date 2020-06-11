@@ -14,6 +14,7 @@
 ##' @param maxtest Maximum splits or tests to do. Should probably not be smaller than the number of experimental blocks.
 ##' @param copydts TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.
 ##' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))
+##' @param stop_splitby_constant TRUE if the splitting should stop when splitby is constant within a given branch of the tree. FALSE if splitting should continue even when splitby is constant. Default is TRUE.
 ##' @param blocksize A string with the name of the column in bdat contains information about the size of the block (or other determinant of the power of tests within that block, such as harmonic mean weight of the block or variance of the outcome within the block.)
 ##' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
 ##' @param fmla A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors.
@@ -26,7 +27,7 @@
 findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NULL, simthresh = 20,
                        sims = 1000, maxtest = 2000, thealpha = 0.05,
                        fmla = YContNorm ~ trtF | blockF,
-                       parallel = "multicore", copydts = FALSE, splitby = "hwt", blocksize = "hwt", trace=FALSE) {
+                       parallel = "multicore", copydts = FALSE, splitby = "hwt", stop_splitby_constant=TRUE, blocksize = "hwt", trace=FALSE) {
   if (copydts) {
     bdat <- data.table::copy(bdat)
     idat <- data.table::copy(idat)
@@ -163,9 +164,15 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
       bdat[pbtracker, (alphanm) := get(paste0("i.", alphanm)), on = "biggrp"]
       ## Recall that := **updates** values. So, it doesn't overwrite
       ## (testable==FALSE) values. Here we use current p rather than max of previous p.
+      ## A block is testable if current p <= the alpha level AND the number of blocks in the group containing the block is more than 1
+      ## we stop testing when we have only a single block within a group (or branch) because the block is the unit.
       bdat[, testable := fifelse((get(pnm) <= get(alphanm)) & (blocksbygroup > 1), TRUE, FALSE)]
-      testable_grps <- bdat[!is.na(testable), .(testable = unique(testable)), keyby = "biggrp"]
-      pbtracker[testable_grps, testable := get("i.testable")]
+      ## Also stop testing for groups within which we cannot split any more for certain splitters. Currently set by hand.
+      if(stop_splitby_constant){
+          bdat[,testable:=fifelse(uniqueN(get(splitby))==1,FALSE,testable),by=biggrp]
+      }
+      ##testable_grps <- bdat[!is.na(testable), .(testable = unique(testable)), keyby = "biggrp"]
+      ##pbtracker[testable_grps, testable := get("i.testable")]
     }
     setkeyv(bdat, "testable") ## for binary search speed
     ## message(paste(unique(signif(bdat$pfinalb,4)),collapse=' '),appendLF = TRUE)

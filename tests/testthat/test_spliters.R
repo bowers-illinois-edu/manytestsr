@@ -59,8 +59,12 @@ idat[, Y_zeros := y1test_zeros * Z + y0 * (1 - Z)]
 idat[, Y_null := y1test_null * Z + y0 * (1 - Z)]
 
 
-## Will findBlocks stop once there is no more variation in the splitby vector?
-## I think we want this: at least for splitSpecified perhaps something like splitCluster too --- but with a switch to say "Stop within a branch once there is no variation in the splitby vector? Versus Split into equal pieces once you have constant values in splitby."
+#### When splitby has no variation within biggrp, further splitting doesn't do anything and the algorithm may just continue to produce the same p-values until maxtest is reached depending on the splitting function. So, for example, in splitSpecifiedFactor and splitCluster we want the algorithm to stop or switch to another splitter (TODO maybe) once clusters / branches have no variation on splitby  --- any further splitting would be essentially random.
+
+## In splitSpecifiedFactor we want it to stop when splitby is constant within group
+## In splitCluster we want it to stop when splitby is constant within group or move to random splits or splitLOO or splitEqualApprox
+## In splitEqualApprox we want splitby to be something like N and so we want it to continue even if the groups have the same N.
+## In splitLOO could stop when splitby is constant within the bigger group or start choosing blocks to focus on at random.
 
 ## A splitting variable with little variation.
 ### START HERE
@@ -70,7 +74,7 @@ bdat4[,twosplitsF:=factor(twosplits)]
 
 splittingfns <- c("splitLOO", "splitEqualApprox", "splitCluster", "splitSpecifiedFactor")
 
- theres1 <- findBlocks(idat = idat3, bdat = bdat4, blockid = "bF", splitfn = splitSpecifiedFactor,
+ theres1 <- findBlocks(idat = idat3, bdat = bdat4, blockid = "bF", splitfn = splitCluster,
     pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
     fmla =  Ytauv2 ~ ZF | bF,
     parallel = "no", copydts = TRUE, splitby = 'twosplitsF'
