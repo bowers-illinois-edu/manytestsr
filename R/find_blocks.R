@@ -28,6 +28,11 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
                        sims = 1000, maxtest = 2000, thealpha = 0.05,
                        fmla = YContNorm ~ trtF | blockF,
                        parallel = "multicore", copydts = FALSE, splitby = "hwt", stop_splitby_constant=TRUE, blocksize = "hwt", trace=FALSE) {
+
+    ## Some checks
+    stopifnot('The splitby variable must have at least two values if stop_splitby_constant is TRUE'=stop_splitby_constant & uniqueN(bdat[[splitby]])>=2)
+
+    ## Setup
   if (copydts) {
     bdat <- data.table::copy(bdat)
     idat <- data.table::copy(idat)
@@ -83,7 +88,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     pnm <- paste0("p", i) ## name of the p-value variable for the current split
     alphanm <- paste0("alpha", i)
     ## Set Group to NA for blocks where we have to stop testing
-    bdat[(testable), (gnm) := splitfn(bid = get(blockid), x = get(splitby)), by = biggrp] ## get(paste0('g',i-1))]
+    bdat[(testable), (gnm) := splitfn(bid = get(blockid), x = get(splitby)), by = biggrp]
     ## maybe improve this next with
     ## https://stackoverflow.com/questions/33689098/interactions-between-factors-in-data-table
     if (i == 2) {
@@ -168,11 +173,11 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
       ## we stop testing when we have only a single block within a group (or branch) because the block is the unit.
       bdat[, testable := fifelse((get(pnm) <= get(alphanm)) & (blocksbygroup > 1), TRUE, FALSE)]
       ## Also stop testing for groups within which we cannot split any more for certain splitters. Currently set by hand.
-      if(stop_splitby_constant){
-          bdat[,testable:=fifelse(uniqueN(get(splitby))==1,FALSE,testable),by=biggrp]
-      }
       ##testable_grps <- bdat[!is.na(testable), .(testable = unique(testable)), keyby = "biggrp"]
       ##pbtracker[testable_grps, testable := get("i.testable")]
+    }
+    if(stop_splitby_constant){
+        bdat[,testable:=fifelse(uniqueN(get(splitby))==1,FALSE,unique(testable)),by=biggrp]
     }
     setkeyv(bdat, "testable") ## for binary search speed
     ## message(paste(unique(signif(bdat$pfinalb,4)),collapse=' '),appendLF = TRUE)

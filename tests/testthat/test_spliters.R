@@ -1,10 +1,14 @@
 # Test and develop functions to split the data
 context("Performance of Splitting Functions")
 
-# library(here)
-# library(data.table)
-# source(here::here("tests/testthat", "make_test_data.R"))
-# devtools::load_all() ## use  this during debugging
+## The next lines are for use when creating the tests. Change interactive<-FALSE for production
+interactive <- TRUE
+if(interactive){
+ library(here)
+ library(data.table)
+ source(here::here("tests/testthat", "make_test_data.R"))
+ devtools::load_all() ## use  this during debugging
+}
 
 ## Shuffle order  of the blocks so that the first set and the second set don't  automatically go together
 set.seed(12345)
@@ -70,17 +74,35 @@ idat[, Y_null := y1test_null * Z + y0 * (1 - Z)]
 ### START HERE
 set.seed(12345)
 bdat4[,twosplits:=rbinom(.N,1,.5)]
-bdat4[,twosplitsF:=factor(twosplits)]
+bdat4[,twosplitsF:=factor(twosplits)] ## should only have 2 splits
+bdat4[,lvs2:=interaction(lv1,lv2)] ## should only have 4 spits
 
 splittingfns <- c("splitLOO", "splitEqualApprox", "splitCluster", "splitSpecifiedFactor")
 
- theres1 <- findBlocks(idat = idat3, bdat = bdat4, blockid = "bF", splitfn = splitCluster,
+ theres1 <- findBlocks(idat = idat3, bdat = bdat4, blockid = "bF",     pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
+    fmla =  Ytauv2 ~ ZF | bF,
+    parallel = 'no', copydts = TRUE,
+    splitfn = splitCluster, splitby = 'twosplitsF', stop_splitby_constant = TRUE
+  )
+theres1_det <- report_detections(theres1,blockid="bF")
+expect_equal(uniqueN(theres1$biggrp),uniqueN(bdat4$twosplitsF))
+## This next because I know that we should reject in both groups.
+expect_equal(uniqueN(theres1_det$fin_grp),uniqueN(bdat4$twosplitsF))
+table(theres1$twosplitsF,theres1$biggrp)
+
+ theres2 <- findBlocks(idat = idat3, bdat = bdat4, blockid = "bF",
     pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
     fmla =  Ytauv2 ~ ZF | bF,
-    parallel = "no", copydts = TRUE, splitby = 'twosplitsF'
+    parallel = 'no', copydts = TRUE,
+    splitfn = splitSpecifiedFactor, splitby = 'lvs2', stop_splitby_constant = TRUE
   )
+theres2_det <- report_detections(theres2,blockid="bF")
+expect_equal(uniqueN(theres2$biggrp),uniqueN(bdat4$lvs2))
+table(theres2$lvs2,theres2$biggrp)
 
+### START HERE OR JUST ABOVE TO VERIFY THAT THIS WORKS FOR ALL SPLITTERS. ALSO CHECK FOR BEHAVIOR WHEN stop_splitby_constant=FALSE
 
+##########################################################
 ## Testing node id functions here for now
 nodeidfn <- function(d) {
   crc32hash <- digest::getVDigest(algo = "crc32")
