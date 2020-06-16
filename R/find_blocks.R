@@ -21,6 +21,8 @@
 ##' @param parallel Should the pfn use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following `approximate` in the coin package.
 ##' @param trace Logical, FALSE (default) to not print split number. TRUE prints the split number.
 ##' @return A data.table containing information about the sequence of splitting and testing
+##' @details Some notes about the splitting functions.
+##'  - splitLOO chooses the blocks largest on the splitby vector one at a time. When the splitby vector has ties, it chooses one block at random among those tied for the first or largest rank. When the split vector has few values, for example, only two values, it will still split assuming that the vector is numeric (so, 1 is ranked higher than 0) and then randomly among ties. If stop_splitby_constant=TRUE, then the algorithm will stop after exhausting the blocks in the higher ranked category (thinking about the binary splitby case). For this reason we advise against using splitLOO with a splitby vector with few categories.
 ##' @importFrom stringi stri_count_fixed stri_split_fixed stri_split stri_sub stri_replace_all stri_extract_last
 ##' @importFrom digest digest getVDigest
 ##' @export
@@ -30,7 +32,9 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
                        parallel = "multicore", copydts = FALSE, splitby = "hwt", stop_splitby_constant=TRUE, blocksize = "hwt", trace=FALSE) {
 
     ## Some checks
-    stopifnot('The splitby variable must have at least two values if stop_splitby_constant is TRUE'=stop_splitby_constant & uniqueN(bdat[[splitby]])>=2)
+    if(stop_splitby_constant){
+    stopifnot('The splitby variable must have at least two values if stop_splitby_constant is TRUE' =  uniqueN(bdat[[splitby]])>=2)
+    }
 
     ## Setup
   if (copydts) {
@@ -81,7 +85,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   ## all p_i > alpha_i  OR simulation
   ## limits reached (for testing of the algorithm).
   while (any(bdat$testable, na.rm = TRUE) & i < maxtest) {
-    ##   if(i==10){ browser() }
+      ## if(i==9){ browser() }
     i <- i + 1L
     if (trace) {  message("Split number: ", i) }
     gnm <- paste0("g", i) ## name of the grouping variable for the current split

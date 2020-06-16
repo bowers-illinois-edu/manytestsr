@@ -11,6 +11,14 @@
 ##' @importFrom ClusterR KMeans_rcpp
 ##' @export
 splitCluster <- function(bid, x) {
+
+    stopifnot("x must be numeric or integer" = is.numeric(x))
+
+  if(length(unique(x))==1){
+    ## Random splits used with stop_splitby_constant=FALSE otherwise findBlocks should stop before this
+    group <- factor(sample(rep_len(c(0,1),length.out=length(x))))
+    return(group)
+  }
   if (length(x) == 2) {
     group <- factor(c(0, 1))
     return(group)
@@ -19,12 +27,6 @@ splitCluster <- function(bid, x) {
     mnx <- fastMean(x)
     rank_dists <- rank(abs(x - mnx))
     group <- factor(rank_dists==max(rank_dists))
-    return(group)
-  }
-  if(length(unique(x))==1){
-    ## Sometimes when the split-by vector is constant within a group, kmeans fails.
-    ## So just split in half
-    group <- factor(rep_len(c(0,1),length.out=length(x)))
     return(group)
   }
   # clus <- kmeans(x, centers = 2, nstart = 10)
@@ -131,7 +133,8 @@ splitLOO <- function(bid, x) {
   }
   ## require(data.table)
   ## We only want to return one block and a time. So need to avoid ties.
-  frankx <- frank(x, ties.method = "first") ## frank from data.table
+## Using random choice among equal ranks.
+  frankx <- frank(x, ties.method = "random") ## frank from data.table
   group <- factor(as.numeric(frankx < max(frankx)))
   ## names(x) <- bid
   return(group)
@@ -145,6 +148,12 @@ splitLOO <- function(bid, x) {
 ##' @export
 splitSpecifiedFactor <- function(bid, x) {
   stopifnot(is.factor(x))
+  stopifnot(stri_count_fixed(x, ".")>0)
+  if(length(unique(x))==1){
+    ## Random splits used with stop_splitby_constant=FALSE otherwise findBlocks should stop before this
+    group <- factor(sample(rep_len(c(0,1),length.out=length(x))))
+    return(group)
+  }
   if (length(x) == 2) {
     group <- factor(c(0, 1))
     return(group)
@@ -157,12 +166,12 @@ splitSpecifiedFactor <- function(bid, x) {
   })
   ## Split on the first column with variance from the beginning
   split_on <- which(which_varies > 1)[1]
-  if (is.na(split_on)) {
-    group <- factor(rep_len(0, length.out=length(x)))
-  } else {
+  #if (is.na(split_on)) {
+  #  group <- factor(rep_len(0, length.out=length(x)))
+  #} else {
     ## as.numeric of factors creates a vector that starts a 1
     group <- factor(as.numeric(x_split[, split_on] == x_split[1, split_on]))
-  }
+  #}
   return(group)
 }
 
@@ -173,7 +182,8 @@ splitSpecifiedFactor <- function(bid, x) {
 ##' @param bid is not used
 ##' @export
 splitSpecified <- function(bid, x) {
-  stopifnot(is.data.table(x))
+  stopifnot("This splitting function requires a data.table object with more than one column" = is.data.table(x))
+  stopifnot("Try a different splitting function if you have only a single attribute or criteria" = ncol(x)>1)
   if (nrow(x) == 2) {
     group <- factor(c(0, 1))
     return(group)

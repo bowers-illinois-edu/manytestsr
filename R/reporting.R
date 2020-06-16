@@ -15,7 +15,7 @@
 ##' @importFrom stringi stri_count_fixed stri_split_fixed
 ##' @import data.table
 ##' @export
-report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, autofwer = TRUE,blockid="blockF") {
+report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, autofwer = TRUE, blockid="blockF") {
   res <- copy(orig_res)
   ## For the output from adjust_block_tests (the bottom-up or test all blocks method)
   if (length(grep("biggrp", names(res))) == 0) {
@@ -57,13 +57,13 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
   ## A detection is scored if p < alpha for a node containing a single block (i.e. a leaf)
   res[, single_hit := max_p < max_alpha & blocksbygroup == 1]
   ## A detection is also scored if the two leaves have p > alpha but the parent has p < alpha: this is a grouped detection with two blocks.
-  res[(!single_hit), group_hit := all(max_p > max_alpha) & fin_parent_p < parent_alpha & length(unique(fin_nodenum)) == 2, by = fin_parent]
+  res[, group_hit := fifelse(!single_hit & ( all(max_p > max_alpha) & fin_parent_p < parent_alpha & length(unique(fin_nodenum)) == 2),TRUE,FALSE), by = fin_parent]
   ## Also a group hit can be scored (an effect detected within a group of blocks) if there are multiple blocks in a final node and that test is p<a
-  res[blocksbygroup>1, group_hit2 := all(max_p < max_alpha), by=fin_nodenum ]
+  res[, group_hit2 := fifelse(blocksbygroup>1 & all(max_p < max_alpha),TRUE,FALSE), by=fin_nodenum ]
   res[, hit := single_hit | group_hit | group_hit2]
   if (any(res$hit)) {
     res[(hit), fin_grp := fifelse(single_hit | group_hit2, fin_nodenum, fin_parent)]
-    res[(hit), hit_grp := fin_grp] # , labels = 1:length(unique(fin_grp)))]
+    res[(hit), hit_grp := fin_grp]
     res[!(hit), hit_grp := fin_nodenum]
     ## Make sure that no  hit_grp includes *both* detections and misses/skips/acceptances
     test <- res[, .(hitmix = length(unique(hit)) == 1), by = hit_grp]
