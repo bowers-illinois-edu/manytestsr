@@ -29,14 +29,14 @@
 findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NULL, simthresh = 20,
                        sims = 1000, maxtest = 2000, thealpha = 0.05,
                        fmla = YContNorm ~ trtF | blockF,
-                       parallel = "multicore", copydts = FALSE, splitby = "hwt", stop_splitby_constant=TRUE, blocksize = "hwt", trace=FALSE) {
+                       parallel = "multicore", copydts = FALSE, splitby = "hwt", stop_splitby_constant = TRUE, blocksize = "hwt", trace = FALSE) {
 
-    ## Some checks
-    if(stop_splitby_constant){
-    stopifnot('The splitby variable must have at least two values if stop_splitby_constant is TRUE' =  uniqueN(bdat[[splitby]])>=2)
-    }
+  ## Some checks
+  if (stop_splitby_constant) {
+    stopifnot("The splitby variable must have at least two values if stop_splitby_constant is TRUE" = uniqueN(bdat[[splitby]]) >= 2)
+  }
 
-    ## Setup
+  ## Setup
   if (copydts) {
     bdat <- data.table::copy(bdat)
     idat <- data.table::copy(idat)
@@ -85,9 +85,11 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   ## all p_i > alpha_i  OR simulation
   ## limits reached (for testing of the algorithm).
   while (any(bdat$testable, na.rm = TRUE) & i < maxtest) {
-      ## if(i==9){ browser() }
+    ## if(i==9){ browser() }
     i <- i + 1L
-    if (trace) {  message("Split number: ", i) }
+    if (trace) {
+      message("Split number: ", i)
+    }
     gnm <- paste0("g", i) ## name of the grouping variable for the current split
     pnm <- paste0("p", i) ## name of the p-value variable for the current split
     alphanm <- paste0("alpha", i)
@@ -177,11 +179,11 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
       ## we stop testing when we have only a single block within a group (or branch) because the block is the unit.
       bdat[, testable := fifelse((get(pnm) <= get(alphanm)) & (blocksbygroup > 1), TRUE, FALSE)]
       ## Also stop testing for groups within which we cannot split any more for certain splitters. Currently set by hand.
-      ##testable_grps <- bdat[!is.na(testable), .(testable = unique(testable)), keyby = "biggrp"]
-      ##pbtracker[testable_grps, testable := get("i.testable")]
+      ## testable_grps <- bdat[!is.na(testable), .(testable = unique(testable)), keyby = "biggrp"]
+      ## pbtracker[testable_grps, testable := get("i.testable")]
     }
-    if(stop_splitby_constant){
-        bdat[,testable:=fifelse(uniqueN(get(splitby))==1,FALSE,unique(testable)),by=biggrp]
+    if (stop_splitby_constant) {
+      bdat[, testable := fifelse(uniqueN(get(splitby)) == 1, FALSE, unique(testable)), by = biggrp]
     }
     setkeyv(bdat, "testable") ## for binary search speed
     ## message(paste(unique(signif(bdat$pfinalb,4)),collapse=' '),appendLF = TRUE)
@@ -200,7 +202,6 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
 ##' @importFrom digest digest getVDigest
 ##' @export
 nodeidfn <- function(d) {
-    crc32hash <- getVDigest(algo = "crc32")
-    crc32hash(d)
+  crc32hash <- getVDigest(algo = "crc32")
+  crc32hash(d)
 }
-

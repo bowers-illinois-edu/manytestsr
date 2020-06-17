@@ -15,7 +15,7 @@
 ##' @importFrom stringi stri_count_fixed stri_split_fixed
 ##' @import data.table
 ##' @export
-report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, autofwer = TRUE, blockid="blockF") {
+report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, autofwer = TRUE, blockid = "blockF") {
   res <- copy(orig_res)
   ## For the output from adjust_block_tests (the bottom-up or test all blocks method)
   if (length(grep("biggrp", names(res))) == 0) {
@@ -23,55 +23,55 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
     ## max_p are the adjusted p-values so we can use alpha=.05 for error rate control (hoping it is fdr and not fwer)
     res[, hit := max_p < alpha]
     res[, hit_grp := nodenum_current]
-    if(all(!res$hit)){
-    res[, hit_grp := NA]
+    if (all(!res$hit)) {
+      res[, hit_grp := NA]
     }
   } else {
-  ## For the splitting based methods (output  from findBlocks)
-  res[, fin_nodenum := nodenum_current]
-  res[, fin_parent := nodenum_prev]
-  ## Maximum tree depth for a node encoded in the biggrp string: basically number of dots+1 or number of node numbers
-  ## (where node numbers are separated by a dot)
-  res[, maxdepth := stri_count_fixed(biggrp, ".") + 1]
-  if (all(res$maxdepth == 1)) {
-    ## When the algorithm stops at the first level there are no parents. There is just the root node. This is an attempt at a work around
-    res[, fin_parent_p := p1]
-    res[, parent_alpha := alpha1]
-  } else {
-    res[, fin_parent_p := get(paste0("p", maxdepth - 1)), by = seq_len(nrow(res))]
-    res[, parent_alpha := get(paste0("alpha", maxdepth - 1)), by = seq_len(nrow(res))]
-  }
-  ## If the block is a terminal node and p<alpha then this is a hit or detected effect
-  ## If the block is a terminal node and p>alpha for both it and the other of the two terminal nodes then we have a hit or detected effect for *both* nodes but cannot distinguish between them.
-  ## I think max_p should be p at maxdepth for the FDR algorithmn and maximum p overall (or pfinalb) for the FWER algo.
-  ## could have done this first     res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
-  ## But I think the following is faster
-  if (fwer & !autofwer) {
-    res[, max_p := pfinalb]
-    res[, max_alpha := alpha]
-    # res[, parent_alpha := alpha]
-  } else {
-    res[, max_p := get(paste0("p", maxdepth)), by = seq_len(nrow(res))]
-    res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
-  }
-  ## A detection is scored if p < alpha for a node containing a single block (i.e. a leaf)
-  res[, single_hit := max_p < max_alpha & blocksbygroup == 1]
-  ## A detection is also scored if the two leaves have p > alpha but the parent has p < alpha: this is a grouped detection with two blocks.
-  res[, group_hit := fifelse(!single_hit & ( all(max_p > max_alpha) & fin_parent_p < parent_alpha & length(unique(fin_nodenum)) == 2),TRUE,FALSE), by = fin_parent]
-  ## Also a group hit can be scored (an effect detected within a group of blocks) if there are multiple blocks in a final node and that test is p<a
-  res[, group_hit2 := fifelse(blocksbygroup>1 & all(max_p < max_alpha),TRUE,FALSE), by=fin_nodenum ]
-  res[, hit := single_hit | group_hit | group_hit2]
-  if (any(res$hit)) {
-    res[(hit), fin_grp := fifelse(single_hit | group_hit2, fin_nodenum, fin_parent)]
-    res[(hit), hit_grp := fin_grp]
-    res[!(hit), hit_grp := fin_nodenum]
-    ## Make sure that no  hit_grp includes *both* detections and misses/skips/acceptances
-    test <- res[, .(hitmix = length(unique(hit)) == 1), by = hit_grp]
-    stopifnot(all(test$hitmix))
-  } else {
-    res[, fin_grp := NA]
-    res[, hit_grp := NA]
-  }
+    ## For the splitting based methods (output  from findBlocks)
+    res[, fin_nodenum := nodenum_current]
+    res[, fin_parent := nodenum_prev]
+    ## Maximum tree depth for a node encoded in the biggrp string: basically number of dots+1 or number of node numbers
+    ## (where node numbers are separated by a dot)
+    res[, maxdepth := stri_count_fixed(biggrp, ".") + 1]
+    if (all(res$maxdepth == 1)) {
+      ## When the algorithm stops at the first level there are no parents. There is just the root node. This is an attempt at a work around
+      res[, fin_parent_p := p1]
+      res[, parent_alpha := alpha1]
+    } else {
+      res[, fin_parent_p := get(paste0("p", maxdepth - 1)), by = seq_len(nrow(res))]
+      res[, parent_alpha := get(paste0("alpha", maxdepth - 1)), by = seq_len(nrow(res))]
+    }
+    ## If the block is a terminal node and p<alpha then this is a hit or detected effect
+    ## If the block is a terminal node and p>alpha for both it and the other of the two terminal nodes then we have a hit or detected effect for *both* nodes but cannot distinguish between them.
+    ## I think max_p should be p at maxdepth for the FDR algorithmn and maximum p overall (or pfinalb) for the FWER algo.
+    ## could have done this first     res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
+    ## But I think the following is faster
+    if (fwer & !autofwer) {
+      res[, max_p := pfinalb]
+      res[, max_alpha := alpha]
+      # res[, parent_alpha := alpha]
+    } else {
+      res[, max_p := get(paste0("p", maxdepth)), by = seq_len(nrow(res))]
+      res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
+    }
+    ## A detection is scored if p < alpha for a node containing a single block (i.e. a leaf)
+    res[, single_hit := max_p < max_alpha & blocksbygroup == 1]
+    ## A detection is also scored if the two leaves have p > alpha but the parent has p < alpha: this is a grouped detection with two blocks.
+    res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & fin_parent_p < parent_alpha & length(unique(fin_nodenum)) == 2), TRUE, FALSE), by = fin_parent]
+    ## Also a group hit can be scored (an effect detected within a group of blocks) if there are multiple blocks in a final node and that test is p<a
+    res[, group_hit2 := fifelse(blocksbygroup > 1 & all(max_p < max_alpha), TRUE, FALSE), by = fin_nodenum]
+    res[, hit := single_hit | group_hit | group_hit2]
+    if (any(res$hit)) {
+      res[(hit), fin_grp := fifelse(single_hit | group_hit2, fin_nodenum, fin_parent)]
+      res[(hit), hit_grp := fin_grp]
+      res[!(hit), hit_grp := fin_nodenum]
+      ## Make sure that no  hit_grp includes *both* detections and misses/skips/acceptances
+      test <- res[, .(hitmix = length(unique(hit)) == 1), by = hit_grp]
+      stopifnot(all(test$hitmix))
+    } else {
+      res[, fin_grp := NA]
+      res[, hit_grp := NA]
+    }
   }
   ## Later return fewer columns to save memory
   returncols <- names(res)
