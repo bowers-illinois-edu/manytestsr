@@ -1,51 +1,51 @@
-## Functions for organizing and graphing results
+# Functions for organizing and graphing results
 
 
-##' Return detected blocks plus info
-##'
-##' Given the results of the splitting and testing algorithm, report on the blocks
-##'  where the null of no effects could be rejected at level alpha.
-##' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
-##' @param fwer (default is TRUE) means that a block is detected (or not) using the maximum p-value associated with the
-##' block (or the groups containing that block). fwer=FALSE to detect blocks (or groups of blocks) using FDR control.
-##' @param alpha Is the false positive rate used for detecting an effect if it is constant (i.e. not an FDR-style approach).
-##' @param only_hits (default FALSE) returns only the detected blocks
-##' @param autofwer If fwer=TRUE but alpha varies, return the fdr based report.
-##' @return A data.table adding a column \code{hit} to the \code{res} data.table indicating a "hit" or detection for that block (or group of blocks)
-##' @importFrom stringi stri_count_fixed stri_split_fixed
-##' @import data.table
-##' @export
+#' Return detected blocks plus info
+#'
+#' Given the results of the splitting and testing algorithm, report on the blocks
+#'  where the null of no effects could be rejected at level alpha.
+#' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
+#' @param fwer (default is TRUE) means that a block is detected (or not) using the maximum p-value associated with the
+#' block (or the groups containing that block). fwer=FALSE to detect blocks (or groups of blocks) using FDR control.
+#' @param alpha Is the false positive rate used for detecting an effect if it is constant (i.e. not an FDR-style approach).
+#' @param only_hits (default FALSE) returns only the detected blocks
+#' @param autofwer If fwer=TRUE but alpha varies, return the fdr based report.
+#' @return A data.table adding a column \code{hit} to the \code{res} data.table indicating a "hit" or detection for that block (or group of blocks)
+#' @importFrom stringi stri_count_fixed stri_split_fixed
+#' @import data.table
+#' @export
 report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, autofwer = TRUE, blockid = "blockF") {
   res <- copy(orig_res)
-  ## For the output from adjust_block_tests (the bottom-up or test all blocks method)
+  # For the output from adjust_block_tests (the bottom-up or test all blocks method)
   if (length(grep("biggrp", names(res))) == 0) {
-    ## This is for the bottom-up/test every block method
-    ## max_p are the adjusted p-values so we can use alpha=.05 for error rate control (hoping it is fdr and not fwer)
+    # This is for the bottom-up/test every block method
+    # max_p are the adjusted p-values so we can use alpha=.05 for error rate control (hoping it is fdr and not fwer)
     res[, hit := max_p < alpha]
     res[, hit_grp := nodenum_current]
     if (all(!res$hit)) {
       res[, hit_grp := NA]
     }
   } else {
-    ## For the splitting based methods (output  from findBlocks)
+    # For the splitting based methods (output  from findBlocks)
     res[, fin_nodenum := nodenum_current]
     res[, fin_parent := nodenum_prev]
-    ## Maximum tree depth for a node encoded in the biggrp string: basically number of dots+1 or number of node numbers
-    ## (where node numbers are separated by a dot)
+    # Maximum tree depth for a node encoded in the biggrp string: basically number of dots+1 or number of node numbers
+    # (where node numbers are separated by a dot)
     res[, maxdepth := stri_count_fixed(biggrp, ".") + 1]
     if (all(res$maxdepth == 1)) {
-      ## When the algorithm stops at the first level there are no parents. There is just the root node. This is an attempt at a work around
+      # When the algorithm stops at the first level there are no parents. There is just the root node. This is an attempt at a work around
       res[, fin_parent_p := p1]
       res[, parent_alpha := alpha1]
     } else {
       res[, fin_parent_p := get(paste0("p", maxdepth - 1)), by = seq_len(nrow(res))]
       res[, parent_alpha := get(paste0("alpha", maxdepth - 1)), by = seq_len(nrow(res))]
     }
-    ## If the block is a terminal node and p<alpha then this is a hit or detected effect
-    ## If the block is a terminal node and p>alpha for both it and the other of the two terminal nodes then we have a hit or detected effect for *both* nodes but cannot distinguish between them.
-    ## I think max_p should be p at maxdepth for the FDR algorithmn and maximum p overall (or pfinalb) for the FWER algo.
-    ## could have done this first     res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
-    ## But I think the following is faster
+    # If the block is a terminal node and p<alpha then this is a hit or detected effect
+    # If the block is a terminal node and p>alpha for both it and the other of the two terminal nodes then we have a hit or detected effect for *both* nodes but cannot distinguish between them.
+    # I think max_p should be p at maxdepth for the FDR algorithmn and maximum p overall (or pfinalb) for the FWER algo.
+    # could have done this first     res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
+    # But I think the following is faster
     if (fwer & !autofwer) {
       res[, max_p := pfinalb]
       res[, max_alpha := alpha]
@@ -54,18 +54,18 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
       res[, max_p := get(paste0("p", maxdepth)), by = seq_len(nrow(res))]
       res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
     }
-    ## A detection is scored if p < alpha for a node containing a single block (i.e. a leaf)
+    # A detection is scored if p < alpha for a node containing a single block (i.e. a leaf)
     res[, single_hit := max_p < max_alpha & blocksbygroup == 1]
-    ## A detection is also scored if the two leaves have p > alpha but the parent has p < alpha: this is a grouped detection with two blocks.
+    # A detection is also scored if the two leaves have p > alpha but the parent has p < alpha: this is a grouped detection with two blocks.
     res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & fin_parent_p < parent_alpha & length(unique(fin_nodenum)) == 2), TRUE, FALSE), by = fin_parent]
-    ## Also a group hit can be scored (an effect detected within a group of blocks) if there are multiple blocks in a final node and that test is p<a
+    # Also a group hit can be scored (an effect detected within a group of blocks) if there are multiple blocks in a final node and that test is p<a
     res[, group_hit2 := fifelse(blocksbygroup > 1 & all(max_p < max_alpha), TRUE, FALSE), by = fin_nodenum]
     res[, hit := single_hit | group_hit | group_hit2]
     if (any(res$hit)) {
       res[(hit), fin_grp := fifelse(single_hit | group_hit2, fin_nodenum, fin_parent)]
       res[(hit), hit_grp := fin_grp]
       res[!(hit), hit_grp := fin_nodenum]
-      ## Make sure that no  hit_grp includes *both* detections and misses/skips/acceptances
+      # Make sure that no  hit_grp includes *both* detections and misses/skips/acceptances
       test <- res[, .(hitmix = length(unique(hit)) == 1), by = hit_grp]
       stopifnot(all(test$hitmix))
     } else {
@@ -73,7 +73,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
       res[, hit_grp := NA]
     }
   }
-  ## Later return fewer columns to save memory
+  # Later return fewer columns to save memory
   returncols <- names(res)
   if (only_hits) {
     res <- droplevels(res[(hit), .SD, .SDcols = returncols])
@@ -82,19 +82,19 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 }
 
 
-##' Make a node level binary tree object
-##'
-##' Given the results of the splitting and testing algorithm, make a node level data set for use in reporting results in terms of a binary tree graph.
-##' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
-##' @param blockdis Is a character name for the variable containing the block id information
-##' @return A tbl_graph and igraph object with nodes and edges
-##' @importFrom stringi stri_split_fixed stri_sub
-## @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent activate
-##' @import tidygraph
-##' @importFrom data.table melt
-##' @export
+#' Make a node level binary tree object
+#'
+#' Given the results of the splitting and testing algorithm, make a node level data set for use in reporting results in terms of a binary tree graph.
+#' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
+#' @param blockdis Is a character name for the variable containing the block id information
+#' @return A tbl_graph and igraph object with nodes and edges
+#' @importFrom stringi stri_split_fixed stri_sub
+# @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent activate
+#' @import tidygraph
+#' @importFrom data.table melt
+#' @export
 make_tree <- function(orig_res, blockid = "bF") {
-  ## We have to make a node level data set and an edge level data set in order to define the graph
+  # We have to make a node level data set and an edge level data set in order to define the graph
   res <- copy(orig_res)
   res_nodeids <- stri_split_fixed(as.character(res$biggrp), pattern = ".", simplify = TRUE)
   res_nodeids[res_nodeids == ""] <- NA
@@ -105,7 +105,7 @@ make_tree <- function(orig_res, blockid = "bF") {
   pnms <- sort(grep("^p[0-9]", names(res), value = TRUE))
   anms <- sort(grep("^alpha[0-9]", names(res), value = TRUE))
   nodenums <- sort(grep("^nodenum[0-9]", names(res), value = TRUE))
-  ## Right now we go from wide to long to node. It would be nicer to go directly from wide to node.
+  # Right now we go from wide to long to node. It would be nicer to go directly from wide to node.
   reslong <- melt(res,
     id = c("biggrp", blockid, "nodenum_current", "nodenum_prev"),
     measure.vars = list(p = pnms, a = anms, nodenum = nodenums),
@@ -122,7 +122,7 @@ make_tree <- function(orig_res, blockid = "bF") {
   ), by = nodenum]
   res_nodes_df$name <- res_nodes_df$nodenum
 
-  ## Make an edge data.frame
+  # Make an edge data.frame
   res_edges_lst <- list()
   for (i in 1:(ncol(res_nodeids) - 1)) {
     res_edges_lst[[i]] <- data.table(from = res_nodeids[, i], to = res_nodeids[, i + 1])
@@ -133,14 +133,14 @@ make_tree <- function(orig_res, blockid = "bF") {
     sort = FALSE, all.x = TRUE
   )
   setnames(res_nodes_df, "from", "parent_name")
-  ## Now define the graph using the node data set and the edges dataset.
+  # Now define the graph using the node data set and the edges dataset.
   res_graph <- tbl_graph(nodes = res_nodes_df, edges = res_edges_df)
   res_graph <- res_graph %>%
     activate(nodes) %>%
     mutate(out_degree = centrality_degree(mode = "out"))
 
-  ## blah <- igraph::dominator_tree(res_graph,root="1",mode="out")
-  ## blah$dom #might be parents
+  # blah <- igraph::dominator_tree(res_graph,root="1",mode="out")
+  # blah$dom #might be parents
   res_graph <- res_graph %>%
     activate(nodes) %>%
     group_by(parent_name) %>%
@@ -149,7 +149,7 @@ make_tree <- function(orig_res, blockid = "bF") {
   res_graph <- res_graph %>%
     activate(nodes) %>%
     mutate(parent_of_ns = node_is_adjacent(to = both_ns, include_to = FALSE, mode = "in"))
-  ## first way to detect is leaf with p<alpha and second way as parent of two non-sig leaves
+  # first way to detect is leaf with p<alpha and second way as parent of two non-sig leaves
   res_graph <- res_graph %>%
     activate(nodes) %>%
     mutate(hit = (out_degree == 0 & p <= a) | parent_of_ns)
@@ -168,14 +168,14 @@ make_tree <- function(orig_res, blockid = "bF") {
   return(res_graph)
 }
 
-##' Make a plot of the nodes
-##'
-##' Given the results of the splitting and testing algorithm in the form of a , make a node level data set for use in reporting results in terms of a binary tree graph. This does not print or plot the graph. You'll need to do that with the resulting object.
-##' @param res_graph A tidygraph object produced from make_tree
-##' @return A ggraph object
-##' @import ggraph
-##' @import ggplot2
-##' @export
+#' Make a plot of the nodes
+#'
+#' Given the results of the splitting and testing algorithm in the form of a , make a node level data set for use in reporting results in terms of a binary tree graph. This does not print or plot the graph. You'll need to do that with the resulting object.
+#' @param res_graph A tidygraph object produced from make_tree
+#' @return A ggraph object
+#' @import ggraph
+#' @import ggplot2
+#' @export
 make_graph <- function(res_graph) {
   # require(ggraph)
   # require(tidygraph)

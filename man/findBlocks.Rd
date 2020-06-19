@@ -19,6 +19,7 @@ findBlocks(
   parallel = "multicore",
   copydts = FALSE,
   splitby = "hwt",
+  stop_splitby_constant = TRUE,
   blocksize = "hwt",
   trace = FALSE
 )
@@ -40,7 +41,7 @@ findBlocks(
 
 \item{sims}{Number of permutations for permutation-based testing}
 
-\item{maxtest}{Maximum splits or tests to do}
+\item{maxtest}{Maximum splits or tests to do. Should probably not be smaller than the number of experimental blocks.}
 
 \item{thealpha}{Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)}
 
@@ -50,7 +51,9 @@ findBlocks(
 
 \item{copydts}{TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.}
 
-\item{splitby}{A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))}
+\item{splitby}{A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates) or a column with a factor with levels separated by "." that indicates a pre-specified series of splits (see splitSpecifiedFactor))}
+
+\item{stop_splitby_constant}{TRUE if the splitting should stop when splitby is constant within a given branch of the tree. FALSE if splitting should continue even when splitby is constant. Default is TRUE. Different combinations of splitby, splitfn, and stop_splitby_constant make more or less sense as described below.}
 
 \item{blocksize}{A string with the name of the column in bdat contains information about the size of the block (or other determinant of the power of tests within that block, such as harmonic mean weight of the block or variance of the outcome within the block.)}
 
@@ -61,4 +64,49 @@ A data.table containing information about the sequence of splitting and testing
 }
 \description{
 Split and test.
+}
+\details{
+Some notes about the splitting functions and how they relate to splitting criteria (splitby) and stopping criteria (stop_splitby_constant).
+\itemize{
+\item \code{\link[=splitLOO]{splitLOO()}} chooses the blocks largest on the splitby vector one at a
+time so that we have two tests, one focusing on the highest ranked block and
+one on all of the rest of the blocks (for example, the block with the most
+units in it versus the rest of the blocks). When the splitby vector has
+ties, it chooses one block at random among those tied for the first or
+largest rank. When the split vector has few values, for example, only two
+values, it will still split assuming that the vector is numeric (so, 1 is
+ranked higher than 0) and then randomly among ties. If
+stop_splitby_constant=TRUE, then the algorithm will stop after exhausting
+the blocks in the higher ranked category (thinking about the binary splitby
+case). For this reason we advise against using splitLOO with a factor
+splitby vector with few categories. \code{\link[=splitLOO]{splitLOO()}} is best used with a splitby
+vector like block-size --- which could be constant and thus just create a
+random choice of a single block or could vary and thus focus the testing on
+the largest/highest ranked blocks.
+\item \code{\link[=splitEqualApprox]{splitEqualApprox()}} splits the sets of blocks into two groups where the
+sum of the splitby vector is approximately the same in each split. For
+example, if splitby is number of units in a block, then this splitting
+function makes two groups of blocks, each group having the same total
+number of units. This splitting function will work with discrete or factors
+but will do: \code{rank_splitby <- rank(splitby)} and then divide the blocks
+into groups based on taking every other rank. So, for factors variables
+with few categories that are ordered, this will allocate every other
+category to one or another group.
+\item \code{\link[=splitCluster]{splitCluster()}} splits the blocks into groups that are as similar as
+possible to each other on splitby using the kmeans clustering algorithm
+(using a combination of \code{\link[=kmeans]{kmeans()}} or \code{\link[=KMeans_rcpp]{KMeans_rcpp()}}). This will not work
+with factor variables. When the splitting criteria is constant, it will
+return random splits into roughly two equal sized groups of blocks if
+stop_splitby_constant=FALSE. If stop_splitby_constant=TRUE then
+\code{\link[=findBlocks]{findBlocks()}} will stop and return groups of blocks as detected or not.
+\item \code{\link[=splitSpecifiedFactor]{splitSpecifiedFactor()}} will split the blocks following prespecified
+pattern encoded into the labels for the levels of the factor. For example,
+if we imagine three nested levels of splitting (like states, districts,
+neighborhoods), the factor would have labels like
+\code{category1_level1.category2_level1.category3_level1} and where splits will
+occur from left to right depending on whether there is existing variation
+at that level. When the factor is constant and stop_splitby_constant=TRUE
+splitting stops. When stop_splitby_constant=FALSE, then it uses random
+splits.
+}
 }

@@ -2,7 +2,7 @@
 context("Performance of Splitting Functions")
 
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
-interactive <- TRUE
+interactive <- FALSE
 if (interactive) {
   library(here)
   library(data.table)
@@ -16,7 +16,7 @@ bdat4 <- bdat3[sample(.N), ]
 
 ## The test of leave one out splitting is easiest.
 test_Split_LOO <- splitLOO(bdat4$bF, bdat4$hwt)
-stopifnot(sum(test_Split_LOO == "1") == length(test_Split_LOO) - 1)
+expect_equal(sum(test_Split_LOO == "1"), length(test_Split_LOO) - 1)
 
 ## Not sure what kind of test to write here. Leaving this as is for now. Hoping it doesn't break package building
 bdat4[, g1 := splitCluster(bid = as.character(bF), x = hwt)]
@@ -80,19 +80,23 @@ bdat4[, twosplitsF := factor(twosplits)] ## should only have 2 splits
 bdat4[, lvs2 := interaction(lv1, lv2)] ## should only have 4 spits
 bdat4[, constv := rep(10, .N)]
 
-theres1 <- findBlocks(
-  idat = idat3, bdat = bdat4, blockid = "bF", pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
-  fmla = Ytauv2 ~ ZF | bF,
-  parallel = "no", copydts = TRUE,
-  splitfn = splitCluster, splitby = "twosplits", stop_splitby_constant = TRUE
-)
-theres1_det <- report_detections(theres1, blockid = "bF")
-expect_equal(uniqueN(theres1$biggrp), uniqueN(bdat4$twosplits))
-## This next because I know that we should reject in both groups.
-expect_equal(uniqueN(theres1_det$fin_grp), uniqueN(bdat4$twosplits))
-table(theres1$twosplitsF, theres1$biggrp)
+test_that("splitCluster follows the values of discrete splitby variables", {
+  theres1 <- findBlocks(
+    idat = idat3, bdat = bdat4, blockid = "bF", pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
+    fmla = Ytauv2 ~ ZF | bF,
+    parallel = "no", copydts = TRUE,
+    splitfn = splitCluster, splitby = "twosplits", stop_splitby_constant = TRUE
+  )
+  theres1_det <- report_detections(theres1, blockid = "bF")
+  expect_equal(uniqueN(theres1$biggrp), uniqueN(bdat4$twosplits))
+  ## This next because I know that we should reject in both groups.
+  expect_equal(uniqueN(theres1_det$fin_grp), uniqueN(bdat4$twosplits))
+  thetab <- table(theres1$twosplitsF, theres1$biggrp)
+  expect_equal(c(thetab[1, 1], thetab[2, 2]), c(0, 0))
+})
 
 ## Not testing "splitSpecified" because splitSpecifiedFactor does a better job.
+## depreciate splitSpecified
 split_test_parms <- data.table(expand.grid(
   sfn = c(
     "splitLOO", "splitEqualApprox",
@@ -117,18 +121,18 @@ test_splitters_fn <- function(sfn, splitby, stopsplitting) {
 }
 
 res <- mapply(
-  FUN = function(sfn=sfn, sby=sby, stopsplitting=stopsplitting) {
+  FUN = function(sfn = sfn, sby = sby, stopsplitting = stopsplitting) {
     message(paste(sfn, sby, stopsplitting, collapse = ","))
     obj <- try(test_splitters_fn(
       sfn = sfn,
       splitby = sby,
       stopsplitting = stopsplitting
     ))
-    obj_det <-    if(class(obj)[1]=="try-error"){
-                          return(NA)
-                      } else {
-                          return(report_detections(obj))
-                      }
+    obj_det <- if (class(obj)[1] == "try-error") {
+      return(NA)
+    } else {
+      return(report_detections(obj))
+    }
   },
   sfn = split_test_parms$sfn,
   sby = split_test_parms$splitby,
@@ -136,174 +140,189 @@ res <- mapply(
   SIMPLIFY = FALSE
 )
 
-names(res) <- apply(split_test_parms,1,function(x){ paste(x,collapse="_",sep="") })
+names(res) <- apply(split_test_parms, 1, function(x) {
+  paste(x, collapse = "_", sep = "")
+})
 
-### Expectations ###
+test_that("Splitters work as expected given splitby variables that have one, two or four values and are factor or numeric", {
+  ### Expectations ###
 
-## > split_test_parms
+  ## > split_test_parms
 
-##                      sfn    splitby stopsplitting
+  ##                      sfn    splitby stopsplitting
 
-## splitLOO will tend to first choose one of twosplits==1 at random and then
-## again until there are no more twosplits==1, then it will stop. If it would
-## reject with the entire group of twosplits==0, it will still stop but then
-## report that as a rejection.
+  ## splitLOO will tend to first choose one of twosplits==1 at random and then
+  ## again until there are no more twosplits==1, then it will stop. If it would
+  ## reject with the entire group of twosplits==0, it will still stop but then
+  ## report that as a rejection.
 
-##  1:             splitLOO  twosplits          TRUE
-with(res[[1]],table(biggrp,twosplits,exclude=c()))
-with(res[[1]],table(fin_grp,twosplits,exclude=c()))
-## All of the group with the smallest value on twosplits will be put in one split
-expect_equal(sum(res[[1]]$twosplits==0),max(table(res[[1]]$fin_grp)))
-##  4:             splitLOO twosplitsF          TRUE
-### This should be the same as above. Factor is the same as numeric here.
-with(res[[4]],table(biggrp,twosplitsF,exclude=c()))
-with(res[[4]],table(fin_grp,twosplitsF,exclude=c()))
-expect_equal(sum(res[[4]]$twosplitsF==0),max(table(res[[4]]$fin_grp)))
+  ##  1:             splitLOO  twosplits          TRUE
+  with(res[[1]], table(biggrp, twosplits, exclude = c()))
+  with(res[[1]], table(fin_grp, twosplits, exclude = c()))
+  ## All of the group with the smallest value on twosplits will be put in one split
+  expect_equal(sum(res[[1]]$twosplits == 0), max(table(res[[1]]$fin_grp)))
+  ##  4:             splitLOO twosplitsF          TRUE
+  ### This should be the same as above. Factor is the same as numeric here.
+  with(res[[4]], table(biggrp, twosplitsF, exclude = c()))
+  with(res[[4]], table(fin_grp, twosplitsF, exclude = c()))
+  expect_equal(sum(res[[4]]$twosplitsF == 0), max(table(res[[4]]$fin_grp)))
 
-## 15:             splitLOO  twosplits         FALSE
-### This should be like random splits: Yes. See below how blah2 and blah2a differ. So, splitLOO really should be used with a splitby that is more continuous and random splits will happen when the systematic variation in splitby is used up.
-with(res[[15]],table(biggrp,twosplits,exclude=c()))
-with(res[[15]],table(fin_grp,twosplits,exclude=c()))
-with(res[[15]],table(hit,twosplits,exclude=c()))
+  ## 15:             splitLOO  twosplits         FALSE
+  ### This should be like random splits: Yes. See below how blah2 and blah2a differ. So, splitLOO really should be used with a splitby that is more continuous and random splits will happen when the systematic variation in splitby is used up.
+  with(res[[15]], table(biggrp, twosplits, exclude = c()))
+  with(res[[15]], table(fin_grp, twosplits, exclude = c()))
+  with(res[[15]], table(hit, twosplits, exclude = c()))
 
-blah2 <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplits", stopsplitting = FALSE)
-blah2_det <- report_detections(blah2, blockid = "bF")
-with(blah2_det,table(fin_grp,twosplits,exclude=c()))
+  blah2 <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplits", stopsplitting = FALSE)
+  blah2_det <- report_detections(blah2, blockid = "bF")
+  with(blah2_det, table(fin_grp, twosplits, exclude = c()))
 
-blah2a <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplits", stopsplitting = FALSE)
-blah2a_det <- report_detections(blah2a, blockid = "bF")
-with(blah2a_det,table(fin_grp,twosplits,exclude=c()))
-blah2_tree <- make_graph(make_tree(blah2))
-
-
-## 18:             splitLOO twosplitsF         FALSE
-with(res[[18]],table(biggrp,twosplitsF,exclude=c()))
-with(res[[18]],table(fin_grp,twosplitsF,exclude=c()))
-with(res[[18]],table(hit,twosplitsF,exclude=c()))
-
-blah2F <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplitsF", stopsplitting = FALSE)
-blah2F_det <- report_detections(blah2F, blockid = "bF")
-with(blah2F_det,table(fin_grp,twosplits,exclude=c()))
-
-blah2Fa <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplitsF", stopsplitting = FALSE)
-blah2Fa_det <- report_detections(blah2Fa, blockid = "bF")
-with(blah2Fa_det,table(fin_grp,twosplits,exclude=c()))
-
-##  8:             splitLOO       lvs2          TRUE
-### Basically don't use splitLOO with overly discrete splitby unless we are happy with random splits
-## with(res[[8]],table(biggrp,lvs2,exclude=c()))
-with(res[[8]],table(fin_grp,lvs2,exclude=c()))
-
-## 12:             splitLOO     constv          TRUE
-### This one failed because you can't have a splitby that is constant if stop_splitby_constant=TRUE
-blah2G <- test_splitters_fn(sfn = "splitLOO", splitby = "constv", stopsplitting = TRUE)
-res[[12]]
-
-## 22:             splitLOO       lvs2         FALSE
-## Semi-random splits after exhausting variation in lvs2
-with(res[[22]],table(fin_grp,lvs2,exclude=c()))
-
-## 26:             splitLOO     constv         FALSE
-## This is random splits again.
-with(res[[26]],table(fin_grp,constv,exclude=c()))
-###########
-
-############################
-
-### splitEqualApprox tries to make two groups such that the sum(x_{group
-### 1})=sum(x_{group_2}). This means that in a case with only two values, it
-### tries to allocate blocks to splits such that the numbers of blocks with x=0
-### and x=1 in group 1 are the same as they are in group 2
-### Unclear what patterns to expect here
-##  2:     splitEqualApprox  twosplits          TRUE
-with(res[[2]],table(fin_grp,twosplits,exclude=c()))
-blah2H <- test_splitters_fn(sfn = "splitEqualApprox", splitby = "twosplits",
-                            stopsplitting = TRUE)
-blah2H_det <- report_detections(blah2H, blockid = "bF")
-with(blah2H_det,table(fin_grp,twosplits,exclude=c()))
-
-##  5:     splitEqualApprox twosplitsF          TRUE
-with(res[[5]],table(fin_grp,twosplitsF,exclude=c()))
-
-##  9:     splitEqualApprox       lvs2          TRUE
-### splitEqualApprox will rank factors and sum them too. So, again, not really that great for factors.
-with(res[[9]],table(fin_grp,lvs2,exclude=c()))
-
-## 13:     splitEqualApprox     constv          TRUE
-## Not allowed by findBlocks.
-res[[13]]
-
-## 16:     splitEqualApprox  twosplits         FALSE
-## 19:     splitEqualApprox twosplitsF         FALSE
-## 23:     splitEqualApprox       lvs2         FALSE
-## 27:     splitEqualApprox     constv         FALSE
-with(res[[27]],table(fin_grp,constv,exclude=c()))
+  blah2a <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplits", stopsplitting = FALSE)
+  blah2a_det <- report_detections(blah2a, blockid = "bF")
+  with(blah2a_det, table(fin_grp, twosplits, exclude = c()))
+  blah2_tree <- make_graph(make_tree(blah2))
 
 
-##  3:         splitCluster  twosplits          TRUE
-##  6:         splitCluster twosplitsF          TRUE
-## 10:         splitCluster       lvs2          TRUE
-## 14:         splitCluster     constv          TRUE
-## 17:         splitCluster  twosplits         FALSE
-## 20:         splitCluster twosplitsF         FALSE
-## 24:         splitCluster       lvs2         FALSE
-## 28:         splitCluster     constv         FALSE
+  ## 18:             splitLOO twosplitsF         FALSE
+  with(res[[18]], table(biggrp, twosplitsF, exclude = c()))
+  with(res[[18]], table(fin_grp, twosplitsF, exclude = c()))
+  with(res[[18]], table(hit, twosplitsF, exclude = c()))
 
-##  7: splitSpecifiedFactor twosplitsF          TRUE
-## 11: splitSpecifiedFactor       lvs2          TRUE
-## 21: splitSpecifiedFactor twosplitsF         FALSE
-## 25: splitSpecifiedFactor       lvs2         FALSE
+  blah2F <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplitsF", stopsplitting = FALSE)
+  blah2F_det <- report_detections(blah2F, blockid = "bF")
+  with(blah2F_det, table(fin_grp, twosplits, exclude = c()))
+
+  blah2Fa <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplitsF", stopsplitting = FALSE)
+  blah2Fa_det <- report_detections(blah2Fa, blockid = "bF")
+  with(blah2Fa_det, table(fin_grp, twosplits, exclude = c()))
+
+  ##  8:             splitLOO       lvs2          TRUE
+  ### Basically don't use splitLOO with overly discrete splitby unless we are happy with random splits
+  ## with(res[[8]],table(biggrp,lvs2,exclude=c()))
+  with(res[[8]], table(fin_grp, lvs2, exclude = c()))
+
+  ## 12:             splitLOO     constv          TRUE
+  ### This one failed because you can't have a splitby that is constant if stop_splitby_constant=TRUE
+  blah2G <- test_splitters_fn(sfn = "splitLOO", splitby = "constv", stopsplitting = TRUE)
+  res[[12]]
+
+  ## 22:             splitLOO       lvs2         FALSE
+  ## Semi-random splits after exhausting variation in lvs2
+  with(res[[22]], table(fin_grp, lvs2, exclude = c()))
+
+  ## 26:             splitLOO     constv         FALSE
+  ## This is random splits again.
+  with(res[[26]], table(fin_grp, constv, exclude = c()))
+  ###########
+
+  ############################
+
+  ### splitEqualApprox tries to make two groups such that the sum(x_{group
+  ### 1})=sum(x_{group_2}). This means that in a case with only two values, it
+  ### tries to allocate blocks to splits such that the numbers of blocks with x=0
+  ### and x=1 in group 1 are the same as they are in group 2
+  ### Unclear what patterns to expect here
+  ##  2:     splitEqualApprox  twosplits          TRUE
+  with(res[[2]], table(fin_grp, twosplits, exclude = c()))
+  blah2H <- test_splitters_fn(
+    sfn = "splitEqualApprox", splitby = "twosplits",
+    stopsplitting = TRUE
+  )
+  blah2H_det <- report_detections(blah2H, blockid = "bF")
+  with(blah2H_det, table(fin_grp, twosplits, exclude = c()))
+
+  ##  5:     splitEqualApprox twosplitsF          TRUE
+  with(res[[5]], table(fin_grp, twosplitsF, exclude = c()))
+
+  ##  9:     splitEqualApprox       lvs2          TRUE
+  ### splitEqualApprox will rank factors and sum them too. So, again, not really that great for factors.
+  with(res[[9]], table(fin_grp, lvs2, exclude = c()))
+
+  ## 13:     splitEqualApprox     constv          TRUE
+  ## Not allowed by findBlocks.
+  res[[13]]
+
+  ## 16:     splitEqualApprox  twosplits         FALSE
+  ## Random splits basically  (after first split then random)
+  with(res[[16]], table(fin_grp, twosplits, exclude = c()))
+
+  ## 19:     splitEqualApprox twosplitsF         FALSE
+  ### Random splits again (after first split then random)
+  with(res[[19]], table(fin_grp, twosplits, exclude = c()))
+
+  ## 23:     splitEqualApprox       lvs2         FALSE
+  ## random splits after initial splits by lvs2 (ranking levels, taking every other level into group 1 the rest into group 2)
+  with(res[[23]], table(fin_grp, lvs2, exclude = c()))
+
+  ## 27:     splitEqualApprox     constv         FALSE
+  ### random splits
+  with(res[[27]], table(fin_grp, constv, exclude = c()))
+
+  ##  3:         splitCluster  twosplits          TRUE
+  tabres3 <- with(res[[3]], table(fin_grp, twosplits, exclude = c()))
+  expect_equal(tabres3[1, 1], 0)
+  expect_equal(tabres3[2, 2], 0)
+  expect_equal(dim(tabres3), c(2, 2))
+
+  ##  6:         splitCluster twosplitsF          TRUE
+  ### Can't do kmeans with a factor
+  expect_equal(res[[6]], NA)
+
+  ## 10:         splitCluster       lvs2          TRUE
+  ### Can't do kmeans with a factor
+  expect_equal(res[[10]], NA)
+
+  ## 14:         splitCluster     constv          TRUE
+  ### Can't use stop_splitby_constant=TRUE with a constant splitby
+  expect_equal(res[[14]], NA)
+
+  ## 17:         splitCluster  twosplits         FALSE
+  ### No special expectations here because the splitting becomes random
+  tabres17 <- with(res[[17]], table(fin_grp, twosplits, exclude = c()))
+
+  ## 20:         splitCluster twosplitsF         FALSE
+  ### Factors not allowed with splitCluster
+  expect_equal(res[[20]], NA)
+
+  ## 24:         splitCluster       lvs2         FALSE
+  expect_equal(res[[24]], NA)
+
+  ## 28:         splitCluster     constv         FALSE
+  ### This next is random splits.
+  tabres28 <- with(res[[28]], table(fin_grp, constv, exclude = c()))
+
+  ##  7: splitSpecifiedFactor twosplitsF          TRUE
+  ## splitSpecifiedFactor requires a specific format for the labels of the factor
+  expect_equal(res[[7]], NA)
+
+  ## 11: splitSpecifiedFactor       lvs2          TRUE
+  ### Only one non-zero entry in the following table per column because the blocks with specified factor level have to be kept together.
+  tabres11 <- with(res[[11]], table(fin_grp, lvs2, exclude = c()))
+  expect_true(all(apply(tabres11, 2, function(x) {
+    sum(x > 0)
+  })))
+  expect_equal(uniqueN(res[[11]]$biggrp), uniqueN(res[[11]]$lvs2))
+
+  ## 21: splitSpecifiedFactor twosplitsF         FALSE
+  expect_equal(res[[21]], NA)
+
+  ## 25: splitSpecifiedFactor       lvs2         FALSE
+  ### Starts within factor be then splits randomly
+  tabres25 <- with(res[[25]], table(fin_grp, lvs2, exclude = c()))
+
+  theres2 <- findBlocks(
+    idat = idat3, bdat = bdat4, blockid = "bF",
+    pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
+    fmla = Ytauv2 ~ ZF | bF,
+    parallel = "no", copydts = TRUE,
+    splitfn = splitSpecifiedFactor, splitby = "lvs2", stop_splitby_constant = TRUE
+  )
+  theres2_det <- report_detections(theres2, blockid = "bF")
+  expect_equal(uniqueN(theres2$biggrp), uniqueN(bdat4$lvs2))
+  table(theres2$lvs2, theres2$biggrp)
+})
 
 
-## splitLOO will tend to first choose one of twosplits==1 at random and then again until there are no more twosplits==1, then it will stop. If it would reject with the entire group of twosplits==0, it will still stop but then report that as a rejection.
-blah1 <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplits", stopsplitting = TRUE)
-blah1_det <- report_detections(blah1, blockid = "bF")
-blah1_tree <- make_graph(make_tree(blah1)
-## This next should stop after one split --- returning two groups that map directly onto twosplits
-blah3 <- test_splitters_fn(sfn = "splitCluster", splitby = "twosplits", stopsplitting = TRUE)
-blah3_det <- report_detections(blah3, blockid = "bF")
-blah3_tree <- make_graph(make_tree(blah3))
-
-## This should continue splitting although I think that all of the splitting should still be within twosplits
-blah4 <- test_splitters_fn(sfn = "splitCluster", splitby = "twosplits", stopsplitting = FALSE)
-blah4_det <- report_detections(blah4, blockid = "bF")
-blah4_tree <- make_graph(make_tree(blah4))
-
-## This next should stop after 4 splits.
-blah5 <- test_splitters_fn(sfn = "splitSpecifiedFactor", splitby = "lvs2", stopsplitting = TRUE)
-blah5_det <- report_detections(blah5, blockid = "bF")
-blah5_tree <- make_graph(make_tree(blah5))
-with(blah5_det, table(hit, lvs2, exclude = c()))
-with(blah5_det, table(fin_grp, lvs2, exclude = c()))
-
-## This should continue splitting: will split at random within lvs2 
-blah6 <- test_splitters_fn(sfn = "splitSpecifiedFactor", splitby = "lvs2", stopsplitting = FALSE)
-blah6_det <- report_detections(blah6, blockid = "bF")
-blah6_tree <- make_graph(make_tree(blah6))
-with(blah6_det, table(hit, lvs2, exclude = c()))
-with(blah6_det, table(fin_grp, lvs2, exclude = c()))
-
-
-## test_that("Splitters stop when given a splitting criteria vector with few values and stopping is requested.", {
-##
-##   })
-
-
-
-
-
-theres2 <- findBlocks(
-  idat = idat3, bdat = bdat4, blockid = "bF",
-  pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
-  fmla = Ytauv2 ~ ZF | bF,
-  parallel = "no", copydts = TRUE,
-  splitfn = splitSpecifiedFactor, splitby = "lvs2", stop_splitby_constant = TRUE
-)
-theres2_det <- report_detections(theres2, blockid = "bF")
-expect_equal(uniqueN(theres2$biggrp), uniqueN(bdat4$lvs2))
-table(theres2$lvs2, theres2$biggrp)
-
-### START HERE OR JUST ABOVE TO VERIFY THAT THIS WORKS FOR ALL SPLITTERS. ALSO CHECK FOR BEHAVIOR WHEN stop_splitby_constant=FALSE
 
 ##########################################################
 ## Testing node id functions here for now
