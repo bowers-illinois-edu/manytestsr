@@ -80,7 +80,7 @@ splitEqual <- function(bid, x) {
   if (oddx) {
     groupsum <- tapply(x, group, sum)
     # the names of the groupnum object are the levels of the group factor
-    group <- factor(c(as.character(group), names(groupsum)[groupsum == min(groupsum)]))
+    group <- factor(c(as.character(group), names(groupsum)[groupsum == min(groupsum)]),labels=c("0","1"))
     # names(group) <- c(names(x),names(smallx))
   }
   return(group)
