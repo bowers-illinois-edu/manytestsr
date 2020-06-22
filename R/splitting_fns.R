@@ -44,48 +44,48 @@ splitCluster <- function(bid, x) {
   return(group)
 }
 
-
-#' Splitting function: Equal Splits
-#'
-#' A splitting function takes block ids and block ordering
-#' vector (or vectors) and produces a factor that assigns some block ids to one
-#' group or another group.
-#' @param bid Block id
-#' @param x A vector that we can use to order the blocks
-#' @return A factor categorizing blocks into groups.
-#' @importFrom nbpMatching nonbimatch distancematrix get.sets
-#' @export
-splitEqual <- function(bid, x) {
-  if (length(x) == 2) {
-    group <- factor(c(0, 1))
-    return(group)
-  }
-  names(x) <- bid
-  x <- sort(x)
-  oddx <- (length(x) %% 2) != 0
-  if (oddx) {
-    # if an odd number of blocks, exclude the least powerful one and add it later
-    smallx <- x[1] # x[x==min(x)][1]
-    x <- x[2:length(x)]
-  }
-  blockdists <- outer(x, x, function(x, y) {
-    abs(x - y)
-  })
-  blockdistsm <- distancematrix(blockdists)
-  sol <- nonbimatch(blockdistsm)
-  solsets <- get.sets(sol)
-  # Split into groups based on the pairs
-  group1sets <- names(sort(solsets)[(1:length(solsets) %% 2) == 0])
-  group <- factor(as.numeric((names(x) %in% group1sets)))
-  if (oddx) {
-    groupsum <- tapply(x, group, sum)
-    # the names of the groupnum object are the levels of the group factor
-    group <- factor(c(as.character(group), names(groupsum)[groupsum == min(groupsum)]),labels=c("0","1"))
-    # names(group) <- c(names(x),names(smallx))
-  }
-  return(group)
-}
-
+## #### Deprecating the following function since it is slow and doesn't really add that much over splitEqualApprox
+## #' Splitting function: Equal Splits
+## #'
+## #' A splitting function takes block ids and block ordering
+## #' vector (or vectors) and produces a factor that assigns some block ids to one
+## #' group or another group.
+## #' @param bid Block id
+## #' @param x A vector that we can use to order the blocks
+## #' @return A factor categorizing blocks into groups.
+## #' @importFrom nbpMatching nonbimatch distancematrix get.sets
+## #' @export
+## splitEqual <- function(bid, x) {
+##   if (length(x) == 2) {
+##     group <- factor(c(0, 1))
+##     return(group)
+##   }
+##   names(x) <- bid
+##   x <- sort(x)
+##   oddx <- (length(x) %% 2) != 0
+##   if (oddx) {
+##     # if an odd number of blocks, exclude the least powerful one and add it later
+##     smallx <- x[1] # x[x==min(x)][1]
+##     x <- x[2:length(x)]
+##   }
+##   blockdists <- outer(x, x, function(x, y) {
+##     abs(x - y)
+##   })
+##   blockdistsm <- distancematrix(blockdists)
+##   sol <- nonbimatch(blockdistsm)
+##   solsets <- get.sets(sol)
+##   # Split into groups based on the pairs
+##   group1sets <- names(sort(solsets)[(1:length(solsets) %% 2) == 0])
+##   group <- factor(as.numeric((names(x) %in% group1sets)))
+##   if (oddx) {
+##     groupsum <- tapply(x, group, sum)
+##     # the names of the groupnum object are the levels of the group factor
+##     group <- factor(c(as.character(group), names(groupsum)[groupsum == min(groupsum)]),labels=c("0","1"))
+##     # names(group) <- c(names(x),names(smallx))
+##   }
+##   return(group)
+## }
+## 
 # testSplitEqual <- splitEqual(trueBlockEffects$block,trueBlockEffects$hwt)
 # stopifnot(length(testSplitEqual)==nrow(trueBlockEffects))
 # stopifnot(sum(as.logical(testSplitEqual))==nrow(trueBlockEffects)/2)
@@ -97,7 +97,7 @@ splitEqual <- function(bid, x) {
 #'
 #' A splitting function takes block ids and block ordering
 #' vector (or vectors) and produces a factor that assigns some block ids to one
-#' group or another group.
+#' group or another group such that the sum of x within one group is approximately equal to the sum of x in the other group.
 #' @param bid Block id
 #' @param x A vector that we can use to order the blocks
 #' @return A factor categorizing blocks into groups.

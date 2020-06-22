@@ -17,5 +17,5 @@ A factor categorizing blocks into groups.
 \description{
 A splitting function takes block ids and block ordering
 vector (or vectors) and produces a factor that assigns some block ids to one
-group or another group.
+group or another group such that the sum of x within one group is approximately equal to the sum of x in the other group.
 }

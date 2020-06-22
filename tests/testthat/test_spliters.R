@@ -2,7 +2,7 @@
 context("Performance of Splitting Functions")
 
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
-interactive <- TRUE 
+interactive <- FALSE
 if (interactive) {
   library(here)
   library(data.table)
@@ -23,15 +23,11 @@ test_that("Leave One Outsplitting actually Leaves One out.",{
 ## Not sure what kind of test to write here. Leaving this as is for now. Hoping it doesn't break package building
 bdat4[, g1 := splitCluster(bid = as.character(bF), x = hwt)]
 bdat4[, g2 := splitEqualApprox(bid = as.character(bF), x = hwt)]
-bdat4[, g3 := splitEqual(bid = as.character(bF), x = hwt)]
-bdat4[, g4 := splitEqual(bid = as.character(bF), x = v1)]
 bdat4[, g5 := splitCluster(bid = as.character(bF), x = v4)]
 
 # Maybe we want something from splitCLuster like the difference between the  means is bigger than any random split?
 bdat4[, .(mn = mean(hwt), sd = sd(hwt)), by = g1]
 bdat4[, .(mn = mean(hwt), sd = sd(hwt)), by = g2]
-bdat4[, .(mn = mean(hwt), sd = sd(hwt)), by = g3]
-bdat4[, .(mn = mean(v1), sd = sd(v1)), by = g4]
 
 ## Setting up  a test of pre-specified splits
 bdat4[, lv1 := cut(v1, 2, labels = c("l1_1", "l1_2"))]
