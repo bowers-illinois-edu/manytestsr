@@ -1,10 +1,15 @@
 ## Test and develop functions to adapt alpha levels as the tree grows
 context("Alpha Adjusting Performance")
 
-# These lines are used for development
-# library(here)
-# source(here::here("tests/testthat", "make_test_data.R"))
-# devtools::load_all()
+## The next lines are for use when creating the tests. Change interactive<-FALSE for production
+interactive <- TRUE
+if (interactive) {
+  library(here)
+  library(data.table)
+  source(here::here("tests/testthat", "make_test_data.R"))
+  devtools::load_all() ## use  this during debugging
+}
+
 
 setDTthreads(1)
 options(digits = 4)
@@ -40,7 +45,7 @@ testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3, bda
     idat = idat, bdat = bdat, blockid = "bF", splitfn = get(sfn),
     pfn = pIndepDist, alphafn = theafn, thealpha = 0.05,
     fmla = fmla, # Ynorm_inc ~ ZF | bF,
-    parallel = "no", copydts = TRUE, splitby = sby
+    parallel = "no", copydts = TRUE, splitby = sby, stop_splitby_constant = TRUE
   )
   return(theres)[order(biggrp)]
   # theps <- grep("^p[0-9]", names(theres), value = TRUE)

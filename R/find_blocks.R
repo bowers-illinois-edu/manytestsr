@@ -185,7 +185,8 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     # left.
     # Now decide which blocks (units) can be tested again.
     # If a split contains only one block. We cannot test further.
-    bdat[, blocksbygroup := length(unique(get(blockid))), by = biggrp]
+    ## bdat[, blocksbygroup := uniqueN(get(blockid)), by = biggrp]
+    bdat[, blocksbygroup := .N, by = biggrp]
     # Now update alpha if we are trying to control FDR or mFDR rather than FWER
     if (is.null(alphafn)) {
       bdat[, (alphanm) := thealpha]
@@ -225,6 +226,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     if (stop_splitby_constant) {
       bdat[, testable := fifelse(uniqueN(get(splitby)) == 1, FALSE, unique(testable)), by = biggrp]
     }
+    ## bdat[(testable),biggrp:=droplevels(biggrp)]
     setkeyv(bdat, "testable") # for binary search speed
     # message(paste(unique(signif(bdat$pfinalb,4)),collapse=' '),appendLF = TRUE)
     # message('Number of blocks left to test: ', sum(bdat$testable))

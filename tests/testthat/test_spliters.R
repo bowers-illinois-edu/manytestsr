@@ -2,7 +2,7 @@
 context("Performance of Splitting Functions")
 
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
-interactive <- FALSE
+interactive <- TRUE
 if (interactive) {
   library(here)
   library(data.table)
@@ -14,9 +14,11 @@ if (interactive) {
 set.seed(12345)
 bdat4 <- bdat3[sample(.N), ]
 
-## The test of leave one out splitting is easiest.
-test_Split_LOO <- splitLOO(bdat4$bF, bdat4$hwt)
-expect_equal(sum(test_Split_LOO == "1"), length(test_Split_LOO) - 1)
+test_that("Leave One Outsplitting actually Leaves One out.",{
+              ## The test of leave one out splitting is easiest.
+              test_Split_LOO <- splitLOO(bdat4$bF, bdat4$hwt)
+              expect_equal(sum(test_Split_LOO == "1"), length(test_Split_LOO) - 1)
+})
 
 ## Not sure what kind of test to write here. Leaving this as is for now. Hoping it doesn't break package building
 bdat4[, g1 := splitCluster(bid = as.character(bF), x = hwt)]
@@ -56,14 +58,13 @@ with(bdat4, table(lvs, gf9, exclude = c()))
 bdat4[lv1 != "l1_1" & lv2 != "l2_2", gf10 := splitSpecifiedFactor(bF, x = lvs)]
 with(bdat4, table(lvs, gf10, exclude = c()))
 
-set.seed(12355)
-idat$y1test_null <- create_effects(idat = idat, ybase = "y0", blockid = "bF", tau_fn = tau_norm, tau_size = 0, prop_blocks_0 = .5)
-idat$y1test_zeros <- create_effects(idat = idat, ybase = "y0", blockid = "bF", tau_fn = tau_norm, tau_size = 2, prop_blocks_0 = .5)
-idat[, Y_zeros := y1test_zeros * Z + y0 * (1 - Z)]
-idat[, Y_null := y1test_null * Z + y0 * (1 - Z)]
-
-
-#### When splitby has no variation within biggrp, further splitting doesn't do anything and the algorithm may just continue to produce the same p-values until maxtest is reached depending on the splitting function. So, for example, in splitSpecifiedFactor and splitCluster we want the algorithm to stop or switch to another splitter (TODO maybe) once clusters / branches have no variation on splitby  --- any further splitting would be essentially random.
+#### When splitby has no variation within biggrp, further splitting doesn't do
+###anything and the algorithm may just continue to produce the same p-values
+###until maxtest is reached depending on the splitting function. So, for
+###example, in splitSpecifiedFactor and splitCluster we want the algorithm to
+###stop or switch to another splitter (TODO maybe) once clusters / branches
+###have no variation on splitby  --- any further splitting would be essentially
+###random.
 
 ## In splitSpecifiedFactor we want it to stop when splitby is constant within group
 ## In splitCluster we want it to stop when splitby is constant within group or move to random splits or splitLOO or splitEqualApprox
@@ -73,7 +74,6 @@ idat[, Y_null := y1test_null * Z + y0 * (1 - Z)]
 ## for the first split (say, with only two groups or even with only one group), splitLOO will choose one block at random. So, splitLOO with a splitting vector/criteria/variable that does not vary is the same as random splits. So, probably ok for error rate but not great for power.
 
 ## A splitting variable with little variation.
-### START HERE
 set.seed(12345)
 bdat4[, twosplits := rbinom(.N, 1, .5)]
 bdat4[, twosplitsF := factor(twosplits)] ## should only have 2 splits
@@ -94,6 +94,19 @@ test_that("splitCluster follows the values of discrete splitby variables", {
   thetab <- table(theres1$twosplitsF, theres1$biggrp)
   expect_equal(c(thetab[1, 1], thetab[2, 2]), c(0, 0))
 })
+
+test_that("splitCluster stops appropriately with continuous splitting criteria", {
+  theres1 <- findBlocks(
+    idat = idat3, bdat = bdat4, blockid = "bF", pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
+    fmla = Ytauv2 ~ ZF | bF,
+    parallel = "no", copydts = TRUE,
+    splitfn = splitCluster, splitby = "hwt", stop_splitby_constant = TRUE
+  )
+  theres1_det <- report_detections(theres1, blockid = "bF")
+  ## Not sure what to expect here
+})
+
+
 
 ## Not testing "splitSpecified" because splitSpecifiedFactor does a better job.
 ## depreciate splitSpecified

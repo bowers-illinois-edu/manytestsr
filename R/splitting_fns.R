@@ -147,7 +147,7 @@ splitLOO <- function(bid, x) {
 #' @export
 splitSpecifiedFactor <- function(bid, x) {
   stopifnot(is.factor(x))
-  stopifnot(stri_count_fixed(x, ".") > 0)
+  stopifnot("The factor must have categories separately by dots '.' and have at least one such separation." = stri_count_fixed(x, ".") > 0)
   if (length(unique(x)) == 1) {
     # Random splits used with stop_splitby_constant=FALSE otherwise findBlocks should stop before this
     group <- factor(sample(rep_len(c(0, 1), length.out = length(x))))
