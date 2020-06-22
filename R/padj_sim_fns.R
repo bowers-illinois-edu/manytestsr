@@ -15,6 +15,7 @@
 #' @param tau_size Is the parameter for the tau_fn --- like the true average effect size within a block.
 #' @param pfn A function to produce pvalues --- using idat.
 #' @param afn A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator.
+#' @param p_adj_method Is "split" to use [findBlocks] for top-down testing and "fdr" or "holm" etc to use [stats::p.adjust] and do the test in every block.
 #' @param nsims Is the number of simulations to run --- each simulation uses the same treatment effects be re-assigns treatment (re-shuffles treatment and re-reveals the observed outcomes as a function of the potential outcomes)
 #' @param ncores Tells p-value functions how many cores to use. Mostly ignored in use of this function because we are tending to parallelize at higher loops.
 #' @param splitfn A function to split the data into two pieces --- using bdat
@@ -195,10 +196,10 @@ reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF
 
 #' Calculate the error and success proportions of tests for a single iteration
 #'
-#' This function takes output from [findBlocks] where a or equivalent bottom-up testing function [bottom_up]
+#' This function takes output from [findBlocks] where a or equivalent bottom-up testing function [adjust_block_tests]
 #' and returns the proportions of errors made. This means that the input to findBlocks includes a column containing a true block-level effect.
 #' Repeated uses of this function allow us to assess false discovery rates and family wise error rates among other metrics of testing success.
-#' @param testobj Is an object arising from [findBlocks] or [bottom_up].
+#' @param testobj Is an object arising from [findBlocks] or [adjust_block_tests].
 #' @param truevar_name Is a string indicating the name of the variable containing the true underlying causal effect (at the block level).
 #' @param trueeffect_tol Is the smallest effect size below which we consider the effect to be zero (by default is it floating point zero).
 #' @param blockid A character name of the column in idat and bdat indicating the block.

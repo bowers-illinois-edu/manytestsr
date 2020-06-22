@@ -16,10 +16,10 @@
 #' @param ncpu is the number of workers (for "snow") or cores (for "multicore").
 #' @return A p-value
 #' @importFrom coin oneway_test pvalue approximate exact asymptotic
+#' @importFrom parallel detectCores
 #' @export
 pOneway <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
                     parallel = "no", ncpu = NULL) {
-  require(coin)
   theresponse <- all.vars(fmla)[attr(terms(fmla), "response")]
   # if we get a constant outcome, then p=1.
   # no evidence against the null of no effects.
@@ -30,7 +30,7 @@ pOneway <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
     thep <- pvalue(oneway_test(fmla, data = dat))[[1]]
   } else {
     if (is.null(ncpu) & parallel != "no") {
-      ncpu <- parallel::detectCores()
+      ncpu <- detectCores()
     }
     if (parallel == "no") {
       ncpu <- 1
@@ -62,10 +62,10 @@ pOneway <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 #' @param ncpu is the number of workers (for "snow") or cores (for "multicore").
 #' @return A p-value
 #' @importFrom coin wilcox_test pvalue approximate exact asymptotic
+#' @importFrom parallel detectCores
 #' @export
 pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
                     parallel = "no", ncpu = NULL) {
-  require(coin)
   theresponse <- all.vars(fmla)[attr(terms(fmla), "response")]
   # if we get a constant outcome, then p=1.
   # no evidence against the null of no effects.
@@ -76,7 +76,7 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
     thep <- pvalue(wilcox_test(fmla, data = dat))[[1]]
   } else {
     if (is.null(ncpu) & parallel != "no") {
-      ncpu <- parallel::detectCores()
+      ncpu <- detectCores()
     }
     if (parallel == "no") {
       ncpu <- 1
@@ -115,6 +115,7 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 #' @return A p-value
 #' @importFrom coin independence_test pvalue approximate exact asymptotic
 #' @importFrom Rfast Rank
+#' @importFrom parallel detectCores
 #' @export
 pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
                        parallel = "no", ncpu = NULL, groups = NULL, distfn = dists_and_trans) {
@@ -153,7 +154,7 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
     #               times=20)
   } else {
     if (is.null(ncpu) & parallel != "no") {
-      ncpu <- parallel::detectCores()
+      ncpu <- detectCores()
     }
     if (parallel == "no") {
       ncpu <- 1

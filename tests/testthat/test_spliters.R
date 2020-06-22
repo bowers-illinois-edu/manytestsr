@@ -2,7 +2,7 @@
 context("Performance of Splitting Functions")
 
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
-interactive <- TRUE
+interactive <- TRUE 
 if (interactive) {
   library(here)
   library(data.table)
@@ -159,11 +159,8 @@ names(res) <- apply(split_test_parms, 1, function(x) {
 
 test_that("Splitters work as expected given splitby variables that have one, two or four values and are factor or numeric", {
   ### Expectations ###
-
   ## > split_test_parms
-
   ##                      sfn    splitby stopsplitting
-
   ## splitLOO will tend to first choose one of twosplits==1 at random and then
   ## again until there are no more twosplits==1, then it will stop. If it would
   ## reject with the entire group of twosplits==0, it will still stop but then
@@ -216,8 +213,8 @@ test_that("Splitters work as expected given splitby variables that have one, two
 
   ## 12:             splitLOO     constv          TRUE
   ### This one failed because you can't have a splitby that is constant if stop_splitby_constant=TRUE
-  blah2G <- test_splitters_fn(sfn = "splitLOO", splitby = "constv", stopsplitting = TRUE)
-  res[[12]]
+  ## blah2G <- test_splitters_fn(sfn = "splitLOO", splitby = "constv", stopsplitting = TRUE)
+  expect_equal(res[[12]],NA)
 
   ## 22:             splitLOO       lvs2         FALSE
   ## Semi-random splits after exhausting variation in lvs2
@@ -253,7 +250,7 @@ test_that("Splitters work as expected given splitby variables that have one, two
 
   ## 13:     splitEqualApprox     constv          TRUE
   ## Not allowed by findBlocks.
-  res[[13]]
+  expect_equal(res[[13]],NA)
 
   ## 16:     splitEqualApprox  twosplits         FALSE
   ## Random splits basically  (after first split then random)

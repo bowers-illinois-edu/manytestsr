@@ -53,9 +53,9 @@ splitCluster <- function(bid, x) {
 #' @param bid Block id
 #' @param x A vector that we can use to order the blocks
 #' @return A factor categorizing blocks into groups.
+#' @importFrom nbpMatching nonbimatch distancematrix get.sets
 #' @export
 splitEqual <- function(bid, x) {
-  require(nbpMatching, quietly = TRUE)
   if (length(x) == 2) {
     group <- factor(c(0, 1))
     return(group)
@@ -71,9 +71,9 @@ splitEqual <- function(bid, x) {
   blockdists <- outer(x, x, function(x, y) {
     abs(x - y)
   })
-  blockdistsm <- nbpMatching::distancematrix(blockdists)
-  sol <- nbpMatching::nonbimatch(blockdistsm)
-  solsets <- nbpMatching::get.sets(sol)
+  blockdistsm <- distancematrix(blockdists)
+  sol <- nonbimatch(blockdistsm)
+  solsets <- get.sets(sol)
   # Split into groups based on the pairs
   group1sets <- names(sort(solsets)[(1:length(solsets) %% 2) == 0])
   group <- factor(as.numeric((names(x) %in% group1sets)))
@@ -142,6 +142,7 @@ splitLOO <- function(bid, x) {
 
 #' A set of pre-specified splits
 #'
+#' @param bid Block id
 #' @param x Is a a factor with levels like "state.district.school". The splits will occur from left to right depending on whether there is existing variation at that level
 #' @importFrom stringi stri_split_regex
 #' @export
@@ -174,8 +175,9 @@ splitSpecifiedFactor <- function(bid, x) {
   return(group)
 }
 
-#' A set of pre-specified splits
+#' A set of pre-specified splits using a data.table object
 #'
+#' @param bid Block id
 #' @param x is a data.table object where each column from 1 to k further divides the blocks.
 #' Column one should be highest level and each other column should be nested
 #' @param bid is not used

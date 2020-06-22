@@ -11,6 +11,7 @@
 #' @param alpha Is the false positive rate used for detecting an effect if it is constant (i.e. not an FDR-style approach).
 #' @param only_hits (default FALSE) returns only the detected blocks
 #' @param autofwer If fwer=TRUE but alpha varies, return the fdr based report.
+#' @param blockid Name of block variable (the blocking variable is a factor)
 #' @return A data.table adding a column \code{hit} to the \code{res} data.table indicating a "hit" or detection for that block (or group of blocks)
 #' @importFrom stringi stri_count_fixed stri_split_fixed
 #' @import data.table
@@ -86,7 +87,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 #'
 #' Given the results of the splitting and testing algorithm, make a node level data set for use in reporting results in terms of a binary tree graph.
 #' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
-#' @param blockdis Is a character name for the variable containing the block id information
+#' @param blockid is Is a character name for the variable containing the block id information
 #' @return A tbl_graph and igraph object with nodes and edges
 #' @importFrom stringi stri_split_fixed stri_sub
 # @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent activate

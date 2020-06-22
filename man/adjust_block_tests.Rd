@@ -18,9 +18,9 @@ adjust_block_tests(
 )
 }
 \arguments{
-\item{idat}{Data at the unit level.}
+\item{idat}{Data at the unit level as a data.table.}
 
-\item{bdat}{Data at the block level.}
+\item{bdat}{Data at the block level as a data.table.}
 
 \item{blockid}{A character name of the column in idat and bdat indicating the block.}
 
@@ -42,5 +42,7 @@ adjust_block_tests(
 A data.table containing information about the sequence tests
 }
 \description{
-This function tests a hypothesis (of no effects currently) within each and every block and then adjusts the results to control the False Discovery Rate or Family-wise Error Rate  using the base R \code{p.adjust} function.
+This function tests a hypothesis (of no effects currently) within each and
+every block and then adjusts the results to control the False Discovery Rate
+or Family-wise Error Rate  using the base R \code{p.adjust} function.
 }

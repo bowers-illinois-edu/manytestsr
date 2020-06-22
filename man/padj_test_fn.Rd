@@ -48,6 +48,8 @@ padj_test_fn(
 
 \item{afn}{A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator.}
 
+\item{p_adj_method}{Is "split" to use \link{findBlocks} for top-down testing and "fdr" or "holm" etc to use \link[stats:p.adjust]{stats::p.adjust} and do the test in every block.}
+
 \item{nsims}{Is the number of simulations to run --- each simulation uses the same treatment effects be re-assigns treatment (re-shuffles treatment and re-reveals the observed outcomes as a function of the potential outcomes)}
 
 \item{ncores}{Tells p-value functions how many cores to use. Mostly ignored in use of this function because we are tending to parallelize at higher loops.}

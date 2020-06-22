@@ -7,6 +7,8 @@
 splitSpecifiedFactor(bid, x)
 }
 \arguments{
+\item{bid}{Block id}
+
 \item{x}{Is a a factor with levels like "state.district.school". The splits will occur from left to right depending on whether there is existing variation at that level}
 }
 \description{

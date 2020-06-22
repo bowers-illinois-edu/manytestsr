@@ -2,10 +2,12 @@
 
 #' Test every block and adjust the p-values
 #'
-#' This function tests a hypothesis (of no effects currently) within each and every block and then adjusts the results to control the False Discovery Rate or Family-wise Error Rate  using the base R `p.adjust` function.
+#' This function tests a hypothesis (of no effects currently) within each and
+#' every block and then adjusts the results to control the False Discovery Rate
+#' or Family-wise Error Rate  using the base R `p.adjust` function.
 #'
-#' @param idat Data at the unit level.
-#' @param bdat Data at the block level.
+#' @param idat Data at the unit level as a data.table.
+#' @param bdat Data at the block level as a data.table.
 #' @param blockid A character name of the column in idat and bdat indicating the block.
 #' @param pfn A function to produce pvalues --- using idat.
 #' @param p_adj_method  A string indicating which method `p.adjust` should use.
@@ -21,8 +23,8 @@ adjust_block_tests <- function(idat, bdat, blockid = "block", pfn, p_adj_method,
                                sims = 1000, fmla = YContNorm ~ trtF | blockF,
                                parallel = "no", copydts = FALSE) {
   if (copydts) {
-    bdat <- data.table::copy(bdat)
-    idat <- data.table::copy(idat)
+    bdat <- copy(bdat)
+    idat <- copy(idat)
   }
   theps <- idat[, .(p = pfn(fmla = fmla, dat = .SD, parallel = parallel, simthresh = simthresh, sims = sims)), by = blockid]
   setkeyv(theps, blockid)

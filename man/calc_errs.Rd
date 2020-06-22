@@ -13,7 +13,7 @@ calc_errs(
 )
 }
 \arguments{
-\item{testobj}{Is an object arising from \link{findBlocks} or \link{bottom_up}.}
+\item{testobj}{Is an object arising from \link{findBlocks} or \link{adjust_block_tests}.}
 
 \item{truevar_name}{Is a string indicating the name of the variable containing the true underlying causal effect (at the block level).}
 
@@ -27,7 +27,7 @@ calc_errs(
 False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
 }
 \description{
-This function takes output from \link{findBlocks} where a or equivalent bottom-up testing function \link{bottom_up}
+This function takes output from \link{findBlocks} where a or equivalent bottom-up testing function \link{adjust_block_tests}
 and returns the proportions of errors made. This means that the input to findBlocks includes a column containing a true block-level effect.
 Repeated uses of this function allow us to assess false discovery rates and family wise error rates among other metrics of testing success.
 }

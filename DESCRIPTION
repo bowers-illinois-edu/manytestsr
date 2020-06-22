@@ -7,8 +7,8 @@ Authors@R:
            role = c("aut", "cre"),
            email = "jake@jakebowers.org",
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: What license it uses
+Description: Implements the nesting or top-down procedures detailed in Bowers and Chen 2020.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Suggests:

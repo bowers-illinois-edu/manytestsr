@@ -9,7 +9,7 @@ make_tree(orig_res, blockid = "bF")
 \arguments{
 \item{orig_res}{results data.table output from the \code{\link{findBlocks}} function.}
 
-\item{blockdis}{Is a character name for the variable containing the block id information}
+\item{blockid}{is Is a character name for the variable containing the block id information}
 }
 \value{
 A tbl_graph and igraph object with nodes and edges

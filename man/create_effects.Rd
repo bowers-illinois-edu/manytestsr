@@ -20,6 +20,8 @@ create_effects(
 
 \item{ybase}{Baseline potential outcome variable name, a string.}
 
+\item{blockid}{Name of block variable (the blocking variable is a factor)}
+
 \item{tau_fn}{A function taking y0 and tau_size to produce a treatment effect for each unit}
 
 \item{tau_size}{The rough or mean size of the treatment effect (like the mean shift), in sds probably.}
@@ -29,8 +31,6 @@ create_effects(
 \item{prop_blocks_0}{The proportion of blocks having zero treatment effect.}
 
 \item{by_block}{TRUE if each block has a separate shift (like a mean shift) or to otherwise create the individual level treatment effect separately within block or FALSE to create the effect across all blocks (ignoring blocks).}
-
-\item{block}{Name of block variable (the blocking variable is a factor)}
 }
 \value{
 A data.table with a single column containing potential outcome to treatment.

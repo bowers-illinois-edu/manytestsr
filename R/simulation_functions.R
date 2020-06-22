@@ -70,7 +70,7 @@ errsimfn <- function(idat, bdat, pfn, splitfn,
 #'
 #' @param idat Unit-level data. An object inheriting from class data.table
 #' @param ybase Baseline potential outcome variable name, a string.
-#' @param block Name of block variable (the blocking variable is a factor)
+#' @param blockid Name of block variable (the blocking variable is a factor)
 #' @param tau_fn A function taking y0 and tau_size to produce a treatment effect for each unit
 #' @param tau_size The rough or mean size of the treatment effect (like the mean shift), in sds probably.
 #' @param covariate Contains information about covariates currently a character name of a column in idat. It is NULL if not used.
