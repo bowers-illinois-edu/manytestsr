@@ -25,7 +25,7 @@ splitCluster <- function(bid, x) {
   if (length(x) == 3) {
     mnx <- fastMean(x)
     rank_dists <- rank(abs(x - mnx))
-    group <- factor(rank_dists == max(rank_dists))
+    group <- factor(as.numeric(rank_dists == max(rank_dists)))
     return(group)
   }
   # clus <- kmeans(x, centers = 2, nstart = 10)
