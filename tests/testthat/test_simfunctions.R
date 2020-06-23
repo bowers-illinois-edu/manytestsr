@@ -3,9 +3,17 @@
 
 # context("Simulation Functions")
 
-# library(here)
-# source(here::here("tests/testthat", "make_test_data.R"))
-# devtools::load_all() ## comment this out for production
+## The next lines are for use when creating the tests. Change interactive<-FALSE for production
+interactive <- FALSE
+if (interactive) {
+  library(here)
+  library(data.table)
+  library(devtools)
+  source(here("tests/testthat", "make_test_data.R"))
+  load_all() ## use  this during debugging
+}
+
+
 setDTthreads(1)
 options(digits = 4)
 #####

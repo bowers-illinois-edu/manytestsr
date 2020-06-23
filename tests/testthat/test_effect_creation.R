@@ -1,10 +1,15 @@
 # Test and develop functions to create treatment effects in simulations
 context("Treatment Effect Simulations")
 
-# library(here)
-# library(testthat)
-# devtools::load_all() ## comment this out for production
-# source("make_test_data.R")
+## The next lines are for use when creating the tests. Change interactive<-FALSE for production
+interactive <- FALSE
+if (interactive) {
+  library(here)
+  library(data.table)
+  library(devtools)
+  source(here("tests/testthat", "make_test_data.R"))
+  load_all() ## use  this during debugging
+}
 
 test_that("We can create effects as expected", {
   setkey(idat, bF)

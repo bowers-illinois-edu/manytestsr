@@ -6,8 +6,9 @@ interactive <- FALSE
 if (interactive) {
   library(here)
   library(data.table)
-  source(here::here("tests/testthat", "make_test_data.R"))
-  devtools::load_all() ## use  this during debugging
+  library(devtools)
+  source(here("tests/testthat", "make_test_data.R"))
+  load_all() ## use  this during debugging
 }
 
 ## Shuffle order  of the blocks so that the first set and the second set don't  automatically go together

@@ -6,8 +6,9 @@ interactive <- FALSE
 if (interactive) {
   library(here)
   library(data.table)
-  source(here::here("tests/testthat", "make_test_data.R"))
-  devtools::load_all() ## use  this during debugging
+  source(here("tests/testthat", "make_test_data.R"))
+  library(devtools)
+  load_all() ## use  this during debugging
 }
 
 

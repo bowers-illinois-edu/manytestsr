@@ -196,7 +196,7 @@ reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF
 
 #' Calculate the error and success proportions of tests for a single iteration
 #'
-#' This function takes output from [findBlocks] or an equivalent bottom-up testing function [adjust_block_tests]
+#' This function takes output from [findBlocks] or an equivalent bottom-up testing function such as `adjust_block_tests`
 #' and returns the proportions of errors made. This means that the input to findBlocks includes a column containing a true block-level effect.
 #' Repeated uses of this function allow us to assess false discovery rates and family wise error rates among other metrics of testing success.
 #' @param testobj Is an object arising from [findBlocks] or [adjust_block_tests].

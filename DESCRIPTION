@@ -12,9 +12,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Suggests:
-    testthat (>= 2.1.0),
-    energy,
-    randomizr
+    testthat (>= 2.1.0)
 Depends:
     R (>= 3.5.0),
     data.table (>= 1.12.0)
@@ -29,7 +27,8 @@ Imports:
     digest (>= 0.6.25),
     dplyr (>= 0.8.5),
     ggplot2 (>= 3.3.0),
-    ClusterR (>= 1.2.2)
+    ClusterR (>= 1.2.2),
+    randomizr (>= 0.20.0) 
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)

@@ -159,6 +159,7 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
     if (parallel == "no") {
       ncpu <- 1
     }
+    suppressWarnings(
     thep <- pvalue(independence_test(newfmla,
       data = thedat,
       teststat = "quadratic",
@@ -167,7 +168,7 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
         parallel = parallel,
         ncpus = ncpu
       )
-    ))[[1]]
+    ))[[1]])
   }
   return(as.numeric(thep))
 }
