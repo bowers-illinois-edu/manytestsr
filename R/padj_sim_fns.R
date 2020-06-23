@@ -22,11 +22,12 @@
 #' @param covariate is the name of a covariate to be used in created covariate dependent treatment effects
 #' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
+#' @param stop_splitby_constant TRUE is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
 #' @return A pvalue for each block
 #' @export
 padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | blockF, ybase,
                          prop_blocks_0, tau_fn, tau_size, pfn, afn, p_adj_method, nsims, ncores = 1,
-                         splitfn = NULL, covariate = NULL, splitby = NULL, thealpha = .05) {
+                         splitfn = NULL, covariate = NULL, splitby = NULL, thealpha = .05, stop_splitby_constant=TRUE) {
   if (!is.null(afn) & is.character(afn)) {
     if (afn == "NULL") {
       afn <- NULL
@@ -75,7 +76,7 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
     p_sims_lst <- replicate(nsims, reveal_and_test_fn(
       idat = datnew, bdat = bdatnew, blockid = blockid, trtid = trtid, y1var = "y1new",
       fmla = fmla, ybase = ybase, prop_blocks_0 = prop_blocks_0,
-      tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method, splitfn = splitfn, splitby = splitby, thealpha = thealpha
+      tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method, splitfn = splitfn, splitby = splitby, thealpha = thealpha,stop_splitby_constant=stop_splitby_constant
     ), simplify = FALSE)
     p_sims <- data.table::rbindlist(p_sims_lst)
   }
@@ -102,11 +103,12 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
 #' @param splitby Must be null. Only exists so that we can use the same efffect creation and testing function for both approaches.
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
 #' @param copydts TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.
+#' @param stop_splitby_constant FALSE (not used here because this algorithmn does not split) is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
 #' @return False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
 #' @export
 reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y1var,
                                prop_blocks_0, tau_fn, tau_size, pfn, p_adj_method = "fdr",
-                               afn = NULL, splitfn = NULL, splitby = NULL, thealpha = .05, copydts = FALSE) {
+                               afn = NULL, splitfn = NULL, splitby = NULL, thealpha = .05, copydts = FALSE, stop_splitby_constant=FALSE) {
   stopifnot(is.null(splitfn) | splitfn == "NULL")
   idat[, newZ := sample(get(trtid)), by = blockid] # make no effects within block by shuffling treatment, this is the engine of variability in the sim
   idat[, Y := get(y1var) * newZ + get(ybase) * (1 - newZ)] # reveal relevant potential outcomes with possible known effect
@@ -153,11 +155,12 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
 #' @param splitfn A function to split the data into two pieces --- using bdat
 #' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
+#' @param stop_splitby_constant TRUE is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
 #' @return False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
 #' @export
 reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF | blockF, ybase, y1var,
                                     prop_blocks_0, tau_fn, tau_size, pfn, afn, p_adj_method = "split",
-                                    copydts = FALSE, splitfn, splitby, thealpha = .05) {
+                                    copydts = FALSE, splitfn, splitby, thealpha = .05, stop_splitby_constant=TRUE) {
   if (!is.null(afn) & is.character(afn)) {
     if (afn == "NULL") {
       afn <- NULL
@@ -180,7 +183,7 @@ reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF
     idat = idat, bdat = bdat, blockid = blockid, splitfn = splitfn,
     pfn = pfn, alphafn = afn, thealpha = thealpha,
     fmla = fmla,
-    parallel = "no", copydts = copydts, splitby = splitby
+    parallel = "no", copydts = copydts, splitby = splitby, stop_splitby_constant = stop_splitby_constant
   )
 
   errs <- calc_errs(

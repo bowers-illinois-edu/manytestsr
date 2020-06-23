@@ -21,7 +21,8 @@ reveal_po_and_test_siup(
   copydts = FALSE,
   splitfn,
   splitby,
-  thealpha = 0.05
+  thealpha = 0.05,
+  stop_splitby_constant = TRUE
 )
 }
 \arguments{
@@ -58,6 +59,8 @@ reveal_po_and_test_siup(
 \item{splitby}{A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))}
 
 \item{thealpha}{Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)}
+
+\item{stop_splitby_constant}{TRUE is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.}
 }
 \value{
 False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
