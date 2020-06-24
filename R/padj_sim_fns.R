@@ -202,21 +202,29 @@ reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF
 #' This function takes output from [findBlocks] or an equivalent bottom-up testing function such as `adjust_block_tests`
 #' and returns the proportions of errors made. This means that the input to findBlocks includes a column containing a true block-level effect.
 #' Repeated uses of this function allow us to assess false discovery rates and family wise error rates among other metrics of testing success.
-#' @param testobj Is an object arising from [findBlocks] or [adjust_block_tests].
+#' @param testobj Is an object arising from [findBlocks] or [adjust_block_tests]. It will contain block-level results.
 #' @param truevar_name Is a string indicating the name of the variable containing the true underlying causal effect (at the block level).
 #' @param trueeffect_tol Is the smallest effect size below which we consider the effect to be zero (by default is it floating point zero).
 #' @param blockid A character name of the column in idat and bdat indicating the block.
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
-#' @return False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
+#' @return False positive proportion out of the tests across the blocks, The
+#' false discovery rate (proportion rejected of false nulls out of all
+#' rejections), the power of the adjusted tests across blocks (the proportion
+#' of correctly rejected hypotheses out of all correct hypotheses --- in this
+#' case correct means non-null), and power of the unadjusted test (proportion
+#' correctly rejected out of  all correct hypothesis, but using unadjusted
+#' p-values).
 #' @export
 calc_errs <- function(testobj,
                       truevar_name,
                       trueeffect_tol = .Machine$double.eps,
                       blockid = "bF",
                       thealpha = .05) {
-  simp_summary <- function(x) {
-    list(min(x, na.rm = TRUE), mean(x, na.rm = TRUE), median(x, na.rm = TRUE), max(x, na.rm = TRUE))
-  }
+    simp_summary <- function(x) {
+        ## x is the true effect size in the block (probably the true mean effect size).
+        x <- abs(x) ## We want look at relative sizes of detected effects and don't care about large negative versus positive effects
+        list(min(x, na.rm = TRUE), mean(x, na.rm = TRUE), median(x, na.rm = TRUE), max(x, na.rm = TRUE))
+    }
 
   if (length(grep("biggrp", names(testobj))) > 0) {
     # this is for the top-down/split and test method
@@ -235,7 +243,6 @@ calc_errs <- function(testobj,
 
     detnodes_effects <- detobj[, simp_summary(get(truevar_name)), by = list(hit, hit_grp)]
     setnames(detnodes_effects, c("hit", "hit_grp", "minate", "meanate", "medianate", "maxate"))
-    # detnodes_effects <- cbind(detnodes_effects1[hit==1,],detnodes_effects1[hit==0,.(min0=minate,mean0=meanate,median0=medianate,max0=maxate)])
     setkey(detnodes_effects, hit_grp)
     detnodes <- detnodes[detnodes_effects, ]
   } else {
@@ -260,7 +267,6 @@ calc_errs <- function(testobj,
     setkey(detnodes, blockid)
     detnodes_effects <- detobj[, as.list(simp_summary(get(truevar_name))), by = list(hit, hit_grp)]
     setnames(detnodes_effects, c("hit", "hit_grp", "minate", "meanate", "medianate", "maxate"))
-    # detnodes_effects <- cbind(detnodes_effects1[hit==1,],detnodes_effects1[hit==0,.(min0=minate,mean0=meanate,median0=medianate,max0=maxate)])
     setkey(detnodes_effects, hit_grp)
     detnodes <- detnodes[detnodes_effects, ]
   }
