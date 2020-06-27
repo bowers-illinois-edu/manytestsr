@@ -129,10 +129,10 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
   }
   thetreat <- fmla_vars[[2]]
   thedat <- copy(dat)
-  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "mhY", "rankY")
+  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
   if (length(fmla_vars) == 3) {
     theblock <- fmla_vars[[3]]
-    thedat[, outcome_names[-1] := c(distfn(get(theresponse)), list(Rank(get(theresponse)))), by = get(theblock)]
+    thedat[, outcome_names[-1] := distfn(get(theresponse)), by = get(theblock)]
     # If one of the test statistics is constant, drop it.
     # https://stackoverflow.com/questions/15068981/removal-of-constant-columns-in-r
     # anyconstant_cols <-  whichAreConstant(thedat[,.SD,.SDcols=outcome_names], verbose=FALSE)
@@ -141,7 +141,7 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
   } else {
     theblock <- NULL
     # This next is faster than doing it in two lines
-    thedat[, outcome_names[-1] := c(distfn(get(theresponse)), list(Rank(get(theresponse))))]
+    thedat[, outcome_names[-1] := distfn(get(theresponse))]
     newfmla_text <- paste(paste(outcome_names, collapse = "+"), "~", thetreat, sep = "")
   }
   newfmla <- as.formula(newfmla_text)
