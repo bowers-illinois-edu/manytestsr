@@ -114,7 +114,8 @@ dists_and_trans <- function(x, Z) {
   dx <- vecdist(x)
   dxRank0 <- vecdist(Rank(x)) # distance among the ranks
   mnx <- fastMean(x)
-  sigx <- cova(matrix(x, ncol = 1))
+  xmat <- matrix(x, ncol = 1)
+  sigx <- cova(xmat)
   res <- list(
     mndist = rowmeans(dx),
     mndistRank0 = rowmeans(dxRank0),
@@ -122,7 +123,7 @@ dists_and_trans <- function(x, Z) {
     maddistRank0 = rowMads(dxRank0),
     maxdist = rowMaxs(dx, value = TRUE),
     maxdistRank0 = rowMaxs(dxRank0, value = TRUE),
-    mhdist = mahala(xmat, mu = mnx, sigma = sigx)
+    mhdist = zscore_vec(x)
   )
   return(res)
 }
