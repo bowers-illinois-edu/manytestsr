@@ -50,7 +50,7 @@ distsums_stf <- function(x) {
 #' @importFrom Rfast Dist colsums rowsums Order
 #' @export
 edisti <- function(x, Z) {
-  dx <- Dist(x) ## could be dx^2 for anova style
+  dx <- vecdist(x) ## could be dx^2 for anova style
   if (is.factor(Z)) {
     Z <- as.numeric(levels(Z))[Z] - 1
     stopifnot(all(Z %in% c(0, 1)))
@@ -104,15 +104,17 @@ edisti <- function(x, Z) {
 #' Outcome distances between treatment arms and transformations of distances
 #'
 #' @param x Is a numeric vector (the  outcome variable)
-#' @param Z is just a placeholder and not used but is a part of the api
+#' @param Z is just a placeholder and not used but is a part of the api for distance functions
 #' @return A list  for inclusion in a data.table with  distances between each unit and other units as well as some transformations of those distances
 #' @importFrom Rfast Dist rowmeans rowMads rowMaxs mahala cova
 #' @export
 dists_and_trans <- function(x, Z) {
   # I bet we can speed this up by just doing it in cpp
-  dx <- Dist(x)
-  dxRank0 <- Dist(Rank(x)) # distance among the ranks
-  xmat <- matrix(x, ncol = 1)
+  ## if(!is.numeric(x){x <- as.numeric(x)}
+  dx <- vecdist(x)
+  dxRank0 <- vecdist(Rank(x)) # distance among the ranks
+  mnx <- fastMean(x)
+  sigx <- cova(matrix(x, ncol = 1))
   res <- list(
     mndist = rowmeans(dx),
     mndistRank0 = rowmeans(dxRank0),
@@ -120,10 +122,12 @@ dists_and_trans <- function(x, Z) {
     maddistRank0 = rowMads(dxRank0),
     maxdist = rowMaxs(dx, value = TRUE),
     maxdistRank0 = rowMaxs(dxRank0, value = TRUE),
-    mhdist = mahala(xmat, mu = fastMean(xmat), sigma = cova(xmat))
+    mhdist = mahala(xmat, mu = mnx, sigma = sigx)
   )
   return(res)
 }
+
+
 #
 # #' OLD: Outcome distances between treatment arms
 # #'

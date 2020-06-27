@@ -8,48 +8,48 @@
 using namespace Rcpp;
 
 // armaMatMult
-SEXP armaMatMult(arma::mat A, arma::mat B);
+SEXP armaMatMult(arma::mat& A, arma::mat& B);
 RcppExport SEXP _manytestsr_armaMatMult(SEXP ASEXP, SEXP BSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type B(BSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type B(BSEXP);
     rcpp_result_gen = Rcpp::wrap(armaMatMult(A, B));
     return rcpp_result_gen;
 END_RCPP
 }
 // eigenMatMult
-SEXP eigenMatMult(Eigen::MatrixXd A, Eigen::MatrixXd B);
+SEXP eigenMatMult(Eigen::MatrixXd& A, Eigen::MatrixXd& B);
 RcppExport SEXP _manytestsr_eigenMatMult(SEXP ASEXP, SEXP BSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type A(ASEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type B(BSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd& >::type B(BSEXP);
     rcpp_result_gen = Rcpp::wrap(eigenMatMult(A, B));
     return rcpp_result_gen;
 END_RCPP
 }
 // eigenMapMatMult
-SEXP eigenMapMatMult(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B);
+SEXP eigenMapMatMult(Eigen::Map<Eigen::MatrixXd>& A, Eigen::Map<Eigen::MatrixXd>& B);
 RcppExport SEXP _manytestsr_eigenMapMatMult(SEXP ASEXP, SEXP BSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::MatrixXd> >::type A(ASEXP);
-    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd> >::type B(BSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type B(BSEXP);
     rcpp_result_gen = Rcpp::wrap(eigenMapMatMult(A, B));
     return rcpp_result_gen;
 END_RCPP
 }
 // fastMean
-double fastMean(const arma::vec X);
+double fastMean(const arma::vec& X);
 RcppExport SEXP _manytestsr_fastMean(SEXP XSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type X(XSEXP);
     rcpp_result_gen = Rcpp::wrap(fastMean(X));
     return rcpp_result_gen;
 END_RCPP
@@ -65,6 +65,94 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fastrowMeans
+arma::vec fastrowMeans(const arma::mat& X);
+RcppExport SEXP _manytestsr_fastrowMeans(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(fastrowMeans(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// row_means
+arma::vec row_means(NumericMatrix& x);
+RcppExport SEXP _manytestsr_row_means(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(row_means(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fastrowMads
+arma::vec fastrowMads(const arma::mat& X);
+RcppExport SEXP _manytestsr_fastrowMads(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(fastrowMads(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fastrowMads2
+arma::vec fastrowMads2(const arma::mat& X);
+RcppExport SEXP _manytestsr_fastrowMads2(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(fastrowMads2(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// vecdist2
+NumericMatrix vecdist2(NumericVector& x);
+RcppExport SEXP _manytestsr_vecdist2(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(vecdist2(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fastcova
+arma::mat fastcova(const arma::mat& X);
+RcppExport SEXP _manytestsr_fastcova(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(fastcova(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// eigenDist
+SEXP eigenDist(Eigen::Map<Eigen::VectorXd>& X);
+RcppExport SEXP _manytestsr_eigenDist(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::VectorXd>& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(eigenDist(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// calcPWD1
+Rcpp::NumericMatrix calcPWD1(const Rcpp::NumericVector& x);
+RcppExport SEXP _manytestsr_calcPWD1(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(calcPWD1(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_armaMatMult", (DL_FUNC) &_manytestsr_armaMatMult, 2},
@@ -72,6 +160,14 @@ static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_eigenMapMatMult", (DL_FUNC) &_manytestsr_eigenMapMatMult, 2},
     {"_manytestsr_fastMean", (DL_FUNC) &_manytestsr_fastMean, 1},
     {"_manytestsr_fastcolMeans", (DL_FUNC) &_manytestsr_fastcolMeans, 1},
+    {"_manytestsr_fastrowMeans", (DL_FUNC) &_manytestsr_fastrowMeans, 1},
+    {"_manytestsr_row_means", (DL_FUNC) &_manytestsr_row_means, 1},
+    {"_manytestsr_fastrowMads", (DL_FUNC) &_manytestsr_fastrowMads, 1},
+    {"_manytestsr_fastrowMads2", (DL_FUNC) &_manytestsr_fastrowMads2, 1},
+    {"_manytestsr_vecdist2", (DL_FUNC) &_manytestsr_vecdist2, 1},
+    {"_manytestsr_fastcova", (DL_FUNC) &_manytestsr_fastcova, 1},
+    {"_manytestsr_eigenDist", (DL_FUNC) &_manytestsr_eigenDist, 1},
+    {"_manytestsr_calcPWD1", (DL_FUNC) &_manytestsr_calcPWD1, 1},
     {NULL, NULL, 0}
 };
 

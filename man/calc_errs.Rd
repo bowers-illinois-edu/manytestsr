@@ -13,7 +13,7 @@ calc_errs(
 )
 }
 \arguments{
-\item{testobj}{Is an object arising from \link{findBlocks} or \link{adjust_block_tests}.}
+\item{testobj}{Is an object arising from \link{findBlocks} or \link{adjust_block_tests}. It will contain block-level results.}
 
 \item{truevar_name}{Is a string indicating the name of the variable containing the true underlying causal effect (at the block level).}
 
@@ -24,7 +24,13 @@ calc_errs(
 \item{thealpha}{Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)}
 }
 \value{
-False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
+False positive proportion out of the tests across the blocks, The
+false discovery rate (proportion rejected of false nulls out of all
+rejections), the power of the adjusted tests across blocks (the proportion
+of correctly rejected hypotheses out of all correct hypotheses --- in this
+case correct means non-null), and power of the unadjusted test (proportion
+correctly rejected out of  all correct hypothesis, but using unadjusted
+p-values).
 }
 \description{
 This function takes output from \link{findBlocks} or an equivalent bottom-up testing function such as \code{adjust_block_tests}

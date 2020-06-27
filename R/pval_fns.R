@@ -146,7 +146,9 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
   }
   newfmla <- as.formula(newfmla_text)
   if (is.null(simthresh) | nrow(thedat) > simthresh) {
+    suppressWarnings(
     thep <- pvalue(independence_test(newfmla, data = thedat, teststat = "quadratic"))[[1]]
+    )
     # btfmla <- paste(thetreat,"~",paste(outcome_names,collapse="+"),"+strata(",theblock,")",sep="")
     # thep2 <- RItools::balanceTest(as.formula(btfmla),data=thedat,report="chisquare.test")$overall[theblock,"p.value"]
     # microbenchmark(pvalue(independence_test(newfmla, data = thedat, teststat = "quadratic"))[[1]],

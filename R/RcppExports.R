@@ -21,3 +21,35 @@ fastcolMeans <- function(X) {
     .Call(`_manytestsr_fastcolMeans`, X)
 }
 
+fastrowMeans <- function(X) {
+    .Call(`_manytestsr_fastrowMeans`, X)
+}
+
+row_means <- function(x) {
+    .Call(`_manytestsr_row_means`, x)
+}
+
+fastrowMads <- function(X) {
+    .Call(`_manytestsr_fastrowMads`, X)
+}
+
+fastrowMads2 <- function(X) {
+    .Call(`_manytestsr_fastrowMads2`, X)
+}
+
+vecdist2 <- function(x) {
+    .Call(`_manytestsr_vecdist2`, x)
+}
+
+fastcova <- function(X) {
+    .Call(`_manytestsr_fastcova`, X)
+}
+
+eigenDist <- function(X) {
+    .Call(`_manytestsr_eigenDist`, X)
+}
+
+calcPWD1 <- function(x) {
+    .Call(`_manytestsr_calcPWD1`, x)
+}
+

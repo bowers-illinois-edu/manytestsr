@@ -9,7 +9,7 @@ dists_and_trans(x, Z)
 \arguments{
 \item{x}{Is a numeric vector (the  outcome variable)}
 
-\item{Z}{is just a placeholder and not used but is a part of the api}
+\item{Z}{is just a placeholder and not used but is a part of the api for distance functions}
 }
 \value{
 A list  for inclusion in a data.table with  distances between each unit and other units as well as some transformations of those distances

@@ -6,6 +6,7 @@ interactive <- FALSE
 if (interactive) {
   library(here)
   library(data.table)
+  setDTthreads(1)
   library(devtools)
   source(here("tests/testthat", "make_test_data.R"))
   load_all() ## use  this during debugging
