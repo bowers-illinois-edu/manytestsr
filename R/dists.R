@@ -106,24 +106,21 @@ edisti <- function(x, Z) {
 #' @param x Is a numeric vector (the  outcome variable)
 #' @param Z is just a placeholder and not used but is a part of the api for distance functions
 #' @return A list  for inclusion in a data.table with  distances between each unit and other units as well as some transformations of those distances
-#' @importFrom Rfast Dist rowmeans rowMads rowMaxs mahala cova
+#' @importFrom Rfast Dist rowmeans rowMads rowMaxs
 #' @export
 dists_and_trans <- function(x, Z) {
-  # I bet we can speed this up by just doing it in cpp
-  ## if(!is.numeric(x){x <- as.numeric(x)}
-  dx <- vecdist(x)
-  dxRank0 <- vecdist(Rank(x)) # distance among the ranks
+  dx <- vecdist3(x)
+  dxRank0 <- vecdist3(Rank(x)) # distance among the ranks
   mnx <- fastMean(x)
-  xmat <- matrix(x, ncol = 1)
-  sigx <- cova(xmat)
   res <- list(
-    mndist = rowmeans(dx),
-    mndistRank0 = rowmeans(dxRank0),
+    mndist = as.numeric(fastrowMeans(dx)),
+    mndistRank0 = as.numeric(fastrowMeans(dxRank0)),
     maddist = rowMads(dx),
     maddistRank0 = rowMads(dxRank0),
-    maxdist = rowMaxs(dx, value = TRUE),
-    maxdistRank0 = rowMaxs(dxRank0, value = TRUE),
-    mhdist = zscore_vec(x)
+    maxdist = as.numeric(fastrowMaxs(dx)),
+    maxdistRank0 = as.numeric(fastrowMaxs(dxRank0)),
+    mhdist = zscore_vec(x), ## really just the zscore
+    rankx = Rank(x)
   )
   return(res)
 }

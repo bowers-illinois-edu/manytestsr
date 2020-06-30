@@ -18,6 +18,7 @@ Depends:
     data.table (>= 1.12.0)
 Imports:
     Rcpp (>= 1.0.0),
+    RcppArmadillo (>= 0.9.900.1.0),
     Rfast (>= 1.9.5),
     stringi (>= 1.4.5),
     onlineFDR (>= 1.5.0),
@@ -29,7 +30,7 @@ Imports:
     ggplot2 (>= 3.3.0),
     ClusterR (>= 1.2.2),
     randomizr (>= 0.20.0) 
-LinkingTo: Rcpp, RcppArmadillo, RcppEigen
+LinkingTo: Rcpp, RcppArmadillo
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
