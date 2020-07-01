@@ -4,7 +4,7 @@
 ##
 
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
-interactive <- FALSE
+interactive <- TRUE
 if (interactive) {
   library(here)
   library(data.table)
@@ -15,7 +15,7 @@ if (interactive) {
   load_all() ## use  this during debugging
 }
 
-load("~/Documents/PROJECTS/manytests-paper/data/mtwrkdat.rda")
+load("~/Documents/PROJECTS/manytests-paper/Data/mtwrkdat.rda")
 
 icols <- c("YContNorm", "y0ContNorm", "block", "blockF", "trtF", "trt", "covscluster", "covsplits")
 bcols <- c("block", "blockF", "hwt", "truemndiffb", "covscluster", "covsplits")
@@ -112,7 +112,7 @@ all.equal(fn6(), fn5())
 all.equal(fn6(), fn7())
 all.equal(fn1(), fn7())
 ## microbenchmark(vecdist=fn0(),Dist=fn1(),eigendist=fn2(),fastDist=fn3(),vecdist2=fn4(),vecdist_arma=fn5(),base=fn6(),times=1000)
-microbenchmark(vecdist = fn0(), Dist = fn1(), vecdist2 = fn4(), vecdist3 = fn4(), vecdist_arma = fn5(), base = fn6(), times = 100)
+microbenchmark(vecdist = fn0(), Dist = fn1(), vecdist2 = fn4(), vecdist3 = fn7(), vecdist_arma = fn5(), base = fn6(), times = 100)
 
 ## Another version of vecdist3 but in R
 tmpfn <- function(x) {
@@ -123,7 +123,7 @@ tmpfn <- function(x) {
   sqrt(two)
 }
 
-## use manytestsr:::vecdist_arma hmmm or vecdist3 when x is long
+## use manytestsr:::vecdist_arma hmmm or vecdist2 when x is long
 
 ## Fast row means
 N <- 5000
@@ -226,9 +226,11 @@ microbenchmark(avg_rank_arma(y), Rank(y), rank(y, ties.method = "average"), time
 vecd1 <- vecdist(y)
 vecd2 <- vecdist_arma(y)
 vecd3 <- vecdist2(y)
+vecd4 <- vecdist3(y)
 
 all.equal(vecd1, vecd2)
 all.equal(vecd1, vecd3)
+all.equal(vecd1, vecd4)
 
 
 y <- rnorm(1000)

@@ -213,13 +213,13 @@ Rcpp::List fast_dists_and_trans(const arma::vec & x, const arma::vec & Z){
     arma::mat dx(n , n), dxRank0(n , n);
     arma::vec mndx(n), mndrx(n), maddx(n), maddrx(n), maxdx(n), maxdrx(n), zx(n), rankx(n);
 
-    dx = vecdist3(x);
+    dx = vecdist_arma(x);
     //  Rcpp::NumericMatrix dxTmp = vecdist2(Rcpp::NumericVector(x.begin(),x.end()));
     // dx = as<arma::mat>(dxTmp);
     // arma::mat dx(dxTmp.begin(), n, n, false);
 
     rankx = avg_rank_arma(x);
-    dxRank0 = vecdist3(rankx);
+    dxRank0 = vecdist_arma(rankx);
     // Rcpp::NumericMatrix drxTmp = vecdist2(Rcpp::NumericVector(rankx.begin(),rankx.end()));
     // arma::mat dxRank0(drxTmp.begin(), n, n, false);
 

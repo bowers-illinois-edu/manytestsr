@@ -109,9 +109,9 @@ edisti <- function(x, Z) {
 #' @importFrom Rfast Dist rowmeans rowMads rowMaxs
 #' @export
 dists_and_trans <- function(x, Z) {
-  dx <- vecdist3(x)
-  dxRank0 <- vecdist3(Rank(x)) # distance among the ranks
-  mnx <- fastMean(x)
+  dx <- vecdist2(x)
+  rankx <- Rank(x)
+  dxRank0 <- vecdist2(rankx) # distance among the ranks
   res <- list(
     mndist = as.numeric(fastrowMeans(dx)),
     mndistRank0 = as.numeric(fastrowMeans(dxRank0)),
@@ -120,7 +120,7 @@ dists_and_trans <- function(x, Z) {
     maxdist = as.numeric(fastrowMaxs(dx)),
     maxdistRank0 = as.numeric(fastrowMaxs(dxRank0)),
     mhdist = zscore_vec(x), ## really just the zscore
-    rankx = Rank(x)
+    rankx = rankx
   )
   return(res)
 }
