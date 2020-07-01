@@ -14,7 +14,7 @@ tests/testthat/test.notforCRAN.R
 tests/testthat/test.tidiers.R
 tests/testthat/res1nodes.pdf
 tests/testthat/res3nodes.pdf
-tests/*.R
+tests/profiling_code.R
 tests/*.Rout.save
 ^.*\.Rproj$
 ^\.Rproj\.user$

@@ -16,10 +16,10 @@ if (interactive) {
 set.seed(12345)
 bdat4 <- bdat3[sample(.N), ]
 
-test_that("Leave One Outsplitting actually Leaves One out.",{
-              ## The test of leave one out splitting is easiest.
-              test_Split_LOO <- splitLOO(bdat4$bF, bdat4$hwt)
-              expect_equal(sum(test_Split_LOO == "1"), length(test_Split_LOO) - 1)
+test_that("Leave One Outsplitting actually Leaves One out.", {
+  ## The test of leave one out splitting is easiest.
+  test_Split_LOO <- splitLOO(bdat4$bF, bdat4$hwt)
+  expect_equal(sum(test_Split_LOO == "1"), length(test_Split_LOO) - 1)
 })
 
 ## Not sure what kind of test to write here. Leaving this as is for now. Hoping it doesn't break package building
@@ -57,12 +57,12 @@ bdat4[lv1 != "l1_1" & lv2 != "l2_2", gf10 := splitSpecifiedFactor(bF, x = lvs)]
 with(bdat4, table(lvs, gf10, exclude = c()))
 
 #### When splitby has no variation within biggrp, further splitting doesn't do
-###anything and the algorithm may just continue to produce the same p-values
-###until maxtest is reached depending on the splitting function. So, for
-###example, in splitSpecifiedFactor and splitCluster we want the algorithm to
-###stop or switch to another splitter (TODO maybe) once clusters / branches
-###have no variation on splitby  --- any further splitting would be essentially
-###random.
+### anything and the algorithm may just continue to produce the same p-values
+### until maxtest is reached depending on the splitting function. So, for
+### example, in splitSpecifiedFactor and splitCluster we want the algorithm to
+### stop or switch to another splitter (TODO maybe) once clusters / branches
+### have no variation on splitby  --- any further splitting would be essentially
+### random.
 
 ## In splitSpecifiedFactor we want it to stop when splitby is constant within group
 ## In splitCluster we want it to stop when splitby is constant within group or move to random splits or splitLOO or splitEqualApprox
@@ -212,7 +212,7 @@ test_that("Splitters work as expected given splitby variables that have one, two
   ## 12:             splitLOO     constv          TRUE
   ### This one failed because you can't have a splitby that is constant if stop_splitby_constant=TRUE
   ## blah2G <- test_splitters_fn(sfn = "splitLOO", splitby = "constv", stopsplitting = TRUE)
-  expect_equal(res[[12]],NA)
+  expect_equal(res[[12]], NA)
 
   ## 22:             splitLOO       lvs2         FALSE
   ## Semi-random splits after exhausting variation in lvs2
@@ -248,7 +248,7 @@ test_that("Splitters work as expected given splitby variables that have one, two
 
   ## 13:     splitEqualApprox     constv          TRUE
   ## Not allowed by findBlocks.
-  expect_equal(res[[13]],NA)
+  expect_equal(res[[13]], NA)
 
   ## 16:     splitEqualApprox  twosplits         FALSE
   ## Random splits basically  (after first split then random)

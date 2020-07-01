@@ -27,7 +27,7 @@
 #' @export
 padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | blockF, ybase,
                          prop_blocks_0, tau_fn, tau_size, pfn, afn, p_adj_method, nsims, ncores = 1,
-                         splitfn = NULL, covariate = NULL, splitby = NULL, thealpha = .05, stop_splitby_constant=TRUE) {
+                         splitfn = NULL, covariate = NULL, splitby = NULL, thealpha = .05, stop_splitby_constant = TRUE) {
   if (!is.null(afn) & is.character(afn)) {
     if (afn == "NULL") {
       afn <- NULL
@@ -76,7 +76,7 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
     p_sims_lst <- replicate(nsims, reveal_and_test_fn(
       idat = datnew, bdat = bdatnew, blockid = blockid, trtid = trtid, y1var = "y1new",
       fmla = fmla, ybase = ybase, prop_blocks_0 = prop_blocks_0,
-      tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method, splitfn = splitfn, splitby = splitby, thealpha = thealpha,stop_splitby_constant=stop_splitby_constant
+      tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method, splitfn = splitfn, splitby = splitby, thealpha = thealpha, stop_splitby_constant = stop_splitby_constant
     ), simplify = FALSE)
     p_sims <- data.table::rbindlist(p_sims_lst)
   }
@@ -108,7 +108,7 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
 #' @export
 reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y1var,
                                prop_blocks_0, tau_fn, tau_size, pfn, p_adj_method = "fdr",
-                               afn = NULL, splitfn = NULL, splitby = NULL, thealpha = .05, copydts = FALSE, stop_splitby_constant=FALSE) {
+                               afn = NULL, splitfn = NULL, splitby = NULL, thealpha = .05, copydts = FALSE, stop_splitby_constant = FALSE) {
   stopifnot(is.null(splitfn) | splitfn == "NULL")
   idat[, newZ := sample(get(trtid)), by = blockid] # make no effects within block by shuffling treatment, this is the engine of variability in the sim
   idat[, Y := get(y1var) * newZ + get(ybase) * (1 - newZ)] # reveal relevant potential outcomes with possible known effect
@@ -160,7 +160,7 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
 #' @export
 reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF | blockF, ybase, y1var,
                                     prop_blocks_0, tau_fn, tau_size, pfn, afn, p_adj_method = "split",
-                                    copydts = FALSE, splitfn, splitby, thealpha = .05, stop_splitby_constant=TRUE) {
+                                    copydts = FALSE, splitfn, splitby, thealpha = .05, stop_splitby_constant = TRUE) {
   if (!is.null(afn) & is.character(afn)) {
     if (afn == "NULL") {
       afn <- NULL
@@ -202,7 +202,7 @@ reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF
 #' This function takes output from [findBlocks] or an equivalent bottom-up testing function such as `adjust_block_tests`
 #' and returns the proportions of errors made. This means that the input to findBlocks includes a column containing a true block-level effect.
 #' Repeated uses of this function allow us to assess false discovery rates and family wise error rates among other metrics of testing success.
-#' @param testobj Is an object arising from [findBlocks] or [adjust_block_tests]. It will contain block-level results.
+#' @param testobj Is an object arising from \code{\link{findBlocks}} or \code{\link{adjust_block_tests}}. It will contain block-level results.
 #' @param truevar_name Is a string indicating the name of the variable containing the true underlying causal effect (at the block level).
 #' @param trueeffect_tol Is the smallest effect size below which we consider the effect to be zero (by default is it floating point zero).
 #' @param blockid A character name of the column in idat and bdat indicating the block.
@@ -220,11 +220,11 @@ calc_errs <- function(testobj,
                       trueeffect_tol = .Machine$double.eps,
                       blockid = "bF",
                       thealpha = .05) {
-    simp_summary <- function(x) {
-        ## x is the true effect size in the block (probably the true mean effect size).
-        x <- abs(x) ## We want look at relative sizes of detected effects and don't care about large negative versus positive effects
-        list(min(x, na.rm = TRUE), mean(x, na.rm = TRUE), median(x, na.rm = TRUE), max(x, na.rm = TRUE))
-    }
+  simp_summary <- function(x) {
+    ## x is the true effect size in the block (probably the true mean effect size).
+    x <- abs(x) ## We want look at relative sizes of detected effects and don't care about large negative versus positive effects
+    list(min(x, na.rm = TRUE), mean(x, na.rm = TRUE), median(x, na.rm = TRUE), max(x, na.rm = TRUE))
+  }
 
   if (length(grep("biggrp", names(testobj))) > 0) {
     # this is for the top-down/split and test method

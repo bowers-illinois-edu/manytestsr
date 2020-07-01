@@ -32,9 +32,9 @@ adjust_block_tests(
 
 \item{sims}{Number of permutations for permutation-based testing when the total number of cases is below the threshold.}
 
-\item{fmla}{A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors. The tests will run within each block so that \verb{|block} part is not strictly important.}
+\item{fmla}{A formula with \verb{outcome~treatment assignment | block} where treatment assignment and block must be factors. The tests will run within each block so that \verb{|block} part is not strictly important.}
 
-\item{parallel}{Should the pfn use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following \code{approximate} in the coin package.}
+\item{parallel}{Should the pfn use multicore processing for permutation based testing? Default is no. But could be "snow" or "multicore" following \code{approximate} in the coin package.}
 
 \item{copydts}{TRUE or FALSE. TRUE if using standalone. Could be FALSE if copied objects are being sent to this function from other functions. Basically the question is whether we want this function to change the block or individual level datasets in the main environment or return a new object.}
 }
@@ -44,5 +44,5 @@ A data.table containing information about the sequence tests
 \description{
 This function tests a hypothesis (of no effects currently) within each and
 every block and then adjusts the results to control the False Discovery Rate
-or Family-wise Error Rate  using the base R \code{p.adjust} function.
+or Family-wise Error Rate  using the base R \code{\link{p.adjust}} function.
 }

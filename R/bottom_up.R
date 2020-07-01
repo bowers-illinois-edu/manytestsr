@@ -1,10 +1,8 @@
-# Functions for bottom-up testing
-
 #' Test every block and adjust the p-values
 #'
 #' This function tests a hypothesis (of no effects currently) within each and
 #' every block and then adjusts the results to control the False Discovery Rate
-#' or Family-wise Error Rate  using the base R `p.adjust` function.
+#' or Family-wise Error Rate  using the base R \code{\link{p.adjust}} function.
 #'
 #' @param idat Data at the unit level as a data.table.
 #' @param bdat Data at the block level as a data.table.
@@ -13,8 +11,8 @@
 #' @param p_adj_method  A string indicating which method `p.adjust` should use.
 #' @param simthresh Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations
 #' @param sims Number of permutations for permutation-based testing when the total number of cases is below the threshold.
-#' @param fmla A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors. The tests will run within each block so that `|block` part is not strictly important.
-#' @param parallel Should the pfn use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following `approximate` in the coin package.
+#' @param fmla A formula with `outcome~treatment assignment | block` where treatment assignment and block must be factors. The tests will run within each block so that `|block` part is not strictly important.
+#' @param parallel Should the pfn use multicore processing for permutation based testing? Default is no. But could be "snow" or "multicore" following `approximate` in the coin package.
 #' @param copydts TRUE or FALSE. TRUE if using standalone. Could be FALSE if copied objects are being sent to this function from other functions. Basically the question is whether we want this function to change the block or individual level datasets in the main environment or return a new object.
 #' @return A data.table containing information about the sequence tests
 #' @importFrom stringi stri_count_fixed stri_split_fixed stri_split stri_sub

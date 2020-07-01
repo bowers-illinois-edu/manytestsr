@@ -13,7 +13,7 @@ calc_errs(
 )
 }
 \arguments{
-\item{testobj}{Is an object arising from \link{findBlocks} or \link{adjust_block_tests}. It will contain block-level results.}
+\item{testobj}{Is an object arising from \code{\link{findBlocks}} or \code{\link{adjust_block_tests}}. It will contain block-level results.}
 
 \item{truevar_name}{Is a string indicating the name of the variable containing the true underlying causal effect (at the block level).}
 

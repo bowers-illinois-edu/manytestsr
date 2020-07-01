@@ -85,7 +85,7 @@ splitCluster <- function(bid, x) {
 ##   }
 ##   return(group)
 ## }
-## 
+##
 # testSplitEqual <- splitEqual(trueBlockEffects$block,trueBlockEffects$hwt)
 # stopifnot(length(testSplitEqual)==nrow(trueBlockEffects))
 # stopifnot(sum(as.logical(testSplitEqual))==nrow(trueBlockEffects)/2)
