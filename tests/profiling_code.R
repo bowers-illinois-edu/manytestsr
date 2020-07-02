@@ -296,7 +296,7 @@ dist_timings <- press(N=c(10,100,500,1000,5000,10000,20000), #,seq(1000,10000,10
                 arma=fast_dists_and_trans(y, Z = 1),
                byunit=fast_dists_and_trans_by_unit(y, Z = 1),min_iterations=10, max_iterations=1000,check=FALSE,filter_gc=FALSE)
     })
-save(dist_timings,file="bench_press_results_dist_timings.rda")
+save(dist_timings,file="dist_timings_linuxkeeling.rda")
 
 
 ## Here we cannot use any of the vecdist functions
