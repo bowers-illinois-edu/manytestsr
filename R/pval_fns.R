@@ -127,12 +127,20 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
   if (length(unique(dat[[theresponse]])) < 2) {
     return(1)
   }
+  ## Change the distfn depending on the size of the outcome
+  ## dists_and_trans is fastest until vectors are very large
+  ## fast_dists_and_trans_by_unit should work when vectors are so large that distance matrices cannot be calculated entirely
+  ## fast_dists_and_trans may be faster than dists_and_trans with short vectors
+  ## for now just go to the _by_unit approach with very long vectors
+  if(nrow(dat) > 10000){
+      distfn <- fast_dists_and_trans_by_unit
+  }
   thetreat <- fmla_vars[[2]]
   thedat <- copy(dat)
   outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
   if (length(fmla_vars) == 3) {
     theblock <- fmla_vars[[3]]
-    thedat[, outcome_names[-1] := distfn(get(theresponse)), by = get(theblock)]
+    thedat[, outcome_names[-1] := distfn(get(theresponse),Z=1), by = get(theblock)]
     # If one of the test statistics is constant, drop it.
     # https://stackoverflow.com/questions/15068981/removal-of-constant-columns-in-r
     # anyconstant_cols <-  whichAreConstant(thedat[,.SD,.SDcols=outcome_names], verbose=FALSE)
@@ -141,7 +149,7 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
   } else {
     theblock <- NULL
     # This next is faster than doing it in two lines
-    thedat[, outcome_names[-1] := distfn(get(theresponse))]
+    thedat[, outcome_names[-1] := distfn(get(theresponse),Z=1)]
     newfmla_text <- paste(paste(outcome_names, collapse = "+"), "~", thetreat, sep = "")
   }
   newfmla <- as.formula(newfmla_text)
