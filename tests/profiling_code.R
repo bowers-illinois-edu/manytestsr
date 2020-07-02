@@ -287,7 +287,7 @@ all.equal(dists_and_trans(y), fast_dists_and_trans(y, Z = 1),check.attributes = 
 all.equal(dists_and_trans(y), fast_dists_and_trans_by_unit(y, Z = 1),check.attributes = FALSE)
 
 set.seed(123456)
-y <- rnorm(10000)
+y <- rnorm(100000)
 ## Try to ensure that the values in N=10 are the same 10 (the first 10) as in the N=100, etc.
 dist_timings <- press(N=c(10,100,500,1000,5000,10000,20000), #,seq(1000,10000,1000)),
     {set.seed(12345)
