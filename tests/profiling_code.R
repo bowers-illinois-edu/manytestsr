@@ -12,6 +12,7 @@ if (interactive) {
   source(here("tests/testthat", "make_test_data.R"))
   library(Rfast)
   library(microbenchmark)
+  library(bench)
   load_all() ## use  this during debugging
 }
 
