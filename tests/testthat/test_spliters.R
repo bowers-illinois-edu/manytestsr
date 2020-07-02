@@ -4,10 +4,10 @@ context("Performance of Splitting Functions")
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
 interactive <- FALSE
 if (interactive) {
-  library(here)
-  library(data.table)
+  ## library(here)
+  ## library(data.table)
   setDTthreads(1)
-  library(devtools)
+  ## library(devtools)
   source(here("tests/testthat", "make_test_data.R"))
   load_all() ## use  this during debugging
 }

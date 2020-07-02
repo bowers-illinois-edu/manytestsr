@@ -278,56 +278,34 @@ double fastmad(const Rcpp::NumericVector & x) {
 
 //[[Rcpp::export]]
 Rcpp::List fast_dists_and_trans_by_unit(const Rcpp::NumericVector & x,const Rcpp::NumericVector & Z){
+    // https://hydroecology.net/using-r-and-cpp-together/
+    // In the end, Rcpp stuff is as efficient as using pointers etcc
     int n=x.length();
-    // Rcpp::NumericVector r = Rcpp::no_init_vector(sz);
      Rcpp::NumericVector zx = zscore_vec(x);
      Rcpp::NumericVector rankx = avg_rank(x);
 
     // Setup pointers to the vector objects to make the loops faster
     // http://adv-r.had.co.nz/C-interface.html#c-vectors
-    Rcpp::NumericVector mndx(n);
-    double *mndxipt=REAL(mndx);
+    Rcpp::NumericVector mndx = Rcpp::no_init_vector(n);
+    Rcpp::NumericVector maxdx= Rcpp::no_init_vector(n);
+    Rcpp::NumericVector maddx= Rcpp::no_init_vector(n);
+    Rcpp::NumericVector mndrx= Rcpp::no_init_vector(n);
+    Rcpp::NumericVector maxdrx= Rcpp::no_init_vector(n);
+    Rcpp::NumericVector maddrx= Rcpp::no_init_vector(n);
+    Rcpp::NumericVector dist_i = Rcpp::no_init_vector(n);
+    Rcpp::NumericVector dist_rank_i= Rcpp::no_init_vector(n);
 
-    Rcpp::NumericVector maxdx(n);
-    double *maxdxipt=REAL(maxdx);
-
-    Rcpp::NumericVector maddx(n);
-    double *maddxipt=REAL(maddx);
-
-    Rcpp::NumericVector mndrx(n);
-    double *mndrxipt=REAL(mndrx);
-
-    Rcpp::NumericVector maxdrx(n);
-    double *maxdrxipt=REAL(maxdrx);
-
-    Rcpp::NumericVector maddrx(n);
-    double *maddrxipt=REAL(maddrx);
-
-    Rcpp::NumericVector dist_i(n);
-    double *dist_ipt=REAL(dist_i);
-
-    Rcpp::NumericVector dist_rank_i(n);
-    double *dist_rank_ipt=REAL(dist_rank_i);
-
-    double *xx= REAL(x);
-    double *rx= REAL(rankx);
-
-    //for (it=x.begin(); it !=x.end(); ++it, i++){
     for(int i = 0; i < n ; i++){
         for(int j = 0; j < n ; j++){
             dist_i[j] = std::abs( x[i] - x[j] );
             dist_rank_i[j] = std::abs( rankx[i] - rankx[j] );
-            // dist_ipt[j] = std::abs( xx[i] - xx[j] );
-            // dist_rank_ipt[j] = std::abs( rx[i] - rx[j] );
-            // dist_ipt[j] = std::sqrt(std::pow(xx[i] - xx[j],2.0));
-            // dist_rank_ipt[j] = std::sqrt(std::pow(rx[i] - rx[j],2.0));
         }
-        mndxipt[i] = Rcpp::mean(dist_i);
-        maxdxipt[i] = Rcpp::max(dist_i);
-        maddxipt[i] = fastmad(dist_i);
-        mndrxipt[i] = Rcpp::mean(dist_rank_i);
-        maxdrxipt[i] = Rcpp::max(dist_rank_i);
-        maddrxipt[i] = fastmad(dist_rank_i);
+        mndx[i] = Rcpp::mean(dist_i);
+        maxdx[i] = Rcpp::max(dist_i);
+        maddx[i] = fastmad(dist_i);
+        mndrx[i] = Rcpp::mean(dist_rank_i);
+        maxdrx[i] = Rcpp::max(dist_rank_i);
+        maddrx[i] = fastmad(dist_rank_i);
     }
    // Rcpp::Rcout << "End dist_i" << std::endl;
    // Rcpp::Rcout << dist_i << std::endl;

@@ -267,6 +267,25 @@ microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1
 y <- as.numeric(seq(1.0,2000.0))
 microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 100)
 
+## This next the unit by unit approach is better
+y <- as.numeric(seq(1.0,10000.0))
+microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 10)
+
+## Can't ruin this next
+y <- as.numeric(seq(1.0,50000.0))
+microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 1)
+
+## Try bench::mark 
+library(bench)
+
+y <- rnorm(N)
+all.equal(dists_and_trans(y), fast_dists_and_trans(y, Z = 1),check.attributes = FALSE)
+
+blah <- press(N=c(100,seq(1000,50000,1000)),
+    {y <- rnorm(N)
+    bench::mark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1),max_iterations=2,check=FALSE)
+    })
+
 
 ## Here we cannot use any of the vecdist functions
 ybig <- as.numeric(seq(1.0,10000.0))
