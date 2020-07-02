@@ -1,11 +1,12 @@
 #define RCPP_ARMADILLO_RETURN_COLVEC_AS_VECTOR
+
 #include <RcppArmadillo.h>
 #include "fastfns.h"
 using namespace Rcpp;
 using namespace arma;
-// using std::vector;
 
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::plugins(cpp11)]]
 
 // [[Rcpp::export]]
 double fastMean(const arma::vec & X){
@@ -117,10 +118,11 @@ Rcpp::NumericVector zscore_vec(const arma::vec & X){
 arma::mat vecdist_arma(const arma::vec & x){
     int n=x.n_elem, i = 0, j = 0;
     double d;
-    arma::mat out(n,n);
+    // arma::mat out(n,n);
+    arma::mat out = zeros(n,n);
     for (i = 0; i < n - 1; i++){
         for (j = i + 1; j < n ; j ++){
-            // d = sqrt(pow( (x(i)-x(j)),2.0));
+            // d = std::sqrt(std::pow( as_scalar( (x(i) - x(j)) ),2.0));
            d = std::abs( x(i)-x(j) );
            out(j,i)=d;
            out(i,j)=d;
@@ -140,12 +142,15 @@ arma::mat vecdist3(const arma::vec & A){
       // and https://github.com/RoyiAvital/Projects/tree/master/CalcDistanceMatrix
     // int n = A.nrow();
     // arma::mat A = arma::mat(x.begin(), n, 1, false);
-    // int n = A.n_elem;
+    int n = A.n_elem;
 
     // arma::colvec An =  sum(square(A),1);
-    arma::colvec An =  square(A);
+    arma::mat C(n,n);
+    arma::colvec An(n);
 
-    arma::mat C = -2 * (A * A.t());
+    An =  square(A);
+
+    C = -2 * (A * A.t());
     C.each_col() += An;
     C.each_row() += An.t();
 
@@ -169,8 +174,9 @@ Rcpp::NumericMatrix vecdist2(const Rcpp::NumericVector & x){
     nrow=ncol=x.length();
     SEXP F=PROTECT(Rf_allocMatrix(REALSXP,ncol,nrow));
     double *xx=REAL(x),*end=xx+nrow,*f=REAL(F),*y=xx;
-    for(;xx!=end;++xx,f+=nrow)
+    for(;xx!=end;++xx,f+=nrow){
         minus_c(f,*xx,y,1,ncol);
+    }
     UNPROTECT(1);
       return F;
   }
@@ -214,7 +220,7 @@ Rcpp::List fast_dists_and_trans(const arma::vec & x, const arma::vec & Z){
     arma::vec mndx(n), mndrx(n), maddx(n), maddrx(n), maxdx(n), maxdrx(n), zx(n), rankx(n);
 
     dx = vecdist_arma(x);
-    //  Rcpp::NumericMatrix dxTmp = vecdist2(Rcpp::NumericVector(x.begin(),x.end()));
+    // Rcpp::NumericMatrix dxTmp = vecdist2(Rcpp::NumericVector(x.begin(),x.end()));
     // dx = as<arma::mat>(dxTmp);
     // arma::mat dx(dxTmp.begin(), n, n, false);
 
@@ -230,10 +236,109 @@ Rcpp::List fast_dists_and_trans(const arma::vec & x, const arma::vec & Z){
     maxdx = fastrowMaxs(dx);
     maxdrx = fastrowMaxs(dxRank0);
     zx = zscore_vec(x);
+
     // Order here matters:
 //  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
     List res = List::create(mndx, mndrx, maddx, maddrx, maxdx, maxdrx, zx, rankx);
     // List L = List::create(Named("name1") = v1 , _["name2"] = v2);
      return(res);
 }
+
+
+// [[Rcpp::export]]
+  Rcpp::NumericVector avg_rank(const Rcpp::NumericVector & x)
+  {
+      R_xlen_t sz = x.size();
+      Rcpp::IntegerVector w = Rcpp::seq(0, sz - 1);
+      // Don't need to worry about NAs so commenting this out
+  // std::sort(w.begin(), w.end(), Comparator(x));
+      std::sort(w.begin(), w.end(),
+          [&x](std::size_t i, std::size_t j) { return x[i] < x[j]; });
+
+      Rcpp::NumericVector r = Rcpp::no_init_vector(sz);
+      for (R_xlen_t n, i = 0; i < sz; i += n) {
+          n = 1;
+          while (i + n < sz && x[w[i]] == x[w[i + n]]) ++n;
+          for (R_xlen_t k = 0; k < n; k++) {
+              r[w[i + k]] = i + (n + 1) / 2.;
+          }
+      }
+
+      return r;
+  }
+
+// [[Rcpp::export]]
+double fastmad(const Rcpp::NumericVector & x) {
+   // https://gallery.rcpp.org/articles/robust-estimators/
+   // scale_factor = 1.4826; default for normal distribution consistent with R
+  double medx = median(x);
+  Rcpp::NumericVector med_devs = abs( x - medx );
+  return( 1.4826 * median(med_devs) );
+}
+
+//[[Rcpp::export]]
+Rcpp::List fast_dists_and_trans_by_unit(const Rcpp::NumericVector & x,const Rcpp::NumericVector & Z){
+    int n=x.length();
+    // Rcpp::NumericVector r = Rcpp::no_init_vector(sz);
+     Rcpp::NumericVector zx = zscore_vec(x);
+     Rcpp::NumericVector rankx = avg_rank(x);
+
+    // Setup pointers to the vector objects to make the loops faster
+    // http://adv-r.had.co.nz/C-interface.html#c-vectors
+    Rcpp::NumericVector mndx(n);
+    double *mndxipt=REAL(mndx);
+
+    Rcpp::NumericVector maxdx(n);
+    double *maxdxipt=REAL(maxdx);
+
+    Rcpp::NumericVector maddx(n);
+    double *maddxipt=REAL(maddx);
+
+    Rcpp::NumericVector mndrx(n);
+    double *mndrxipt=REAL(mndrx);
+
+    Rcpp::NumericVector maxdrx(n);
+    double *maxdrxipt=REAL(maxdrx);
+
+    Rcpp::NumericVector maddrx(n);
+    double *maddrxipt=REAL(maddrx);
+
+    Rcpp::NumericVector dist_i(n);
+    double *dist_ipt=REAL(dist_i);
+
+    Rcpp::NumericVector dist_rank_i(n);
+    double *dist_rank_ipt=REAL(dist_rank_i);
+
+    double *xx= REAL(x);
+    double *rx= REAL(rankx);
+
+    //for (it=x.begin(); it !=x.end(); ++it, i++){
+    for(int i = 0; i < n ; i++){
+        for(int j = 0; j < n ; j++){
+            dist_i[j] = std::abs( x[i] - x[j] );
+            dist_rank_i[j] = std::abs( rankx[i] - rankx[j] );
+            // dist_ipt[j] = std::abs( xx[i] - xx[j] );
+            // dist_rank_ipt[j] = std::abs( rx[i] - rx[j] );
+            // dist_ipt[j] = std::sqrt(std::pow(xx[i] - xx[j],2.0));
+            // dist_rank_ipt[j] = std::sqrt(std::pow(rx[i] - rx[j],2.0));
+        }
+        mndxipt[i] = Rcpp::mean(dist_i);
+        maxdxipt[i] = Rcpp::max(dist_i);
+        maddxipt[i] = fastmad(dist_i);
+        mndrxipt[i] = Rcpp::mean(dist_rank_i);
+        maxdrxipt[i] = Rcpp::max(dist_rank_i);
+        maddrxipt[i] = fastmad(dist_rank_i);
+    }
+   // Rcpp::Rcout << "End dist_i" << std::endl;
+   // Rcpp::Rcout << dist_i << std::endl;
+   // Rcpp::Rcout << "End mndx" << std::endl;
+   // Rcpp::Rcout << mndx << std::endl;
+
+    //  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
+    List res = List::create(mndx, mndrx, maddx, maddrx, maxdx, maxdrx, zx, rankx);
+
+    return(res);
+}
+
+
 

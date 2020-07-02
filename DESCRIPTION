@@ -34,3 +34,4 @@ LinkingTo: Rcpp, RcppArmadillo
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
+SystemRequirements: C++11

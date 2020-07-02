@@ -53,6 +53,8 @@ identical(ate_B1000$ate, truetau_B1000$truetau)
 stopifnot(unique(round(abs(ate_B1000$ate - truetau_B1000$truetau), 13)) == 0)
 setkey(bdatB1000, blockF)
 
+rm(mtbdat)
+rm(mtwrkdat)
 
 Rprof(line.profiling = TRUE)
 siu_cluster <- findBlocks(
@@ -69,9 +71,8 @@ summaryRprof(lines = "both")
 
 
 set.seed(12345)
-xblah <- as.numeric(seq(1.0, 10.0, length = 1000))
-x <- 1:10
-
+xblah <- as.numeric(seq(1.0, 1000.0, length = 2000))
+x <- as.numeric(1:10)
 
 ### Faster euclidean distances
 ## First make sure I get it
@@ -79,40 +80,27 @@ dist2 <- sqrt(outer(xblah, xblah, FUN = function(x, y) {
   (x - y)^2
 }))
 testdist <- Dist(xblah)
-all.equal(dist2, testdist)
-fn0 <- function() {
-  Rfast::vecdist(xblah)
-}
-fn1 <- function() {
-  Dist(xblah)
-}
-all.equal(fn1(), fn0())
-## fn2 <- function(){ eigenDist(xblah) }
-## fn3 <- function(){ fastDist(xblah) }
-fn4 <- function() {
-  vecdist2(xblah)
-}
-fn7 <- function() {
-  vecdist3(xblah)
-}
-fn5 <- function() {
-  vecdist_arma(xblah)
-}
+stopifnot(all.equal(dist2, testdist))
+
+fn0 <- function() { Rfast::vecdist(xblah) }
+fn1 <- function() { Dist(xblah) }
+fn4 <- function() { vecdist2(xblah) }
+fn5 <- function() { vecdist_arma(xblah) }
 fn6 <- function() {
   mat <- as.matrix(dist(xblah, diag = TRUE, upper = TRUE))
   dimnames(mat) <- NULL
   return(mat)
 }
-# all.equal(fn1(),fn2())
-## all.equal(fn1(),fn3())
-all.equal(fn1(), fn4())
-all.equal(fn1(), fn5())
-all.equal(fn1(), fn6())
+fn7 <- function() { vecdist3(xblah) }
+
+all.equal(fn6(), fn0())
+all.equal(fn6(), fn1())
+all.equal(fn6(), fn4())
 all.equal(fn6(), fn5())
 all.equal(fn6(), fn7())
-all.equal(fn1(), fn7())
 ## microbenchmark(vecdist=fn0(),Dist=fn1(),eigendist=fn2(),fastDist=fn3(),vecdist2=fn4(),vecdist_arma=fn5(),base=fn6(),times=1000)
-microbenchmark(vecdist = fn0(), Dist = fn1(), vecdist2 = fn4(), vecdist3 = fn7(), vecdist_arma = fn5(), base = fn6(), times = 100)
+
+microbenchmark::microbenchmark(vecdist = fn0(), Dist = fn1(), vecdist2 = fn4(), vecdist3 = fn7(), vecdist_arma = fn5(), base = fn6(), times = 10)
 
 ## Another version of vecdist3 but in R
 tmpfn <- function(x) {
@@ -122,6 +110,10 @@ tmpfn <- function(x) {
   two <- sweep(one, 1, An, "+")
   sqrt(two)
 }
+all.equal(fn1(),tmpfn(xblah))
+
+fn5mat <- vecdist_arma(x)
+fn1mat <- Dist(x)
 
 ## use manytestsr:::vecdist_arma hmmm or vecdist2 when x is long
 
@@ -149,11 +141,13 @@ all.equal(tmp, tmp2)
 all.equal(tmp0, tmp2)
 all.equal(tmp2, tmp3)
 
-microbenchmark(fastrowMads(blah), fastrowMads2(blah), rowMads(blah), apply(blah, 1, mad))
+microbenchmark::microbenchmark(fastrowMads(blah), fastrowMads2(blah), rowMads(blah), apply(blah, 1, mad))
 
 ## use manytestsr::fastrowMads2
 
-### Fast row Maxs
+### Fast row Maxsa
+N <- 1000
+blah <- matrix(rnorm(N), N / 4, 4)
 tmp <- as.vector(fastrowMaxs(blah))
 tmp2 <- rowMaxs(blah, value = TRUE)
 tmp3 <- apply(blah, 1, max)
@@ -163,7 +157,7 @@ all.equal(tmp, tmp2)
 all.equal(tmp2, tmp3)
 all.equal(tmp2, tmp4)
 
-microbenchmark(fastrowMaxs(blah), fastrowMaxs2(blah), rowMaxs(blah, value = TRUE), apply(blah, 1, max), times = 1000)
+microbenchmark::microbenchmark(fastrowMaxs(blah), fastrowMaxs2(blah), rowMaxs(blah, value = TRUE), apply(blah, 1, max), times = 1000)
 
 ## use manytestsr::fastrowMaxs2
 
@@ -212,18 +206,21 @@ microbenchmark(zscore_vec(y), fn6(y), mahala(y, mu = fastMean(y), sigma = fastco
 tmp1 <- rank(y, ties.method = "average")
 tmp2 <- Rank(y)
 tmp4 <- avg_rank_arma(y)
+tmp6 <- avg_rank(y)
 ## tmp5 <- Rank_mean2(y)
 all.equal(tmp1, tmp2)
-# all.equal(tmp1,tmp5)
+all.equal(tmp1,tmp6)
 all.equal(tmp1, as.vector(tmp4))
-microbenchmark(avg_rank_arma(y), Rank(y), rank(y, ties.method = "average"), times = 1000)
+
+y <- rnorm(2000)
+microbenchmark::microbenchmark(avg_rank_arma(y), avg_rank(y), Rank(y), rank(y, ties.method = "average"), times = 1000)
 
 ## avg_rank_arma works. Rank_mean2 is doing something else.
 
 ## Faster dists_and_trans
-### START THERE
+y <- as.numeric(seq(1.0,10.0,length=100))
 
-vecd1 <- vecdist(y)
+vecd1 <- Rfast::vecdist(y)
 vecd2 <- vecdist_arma(y)
 vecd3 <- vecdist2(y)
 vecd4 <- vecdist3(y)
@@ -232,22 +229,63 @@ all.equal(vecd1, vecd2)
 all.equal(vecd1, vecd3)
 all.equal(vecd1, vecd4)
 
-
-y <- rnorm(1000)
-
 tmp1 <- dists_and_trans(y)
 tmp2 <- fast_dists_and_trans(y, Z = 1)
+tmp3 <- fast_dists_and_trans_by_unit(y, Z = 1)
 
 all.equal(length(tmp1), length(tmp2))
-all.equal(tmp1[[1]], as.vector(tmp2[[1]]))
-all.equal(tmp1[[2]], as.vector(tmp2[[2]]))
-all.equal(tmp1[[3]], as.vector(tmp2[[3]]))
-all.equal(tmp1[[4]], as.vector(tmp2[[4]]))
-all.equal(tmp1[[5]], as.vector(tmp2[[5]]))
-all.equal(tmp1[[6]], as.vector(tmp2[[6]]))
-all.equal(tmp1[[7]], as.vector(tmp2[[7]]))
-all.equal(tmp1[[8]], as.vector(tmp2[[8]]))
+all.equal(length(tmp1), length(tmp3))
+all.equal(tmp1[[1]], tmp2[[1]])
+all.equal(tmp1[[2]], tmp2[[2]])
+all.equal(tmp1[[3]], tmp2[[3]])
+all.equal(tmp1[[4]], tmp2[[4]])
+all.equal(tmp1[[5]], tmp2[[5]])
+all.equal(tmp1[[6]], tmp2[[6]])
+all.equal(tmp1[[7]], tmp2[[7]])
+all.equal(tmp1[[8]], tmp2[[8]])
 
-microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), times = 100)
+all.equal(tmp1[[1]], as.vector(tmp3[[1]]))
+all.equal(tmp1[[2]], as.vector(tmp3[[2]]))
+all.equal(tmp1[[3]], as.vector(tmp3[[3]]))
+all.equal(tmp1[[4]], as.vector(tmp3[[4]]))
+all.equal(tmp1[[5]], as.vector(tmp3[[5]]))
+all.equal(tmp1[[6]], as.vector(tmp3[[6]]))
+all.equal(tmp1[[7]], as.vector(tmp3[[7]]))
+all.equal(tmp1[[8]], as.vector(tmp3[[8]]))
 
-## Sigh. It looks like just using c++ functions within R is faster than the whole c++ approach --- at least using RcppArmadillo on long vectors. But slightly faster for short vectors.
+# http://adv-r.had.co.nz/C-interface.html
+# https://thecoatlessprofessor.com/programming/cpp/unofficial-rcpp-api-documentation/#iterators
+
+## small y
+y <- as.numeric(seq(1.0,100.0))
+microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 100)
+
+## larger y
+y <- as.numeric(seq(1.0,1000.0))
+microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 100)
+
+y <- as.numeric(seq(1.0,2000.0))
+microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 100)
+
+
+## Here we cannot use any of the vecdist functions
+ybig <- as.numeric(seq(1.0,10000.0))
+
+## All these fail with 50000 rows
+vecd1big <- Rfast::vecdist(ybig)
+vecd2big <- vecdist_arma(ybig) ## with latest compiler flag this works but is slow
+vecd3big <- vecdist2(ybig)
+vecd4big <- vecdist3(ybig)
+
+microbenchmark::microbenchmark( fast_dists_and_trans_by_unit(ybig, Z = 1),fast_dists_and_trans(y, Z = 1), times = 1)
+
+tmpbig0 <- dists_and_trans(ybig) ## this fails
+
+system.time(
+tmpbig2 <- fast_dists_and_trans_by_unit(ybig, Z = 1)
+)
+## 182.999  39.181 222.864  
+system.time(
+tmpbig1 <- fast_dists_and_trans(ybig, Z = 1)
+)
+

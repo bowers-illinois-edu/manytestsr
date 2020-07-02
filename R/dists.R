@@ -117,8 +117,8 @@ dists_and_trans <- function(x, Z) {
     mndistRank0 = as.numeric(fastrowMeans(dxRank0)),
     maddist = rowMads(dx),
     maddistRank0 = rowMads(dxRank0),
-    maxdist = as.numeric(fastrowMaxs(dx)),
-    maxdistRank0 = as.numeric(fastrowMaxs(dxRank0)),
+    maxdist = as.numeric(fastrowMaxs2(dx)),
+    maxdistRank0 = as.numeric(fastrowMaxs2(dxRank0)),
     mhdist = zscore_vec(x), ## really just the zscore
     rankx = rankx
   )

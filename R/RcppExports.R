@@ -61,3 +61,15 @@ fast_dists_and_trans <- function(x, Z) {
     .Call(`_manytestsr_fast_dists_and_trans`, x, Z)
 }
 
+avg_rank <- function(x) {
+    .Call(`_manytestsr_avg_rank`, x)
+}
+
+fastmad <- function(x) {
+    .Call(`_manytestsr_fastmad`, x)
+}
+
+fast_dists_and_trans_by_unit <- function(x, Z) {
+    .Call(`_manytestsr_fast_dists_and_trans_by_unit`, x, Z)
+}
+
