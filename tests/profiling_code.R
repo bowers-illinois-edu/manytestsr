@@ -8,12 +8,13 @@ interactive <- TRUE
 if (interactive) {
   library(here)
   library(data.table)
-  library(devtools)
+  setDTthreads(1)
   source(here("tests/testthat", "make_test_data.R"))
   library(Rfast)
   library(microbenchmark)
   library(bench)
   load_all() ## use  this during debugging
+  library(devtools)
 }
 
 load("~/Documents/PROJECTS/manytests-paper/Data/mtwrkdat.rda")
@@ -119,7 +120,7 @@ fn1mat <- Dist(x)
 ## use manytestsr:::vecdist_arma hmmm or vecdist2 when x is long
 
 ## Fast row means
-N <- 5000
+N <- 1000
 set.seed(12345)
 blah <- matrix(rnorm(N), N / 4, 4)
 y <- matrix(blah[, 1], ncol = 1)
@@ -272,27 +273,34 @@ microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1
 y <- as.numeric(seq(1.0,10000.0))
 microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 10)
 
-## Can't ruin this next
+## Can't run this next
 y <- as.numeric(seq(1.0,50000.0))
-microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 1)
+tmp1 <- dists_and_trans(y)
+tmp2 <- fast_dists_and_trans(y, Z = 1)
+tmp3 <- fast_dists_and_trans_by_unit(y, Z = 1)
 
-## Try bench::mark 
+## Try bench::mark
 library(bench)
 
-y <- rnorm(N)
+y <- rnorm(1000)
 all.equal(dists_and_trans(y), fast_dists_and_trans(y, Z = 1),check.attributes = FALSE)
+all.equal(dists_and_trans(y), fast_dists_and_trans_by_unit(y, Z = 1),check.attributes = FALSE)
 
-blah <- press(N=c(100,seq(1000,50000,1000)),
-    {y <- rnorm(N)
-    bench::mark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1),max_iterations=2,check=FALSE)
+set.seed(123456)
+y <- rnorm(10000)
+## Try to ensure that the values in N=10 are the same 10 (the first 10) as in the N=100, etc.
+dist_timings <- press(N=c(10,100,500,1000,5000,10000,20000), #,seq(1000,10000,1000)),
+    {set.seed(12345)
+    y <- sample(y,N)
+    bench::mark(main=dists_and_trans(y),
+                arma=fast_dists_and_trans(y, Z = 1),
+               byunit=fast_dists_and_trans_by_unit(y, Z = 1),min_iterations=10, max_iterations=1000,check=FALSE,filter_gc=FALSE)
     })
-
-save(blah,file="bench_press_results_blah.rda")
+save(dist_timings,file="bench_press_results_dist_timings.rda")
 
 
 ## Here we cannot use any of the vecdist functions
 ybig <- as.numeric(seq(1.0,10000.0))
-
 ## All these fail with 50000 rows
 vecd1big <- Rfast::vecdist(ybig)
 vecd2big <- vecdist_arma(ybig) ## with latest compiler flag this works but is slow
@@ -306,7 +314,7 @@ tmpbig0 <- dists_and_trans(ybig) ## this fails
 system.time(
 tmpbig2 <- fast_dists_and_trans_by_unit(ybig, Z = 1)
 )
-## 182.999  39.181 222.864  
+## 182.999  39.181 222.864
 system.time(
 tmpbig1 <- fast_dists_and_trans(ybig, Z = 1)
 )
