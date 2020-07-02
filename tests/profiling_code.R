@@ -287,6 +287,8 @@ blah <- press(N=c(100,seq(1000,50000,1000)),
     bench::mark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1),max_iterations=2,check=FALSE)
     })
 
+save(blah,file="bench_press_results_blah.rda")
+
 
 ## Here we cannot use any of the vecdist functions
 ybig <- as.numeric(seq(1.0,10000.0))
