@@ -6,6 +6,7 @@ using namespace arma;
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp11)]]
 
+// Make these functions available *within* C++ in addition to R
 double fastMean(const arma::vec & X);
 double fastVar(const arma::vec & X);
 arma::vec fastcolMeans(const arma::mat & X);
@@ -25,4 +26,6 @@ Rcpp::NumericVector avg_rank(const Rcpp::NumericVector & x);
 Rcpp::List fast_dists_and_trans_by_unit(const Rcpp::NumericVector & x, const Rcpp::NumericVector & Z);
 double fastmad(const Rcpp::NumericVector & x);
 void inner_dist(double f[],double &x,double *y,int offset,int &len);
+Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec & x,const arma::vec & Z);
+double fastmad_arma(const arma::vec & x);
 

@@ -194,6 +194,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fastmad_arma
+double fastmad_arma(const arma::vec& x);
+RcppExport SEXP _manytestsr_fastmad_arma(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(fastmad_arma(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fast_dists_and_trans_by_unit
 Rcpp::List fast_dists_and_trans_by_unit(const Rcpp::NumericVector& x, const Rcpp::NumericVector& Z);
 RcppExport SEXP _manytestsr_fast_dists_and_trans_by_unit(SEXP xSEXP, SEXP ZSEXP) {
@@ -203,6 +214,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type Z(ZSEXP);
     rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_by_unit(x, Z));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fast_dists_and_trans_by_unit_arma
+Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec& x, const arma::vec& Z);
+RcppExport SEXP _manytestsr_fast_dists_and_trans_by_unit_arma(SEXP xSEXP, SEXP ZSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type Z(ZSEXP);
+    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_by_unit_arma(x, Z));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -225,7 +248,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_fast_dists_and_trans", (DL_FUNC) &_manytestsr_fast_dists_and_trans, 2},
     {"_manytestsr_avg_rank", (DL_FUNC) &_manytestsr_avg_rank, 1},
     {"_manytestsr_fastmad", (DL_FUNC) &_manytestsr_fastmad, 1},
+    {"_manytestsr_fastmad_arma", (DL_FUNC) &_manytestsr_fastmad_arma, 1},
     {"_manytestsr_fast_dists_and_trans_by_unit", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit, 2},
+    {"_manytestsr_fast_dists_and_trans_by_unit_arma", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit_arma, 2},
     {NULL, NULL, 0}
 };
 
