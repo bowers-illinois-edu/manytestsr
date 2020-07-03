@@ -122,7 +122,7 @@ arma::mat vecdist_arma(const arma::vec & x){
     arma::mat out = zeros(n,n);
     for (i = 0; i < n - 1; i++){
         for (j = i + 1; j < n ; j ++){
-            // d = std::sqrt(std::pow( as_scalar( (x(i) - x(j)) ),2.0));
+            // d = std::sqrt(std::pow( as_scalar( (x(i) - x(j)) ),2));
            d = std::abs( x(i)-x(j) );
            out(j,i)=d;
            out(i,j)=d;

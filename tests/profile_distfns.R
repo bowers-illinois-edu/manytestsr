@@ -45,6 +45,7 @@ all.equal(tmp1[[6]], as.vector(tmp4[[6]]))
 all.equal(tmp1[[7]], as.vector(tmp4[[7]]))
 all.equal(tmp1[[8]], as.vector(tmp4[[8]]))
 
+## for more ideas see https://stackoverflow.com/questions/44703599/loop-in-rcpp-slower-than-those-in-r
 
 y <- sample(ypop,1000)
 n1k_osx_times <- bench::mark(main=dists_and_trans(y),
@@ -83,7 +84,7 @@ dist_timings_osx2 <- press(N=c(15000,20000,30000,50000,100000),
         arma=fast_dists_and_trans(y, Z = 1),
         byunit_arma=fast_dists_and_trans_by_unit_arma(y, Z = 1),
         ##byunit=fast_dists_and_trans_by_unit(y, Z = 1), ## this would crash the machine
-        min_iterations=10, max_iterations=1000,check=FALSE,filter_gc=FALSE)
+        min_iterations=2, max_iterations=1000,check=FALSE,filter_gc=FALSE)
     })
 save(dist_timings_osx2,file="dist_timings_osx2.rda")
 

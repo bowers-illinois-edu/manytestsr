@@ -132,13 +132,14 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
   ## fast_dists_and_trans_by_unit_arma should work when vectors are so large that distance matrices cannot be calculated entirely
   ## fast_dists_and_trans may be faster than dists_and_trans with short vectors
   ## for now just go to the _by_unit approach with very long vectors
-  if(nrow(dat) < 500){
+  dat_size <- nrow(dat)
+  if(dat_size < 500){
       distfn <- fast_dists_and_trans
   }
-  if(nrow(dat) >=500 & nrow(dat) < 5000){
+  if(dat_size >=500 & dat_size < 5000){
       distfn <- dists_and_trans
   }
-  if(nrow(dat) >= 5000){
+  if(dat_size >= 5000){
       distfn <- fast_dists_and_trans_by_unit_arma
   }
   thetreat <- fmla_vars[[2]]
