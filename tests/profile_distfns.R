@@ -77,30 +77,36 @@ ggplot2::autoplot(dist_timings_osxlaptop)
 dev.off()
 
 
-dist_timings_osx2 <- press(N=c(15000,20000,30000,50000,100000),
+dist_timings_osx2 <- press(N=c(15000,20000),
     {set.seed(12345)
     y <- sample(ypop,N)
     bench::mark(main=dists_and_trans(y),
         arma=fast_dists_and_trans(y, Z = 1),
         byunit_arma=fast_dists_and_trans_by_unit_arma(y, Z = 1),
         ##byunit=fast_dists_and_trans_by_unit(y, Z = 1), ## this would crash the machine
-        min_iterations=2, max_iterations=1000,check=FALSE,filter_gc=FALSE)
+        min_iterations=10, max_iterations=1000,check=FALSE,filter_gc=FALSE)
     })
 save(dist_timings_osx2,file="dist_timings_osx2.rda")
 
 
-## Where does it crash?
-set.seed(12345)
-N <- 20000
-y <- sample(ypop,N)
-n20k_main <- bench_time( dists_and_trans(y) )
-n20k_arma <- bench_time( fast_dists_and_trans(y, Z = 1) )
-n20k_unit <- bench_time( fast_dists_and_trans_by_unit(y, Z = 1) )
+## dist_timings_osx3 <- press(N=c(30000,50000,100000),
+##     {set.seed(12345)
+##     y <- sample(ypop,N)
+##     bench::mark(arma=fast_dists_and_trans(y, Z = 1),
+##         byunit_arma=fast_dists_and_trans_by_unit_arma(y, Z = 1),
+##         min_iterations=3, max_iterations=1000,check=FALSE,filter_gc=FALSE)
+##     })
+## save(dist_timings_osx3,file="dist_timings_osx3.rda")
 
-n20k_osx_times <- bench::mark(main=dists_and_trans(y),
-        arma=fast_dists_and_trans(y, Z = 1),
-        byunit=fast_dists_and_trans_by_unit(y, Z = 1),min_iterations=10, max_iterations=1000,check=FALSE,filter_gc=FALSE)
-n20k_osx_times 
+
+
+## this next takes too long
+## set.seed(12345)
+## N <- 800000 
+## y <- rnorm(N) ##sample(ypop,N)
+## n800k_unit <- bench_time( fast_dists_and_trans_by_unit_arma(y, Z = 1) )
+## n800k_arma <- bench_time( fast_dists_and_trans(y, Z = 1) )
+
 ## pdf(file="dist_timings_osxlaptop.pdf")
 ## ggplot2::autoplot(dist_timings_osxlaptop)
 ## dev.off()

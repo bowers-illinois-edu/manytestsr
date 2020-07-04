@@ -130,6 +130,7 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
   ## Change the distfn depending on the size of the outcome
   ## dists_and_trans is fastest until vectors are very large
   ## fast_dists_and_trans_by_unit_arma should work when vectors are so large that distance matrices cannot be calculated entirely
+  ## it is still pretty fast but it goes row by row rather than calculating the whole distance matrices.
   ## fast_dists_and_trans may be faster than dists_and_trans with short vectors
   ## for now just go to the _by_unit approach with very long vectors
   dat_size <- nrow(dat)
@@ -164,11 +165,6 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
     suppressWarnings(
       thep <- pvalue(independence_test(newfmla, data = thedat, teststat = "quadratic"))[[1]]
     )
-    # btfmla <- paste(thetreat,"~",paste(outcome_names,collapse="+"),"+strata(",theblock,")",sep="")
-    # thep2 <- RItools::balanceTest(as.formula(btfmla),data=thedat,report="chisquare.test")$overall[theblock,"p.value"]
-    # microbenchmark(pvalue(independence_test(newfmla, data = thedat, teststat = "quadratic"))[[1]],
-    #               RItools::balanceTest(as.formula(btfmla),data=thedat,report="chisquare.test")$overall[theblock,"p.value"],
-    #               times=20)
   } else {
     if (is.null(ncpu) & parallel != "no") {
       ncpu <- detectCores()
