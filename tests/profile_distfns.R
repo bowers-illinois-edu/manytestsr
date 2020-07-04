@@ -64,29 +64,26 @@ dist_timings <- press(N=c(10,100,500,1000,5000,10000,15000),
         byunit=fast_dists_and_trans_by_unit(y, Z = 1),
         min_iterations=10, max_iterations=1000,check=FALSE,filter_gc=FALSE)
     })
-##dist_timings_osxlaptop <- dist_timings
-##save(dist_timings_osxlaptop,file="dist_timings_osxlaptop.rda")
-dist_timings_linuxkeeling <- dist_timings
-save(dist_timings_linuxkeeling,file="dist_timings_linuxkeeling.rda")
 
-print(dist_timings_osxlaptop, n=100)
+### UNCOMMENT OUT THESE NEXT TWO FOR OS X LAPTOP TIMINGS
+## dist_timings_osxlaptop <- dist_timings
+## save(dist_timings_osxlaptop,file="dist_timings_osxlaptop.rda")
+#### UNCOMMENT OUT THESE NEXT TWO FOR KEELING TIMINGS
+## dist_timings_linuxkeeling <- dist_timings
+## save(dist_timings_linuxkeeling,file="dist_timings_linuxkeeling.rda")
+
 ## Something about fast_dists_and_trans_by_unit is just destroying memory. The byunit_arma is the right approach for big stuff.
 
-pdf(file="dist_timings_osxlaptop.pdf")
-ggplot2::autoplot(dist_timings_osxlaptop)
-dev.off()
-
-
-dist_timings_osx2 <- press(N=c(15000,20000),
-    {set.seed(12345)
-    y <- sample(ypop,N)
-    bench::mark(main=dists_and_trans(y),
-        arma=fast_dists_and_trans(y, Z = 1),
-        byunit_arma=fast_dists_and_trans_by_unit_arma(y, Z = 1),
-        ##byunit=fast_dists_and_trans_by_unit(y, Z = 1), ## this would crash the machine
-        min_iterations=10, max_iterations=1000,check=FALSE,filter_gc=FALSE)
-    })
-save(dist_timings_osx2,file="dist_timings_osx2.rda")
+##dist_timings_osx2 <- press(N=c(15000,20000),
+##    {set.seed(12345)
+##    y <- sample(ypop,N)
+##    bench::mark(main=dists_and_trans(y),
+##        arma=fast_dists_and_trans(y, Z = 1),
+##        byunit_arma=fast_dists_and_trans_by_unit_arma(y, Z = 1),
+##        ##byunit=fast_dists_and_trans_by_unit(y, Z = 1), ## this would crash the machine
+##        min_iterations=10, max_iterations=1000,check=FALSE,filter_gc=FALSE)
+##    })
+##save(dist_timings_osx2,file="dist_timings_osx2.rda")
 
 
 ## dist_timings_osx3 <- press(N=c(30000,50000,100000),
@@ -98,8 +95,6 @@ save(dist_timings_osx2,file="dist_timings_osx2.rda")
 ##     })
 ## save(dist_timings_osx3,file="dist_timings_osx3.rda")
 
-
-
 ## this next takes too long
 ## set.seed(12345)
 ## N <- 800000 
@@ -110,14 +105,4 @@ save(dist_timings_osx2,file="dist_timings_osx2.rda")
 ## pdf(file="dist_timings_osxlaptop.pdf")
 ## ggplot2::autoplot(dist_timings_osxlaptop)
 ## dev.off()
-
-
-## We also did this on keeling:
-## load("dist_timings_linuxkeeling.rda")
-
-## summary(dist_timings_linuxkeeling)
-
-pdf(file="dist_timings_linuxkeeling.pdf")
-ggplot2::autoplot(dist_timings_linuxkeeling)
-dev.off()
 
