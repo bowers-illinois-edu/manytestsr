@@ -26,7 +26,7 @@ test_contents_fn <- function(obj1,obj2){
 }
 
 numcores <- parallel::detectCores(logical=FALSE)
-numcores <- 7 # 4 ##floor(cores/2)
+numcores <- 16
 
 test_that("All algorithmns give the same answers",{
 y <- 1:5
@@ -68,11 +68,13 @@ dist_timings_small <- press(N=unique(c(seq(10,100,10),seq(100,1000,100))), #,seq
     })
 
 ### UNCOMMENT OUT THESE NEXT TWO FOR OS X LAPTOP TIMINGS
-dist_timings_small_osxlaptop <- dist_timings_small
-save(dist_timings_small_osxlaptop,file="dist_timings_small_osxlaptop.rda")
+## dist_timings_small_osxlaptop <- dist_timings_small
+## save(dist_timings_small_osxlaptop,file="dist_timings_small_osxlaptop.rda")
 #### UNCOMMENT OUT THESE NEXT TWO FOR KEELING TIMINGS
 ## dist_timings_linuxkeeling_small <- dist_timings_small
 ## save(dist_timings_linuxkeeling,file="dist_timings_linuxkeeling.rda")
+dist_timings_small_osxpro <- dist_timings_small
+save(dist_timings_small_osxpro,file="dist_timings_small_osxpro.rda")
 
 dist_timings_large <- press(N=unique(c(seq(1000,10000,1000),20000)),
     {set.seed(12345)
@@ -82,15 +84,17 @@ dist_timings_large <- press(N=unique(c(seq(1000,10000,1000),20000)),
         byunit_arma=fast_dists_and_trans_by_unit_arma(y, Z = 1),
         byunit_arma2=fast_dists_and_trans_by_unit_arma2(y, Z = 1),
         byunit_arma2_par=fast_dists_by_unit_arma2_par(y, Z = 1, threads=numcores),
-        min_iterations=100, max_iterations=1000,check=FALSE,filter_gc=FALSE)
+        min_iterations=2, max_iterations=1000,check=FALSE,filter_gc=FALSE)
     })
 
 ### UNCOMMENT OUT THESE NEXT TWO FOR OS X LAPTOP TIMINGS
-dist_timings_large_osxlaptop <- dist_timings_large
-save(dist_timings_large_osxlaptop,file="dist_timings_large_osxlaptop.rda")
+## dist_timings_large_osxlaptop <- dist_timings_large
+## save(dist_timings_large_osxlaptop,file="dist_timings_large_osxlaptop.rda")
 #### UNCOMMENT OUT THESE NEXT TWO FOR KEELING TIMINGS
 ## dist_timings_large_linuxkeeling<- dist_timings_large
 ## save(dist_timings_large_linuxkeeling,file="dist_timings_large_linuxkeeling.rda")
+dist_timings_large_osxpro <- dist_timings_large
+save(dist_timings_large_osxpro,file="dist_timings_large_osxpro.rda")
 
 
 
