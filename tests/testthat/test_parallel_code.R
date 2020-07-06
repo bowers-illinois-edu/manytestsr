@@ -34,9 +34,9 @@ test_contents_fn <- function(obj1,obj2){
 }
 
 numcores <- parallel::detectCores(logical=FALSE)
-numcores <- floor(cores/2)
+numcores <- 4 #floor(cores/2)
 
-test_that("All algorithmns give the same answers"{
+test_that("All algorithmns give the same answers",{
 y <- 1:5
 tmp1 <- dists_and_trans(y)
 tmp2 <- fast_dists_and_trans(y, Z = 1)

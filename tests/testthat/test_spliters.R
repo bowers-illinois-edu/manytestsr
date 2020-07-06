@@ -93,16 +93,18 @@ test_that("splitCluster follows the values of discrete splitby variables", {
   expect_equal(c(thetab[1, 1], thetab[2, 2]), c(0, 0))
 })
 
-test_that("splitCluster stops appropriately with continuous splitting criteria", {
-  theres1 <- findBlocks(
-    idat = idat3, bdat = bdat4, blockid = "bF", pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
-    fmla = Ytauv2 ~ ZF | bF,
-    parallel = "no", copydts = TRUE,
-    splitfn = splitCluster, splitby = "hwt", stop_splitby_constant = TRUE
-  )
-  theres1_det <- report_detections(theres1, blockid = "bF")
-  ## Not sure what to expect here
-})
+
+## This next doesn't have explicit expectations and so is a skipped or empty test upon R check. Comment out for now.
+## test_that("splitCluster stops appropriately with continuous splitting criteria.", {
+##   theres1 <- findBlocks(
+##     idat = idat3, bdat = bdat4, blockid = "bF", pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
+##     fmla = Ytauv2 ~ ZF | bF,
+##     parallel = "no", copydts = TRUE,
+##     splitfn = splitCluster, splitby = "hwt", stop_splitby_constant = TRUE
+##   )
+##   theres1_det <- report_detections(theres1, blockid = "bF")
+##   ## Not sure what to expect here
+## })
 
 
 

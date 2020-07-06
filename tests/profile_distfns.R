@@ -68,8 +68,8 @@ dist_timings <- press(N=c(10,100,500,1000,5000,10000,15000,20000),
     })
 
 ### UNCOMMENT OUT THESE NEXT TWO FOR OS X LAPTOP TIMINGS
-## dist_timings_osxlaptop <- dist_timings
-## save(dist_timings_osxlaptop,file="dist_timings_osxlaptop.rda")
+dist_timings_osxlaptop <- dist_timings
+save(dist_timings_osxlaptop,file="dist_timings_osxlaptop.rda")
 #### UNCOMMENT OUT THESE NEXT TWO FOR KEELING TIMINGS
 ## dist_timings_linuxkeeling <- dist_timings
 ## save(dist_timings_linuxkeeling,file="dist_timings_linuxkeeling.rda")
@@ -99,7 +99,7 @@ dist_timings <- press(N=c(10,100,500,1000,5000,10000,15000,20000),
 
 ## this next takes too long
 ## set.seed(12345)
-## N <- 800000 
+## N <- 800000
 ## y <- rnorm(N) ##sample(ypop,N)
 ## n800k_unit <- bench_time( fast_dists_and_trans_by_unit_arma(y, Z = 1) )
 ## n800k_arma <- bench_time( fast_dists_and_trans(y, Z = 1) )
@@ -107,4 +107,3 @@ dist_timings <- press(N=c(10,100,500,1000,5000,10000,15000,20000),
 ## pdf(file="dist_timings_osxlaptop.pdf")
 ## ggplot2::autoplot(dist_timings_osxlaptop)
 ## dev.off()
-
