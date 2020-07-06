@@ -82,7 +82,7 @@ dist_timings_large <- press(N=unique(c(seq(1000,10000,1000),20000)),
         byunit_arma=fast_dists_and_trans_by_unit_arma(y, Z = 1),
         byunit_arma2=fast_dists_and_trans_by_unit_arma2(y, Z = 1),
         byunit_arma2_par=fast_dists_by_unit_arma2_par(y, Z = 1, threads=numcores),
-        min_iterations=100, max_iterations=1000,check=FALSE,filter_gc=FALSE)
+        min_iterations=2, max_iterations=1000,check=FALSE,filter_gc=FALSE)
     })
 
 ### UNCOMMENT OUT THESE NEXT TWO FOR OS X LAPTOP TIMINGS

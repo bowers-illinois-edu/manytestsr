@@ -1,10 +1,14 @@
-
+## Summarize and learn from the benchmarking exercise
 
 library(tidyverse)
 library(bench)
 
-load("dist_timings_osxlaptop.rda")
-load("dist_timings_linuxkeeling.rda")
+load("dist_timings_small_osxlaptop.rda")
+load("dist_timings_small_osxpro.rda")
+load("dist_timings_small_linuxkeeling.rda")
+load("dist_timings_large_osxlaptop.rda")
+load("dist_timings_large_osxpro.rda")
+load("dist_timings_large_linuxkeeling.rda")
 
 print(dist_timings_osxlaptop, n=100)
 ## Something about fast_dists_and_trans_by_unit is just destroying memory. The byunit_arma is the right approach for big stuff.
