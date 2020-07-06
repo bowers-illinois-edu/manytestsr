@@ -26,32 +26,26 @@ test_contents_fn <- function(obj1,obj2){
 }
 
 numcores <- parallel::detectCores(logical=FALSE)
-numcores <- floor(cores/2)
+numcores <- 4 ##floor(cores/2)
 
-test_that("All algorithmns give the same answers"{
+test_that("All algorithmns give the same answers",{
 y <- 1:5
 tmp1 <- dists_and_trans(y)
 tmp2 <- fast_dists_and_trans(y, Z = 1)
 tmp3 <- fast_dists_and_trans_by_unit_arma(y, Z = 1)
 tmp4 <- fast_dists_and_trans_by_unit_arma2(y, Z = 1)
 tmp5 <- fast_dists_by_unit_arma2_par(y,Z=1,threads=numcores)
-
 test_length_fn(tmp1,tmp2)
 test_length_fn(tmp1,tmp3)
 test_length_fn(tmp1,tmp4)
 test_length_fn(tmp1,tmp5)
-
 test_contents_fn(tmp1,tmp2)
 test_contents_fn(tmp1,tmp3)
 test_contents_fn(tmp1,tmp4)
 test_contents_fn(tmp1,tmp5)
-
+})
 
 ## for more ideas see https://stackoverflow.com/questions/44703599/loop-in-rcpp-slower-than-those-in-r
-
-
-numcores <- parallel::detectCores(logical=FALSE)
-numcores <- floor(cores/2)
 
 ## y <- sample(ypop,1000)
 ## n1k_osx_times <- bench::mark(main=dists_and_trans(y),
