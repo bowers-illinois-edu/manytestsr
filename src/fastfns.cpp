@@ -381,7 +381,7 @@ Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec & x,const arma::vec
 Rcpp::List fast_dists_by_unit_arma2_par(const arma::vec & x,const arma::vec & Z, const int threads=4){
      #ifdef _OPENMP
      if ( threads > 0 )
-    omp_set_num_threads( threads );
+     omp_set_num_threads( threads );
      REprintf("Number of threads=%i\n", omp_get_max_threads());
      #endif
 
