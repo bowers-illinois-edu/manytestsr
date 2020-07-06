@@ -71,8 +71,8 @@ dist_timings <- press(N=c(10,100,500,1000,5000,10000,15000,20000),
 ## dist_timings_osxlaptop <- dist_timings
 ## save(dist_timings_osxlaptop,file="dist_timings_osxlaptop.rda")
 #### UNCOMMENT OUT THESE NEXT TWO FOR KEELING TIMINGS
-## dist_timings_linuxkeeling <- dist_timings
-## save(dist_timings_linuxkeeling,file="dist_timings_linuxkeeling.rda")
+dist_timings_linuxkeeling <- dist_timings
+save(dist_timings_linuxkeeling,file="dist_timings_linuxkeeling.rda")
 
 ## Something about fast_dists_and_trans_by_unit is just destroying memory. The byunit_arma is the right approach for big stuff.
 
