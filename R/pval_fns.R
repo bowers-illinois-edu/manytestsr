@@ -112,13 +112,14 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 #' @param  distfn is  a function that produces one or more vectors (a data frame or matrix) of the  same number of  rows as the dat
 #' @param parallel is "no" then parallelization is not required, otherwise it is "multicore" or "snow" (see  help for coin::approximate()
 #' @param ncpu is number of cpus  to be used for parallel operation.
+#' @param adaptive_dist_function is TRUE if the distance calculation function should be chosen using previous benchmarks. See the code.
 #' @return A p-value
 #' @importFrom coin independence_test pvalue approximate exact asymptotic
 #' @importFrom Rfast Rank
 #' @importFrom parallel detectCores
 #' @export
 pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
-                       parallel = "no", ncpu = NULL, groups = NULL, distfn = dists_and_trans) {
+                       parallel = "no", ncpu = NULL, groups = NULL, distfn = dists_and_trans,adaptive_dist_function=TRUE) {
   force(distfn)
   fmla_vars <- all.vars(fmla)
   theresponse <- fmla_vars[attr(terms(fmla), "response")]
@@ -127,21 +128,24 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
   if (length(unique(dat[[theresponse]])) < 2) {
     return(1)
   }
-  ## Change the distfn depending on the size of the outcome
-  ## dists_and_trans is fastest until vectors are very large
-  ## fast_dists_and_trans_by_unit_arma should work when vectors are so large that distance matrices cannot be calculated entirely
-  ## it is still pretty fast but it goes row by row rather than calculating the whole distance matrices.
-  ## fast_dists_and_trans may be faster than dists_and_trans with short vectors
-  ## for now just go to the _by_unit approach with very long vectors
+  ## Change the distfn depending on the size of the outcome using the benchmarking done in tests/profile_distfns.R
+  ## Here are the contenders
+  ##   main=dists_and_trans(y),
+  ##       arma=fast_dists_and_trans(y, Z = 1),
+  ##       byunit_arma=fast_dists_and_trans_by_unit_arma(y, Z = 1),
+  ##       byunit_arma2=fast_dists_and_trans_by_unit_arma2(y, Z = 1),
+  ##       byunit_arma2_par=fast_dists_by_unit_arma2_par(y, Z = 1, threads=numcores),
+
   dat_size <- nrow(dat)
-  if(dat_size < 500){
-      distfn <- fast_dists_and_trans
+
+   if (is.null(ncpu) & parallel != "no") {
+      ncpu <- detectCores()
+    }
+  if(parallel!="no" & dat_size > 50){
+      distfn <- fast_dists_by_unit_arma_parR(threads=ncpu)
   }
-  if(dat_size >=500 & dat_size < 5000){
-      distfn <- dists_and_trans
-  }
-  if(dat_size >= 5000){
-      distfn <- fast_dists_and_trans_by_unit_arma
+  if(parallel=="no" & dat_size >= 5000){
+      distfn <- fast_dists_and_trans_by_unit_arma2
   }
   thetreat <- fmla_vars[[2]]
   thedat <- copy(dat)
@@ -166,9 +170,6 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
       thep <- pvalue(independence_test(newfmla, data = thedat, teststat = "quadratic"))[[1]]
     )
   } else {
-    if (is.null(ncpu) & parallel != "no") {
-      ncpu <- detectCores()
-    }
     if (parallel == "no") {
       ncpu <- 1
     }
