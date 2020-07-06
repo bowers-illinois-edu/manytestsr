@@ -1,3 +1,8 @@
+// Protect against compilers without OpenMP
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #define RCPP_ARMADILLO_RETURN_COLVEC_AS_VECTOR
 
 #include <RcppArmadillo.h>
@@ -7,6 +12,7 @@ using namespace arma;
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp11)]]
+// [[Rcpp::plugins(openmp)]]
 
 // [[Rcpp::export]]
 double fastMean(const arma::vec & X){
@@ -142,14 +148,13 @@ arma::mat vecdist3(const arma::vec & A){
       // and https://github.com/RoyiAvital/Projects/tree/master/CalcDistanceMatrix
     // int n = A.nrow();
     // arma::mat A = arma::mat(x.begin(), n, 1, false);
-    int n = A.n_elem;
+    uword n = A.n_elem;
 
     // arma::colvec An =  sum(square(A),1);
     arma::mat C(n,n);
     arma::colvec An(n);
 
     An =  square(A);
-
     C = -2 * (A * A.t());
     C.each_col() += An;
     C.each_row() += An.t();
@@ -286,49 +291,49 @@ double fastmad_arma(const arma::vec & x) {
   return( 1.4826 * arma::median(med_devs) );
 }
 
-
-//[[Rcpp::export]]
-Rcpp::List fast_dists_and_trans_by_unit(const Rcpp::NumericVector & x,const Rcpp::NumericVector & Z){
-    // https://hydroecology.net/using-r-and-cpp-together/
-    // In the end, Rcpp stuff is as efficient as using pointers etcc
-    int n=x.length();
-    Rcpp::NumericVector zx = zscore_vec(x);
-    Rcpp::NumericVector rankx = avg_rank(x);
-
-    // Setup pointers to the vector objects to make the loops faster?
-    // http://adv-r.had.co.nz/C-interface.html#c-vectors
-    // Rcpp::NumericVector mndx = Rcpp::no_init_vector(n);
-    Rcpp::NumericVector mndx(n);
-    Rcpp::NumericVector maxdx(n);
-    Rcpp::NumericVector maddx(n);
-    Rcpp::NumericVector mndrx(n);
-    Rcpp::NumericVector maxdrx(n);
-    Rcpp::NumericVector maddrx(n);
-
-    Rcpp::NumericVector dist_i(n);
-    Rcpp::NumericVector dist_rank_i(n);
-
-    for(int i = 0; i < n ; i++){
-        for(int j = 0; j < n ; j++){
-            dist_i(j) = std::abs( x(i) - x(j) );
-            dist_rank_i(j) = std::abs( rankx(i) - rankx(j) );
-        }
-        // Rcpp::Rcout << "dist_i" << std::endl;
-        // Rcpp::Rcout << dist_i << std::endl;
-
-        mndx(i) = Rcpp::mean(dist_i);
-        maxdx(i) = Rcpp::max(dist_i);
-        maddx(i) = fastmad(dist_i);
-        mndrx(i) = Rcpp::mean(dist_rank_i);
-        maxdrx(i) = Rcpp::max(dist_rank_i);
-        maddrx(i) = fastmad(dist_rank_i);
-    }
-
-    //  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
-    Rcpp::List res = List::create(mndx, mndrx, maddx, maddrx, maxdx, maxdrx, zx, rankx);
-    return(res);
-}
-
+// This next has a memory leak compared to the armadillo version
+////[[Rcpp::export]]
+//Rcpp::List fast_dists_and_trans_by_unit(const Rcpp::NumericVector & x,const Rcpp::NumericVector & Z){
+//    // https://hydroecology.net/using-r-and-cpp-together/
+//    // In the end, Rcpp stuff is as efficient as using pointers etcc
+//    int n=x.length();
+//    Rcpp::NumericVector zx = zscore_vec(x);
+//    Rcpp::NumericVector rankx = avg_rank(x);
+//
+//    // Setup pointers to the vector objects to make the loops faster?
+//    // http://adv-r.had.co.nz/C-interface.html#c-vectors
+//    // Rcpp::NumericVector mndx = Rcpp::no_init_vector(n);
+//    Rcpp::NumericVector mndx(n);
+//    Rcpp::NumericVector maxdx(n);
+//    Rcpp::NumericVector maddx(n);
+//    Rcpp::NumericVector mndrx(n);
+//    Rcpp::NumericVector maxdrx(n);
+//    Rcpp::NumericVector maddrx(n);
+//
+//    Rcpp::NumericVector dist_i(n);
+//    Rcpp::NumericVector dist_rank_i(n);
+//
+//    for(int i = 0; i < n ; i++){
+//        for(int j = 0; j < n ; j++){
+//            dist_i(j) = std::abs( x(i) - x(j) );
+//            dist_rank_i(j) = std::abs( rankx(i) - rankx(j) );
+//        }
+//        // Rcpp::Rcout << "dist_i" << std::endl;
+//        // Rcpp::Rcout << dist_i << std::endl;
+//
+//        mndx(i) = Rcpp::mean(dist_i);
+//        maxdx(i) = Rcpp::max(dist_i);
+//        maddx(i) = fastmad(dist_i);
+//        mndrx(i) = Rcpp::mean(dist_rank_i);
+//        maxdrx(i) = Rcpp::max(dist_rank_i);
+//        maddrx(i) = fastmad(dist_rank_i);
+//    }
+//
+//    //  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
+//    Rcpp::List res = List::create(mndx, mndrx, maddx, maddrx, maxdx, maxdrx, zx, rankx);
+//    return(res);
+//}
+//
 
 //[[Rcpp::export]]
 Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec & x,const arma::vec & Z){
@@ -351,8 +356,8 @@ Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec & x,const arma::vec
     arma::vec dist_i(n);
     arma::vec dist_rank_i(n);
 
-    for(int i = 0; i < n ; i++){
-        for(int j = 0; j < n ; j++){
+    for(uword i = 0; i < n ; i++){
+        for(uword j = 0; j < n ; j++){
             dist_i(j) = std::abs( x(i) - x(j) );
             dist_rank_i(j) = std::abs( rankx(i) - rankx(j) );
         }
@@ -372,6 +377,82 @@ Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec & x,const arma::vec
     return(res);
 }
 
+//[[Rcpp::export]]
+Rcpp::List fast_dists_by_unit_arma2_par(const arma::vec & x,const arma::vec & Z, const int threads=4){
+     #ifdef _OPENMP
+     if ( threads > 0 )
+    omp_set_num_threads( threads );
+     REprintf("Number of threads=%i\n", omp_get_max_threads());
+     #endif
 
+    arma::uword n=x.n_elem, i;
+    arma::vec zx = zscore_vec(x);
+    arma::vec rankx = avg_rank_arma(x);
 
+    // Setup pointers to the vector objects to make the loops faster?
+    // http://adv-r.had.co.nz/C-interface.html#c-vectors
+    // arma::vec mndx = Rcpp::no_init_vector(n);
+    arma::vec mndx(n);
+    arma::vec maxdx(n);
+    arma::vec maddx(n);
+    arma::vec mndrx(n);
+    arma::vec maxdrx(n);
+    arma::vec maddrx(n);
+
+    arma::vec dist_i(n);
+    arma::vec dist_rank_i(n);
+
+    #pragma omp parallel for default(shared) schedule(static) private(i, dist_i, dist_rank_i)
+    for(i = 0; i < n ; i++){
+        dist_i = sqrt(square( x(i) - x));
+        dist_rank_i = sqrt(square( rankx(i) - rankx));
+        mndx(i) = arma::mean(dist_i);
+        maxdx(i) = arma::max(dist_i);
+        maddx(i) = fastmad_arma(dist_i);
+        mndrx(i) = arma::mean(dist_rank_i);
+        maxdrx(i) = arma::max(dist_rank_i);
+        maddrx(i) = fastmad_arma(dist_rank_i);
+    }
+
+    //  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
+    Rcpp::List res = List::create(mndx, mndrx, maddx, maddrx, maxdx, maxdrx, zx, rankx);
+    return(res);
+}
+
+//[[Rcpp::export]]
+Rcpp::List fast_dists_and_trans_by_unit_arma2(const arma::vec & x,const arma::vec & Z){
+    // this version avoids the inner loop using vectors.
+    int n=x.n_elem;
+    arma::vec zx = zscore_vec(x);
+    arma::vec rankx = avg_rank_arma(x);
+
+    // Setup pointers to the vector objects to make the loops faster?
+    // http://adv-r.had.co.nz/C-interface.html#c-vectors
+    // arma::vec mndx = Rcpp::no_init_vector(n);
+    arma::vec mndx(n);
+    arma::vec maxdx(n);
+    arma::vec maddx(n);
+    arma::vec mndrx(n);
+    arma::vec maxdrx(n);
+    arma::vec maddrx(n);
+ 
+    for(uword i = 0; i < n ; i++){
+        arma::vec dist_i(n);
+        arma::vec dist_rank_i(n);
+        dist_i = sqrt(pow( x(i) - x,2 ));
+        dist_rank_i = sqrt(pow( rankx(i) - rankx, 2 ));
+        mndx(i) = arma::mean(dist_i);
+        maxdx(i) = arma::max(dist_i);
+        maddx(i) = fastmad_arma(dist_i);
+        mndrx(i) = arma::mean(dist_rank_i);
+        maxdrx(i) = arma::max(dist_rank_i);
+        maddrx(i) = fastmad_arma(dist_rank_i);
+    }
+    // Rcpp::Rcout << "dist_i" << std::endl;
+    // Rcpp::Rcout << dist_i << std::endl;
+
+    //  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
+    Rcpp::List res = List::create(mndx, mndrx, maddx, maddrx, maxdx, maxdrx, zx, rankx);
+    return(res);
+}
 

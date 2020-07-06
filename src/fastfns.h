@@ -27,5 +27,7 @@ Rcpp::List fast_dists_and_trans_by_unit(const Rcpp::NumericVector & x, const Rcp
 double fastmad(const Rcpp::NumericVector & x);
 void inner_dist(double f[],double &x,double *y,int offset,int &len);
 Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec & x,const arma::vec & Z);
+Rcpp::List fast_dists_and_trans_by_unit_arma2(const arma::vec & x,const arma::vec & Z);
 double fastmad_arma(const arma::vec & x);
+Rcpp::List fast_dists_by_unit_arma2_par(const arma::vec & x,const arma::vec & Z, const int threads);
 

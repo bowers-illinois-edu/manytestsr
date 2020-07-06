@@ -73,11 +73,15 @@ fastmad_arma <- function(x) {
     .Call(`_manytestsr_fastmad_arma`, x)
 }
 
-fast_dists_and_trans_by_unit <- function(x, Z) {
-    .Call(`_manytestsr_fast_dists_and_trans_by_unit`, x, Z)
-}
-
 fast_dists_and_trans_by_unit_arma <- function(x, Z) {
     .Call(`_manytestsr_fast_dists_and_trans_by_unit_arma`, x, Z)
+}
+
+fast_dists_by_unit_arma2_par <- function(x, Z, threads = 4L) {
+    .Call(`_manytestsr_fast_dists_by_unit_arma2_par`, x, Z, threads)
+}
+
+fast_dists_and_trans_by_unit_arma2 <- function(x, Z) {
+    .Call(`_manytestsr_fast_dists_and_trans_by_unit_arma2`, x, Z)
 }
 

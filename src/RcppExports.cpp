@@ -205,18 +205,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// fast_dists_and_trans_by_unit
-Rcpp::List fast_dists_and_trans_by_unit(const Rcpp::NumericVector& x, const Rcpp::NumericVector& Z);
-RcppExport SEXP _manytestsr_fast_dists_and_trans_by_unit(SEXP xSEXP, SEXP ZSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type Z(ZSEXP);
-    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_by_unit(x, Z));
-    return rcpp_result_gen;
-END_RCPP
-}
 // fast_dists_and_trans_by_unit_arma
 Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec& x, const arma::vec& Z);
 RcppExport SEXP _manytestsr_fast_dists_and_trans_by_unit_arma(SEXP xSEXP, SEXP ZSEXP) {
@@ -226,6 +214,31 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type Z(ZSEXP);
     rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_by_unit_arma(x, Z));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fast_dists_by_unit_arma2_par
+Rcpp::List fast_dists_by_unit_arma2_par(const arma::vec& x, const arma::vec& Z, const int threads);
+RcppExport SEXP _manytestsr_fast_dists_by_unit_arma2_par(SEXP xSEXP, SEXP ZSEXP, SEXP threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< const int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(fast_dists_by_unit_arma2_par(x, Z, threads));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fast_dists_and_trans_by_unit_arma2
+Rcpp::List fast_dists_and_trans_by_unit_arma2(const arma::vec& x, const arma::vec& Z);
+RcppExport SEXP _manytestsr_fast_dists_and_trans_by_unit_arma2(SEXP xSEXP, SEXP ZSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type Z(ZSEXP);
+    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_by_unit_arma2(x, Z));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -249,8 +262,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_avg_rank", (DL_FUNC) &_manytestsr_avg_rank, 1},
     {"_manytestsr_fastmad", (DL_FUNC) &_manytestsr_fastmad, 1},
     {"_manytestsr_fastmad_arma", (DL_FUNC) &_manytestsr_fastmad_arma, 1},
-    {"_manytestsr_fast_dists_and_trans_by_unit", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit, 2},
     {"_manytestsr_fast_dists_and_trans_by_unit_arma", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit_arma, 2},
+    {"_manytestsr_fast_dists_by_unit_arma2_par", (DL_FUNC) &_manytestsr_fast_dists_by_unit_arma2_par, 3},
+    {"_manytestsr_fast_dists_and_trans_by_unit_arma2", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit_arma2, 2},
     {NULL, NULL, 0}
 };
 
