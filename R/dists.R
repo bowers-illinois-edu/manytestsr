@@ -1,5 +1,42 @@
 # Distance Creation Functions
 
+
+#' Outcome distances and transformations
+#'
+#' @param x Is a numeric vector (the  outcome variable)
+#' @param Z is just a placeholder and not used but is a part of the api for distance functions
+#' @return A list  for inclusion in a data.table with  distances between each unit and other units as well as some transformations of those distances
+#' @importFrom Rfast Dist rowmeans rowMads rowMaxs
+#' @export
+dists_and_trans <- function(x, Z) {
+  dx <- vecdist2(x)
+  rankx <- Rank(x)
+  dxRank0 <- vecdist2(rankx) # distance among the ranks
+  res <- list(
+    mndist = as.numeric(fastrowMeans(dx)),
+    mndistRank0 = as.numeric(fastrowMeans(dxRank0)),
+    maddist = rowMads(dx),
+    maddistRank0 = rowMads(dxRank0),
+    maxdist = as.numeric(fastrowMaxs2(dx)),
+    maxdistRank0 = as.numeric(fastrowMaxs2(dxRank0)),
+    mhdist = zscore_vec(x), ## really just the zscore
+    rankx = rankx
+  )
+  return(res)
+}
+
+#' Outcome distances and transformations: C++ OpenMP Parallel version
+#'
+#' @param threads Is an integer with the number of cores to use.
+#' @return A distance creation function taking x (a numeric vector, usually the outcome) and a variable Z which is not used.
+#' @export
+fast_dists_by_unit_arma_parR <- function(threads) {
+    force(threads)
+    return(function(x,Z){ fast_dists_by_unit_arma2_par(x,Z,threads=threads) })
+}
+
+
+
 #' Outcome e-distances between treatment arms
 #'
 #' @param x Is a numeric vector (the  outcome variable)
@@ -57,28 +94,4 @@ edisti <- function(x, Z) {
   # e[i, j] <- e[j, i] <- w * ((m12 + m12) - (m11 + m22))
   # res <- w * ( (c_t_dists - c_c_dists) + (c_t_dists - t_t_dists) )
   return(ei)
-}
-
-#' Outcome distances between treatment arms and transformations of distances
-#'
-#' @param x Is a numeric vector (the  outcome variable)
-#' @param Z is just a placeholder and not used but is a part of the api for distance functions
-#' @return A list  for inclusion in a data.table with  distances between each unit and other units as well as some transformations of those distances
-#' @importFrom Rfast Dist rowmeans rowMads rowMaxs
-#' @export
-dists_and_trans <- function(x, Z) {
-  dx <- vecdist2(x)
-  rankx <- Rank(x)
-  dxRank0 <- vecdist2(rankx) # distance among the ranks
-  res <- list(
-    mndist = as.numeric(fastrowMeans(dx)),
-    mndistRank0 = as.numeric(fastrowMeans(dxRank0)),
-    maddist = rowMads(dx),
-    maddistRank0 = rowMads(dxRank0),
-    maxdist = as.numeric(fastrowMaxs2(dx)),
-    maxdistRank0 = as.numeric(fastrowMaxs2(dxRank0)),
-    mhdist = zscore_vec(x), ## really just the zscore
-    rankx = rankx
-  )
-  return(res)
 }

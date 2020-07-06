@@ -2,7 +2,7 @@
 % Please edit documentation in R/dists.R
 \name{dists_and_trans}
 \alias{dists_and_trans}
-\title{Outcome distances between treatment arms and transformations of distances}
+\title{Outcome distances and transformations}
 \usage{
 dists_and_trans(x, Z)
 }
@@ -15,5 +15,5 @@ dists_and_trans(x, Z)
 A list  for inclusion in a data.table with  distances between each unit and other units as well as some transformations of those distances
 }
 \description{
-Outcome distances between treatment arms and transformations of distances
+Outcome distances and transformations
 }
