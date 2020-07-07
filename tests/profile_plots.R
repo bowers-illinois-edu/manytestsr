@@ -1,4 +1,6 @@
 ## Summarize and learn from the benchmarking exercise
+### Overall, byunit_arma2_par  is best above about 20 and arma below
+### If parallel is not available then overall the "arma" algorithmn wins below about N=200 and byunit_arma wins above
 
 library(tidyverse)
 library(bench)
@@ -51,7 +53,6 @@ linuxnonpar_small <- linuxtime_small %>% filter(algo!="byunit_arma2_par") %>% ar
 osxnonpar_small<- osxtime_small %>% filter(algo!="byunit_arma2_par") %>% arrange(N,median)# %>%  print(n=100)
 osxprononpar_small <-osxprotime_small %>% filter(algo!="byunit_arma2_par") %>% arrange(N,median)# %>%  print(n=100)
 
-
 linuxnonpar_large <- linuxtime_large %>% filter(algo!="byunit_arma2_par") %>% arrange(N,median)# %>%  print(n=100)
 osxnonpar_large<- osxtime_large %>% filter(algo!="byunit_arma2_par") %>% arrange(N,median)# %>%  print(n=100)
 osxprononpar_large <-osxprotime_large %>% filter(algo!="byunit_arma2_par") %>% arrange(N,median)# %>%  print(n=100)
@@ -83,7 +84,7 @@ gosxnonpar_small2<- ggplot(data=filter(osxnonpar_small,N>=200),aes(N,median,grou
   theme(legend.position = c(400, .01), legend.background = element_blank()) +
   theme_bw()
 
-## Looks to me like arma until 600, and then main to 1000
+## Looks to me like arma until 600, and then main to 1000 (but could easily stop arma at 200)
 gosxnonpar_small1 + gosxnonpar_small2
 
 ####
@@ -145,5 +146,96 @@ gosxprononpar_large2<- ggplot(data=filter(osxprononpar_large,N>=5000),aes(N,medi
 gosxprononpar_large1 + gosxprononpar_large2
 
 
+##########################
+###  All algos
+
+dist_timings_small_linuxkeeling$algo <- names(dist_timings_small_linuxkeeling$expression)
+dist_timings_small_osxlaptop$algo <- names(dist_timings_small_osxlaptop$expression)
+dist_timings_small_osxpro$algo <- names(dist_timings_small_osxpro$expression)
+dist_timings_large_linuxkeeling$algo <- names(dist_timings_large_linuxkeeling$expression)
+dist_timings_large_osxlaptop$algo <- names(dist_timings_large_osxlaptop$expression)
+dist_timings_large_osxpro$algo <- names(dist_timings_large_osxpro$expression)
+
+### 
+glinux_small1<- ggplot(data=filter(dist_timings_small_linuxkeeling,N<=200),aes(N,median,group=algo,color=algo)) +
+   geom_line(show.legend =FALSE) +
+  theme_bw()
+
+glinux_small2<- ggplot(data=filter(dist_timings_small_linuxkeeling,N>=200),aes(N,median,group=algo,color=algo)) +
+  geom_line() +
+  theme(legend.position = c(400, .01), legend.background = element_blank()) +
+  theme_bw()
+
+## arma wins but only under about 20
+glinux_small1 + glinux_small2
+
+####
+
+gosxlaptop_small1<- ggplot(data=filter(dist_timings_small_osxlaptop,N<=200),aes(N,median,group=algo,color=algo)) +
+   geom_line(show.legend =FALSE) +
+  theme_bw()
+
+gosxlaptop_small2<- ggplot(data=filter(dist_timings_small_osxlaptop,N>=200),aes(N,median,group=algo,color=algo)) +
+  geom_line() +
+  theme(legend.position = c(400, .01), legend.background = element_blank()) +
+  theme_bw()
+
+## same arma but only under 20
+gosxlaptop_small1 + gosxlaptop_small2
+
+
+####
+
+gosxpro_small1<- ggplot(data=filter(dist_timings_small_osxpro,N<=200),aes(N,median,group=algo,color=algo)) +
+   geom_line(show.legend =FALSE) +
+  theme_bw()
+
+gosxpro_small2<- ggplot(data=filter(dist_timings_small_osxpro,N>=200),aes(N,median,group=algo,color=algo)) +
+  geom_line() +
+  theme(legend.position = c(400, .01), legend.background = element_blank()) +
+  theme_bw()
+
+## same
+gosxpro_small1 + gosxpro_small2
+
+
+### 
+glinux_large1<- ggplot(data=filter(dist_timings_large_linuxkeeling,N<=5000),aes(N,median,group=algo,color=algo)) +
+   geom_line(show.legend =FALSE) +
+  theme_bw()
+
+glinux_large2<- ggplot(data=filter(dist_timings_large_linuxkeeling,N>=5000),aes(N,median,group=algo,color=algo)) +
+  geom_line() +
+  theme(legend.position = c(400, .01), legend.background = element_blank()) +
+  theme_bw()
+
+glinux_large1 + glinux_large2
+
+####
+
+gosxlaptop_large1<- ggplot(data=filter(dist_timings_large_osxlaptop,N<=5000),aes(N,median,group=algo,color=algo)) +
+   geom_line(show.legend =FALSE) +
+  theme_bw()
+
+gosxlaptop_large2<- ggplot(data=filter(dist_timings_large_osxlaptop,N>=5000),aes(N,median,group=algo,color=algo)) +
+  geom_line() +
+  theme(legend.position = c(400, .01), legend.background = element_blank()) +
+  theme_bw()
+
+gosxlaptop_large1 + gosxlaptop_large2
+
+
+####
+
+gosxpro_large1<- ggplot(data=filter(dist_timings_large_osxpro,N<=5000),aes(N,median,group=algo,color=algo)) +
+   geom_line(show.legend =FALSE) +
+  theme_bw()
+
+gosxpro_large2<- ggplot(data=filter(dist_timings_large_osxpro,N>=5000),aes(N,median,group=algo,color=algo)) +
+  geom_line() +
+  theme(legend.position = c(400, .01), legend.background = element_blank()) +
+  theme_bw()
+
+gosxpro_large1 + gosxpro_large2
 
 

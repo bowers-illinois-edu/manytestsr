@@ -94,23 +94,27 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 
 #' P-value function: Independence Treatment Distance Test
 #'
+#' @description
 #' These functions accept a data frame and perhaps test specific arguments
 #' (like whether or not the test will be asympotic or simulation based). It
 #' produces a p-value.
 #'
+#' @details
 #' For now, this  function  does an omnibus-style chi-square  test using (1)
 #' the ratio  of  distances to controls to distances to treated observations
 #' within block;  (2)  the  rank of  distances to  controls for each unit; and
 #' (3) the raw outcome.
+#'
+#' Although the distances are calculated by block, our profiling suggests that it is better to parallelize the distance creation `distfn` (done here in C++ in the `fastfns.cpp` file) rather than use the `data.table` approach of `setDTthreads()`. So, here we assume that the threads for data.table are 1.
 #' @param dat An object inheriting from class data.frame
 #' @param fmla  A formula  appropriate to the function. Here it should  be something like outcome~treatment|block
 #' @param sims Either NULL (meaning use an asymptotic reference dist) or a
 #' number (meaning sampling from the randomization distribution implied by the
 #' formula)
 #' @param simthresh is the size of the data below which we use direct permutations for p-values
-#' @param  groups is a vector defining the groups within which the inter-unit  distances are calculated. Not used here.
-#' @param  distfn is  a function that produces one or more vectors (a data frame or matrix) of the  same number of  rows as the dat
-#' @param parallel is "no" then parallelization is not required, otherwise it is "multicore" or "snow" (see  help for coin::approximate()
+#' @param groups is a vector defining the groups within which the inter-unit  distances are calculated. Not used here.
+#' @param distfn is  a function that produces one or more vectors (a data frame or matrix) of the  same number of  rows as the dat
+#' @param parallel is "no" then parallelization is not required, otherwise it is "multicore" or "snow" in the call to `coin::independence_test()` (see  help for coin::approximate()). Also, if parallel is not "no" and `adaptive_dist_function` is TRUE, then an openmp version of the distance creation function is called using `ncpu` threads (or `parallel::detectCores(logical=FALSE)` cores).
 #' @param ncpu is number of cpus  to be used for parallel operation.
 #' @param adaptive_dist_function is TRUE if the distance calculation function should be chosen using previous benchmarks. See the code.
 #' @return A p-value
@@ -119,7 +123,7 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 #' @importFrom parallel detectCores
 #' @export
 pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
-                       parallel = "no", ncpu = NULL, groups = NULL, distfn = dists_and_trans,adaptive_dist_function=TRUE) {
+                       parallel = "yes", ncpu = NULL, groups = NULL, distfn = dists_and_trans,adaptive_dist_function=TRUE) {
   force(distfn)
   fmla_vars <- all.vars(fmla)
   theresponse <- fmla_vars[attr(terms(fmla), "response")]
@@ -128,25 +132,26 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
   if (length(unique(dat[[theresponse]])) < 2) {
     return(1)
   }
-  ## Change the distfn depending on the size of the outcome using the benchmarking done in tests/profile_distfns.R
-  ## Here are the contenders
-  ##   main=dists_and_trans(y),
-  ##       arma=fast_dists_and_trans(y, Z = 1),
-  ##       byunit_arma=fast_dists_and_trans_by_unit_arma(y, Z = 1),
-  ##       byunit_arma2=fast_dists_and_trans_by_unit_arma2(y, Z = 1),
-  ##       byunit_arma2_par=fast_dists_by_unit_arma2_par(y, Z = 1, threads=numcores),
 
   dat_size <- nrow(dat)
 
-   if (is.null(ncpu) & parallel != "no") {
+  if (is.null(ncpu) & parallel != "no") {
+      ## This is used for both distfn but also for independence_test for it to do permutation testing in parallel in small blocks/samples
       ncpu <- detectCores()
-    }
-  if(parallel!="no" & dat_size > 50){
-      distfn <- fast_dists_by_unit_arma_parR(threads=ncpu)
   }
-  if(parallel=="no" & dat_size >= 5000){
-      distfn <- fast_dists_and_trans_by_unit_arma2
+
+  if(adaptive_dist_function){
+      if(dat_size <=20){
+          distfn <- fast_dists_and_trans
+      }
+      if(parallel!="no" & dat_size > 20){
+          distfn <- fast_dists_by_unit_arma_parR(threads=ncpu)
+      }
+      if(parallel=="no" & dat_size > 20){
+          distfn <- fast_dists_and_trans_by_unit_arma
+      }
   }
+
   thetreat <- fmla_vars[[2]]
   thedat <- copy(dat)
   outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
