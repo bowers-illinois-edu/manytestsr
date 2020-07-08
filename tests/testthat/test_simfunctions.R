@@ -62,7 +62,7 @@ err_testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3,
     idat = idat, bdat = bdat, blockid = "bF", splitfn = get(sfn),
     pfn = pIndepDist, alphafn = theafn, thealpha = 0.05,
     fmla = fmla, # Ynorm_inc ~ ZF | bF,
-    parallel = "no", copydts = TRUE, splitby = sby
+    parallel = "multicore", ncores=2, copydts = TRUE, splitby = sby
   )
   detects <- report_detections(theres, only_hits = FALSE, fwer = is.null(afn))
   nodes <- detects[, .(
@@ -102,7 +102,7 @@ err_testing_fn2 <- function(fmla = Ytauv2 ~ ZF, idat = idat3, bdat = bdat4, true
 
   theres <- adjust_block_tests(
     idat = idat, bdat = bdat, blockid = "bF", p_adj_method = "BH",
-    pfn = pIndepDist, fmla = fmla, copydts = TRUE
+    pfn = pIndepDist, fmla = fmla, copydts = TRUE,parallel="multicore",ncores=2
   )
 
   theres[, hit := max_p < .05] ## doing FDR==.05 for now. All that really matters is some fixed number.
@@ -291,11 +291,11 @@ p_sims_res <- lapply(1:nrow(simparms), FUN = function(i) {
     covariate = "v4",
     pfn = pIndepDist,
     nsims = nsims,
-    ncores = 1, ## parallelize over the  rows of simparms
     afn = ifelse(x[["afn"]] != "NULL", getFromNamespace(x[["afn"]], ns = "manytestsr"), "NULL"),
     p_adj_method = x[["p_adj_method"]],
     splitfn = ifelse(x[["sfn"]] != "NULL", getFromNamespace(x[["sfn"]], ns = "manytestsr"), "NULL"),
-    splitby = x[["splitby"]]
+    splitby = x[["splitby"]],
+    ncores=2
   )
   # p_sims_tab <- p_sims_tab[1,,]
   return(p_sims_tab)

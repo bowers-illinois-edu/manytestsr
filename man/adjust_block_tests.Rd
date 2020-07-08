@@ -13,7 +13,8 @@ adjust_block_tests(
   simthresh = 20,
   sims = 1000,
   fmla = YContNorm ~ trtF | blockF,
-  parallel = "no",
+  parallel = "multicore",
+  ncores = 4,
   copydts = FALSE
 )
 }
@@ -35,6 +36,8 @@ adjust_block_tests(
 \item{fmla}{A formula with \verb{outcome~treatment assignment | block} where treatment assignment and block must be factors. The tests will run within each block so that \verb{|block} part is not strictly important.}
 
 \item{parallel}{Should the pfn use multicore processing for permutation based testing? Default is no. But could be "snow" or "multicore" following \code{approximate} in the coin package.}
+
+\item{ncores}{The number of cores to use in the p-value creation function}
 
 \item{copydts}{TRUE or FALSE. TRUE if using standalone. Could be FALSE if copied objects are being sent to this function from other functions. Basically the question is whether we want this function to change the block or individual level datasets in the main environment or return a new object.}
 }

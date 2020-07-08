@@ -22,7 +22,8 @@ reveal_po_and_test(
   splitby = NULL,
   thealpha = 0.05,
   copydts = FALSE,
-  stop_splitby_constant = FALSE
+  stop_splitby_constant = FALSE,
+  ncores = 1
 )
 }
 \arguments{
@@ -61,6 +62,8 @@ reveal_po_and_test(
 \item{copydts}{TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.}
 
 \item{stop_splitby_constant}{FALSE (not used here because this algorithmn does not split) is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.}
+
+\item{ncores}{The number of cores or threads to use for the test statistic creation and possible permutation testing}
 }
 \value{
 False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).

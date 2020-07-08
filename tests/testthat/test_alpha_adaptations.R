@@ -46,7 +46,7 @@ testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3, bda
     idat = idat, bdat = bdat, blockid = "bF", splitfn = get(sfn),
     pfn = pIndepDist, alphafn = theafn, thealpha = 0.05,
     fmla = fmla, # Ynorm_inc ~ ZF | bF,
-    parallel = "no", copydts = TRUE, splitby = sby, stop_splitby_constant = TRUE
+    copydts = TRUE, splitby = sby, stop_splitby_constant = TRUE,parallel="multicore",ncores=2
   )
   return(theres)[order(biggrp)]
   # theps <- grep("^p[0-9]", names(theres), value = TRUE)

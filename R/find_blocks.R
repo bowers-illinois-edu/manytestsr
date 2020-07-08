@@ -19,6 +19,7 @@
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
 #' @param fmla A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors.
 #' @param parallel Should the pfn use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following `approximate` in the coin package.
+#' @param ncores The number of cores used for parallel processing
 #' @param trace Logical, FALSE (default) to not print split number. TRUE prints the split number.
 #' @return A data.table containing information about the sequence of splitting and testing
 #' @details Some notes about the splitting functions and how they relate to splitting criteria (splitby) and stopping criteria (stop_splitby_constant).
@@ -69,7 +70,7 @@
 findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NULL, simthresh = 20,
                        sims = 1000, maxtest = 2000, thealpha = 0.05,
                        fmla = YContNorm ~ trtF | blockF,
-                       parallel = "multicore", copydts = FALSE, splitby = "hwt", stop_splitby_constant = TRUE, blocksize = "hwt", trace = FALSE) {
+                       parallel = "multicore", ncores=4, copydts = FALSE, splitby = "hwt", stop_splitby_constant = TRUE, blocksize = "hwt", trace = FALSE) {
 
   # Some checks
   if (stop_splitby_constant) {
@@ -86,7 +87,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   i <- 1L
   bdat[, p1 := pfn(
     fmla = fmla, dat = idat,
-    simthresh = simthresh, sims = sims, parallel = parallel
+    simthresh = simthresh, sims = sims, parallel = parallel, ncpu=ncores
   )]
   bdat[, pfinalb := p1] # just to initialize pfinalb
   # Record the names of the group and pvalues.
@@ -161,7 +162,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     idat[, biggrp := droplevels(biggrp)] # annoying to need to do this
     pb <- idat[(testable), list(p = pfn(
       fmla = fmla, dat = .SD, simthresh = simthresh,
-      sims = sims, parallel = parallel
+      sims = sims, parallel = parallel,ncpu=ncores
     )), by = biggrp]
     pb[, depth := i]
     # This next could be made more efficient without string splitting

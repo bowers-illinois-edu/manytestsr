@@ -65,22 +65,14 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
     reveal_and_test_fn <- reveal_po_and_test
   }
 
-  if (ncores > 1) {
-    message("Not parallelizing this part of the loop.")
-    # 	 p_sims <- future_replicate(nsims, reveal_and_test_fn(
-    # 	  idat = datnew, bdat = bdatnew, blockid = blockid, trtid = trtid, y1var = "y1new",
-    # 	  fmla = fmla, ybase = ybase, prop_blocks_0 = prop_blocks_0,
-    # 	  tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method, splitfn = splitfn, splitby = splitby, thealpha=thealpha
-    # 	 ))
-  } else {
     p_sims_lst <- replicate(nsims, reveal_and_test_fn(
       idat = datnew, bdat = bdatnew, blockid = blockid, trtid = trtid, y1var = "y1new",
       fmla = fmla, ybase = ybase, prop_blocks_0 = prop_blocks_0,
-      tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method, splitfn = splitfn, splitby = splitby, thealpha = thealpha, stop_splitby_constant = stop_splitby_constant
-    ), simplify = FALSE)
+      tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method, splitfn = splitfn, splitby = splitby, thealpha = thealpha, stop_splitby_constant = stop_splitby_constant,
+      ncores=ncores), simplify = FALSE)
     p_sims <- data.table::rbindlist(p_sims_lst)
-  }
-  return(p_sims)
+
+    return(p_sims)
 }
 
 #' Repeat experiment, reveal treatment effects from the potential outcomes, test within each block, summarize
@@ -104,11 +96,12 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
 #' @param copydts TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.
 #' @param stop_splitby_constant FALSE (not used here because this algorithmn does not split) is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
+#' @param ncores The number of cores or threads to use for the test statistic creation and possible permutation testing
 #' @return False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
 #' @export
 reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y1var,
                                prop_blocks_0, tau_fn, tau_size, pfn, p_adj_method = "fdr",
-                               afn = NULL, splitfn = NULL, splitby = NULL, thealpha = .05, copydts = FALSE, stop_splitby_constant = FALSE) {
+                               afn = NULL, splitfn = NULL, splitby = NULL, thealpha = .05, copydts = FALSE, stop_splitby_constant = FALSE,ncores=1) {
   stopifnot(is.null(splitfn) | splitfn == "NULL")
   idat[, newZ := sample(get(trtid)), by = blockid] # make no effects within block by shuffling treatment, this is the engine of variability in the sim
   idat[, Y := get(y1var) * newZ + get(ybase) * (1 - newZ)] # reveal relevant potential outcomes with possible known effect
@@ -116,10 +109,12 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
   fmla <- Y ~ newZF
   # idat[, Y := get(y1var) * get(trtid) + get(ybase) * (1 - get(trtid))] # reveal relevant potential outcomes with possible known effect
 
+  if(ncores>1){ parallel="multicore" }
+
   res <- adjust_block_tests(
     idat = idat, bdat = bdat, blockid = blockid, p_adj_method = p_adj_method,
     pfn = pfn, fmla = fmla,
-    copydts = copydts
+    copydts = copydts, ncores=ncores, parallel=parallel
   )
   res[, hit := max_p < thealpha] # doing FDR==.05 for now. All that really matters is some fixed number.
 
@@ -156,11 +151,12 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
 #' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
 #' @param stop_splitby_constant TRUE is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
+#' @param ncores The number of cores or threads to use for the test statistic creation and possible permutation testing
 #' @return False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
 #' @export
 reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF | blockF, ybase, y1var,
                                     prop_blocks_0, tau_fn, tau_size, pfn, afn, p_adj_method = "split",
-                                    copydts = FALSE, splitfn, splitby, thealpha = .05, stop_splitby_constant = TRUE) {
+                                    copydts = FALSE, splitfn, splitby, thealpha = .05, stop_splitby_constant = TRUE, ncores=1) {
   if (!is.null(afn) & is.character(afn)) {
     if (afn == "NULL") {
       afn <- NULL
@@ -168,6 +164,8 @@ reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF
       afn <- get(afn)
     }
   }
+
+if(ncores>1){ parallel="multicore" } else {parallel="no"}
   # 	message(tau_size)
   # 	make relationship between treatment and outcome 0 on average in preparation for power analysis and error rate sims
   idat[, newZ := sample(get(trtid)), by = blockid]
@@ -183,7 +181,7 @@ reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF
     idat = idat, bdat = bdat, blockid = blockid, splitfn = splitfn,
     pfn = pfn, alphafn = afn, thealpha = thealpha,
     fmla = fmla,
-    parallel = "no", copydts = copydts, splitby = splitby, stop_splitby_constant = stop_splitby_constant
+    parallel = parallel, ncores=ncores, copydts = copydts, splitby = splitby, stop_splitby_constant = stop_splitby_constant
   )
 
   errs <- calc_errs(

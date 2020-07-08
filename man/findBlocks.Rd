@@ -17,6 +17,7 @@ findBlocks(
   thealpha = 0.05,
   fmla = YContNorm ~ trtF | blockF,
   parallel = "multicore",
+  ncores = 4,
   copydts = FALSE,
   splitby = "hwt",
   stop_splitby_constant = TRUE,
@@ -48,6 +49,8 @@ findBlocks(
 \item{fmla}{A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors.}
 
 \item{parallel}{Should the pfn use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following \code{approximate} in the coin package.}
+
+\item{ncores}{The number of cores used for parallel processing}
 
 \item{copydts}{TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.}
 
