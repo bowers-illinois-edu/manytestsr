@@ -19,25 +19,25 @@ splitCluster <- function(bid, x) {
     return(group)
   }
   if (length(x) == 2) {
+      # If there are only two values for x, split into two groups.
     group <- factor(c(0, 1))
     return(group)
   }
   if (length(x) == 3) {
+    # if we only have 3 values for x, make two groups with 1 group with the highest value
+    # and the other group with the 2 other values.
     mnx <- fastMean(x)
     rank_dists <- rank(abs(x - mnx))
     group <- factor(as.numeric(rank_dists == max(rank_dists)))
     return(group)
   }
-  # clus <- kmeans(x, centers = 2, nstart = 10)
-  # # Trying to handle some edge cases with this function
-  clus <- tryCatch(KMeans_rcpp(as.matrix(x),
-    clusters = 2, num_init = 2,
-    initializer = "optimal_init"
-  )$clusters,
-  error = function(e) {
-    kmeans(x, centers = 2)$cluster
-  }
-  )
+
+  # Trying to handle some edge
+  # cases with this function. Mostly KMeans_cpp works well but kmeans handles
+  # some cases where KMeans_cpp throws an error
+  clus <- tryCatch(KMeans_rcpp(as.matrix(x), clusters = 2, num_init = 2,
+          initializer = "optimal_init")$clusters, error = function(e) {
+      kmeans(x, centers = 2)$cluster})
 
   group <- factor(as.numeric(clus == 1))
   # names(group) <- bid (no longer necessary)

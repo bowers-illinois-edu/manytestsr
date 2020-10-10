@@ -4,11 +4,11 @@
 # context("Simulation Functions")
 
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
-interactive <- FALSE
+interactive <- TRUE
 if (interactive) {
-  ## library(here)
-  ## library(data.table)
-  ## library(devtools)
+   library(here)
+   library(data.table)
+   library(devtools)
   source(here("tests/testthat", "make_test_data.R"))
   load_all() ## use  this during debugging
 }
@@ -62,7 +62,7 @@ err_testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3,
     idat = idat, bdat = bdat, blockid = "bF", splitfn = get(sfn),
     pfn = pIndepDist, alphafn = theafn, thealpha = 0.05,
     fmla = fmla, # Ynorm_inc ~ ZF | bF,
-    parallel = "multicore", ncores=2, copydts = TRUE, splitby = sby
+    parallel = "multicore", ncores = 2, copydts = TRUE, splitby = sby
   )
   detects <- report_detections(theres, only_hits = FALSE, fwer = is.null(afn))
   nodes <- detects[, .(
@@ -102,7 +102,7 @@ err_testing_fn2 <- function(fmla = Ytauv2 ~ ZF, idat = idat3, bdat = bdat4, true
 
   theres <- adjust_block_tests(
     idat = idat, bdat = bdat, blockid = "bF", p_adj_method = "BH",
-    pfn = pIndepDist, fmla = fmla, copydts = TRUE,parallel="multicore",ncores=2
+    pfn = pIndepDist, fmla = fmla, copydts = TRUE, parallel = "multicore", ncores = 2
   )
 
   theres[, hit := max_p < .05] ## doing FDR==.05 for now. All that really matters is some fixed number.
@@ -295,7 +295,7 @@ p_sims_res <- lapply(1:nrow(simparms), FUN = function(i) {
     p_adj_method = x[["p_adj_method"]],
     splitfn = ifelse(x[["sfn"]] != "NULL", getFromNamespace(x[["sfn"]], ns = "manytestsr"), "NULL"),
     splitby = x[["splitby"]],
-    ncores=2
+    ncores = 2
   )
   # p_sims_tab <- p_sims_tab[1,,]
   return(p_sims_tab)
@@ -313,3 +313,52 @@ err_rates <- p_sims_obj[, lapply(.SD, mean), .SDcols = c(
 ), by = .id]
 
 err_rates
+
+## Checkout a problem with splitCluster
+simparms2 <- simparms[simparms$sfn=="splitCluster",]
+simparms2 <- rbind(simparms2,simparms2)
+simparms2[4:6,"splitby"] <- 'v4'
+simparms2 <- droplevels(simparms2[simparms2$afn=="NULL",])
+
+set.seed(12345)
+res2 <- lapply(seq_len(nrow(simparms2)), FUN = function(i) {
+  x <- simparms2[i, ]
+  xnm <- paste(x, collapse = "_")
+  message(xnm)
+  nsims <- 1000
+  p_sims_tab <- padj_test_fn(
+    idat = idat3,
+    bdat = bdat4,
+    blockid = "bF",
+    trtid = "Z",
+    fmla = Y ~ ZF | blockF,
+    ybase = "y0",
+    prop_blocks_0 = 1,
+    tau_fn = tau_norm_covariate_outliers,
+    tau_size = 0,
+    covariate = "v4",
+    pfn = pIndepDist,
+    nsims = nsims,
+    afn = ifelse(x[["afn"]] != "NULL", getFromNamespace(x[["afn"]], ns = "manytestsr"), "NULL"),
+    p_adj_method = x[["p_adj_method"]],
+    splitfn = ifelse(x[["sfn"]] != "NULL", getFromNamespace(x[["sfn"]], ns = "manytestsr"), "NULL"),
+    splitby = x[["splitby"]],
+    ncores = 6
+  )
+  # p_sims_tab <- p_sims_tab[1,,]
+  return(p_sims_tab)
+})
+
+p_sims_obj2 <- rbindlist(res2, idcol = TRUE)
+
+
+err_rates2 <- p_sims_obj2[, lapply(.SD, mean), .SDcols = c(
+  "true_pos_prop", "false_pos_prop",
+  "true_neg_prop", "false_neg_prop",
+  "true_disc_prop", "false_disc_prop",
+  "true_nondisc_prop", "false_nondisc_prop"
+), by = .id]
+
+err_rates2
+
+stopifnot(all(err_rates2$false_pos_prop < .06))

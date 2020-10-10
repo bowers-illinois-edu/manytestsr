@@ -18,65 +18,65 @@ options(digits = 4)
 set.seed(12345)
 
 
-test_length_fn <- function(obj1,obj2){
-    expect_equal(length(obj1),length(obj2))
+test_length_fn <- function(obj1, obj2) {
+  expect_equal(length(obj1), length(obj2))
 }
 
-test_contents_fn <- function(obj1,obj2){
-    expect_equal(obj1[[1]], obj2[[1]])
-    expect_equal(obj1[[2]], obj2[[2]])
-    expect_equal(obj1[[3]], obj2[[3]])
-    expect_equal(obj1[[4]], obj2[[4]])
-    expect_equal(obj1[[5]], obj2[[5]])
-    expect_equal(obj1[[6]], obj2[[6]])
-    expect_equal(obj1[[7]], obj2[[7]])
-    expect_equal(obj1[[8]], obj2[[8]])
+test_contents_fn <- function(obj1, obj2) {
+  expect_equal(obj1[[1]], obj2[[1]])
+  expect_equal(obj1[[2]], obj2[[2]])
+  expect_equal(obj1[[3]], obj2[[3]])
+  expect_equal(obj1[[4]], obj2[[4]])
+  expect_equal(obj1[[5]], obj2[[5]])
+  expect_equal(obj1[[6]], obj2[[6]])
+  expect_equal(obj1[[7]], obj2[[7]])
+  expect_equal(obj1[[8]], obj2[[8]])
 }
 
-numcores <- parallel::detectCores(logical=FALSE)
-numcores <- 4 #floor(cores/2)
+numcores <- parallel::detectCores(logical = FALSE)
+numcores <- 4 # floor(cores/2)
 
-test_that("All algorithmns give the same answers",{
-y <- 1:5
-tmp1 <- dists_and_trans(y)
-tmp2 <- fast_dists_and_trans(y, Z = 1)
-tmp3 <- fast_dists_and_trans_by_unit_arma(y, Z = 1)
-tmp4 <- fast_dists_and_trans_by_unit_arma2(y, Z = 1)
-tmp5 <- fast_dists_by_unit_arma2_par(y,Z=1,threads=numcores)
+test_that("All algorithmns give the same answers", {
+  y <- 1:5
+  tmp1 <- dists_and_trans(y)
+  tmp2 <- fast_dists_and_trans(y, Z = 1)
+  tmp3 <- fast_dists_and_trans_by_unit_arma(y, Z = 1)
+  tmp4 <- fast_dists_and_trans_by_unit_arma2(y, Z = 1)
+  tmp5 <- fast_dists_by_unit_arma2_par(y, Z = 1, threads = numcores)
 
-test_length_fn(tmp1,tmp2)
-test_length_fn(tmp1,tmp3)
-test_length_fn(tmp1,tmp4)
-test_length_fn(tmp1,tmp5)
+  test_length_fn(tmp1, tmp2)
+  test_length_fn(tmp1, tmp3)
+  test_length_fn(tmp1, tmp4)
+  test_length_fn(tmp1, tmp5)
 
-test_contents_fn(tmp1,tmp2)
-test_contents_fn(tmp1,tmp3)
-test_contents_fn(tmp1,tmp4)
-test_contents_fn(tmp1,tmp5)
+  test_contents_fn(tmp1, tmp2)
+  test_contents_fn(tmp1, tmp3)
+  test_contents_fn(tmp1, tmp4)
+  test_contents_fn(tmp1, tmp5)
 
-y <- rnorm(1000)
-tmp1 <- dists_and_trans(y)
-tmp2 <- fast_dists_and_trans(y, Z = 1)
-tmp3 <- fast_dists_and_trans_by_unit_arma(y, Z = 1)
-tmp4 <- fast_dists_and_trans_by_unit_arma2(y, Z = 1)
-tmp5 <- fast_dists_by_unit_arma2_par(y,Z=1,threads=numcores)
+  y <- rnorm(1000)
+  tmp1 <- dists_and_trans(y)
+  tmp2 <- fast_dists_and_trans(y, Z = 1)
+  tmp3 <- fast_dists_and_trans_by_unit_arma(y, Z = 1)
+  tmp4 <- fast_dists_and_trans_by_unit_arma2(y, Z = 1)
+  tmp5 <- fast_dists_by_unit_arma2_par(y, Z = 1, threads = numcores)
 
-test_length_fn(tmp1,tmp2)
-test_length_fn(tmp1,tmp3)
-test_length_fn(tmp1,tmp4)
-test_length_fn(tmp1,tmp5)
+  test_length_fn(tmp1, tmp2)
+  test_length_fn(tmp1, tmp3)
+  test_length_fn(tmp1, tmp4)
+  test_length_fn(tmp1, tmp5)
 
-test_contents_fn(tmp1,tmp2)
-test_contents_fn(tmp1,tmp3)
-test_contents_fn(tmp1,tmp4)
-test_contents_fn(tmp1,tmp5)
+  test_contents_fn(tmp1, tmp2)
+  test_contents_fn(tmp1, tmp3)
+  test_contents_fn(tmp1, tmp4)
+  test_contents_fn(tmp1, tmp5)
 })
 
 
 
 ## ### Check timing and core usage
 ## cores <- parallel::detectCores(logical = FALSE)
-## 
+##
 ## y <- sample(ypop,5000)
 ## res1 <- bench::mark(main=dists_and_trans(y),
 ##     arma=fast_dists_and_trans(y, Z = 1),
@@ -85,7 +85,7 @@ test_contents_fn(tmp1,tmp5)
 ##     byunit_par=fast_dists_by_unit_arma2_par(y, Z = 1, threads=7),
 ##     min_iterations=10, max_iterations=100,check=FALSE,filter_gc=FALSE)
 ## res1
-## 
+##
 ## y <- sample(ypop,20000)
 ## res2 <- bench::mark(#main=dists_and_trans(y),
 ##     #arma=fast_dists_and_trans(y, Z = 1),
@@ -94,5 +94,3 @@ test_contents_fn(tmp1,tmp5)
 ##     byunit_par=fast_dists_by_unit_arma2_par(y, Z = 1, threads=7),
 ##     min_iterations=2, max_iterations=100,check=FALSE,filter_gc=FALSE)
 ## res2
-
-

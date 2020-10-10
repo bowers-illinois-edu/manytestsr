@@ -177,13 +177,9 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     setkeyv(pb, "biggrp")
     bdat[pb, (pnm) := get(paste0("i.", pnm)), on = "biggrp"]
     # Recall that the siup requires a hierarchy of p-values. So, only
-    # keep the maximum p-value associated with any given block.
+    # keep the maximum p-value associated with any given block as pfinalb.
     # bdat[, pfinalbminus1 := pfinalb] # keep track of previous pvalues
     bdat[(testable), pfinalb := pmax(get(pnm), pfinalb)] # get(paste0("p", i - 1)))]
-    # If the final p-values are not changing then we stop. Maybe change this if alphafn is provided.
-    # samep <- identical(bdat$pfinalb, bdat$pfinalbminus1) # see top of the while() statement
-    # If the p<alpha, continue testing and splitting unless there is only one block
-    # left.
     # Now decide which blocks (units) can be tested again.
     # If a split contains only one block. We cannot test further.
     ## bdat[, blocksbygroup := uniqueN(get(blockid)), by = biggrp]
@@ -191,40 +187,39 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
     # Now update alpha if we are trying to control FDR or mFDR rather than FWER
     if (is.null(alphafn)) {
       bdat[, (alphanm) := thealpha]
-      # Recall that := **updates** values. So, it doesn't overwrite (testable==FALSE) values
+      # Recall that `:=` **updates** values. So, it doesn't overwrite (testable==FALSE) values
       bdat[, testable := fifelse((pfinalb <= get(alphanm)) & (blocksbygroup > 1), TRUE, FALSE)]
     } else {
       if (i == 2) {
         pbtracker[, (alphanm) := alphafn(pval = p, batch = batch, nodesize = nodesize)]
       } else {
+          ## Find the nodes that are ancestors and descedents of each other since the alpha adjusting depends on this order
         mid_roots <- pbtracker[depth == (i - 1) & (testable), nodenum]
         find_paths <- function() {
           tmp <- pbtracker[depth == i, ]
           tmp[, leaves := stri_extract_last(as.character(biggrp), regex = "\\.[:alnum:]*$")]
           tmp[, paths := stri_replace_all(as.character(biggrp), replacement = "", fixed = leaves)]
           path_dat <- tmp[, .(thepath = paste(unique(paths), paste(leaves, sep = "", collapse = ""), sep = "")), by = paths]
-          path_vec <- stri_split_fixed(path_dat$thepath, ".") # ,simplify=TRUE)#[1,]
+          path_vec <- stri_split_fixed(path_dat$thepath, ".")
           # stopifnot(all(path_vec %in% pbtracker$nodenum))
           return(path_vec)
         }
         setkey(pbtracker, nodenum)
         thepaths <- find_paths()
+        ## Do alpha adjustment for each path through the binary tree
         for (j in 1:length(thepaths)) {
           pbtracker[J(thepaths[[j]]), (alphanm) := alphafn(pval = p, batch = depth, nodesize = nodesize)]
         }
       }
       setkey(pbtracker, biggrp)
       bdat[pbtracker, (alphanm) := get(paste0("i.", alphanm)), on = "biggrp"]
-      # Recall that := **updates** values. So, it doesn't overwrite
-      # (testable==FALSE) values. Here we use current p rather than max of previous p.
+      # In deciding which blocks can be included in more testing we use current p rather than max of previous p.
       # A block is testable if current p <= the alpha level AND the number of blocks in the group containing the block is more than 1
-      # we stop testing when we have only a single block within a group (or branch) because the block is the unit.
+      # We stop testing when we have only a single block within a group (or branch) because the block is the unit.
       bdat[, testable := fifelse((get(pnm) <= get(alphanm)) & (blocksbygroup > 1), TRUE, FALSE)]
       # Also stop testing for groups within which we cannot split any more for certain splitters. Currently set by hand.
-      # testable_grps <- bdat[!is.na(testable), .(testable = unique(testable)), keyby = "biggrp"]
-      # pbtracker[testable_grps, testable := get("i.testable")]
     }
-    if (stop_splitby_constant) {
+    if (stop_splitby_constant | deparse(substitute(splitfn)) == "splitCluster") {
       bdat[, testable := fifelse(uniqueN(get(splitby)) == 1, FALSE, unique(testable)), by = biggrp]
     }
     ## bdat[(testable),biggrp:=droplevels(biggrp)]
