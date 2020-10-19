@@ -110,6 +110,7 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
   # idat[, Y := get(y1var) * get(trtid) + get(ybase) * (1 - get(trtid))] # reveal relevant potential outcomes with possible known effect
 
   if(ncores>1){ parallel="multicore" }
+  if(ncores==1){ parallel="no" }
 
   res <- adjust_block_tests(
     idat = idat, bdat = bdat, blockid = blockid, p_adj_method = p_adj_method,
