@@ -121,6 +121,7 @@ findBlocks <- function(idat, bdat, blockid = "block", splitfn, pfn, alphafn = NU
   if (!all(bdat$testable)) {
     return(bdat)
   }
+  ## if(all(bdat$testable)){ browser() }
   # Step 2: Iterate through the tree
   # Keep testing until no testing possible: criteria all blocks all size 1 and or
   # all p_i > alpha_i  OR simulation

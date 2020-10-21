@@ -42,7 +42,7 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
   setkeyv(datnew, blockid)
   setkeyv(bdatnew, blockid)
 
-  set.seed(12345) # make data the same way for each design. This is a hack to have the seed within the function.
+  ## set.seed(12345) # make data the same way for each design. This is a hack to have the seed within the function.
   datnew$y1new <- create_effects(
     idat = datnew, ybase = ybase, blockid = blockid,
     tau_fn = tau_fn, tau_size = tau_size,

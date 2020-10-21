@@ -46,6 +46,6 @@ These functions create individual level causal effects, tau_i, that can be combi
 
 \item \code{tau_norm_covariate_cont}: A basic function that specifies a tau_sds size effect if cov>median(cov) and otherwise is a tau_sds/4 size effect
 
-\item \code{tau_norm_covariate_levels}: A basic function that specifies a tau_sds size effect that varies, randomly, by level of covariate
+\item \code{tau_norm_covariate_levels}: A basic function that specifies a tau_sds size effect that varies, randomly, by level of covariate. We envision this to be used with covariate that have relatively few levels into which the outcome values can be grouped.
 }}
 

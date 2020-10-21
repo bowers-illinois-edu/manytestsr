@@ -167,9 +167,10 @@ tau_norm_covariate_cont <- function(ybase, tau_sds, covariate) {
   return(thetau)
 }
 
-#' @describeIn Tau_Functions A basic function that specifies a tau_sds size effect that varies, randomly, by level of covariate
+#' @describeIn Tau_Functions A basic function that specifies a tau_sds size effect that varies, randomly, by level of covariate. We envision this to be used with covariate that have relatively few levels into which the outcome values can be grouped.
 #' @export
 tau_norm_covariate_levels <- function(ybase, tau_sds, covariate) {
+    stopifnot(length(unique(covariate)) < length(unique(ybase))/10)
   n <- length(ybase)
   thetau <- unsplit(lapply(split(ybase, covariate), function(theys) {
     rnorm(length(theys),
