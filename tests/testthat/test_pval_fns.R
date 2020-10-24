@@ -11,6 +11,7 @@ if (interactive) {
   source(here("tests/testthat", "make_test_data.R"))
   load_all() ## use  this during debugging
 }
+setDTthreads(1)
 
 ##  We have Y where the effects  are gigantic within  block and canceling
 ## Ynull where the sharp  null is  true

@@ -4,7 +4,7 @@
 # context("Simulation Functions")
 
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
-interactive <- TRUE
+interactive <- FALSE
 if (interactive) {
    library(here)
    library(data.table)

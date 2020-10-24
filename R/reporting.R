@@ -144,7 +144,7 @@ make_tree <- function(orig_res, blockid = "bF") {
   # blah$dom #might be parents
   res_graph <- res_graph %>%
     activate(nodes) %>%
-    group_by(parent_name) %>%
+    group_by(parent_name,.add=FALSE) %>%
     mutate(both_ns = all(p > a)) %>%
     ungroup()
   res_graph <- res_graph %>%

@@ -10,6 +10,7 @@ if (interactive) {
   source(here("tests/testthat", "make_test_data.R"))
   load_all() ## use  this during debugging
 }
+setDTthreads(1)
 
 test_that("We can create effects as expected", {
   setkey(idat, bF)
