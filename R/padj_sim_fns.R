@@ -19,7 +19,7 @@
 #' @param nsims Is the number of simulations to run --- each simulation uses the same treatment effects be re-assigns treatment (re-shuffles treatment and re-reveals the observed outcomes as a function of the potential outcomes)
 #' @param ncores Tells p-value functions how many cores to use. Mostly ignored in use of this function because we are tending to parallelize at higher loops.
 #' @param splitfn A function to split the data into two pieces --- using bdat
-#' @param covariate is the name of a covariate to be used in created covariate dependent treatment effects. If NULL then the tau_fn should not use a covariate. If "create", then create a new covariate with a known (moderate) relationship with the potential outcome under control. This relationship is currently fixed with an R^2 of about .1.
+#' @param covariate is the name of a covariate to be used in created covariate dependent treatment effects. If NULL then the tau_fn should not use a covariate. If "newcov", then create a new covariate with a known (moderate) relationship with the potential outcome under control. This relationship is currently fixed with an R^2 of about .1.
 #' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
 #' @param stop_splitby_constant TRUE is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
@@ -45,10 +45,10 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
   ## make data the same way for each design. This is a hack to have the seed within the function.
   set.seed(12345)
 
-  ## If covariate="create" then make a covariate with a known relationship with
+  ## If covariate="newcov" then make a covariate with a known relationship with
   ## the potential outcome to control (this to avoid problems with some created
   ## covariates perfectly predicting the outcome under control)
-  if(covariate == "create"){
+  if(covariate == "newcov"){
       datnew[, newcov := .1 * sd(get(ybase)) * get(ybase) + rnorm(.N, mean=0, sd=sd(get(ybase))),by=blockid]
       covariate <- "newcov"
   }
