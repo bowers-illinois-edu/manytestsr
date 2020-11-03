@@ -121,12 +121,13 @@ create_effects <- function(idat, ybase, blockid, tau_fn, tau_size, covariate = N
 #' These functions create individual level causal effects, tau_i, that can be combined with a potential outcome to control to create a potential outcome to treatment.
 #' @param ybase Is a vector of potential outcome to control
 #' @param tau_sds is the number of sds of ybase to shift the distrbution
-#' @param covariate Contains information about covariates currently a character name of a column in idat. It is NULL if not used.
+#' @param covariate Contains information about covariates currently a character name of a column in idat. It is NULL if not used. Mostly it is a vector the same length as ybase.
 #' @return A vector of individual level causal effects (taus) that we will add to ybase (potential outcome to control) to get y1var or potential outcome to treatment.
 
 #' @describeIn Tau_Functions Draws from a Normal but also adds a few outliers.
 #' @export
 tau_norm_outliers <- function(ybase, tau_sds, covariate) {
+  ## covariate ignored here.
   n <- length(ybase)
   num_outliers <- round(length(ybase) * .02)
   if (num_outliers < 1) {
@@ -140,13 +141,15 @@ tau_norm_outliers <- function(ybase, tau_sds, covariate) {
 #' @describeIn Tau_Functions A basic function with no outliers
 #' @export
 tau_norm <- function(ybase, tau_sds, covariate) {
+  ## covariate ignored here.
   n <- length(ybase)
   rnorm(n, mean = sd(ybase) * tau_sds, sd = sd(ybase) / 2)
 }
 
 #' @describeIn Tau_Functions A basic function that specifies a tau_sds*2 size effect if cov>median(cov) and otherwise is a tau_sds/2 size effect. The idea is to keep the average individual effect size the same as other functions --- i.e. about tau_sds --- but to make a strong but simple relationship with a covariate.
 #' @export
-tau_norm_covariate <- function(ybase, tau_sds, covariate) {
+tau_norm_covariate <- function(ybase, tau_sds, covariate) {i
+  stopifnot(length(covariate)==length(ybase))
   n <- length(ybase)
   thetau <- rnorm(n, mean = sd(ybase) * tau_sds, sd = sd(ybase) / 2)
   ifelse(covariate > median(covariate), thetau * 2, thetau / 2)
@@ -155,6 +158,7 @@ tau_norm_covariate <- function(ybase, tau_sds, covariate) {
 #' @describeIn Tau_Functions A basic function that specifies a tau_sds size effect if cov>median(cov) and otherwise is a tau_sds/4 size effect
 #' @export
 tau_norm_covariate_outliers <- function(ybase, tau_sds, covariate) {
+  stopifnot(length(covariate)==length(ybase))
   thetau <- tau_norm_outliers(ybase = ybase, tau_sds = tau_sds, covariate = covariate)
   ifelse(covariate > median(covariate), thetau * 2, thetau / 2)
 }
@@ -162,6 +166,7 @@ tau_norm_covariate_outliers <- function(ybase, tau_sds, covariate) {
 #' @describeIn Tau_Functions A basic function that specifies a tau_sds size effect if cov>median(cov) and otherwise is a tau_sds/4 size effect
 #' @export
 tau_norm_covariate_cont <- function(ybase, tau_sds, covariate) {
+  stopifnot(length(covariate)==length(ybase))
   n <- length(ybase)
   thetau <- covariate + rnorm(n, mean = sd(ybase) * tau_sds, sd = sd(ybase) / 2)
   return(thetau)
@@ -170,7 +175,8 @@ tau_norm_covariate_cont <- function(ybase, tau_sds, covariate) {
 #' @describeIn Tau_Functions A basic function that specifies a tau_sds size effect that varies, randomly, by level of covariate. We envision this to be used with covariate that have relatively few levels into which the outcome values can be grouped.
 #' @export
 tau_norm_covariate_levels <- function(ybase, tau_sds, covariate) {
-    stopifnot(length(unique(covariate)) < length(unique(ybase))/10)
+  stopifnot(length(covariate)==length(ybase))
+  stopifnot(length(unique(covariate)) < length(unique(ybase))/10)
   n <- length(ybase)
   thetau <- unsplit(lapply(split(ybase, covariate), function(theys) {
     rnorm(length(theys),
