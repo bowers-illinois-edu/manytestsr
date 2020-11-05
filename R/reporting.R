@@ -4,19 +4,18 @@
 #' Return detected blocks plus info
 #'
 #' Given the results of the splitting and testing algorithm, report on the blocks
-#'  where the null of no effects could be rejected at level alpha.
+#'  where the null of no effects could be rejected at level alpha. Currently calculates rejections using an FWER style criteria (p of a node = max of all previous nodes) if the final alphas are all the same as the scalar alpha OR if fwer=TRUE.
 #' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
 #' @param fwer (default is TRUE) means that a block is detected (or not) using the maximum p-value associated with the
 #' block (or the groups containing that block). fwer=FALSE to detect blocks (or groups of blocks) using FDR control.
 #' @param alpha Is the false positive rate used for detecting an effect if it is constant (i.e. not an FDR-style approach).
 #' @param only_hits (default FALSE) returns only the detected blocks
-#' @param autofwer If fwer=TRUE but alpha varies, return the fdr based report.
 #' @param blockid Name of block variable (the blocking variable is a factor)
 #' @return A data.table adding a column \code{hit} to the \code{res} data.table indicating a "hit" or detection for that block (or group of blocks)
 #' @importFrom stringi stri_count_fixed stri_split_fixed
 #' @import data.table
 #' @export
-report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, autofwer = TRUE, blockid = "blockF") {
+report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, blockid = "blockF") {
   res <- copy(orig_res)
   # For the output from adjust_block_tests (the bottom-up or test all blocks method)
   if (length(grep("biggrp", names(res))) == 0) {
@@ -47,10 +46,9 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
     # I think max_p should be p at maxdepth for the FDR algorithmn and maximum p overall (or pfinalb) for the FWER algo.
     # could have done this first     res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
     # But I think the following is faster
-    if (fwer & !autofwer) {
+    if ( fwer  | all(res$parent_alpha==alpha) ) {
       res[, max_p := pfinalb]
       res[, max_alpha := alpha]
-      # res[, parent_alpha := alpha]
     } else {
       res[, max_p := get(paste0("p", maxdepth)), by = seq_len(nrow(res))]
       res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
@@ -144,7 +142,7 @@ make_tree <- function(orig_res, blockid = "bF") {
   # blah$dom #might be parents
   res_graph <- res_graph %>%
     activate(nodes) %>%
-    group_by(parent_name,.add=FALSE) %>%
+    group_by(parent_name, .add = FALSE) %>%
     mutate(both_ns = all(p > a)) %>%
     ungroup()
   res_graph <- res_graph %>%

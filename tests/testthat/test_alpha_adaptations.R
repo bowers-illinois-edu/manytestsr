@@ -4,10 +4,10 @@ context("Alpha Adjusting Performance")
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
 interactive <- FALSE
 if (interactive) {
-  ## library(here)
-  ## library(data.table)
+  library(here)
+  library(data.table)
   source(here("tests/testthat", "make_test_data.R"))
-  ## library(devtools)
+  library(devtools)
   load_all() ## use  this during debugging
 }
 

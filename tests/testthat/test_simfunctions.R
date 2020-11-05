@@ -5,7 +5,7 @@
 
 
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
-interactive <- TRUE
+interactive <- FALSE
 if (interactive) {
   library(here)
   library(data.table)
@@ -142,7 +142,6 @@ err_testing_fn2 <-
            truevar_name,
            thealpha = .05) {
     ## afn and sfn and sby are character names
-
     theres <- adjust_block_tests(
       idat = idat,
       bdat = bdat,

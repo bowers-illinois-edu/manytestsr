@@ -148,7 +148,7 @@ tau_norm <- function(ybase, tau_sds, covariate) {
 
 #' @describeIn Tau_Functions A basic function that specifies a tau_sds*2 size effect if cov>median(cov) and otherwise is a tau_sds/2 size effect. The idea is to keep the average individual effect size the same as other functions --- i.e. about tau_sds --- but to make a strong but simple relationship with a covariate.
 #' @export
-tau_norm_covariate <- function(ybase, tau_sds, covariate) {i
+tau_norm_covariate <- function(ybase, tau_sds, covariate) {
   stopifnot(length(covariate)==length(ybase))
   n <- length(ybase)
   thetau <- rnorm(n, mean = sd(ybase) * tau_sds, sd = sd(ybase) / 2)

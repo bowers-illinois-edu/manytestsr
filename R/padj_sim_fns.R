@@ -218,6 +218,7 @@ if(ncores>1){ parallel="multicore" } else {parallel="no"}
 #' @param trueeffect_tol Is the smallest effect size below which we consider the effect to be zero (by default is it floating point zero).
 #' @param blockid A character name of the column in idat and bdat indicating the block.
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
+#' @param fwer Indicates that we are trying to control FWER. Right now, we do this by default in report_detections but this indicates when we should be looking at FDR
 #' @return False positive proportion out of the tests across the blocks, The
 #' false discovery rate (proportion rejected of false nulls out of all
 #' rejections), the power of the adjusted tests across blocks (the proportion
@@ -230,7 +231,8 @@ calc_errs <- function(testobj,
                       truevar_name,
                       trueeffect_tol = .Machine$double.eps,
                       blockid = "bF",
-                      thealpha = .05) {
+                      thealpha = .05,
+                      fwer=FALSE) {
   simp_summary <- function(x) {
     ## x is the true effect size in the block (probably the true mean effect size).
     x <- abs(x) ## We want look at relative sizes of detected effects and don't care about large negative versus positive effects
@@ -239,7 +241,7 @@ calc_errs <- function(testobj,
 
   if (length(grep("biggrp", names(testobj))) > 0) {
     # this is for the top-down/split and test method
-    detobj <- report_detections(testobj, fwer = FALSE, only_hits = FALSE)
+    detobj <- report_detections(testobj, fwer = fwer, only_hits = FALSE)
     detobj[, hit := as.numeric(detobj$hit)]
 
     detnodes <- detobj[, .(
