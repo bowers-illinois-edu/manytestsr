@@ -2,7 +2,7 @@
 testthat::context("Performance of Splitting Functions")
 
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
-interactive <- TRUE
+interactive <- FALSE
 if (interactive) {
   library(here)
   library(data.table)
@@ -24,19 +24,23 @@ test_that("Leave One Outsplitting actually Leaves One out.", {
 
 ## Not sure what kind of test to write here. Leaving this as is for now. Hoping it doesn't break package building
 bdat4[, x1 := 1:nrow(bdat4)]
-bdat4[, x2 := c(rep(1,nrow(bdat4)-5),rep(10,5))]
-bdat4[, x3 := c(rep(1,nrow(bdat4)-5),5,rep(10,4))]
-
-bdat4[, g1 := splitCluster(bid = as.character(bF), x = hwt)]
-bdat4[, g2 := splitEqualApprox(bid = as.character(bF), x = hwt)]
+bdat4[, x2 := c(rep(1, nrow(bdat4) - 5), rep(10, 5))]
+bdat4[, x3 := c(rep(1, nrow(bdat4) - 5), 5, rep(10, 4))]
 bdat4[, g5 := splitCluster(bid = as.character(bF), x = v4)]
-bdat4[, g_x1 := splitCluster(bid = as.character(bF), x = x1, algo=1)]
-bdat4[, g_x2 := splitCluster(bid = as.character(bF), x = x2, algo=1)]
-bdat4[, g_x3 := splitCluster(bid = as.character(bF), x = x3, algo=1)]
+bdat4[, g_x1 := splitCluster(bid = as.character(bF), x = x1)]
+bdat4[, g_x2 := splitCluster(bid = as.character(bF), x = x2)]
+bdat4[, g_x3 := splitCluster(bid = as.character(bF), x = x3)]
 
-# Maybe we want something from splitCLuster like the difference between the  means is bigger than any random split?
-bdat4[, .(mn = mean(hwt), sd = sd(hwt)), by = g1]
-bdat4[, .(mn = mean(hwt), sd = sd(hwt)), by = g2]
+test_that("Clustering based splitting makes the splits more homogeneous and distant in mean", {
+  bdat4[, g1 := splitCluster(bid = as.character(bF), x = hwt)]
+  bdat4[, g2 := splitEqualApprox(bid = as.character(bF), x = hwt)]
+  # Maybe we want something from splitCLuster like the difference between the  means is bigger than any random split?
+  g1summary <- bdat4[, .(mn = mean(hwt), sd = sd(hwt)), by = g1]
+  g2summary <- bdat4[, .(mn = mean(hwt), sd = sd(hwt)), by = g2]
+  expect_lt(max(g1summary$sd), min(g2summary$sd))
+  expect_gt(abs(diff(g1summary$mn)), abs(diff(g2summary$mn)))
+})
+
 
 ## Setting up  a test of pre-specified splits
 bdat4[, lv1 := cut(v1, 2, labels = c("l1_1", "l1_2"))]
@@ -97,7 +101,7 @@ test_that("splitCluster follows the values of discrete splitby variables", {
   ## This next because I know that we should reject in both groups.
   expect_equal(uniqueN(theres1_det$fin_grp), uniqueN(bdat4$twosplits))
   thetab <- table(theres1$twosplitsF, theres1$biggrp)
-  expect_equal(c(thetab[1, 1], thetab[2, 2]), c(0, 0))
+  expect_equal(c(thetab[1, 2], thetab[2, 1]), c(0, 0))
 })
 
 
@@ -143,12 +147,12 @@ test_splitters_fn <- function(sfn, splitby, stopsplitting) {
 res <- mapply(
   FUN = function(sfn = sfn, sby = sby, stopsplitting = stopsplitting) {
     message(paste(sfn, sby, stopsplitting, collapse = ","))
-  ## Some errors are expected here.
+    ## Some errors are expected here.
     obj <- try(test_splitters_fn(
       sfn = sfn,
       splitby = sby,
       stopsplitting = stopsplitting
-    ),silent=TRUE)
+    ), silent = TRUE)
     obj_det <- if (class(obj)[1] == "try-error") {
       return(NA)
     } else {
@@ -173,7 +177,6 @@ test_that("Splitters work as expected given splitby variables that have one, two
   ## again until there are no more twosplits==1, then it will stop. If it would
   ## reject with the entire group of twosplits==0, it will still stop but then
   ## report that as a rejection.
-
   ##  1:             splitLOO  twosplits          TRUE
   with(res[[1]], table(biggrp, twosplits, exclude = c()))
   with(res[[1]], table(fin_grp, twosplits, exclude = c()))
@@ -278,8 +281,8 @@ test_that("Splitters work as expected given splitby variables that have one, two
 
   ##  3:         splitCluster  twosplits          TRUE
   tabres3 <- with(res[[3]], table(fin_grp, twosplits, exclude = c()))
-  expect_equal(tabres3[1, 1], 0)
-  expect_equal(tabres3[2, 2], 0)
+  expect_equal(tabres3[1, 2], 0)
+  expect_equal(tabres3[2, 1], 0)
   expect_equal(dim(tabres3), c(2, 2))
 
   ##  6:         splitCluster twosplitsF          TRUE

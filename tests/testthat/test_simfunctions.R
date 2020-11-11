@@ -5,7 +5,7 @@
 
 
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
-interactive <- FALSE
+interactive <- TRUE
 if (interactive) {
   library(here)
   library(data.table)
@@ -19,7 +19,7 @@ setDTthreads(1)
 options(digits = 4)
 #####
 set.seed(12345)
-bdat4 <- bdat3[sample(.N),]
+bdat4 <- bdat3[sample(.N), ]
 ## Setting up  a test of pre-specified splits
 bdat4[, lv1 := cut(v1, 2, labels = c("l1_1", "l1_2"))]
 bdat4[, lv2 := cut(v2, 2, labels = c("l2_1", "l2_2")), by = lv1]
@@ -122,16 +122,17 @@ err_testing_fn <-
       err_tab <- err_tab0
     }
     errs <- calc_errs(theres,
-                      truevar_name = truevar_name,
-                      trueeffect_tol = .Machine$double.eps)
+      truevar_name = truevar_name,
+      trueeffect_tol = .Machine$double.eps
+    )
     expect_equal(errs$true_pos_prop, err_tab["1", "0"] / sum(err_tab))
     expect_equal(errs$true_neg_prop, err_tab["0", "1"] / sum(err_tab))
     expect_equal(errs$false_pos_prop, err_tab["1", "1"] / sum(err_tab))
     expect_equal(errs$false_neg_prop, err_tab["0", "0"] / sum(err_tab))
-    expect_equal(errs$true_disc_prop, err_tab["1", "0"] / max(1, sum(err_tab["1",])))
-    expect_equal(errs$false_disc_prop, err_tab["1", "1"] / max(1, sum(err_tab["1",])))
-    expect_equal(errs$true_nondisc_prop, err_tab["0", "1"] / max(1, sum(err_tab["0",])))
-    expect_equal(errs$false_nondisc_prop, err_tab["0", "0"] / max(1, sum(err_tab["0",])))
+    expect_equal(errs$true_disc_prop, err_tab["1", "0"] / max(1, sum(err_tab["1", ])))
+    expect_equal(errs$false_disc_prop, err_tab["1", "1"] / max(1, sum(err_tab["1", ])))
+    expect_equal(errs$true_nondisc_prop, err_tab["0", "1"] / max(1, sum(err_tab["0", ])))
+    expect_equal(errs$false_nondisc_prop, err_tab["0", "0"] / max(1, sum(err_tab["0", ])))
   }
 
 
@@ -186,10 +187,10 @@ err_testing_fn2 <-
     expect_equal(errs$true_neg_prop, err_tab["0", "1"] / sum(err_tab))
     expect_equal(errs$false_pos_prop, err_tab["1", "1"] / sum(err_tab))
     expect_equal(errs$false_neg_prop, err_tab["0", "0"] / sum(err_tab))
-    expect_equal(errs$true_disc_prop, err_tab["1", "0"] / max(1, sum(err_tab["1",])))
-    expect_equal(errs$false_disc_prop, err_tab["1", "1"] / max(1, sum(err_tab["1",])))
-    expect_equal(errs$true_nondisc_prop, err_tab["0", "1"] / max(1, sum(err_tab["0",])))
-    expect_equal(errs$false_nondisc_prop, err_tab["0", "0"] / max(1, sum(err_tab["0",])))
+    expect_equal(errs$true_disc_prop, err_tab["1", "0"] / max(1, sum(err_tab["1", ])))
+    expect_equal(errs$false_disc_prop, err_tab["1", "1"] / max(1, sum(err_tab["1", ])))
+    expect_equal(errs$true_nondisc_prop, err_tab["0", "1"] / max(1, sum(err_tab["0", ])))
+    expect_equal(errs$false_nondisc_prop, err_tab["0", "0"] / max(1, sum(err_tab["0", ])))
   }
 
 # err_testing_fn2(fmla = Ytauv2 ~ ZF, idat = idat3, bdat = bdat4, truevar_name="ate_tauv2")
@@ -199,57 +200,55 @@ resnms <- apply(alpha_and_splits, 1, function(x) {
 })
 
 
-test_that("Error calculations for a given set of tests work: No effects at all",
-          {
-            ### No effects at all
-            test_lst <- mapply(
-              FUN = function(afn = afn,
-                             sfn = sfn,
-                             sby = sby,
-                             truevar_name = "ate_null") {
-                message(paste(afn, sfn, sby, collapse = ","))
-                err_testing_fn(
-                  afn = afn,
-                  sfn = sfn,
-                  sby = sby,
-                  idat = idat3,
-                  bdat = bdat4,
-                  fmla = Ynull ~ ZF | bF,
-                  truevar_name = truevar_name
-                )
-              },
-              afn = alpha_and_splits$afn,
-              sfn = alpha_and_splits$sfn,
-              sby = alpha_and_splits$splitby,
-              SIMPLIFY = FALSE
-            )
-            ## names(tau_null) <- resnms
-          })
+test_that("Error calculations for a given set of tests work: No effects at all", {
+  ### No effects at all
+  test_lst <- mapply(
+    FUN = function(afn = afn,
+                   sfn = sfn,
+                   sby = sby,
+                   truevar_name = "ate_null") {
+      message(paste(afn, sfn, sby, collapse = ","))
+      err_testing_fn(
+        afn = afn,
+        sfn = sfn,
+        sby = sby,
+        idat = idat3,
+        bdat = bdat4,
+        fmla = Ynull ~ ZF | bF,
+        truevar_name = truevar_name
+      )
+    },
+    afn = alpha_and_splits$afn,
+    sfn = alpha_and_splits$sfn,
+    sby = alpha_and_splits$splitby,
+    SIMPLIFY = FALSE
+  )
+  ## names(tau_null) <- resnms
+})
 
-test_that("Error calculations for a given set of tests work: large and homogenous effects",
-          {
-            test_lst <- mapply(
-              FUN = function(afn = afn,
-                             sfn = sfn,
-                             sby = sby,
-                             truevar_name = "ate_homog") {
-                message(paste(afn, sfn, sby, collapse = ","))
-                err_testing_fn(
-                  afn = afn,
-                  sfn = sfn,
-                  sby = sby,
-                  idat = idat3,
-                  bdat = bdat4,
-                  fmla = Yhomog ~ ZF | bF,
-                  truevar_name = truevar_name
-                )
-              },
-              afn = alpha_and_splits$afn,
-              sfn = alpha_and_splits$sfn,
-              sby = alpha_and_splits$splitby,
-              SIMPLIFY = FALSE
-            )
-          })
+test_that("Error calculations for a given set of tests work: large and homogenous effects", {
+  test_lst <- mapply(
+    FUN = function(afn = afn,
+                   sfn = sfn,
+                   sby = sby,
+                   truevar_name = "ate_homog") {
+      message(paste(afn, sfn, sby, collapse = ","))
+      err_testing_fn(
+        afn = afn,
+        sfn = sfn,
+        sby = sby,
+        idat = idat3,
+        bdat = bdat4,
+        fmla = Yhomog ~ ZF | bF,
+        truevar_name = truevar_name
+      )
+    },
+    afn = alpha_and_splits$afn,
+    sfn = alpha_and_splits$sfn,
+    sby = alpha_and_splits$splitby,
+    SIMPLIFY = FALSE
+  )
+})
 
 
 test_that(
@@ -400,7 +399,7 @@ set.seed(12345)
 p_sims_res <- lapply(
   1:nrow(simparms),
   FUN = function(i) {
-    x <- simparms[i,]
+    x <- simparms[i, ]
     xnm <- paste(x, collapse = "_")
     message(xnm)
     nsims <- 10 ## 100
@@ -446,61 +445,54 @@ err_rates <- p_sims_obj[, lapply(.SD, mean), .SDcols = c(
 err_rates
 
 test_that(
-  "K-Means Cluster Splitters control FWER.",
+  "Clustering-based Splitters control FWER.",
   {
-## Learn about problem with splitCluster where false positive rates were too high in the absence of any effects.
-## It has to do with a situation where the covariate nearly perfectly predicts y0 within block
-simparms2 <- data.table(expand.grid(splitby=c("hwt","v4","newcov"),covariate=c("v4","newcov"),stringsAsFactors = FALSE))
-simparms2[,afn:="NULL"]
-simparms2[,sfn:="splitCluster"]
-simparms2[,p_adj_method:="split"]
-
-set.seed(12345)
-res2 <- lapply(
-  seq_len(nrow(simparms2)),
-  FUN = function(i) {
-    x <- simparms2[i,]
-    xnm <- paste(x, collapse = "_")
-    message(xnm)
-    nsims <- 100
-    p_sims_tab <- padj_test_fn(
-      idat = idat3,
-      bdat = bdat4,
-      blockid = "bF",
-      trtid = "Z",
-      fmla = Y ~ ZF | blockF,
-      ybase = "y0",
-      prop_blocks_0 = 1,
-      tau_fn = tau_norm_covariate_outliers,
-      tau_size = 0,
-      covariate = x[["covariate"]],
-      pfn = pIndepDist,
-      nsims = nsims,
-      afn = "NULL",
-      p_adj_method = "split",
-      splitfn = getFromNamespace(x[["sfn"]], ns = "manytestsr"),
-      splitby = x[["splitby"]],
-      ncores = 6
+    simparms2 <- data.table(expand.grid(splitby = c("hwt", "v4", "newcov"), covariate = c("v4", "newcov"), stringsAsFactors = FALSE))
+    simparms2[, afn := "NULL"]
+    simparms2[, sfn := "splitCluster"]
+    simparms2[, p_adj_method := "split"]
+    set.seed(12345)
+    res2 <- lapply(
+      seq_len(nrow(simparms2)),
+      FUN = function(i) {
+        x <- simparms2[i, ]
+        xnm <- paste(x, collapse = "_")
+        message(xnm)
+        nsims <- 100
+        p_sims_tab <- padj_test_fn(
+          idat = idat3,
+          bdat = bdat4,
+          blockid = "bF",
+          trtid = "Z",
+          fmla = Y ~ ZF | blockF,
+          ybase = "y0",
+          prop_blocks_0 = 1,
+          tau_fn = tau_norm_covariate_outliers,
+          tau_size = 0,
+          covariate = x[["covariate"]],
+          pfn = pIndepDist,
+          nsims = nsims,
+          afn = "NULL",
+          p_adj_method = "split",
+          splitfn = getFromNamespace(x[["sfn"]], ns = "manytestsr"),
+          splitby = x[["splitby"]],
+          ncores = 6
+        )
+        return(p_sims_tab)
+      }
     )
-    # p_sims_tab <- p_sims_tab[1,,]
-    return(p_sims_tab)
+    p_sims_obj2 <- rbindlist(res2, idcol = TRUE)
+    err_rates2 <- p_sims_obj2[, lapply(.SD, mean), .SDcols = c(
+      "true_pos_prop",
+      "false_pos_prop",
+      "true_neg_prop",
+      "false_neg_prop",
+      "true_disc_prop",
+      "false_disc_prop",
+      "true_nondisc_prop",
+      "false_nondisc_prop"
+    ), by = .id]
+    err_rates2
+    expect_lte(max(err_rates2$false_pos_prop), .05+2*(sqrt( .025 / 100 )))
   }
 )
-
-p_sims_obj2 <- rbindlist(res2, idcol = TRUE)
-
-err_rates2 <- p_sims_obj2[, lapply(.SD, mean), .SDcols = c(
-  "true_pos_prop",
-  "false_pos_prop",
-  "true_neg_prop",
-  "false_neg_prop",
-  "true_disc_prop",
-  "false_disc_prop",
-  "true_nondisc_prop",
-  "false_nondisc_prop"
-), by = .id]
-
-err_rates2
-
-expect_lte(max(err_rates2$false_pos_prop),.06)
-})
