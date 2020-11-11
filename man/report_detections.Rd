@@ -9,7 +9,6 @@ report_detections(
   fwer = TRUE,
   alpha = 0.05,
   only_hits = FALSE,
-  autofwer = TRUE,
   blockid = "blockF"
 )
 }
@@ -23,8 +22,6 @@ block (or the groups containing that block). fwer=FALSE to detect blocks (or gro
 
 \item{only_hits}{(default FALSE) returns only the detected blocks}
 
-\item{autofwer}{If fwer=TRUE but alpha varies, return the fdr based report.}
-
 \item{blockid}{Name of block variable (the blocking variable is a factor)}
 }
 \value{
@@ -32,5 +29,5 @@ A data.table adding a column \code{hit} to the \code{res} data.table indicating 
 }
 \description{
 Given the results of the splitting and testing algorithm, report on the blocks
-where the null of no effects could be rejected at level alpha.
+where the null of no effects could be rejected at level alpha. Currently calculates rejections using an FWER style criteria (p of a node = max of all previous nodes) if the final alphas are all the same as the scalar alpha OR if fwer=TRUE.
 }

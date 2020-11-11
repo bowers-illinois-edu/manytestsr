@@ -57,7 +57,7 @@ padj_test_fn(
 
 \item{splitfn}{A function to split the data into two pieces --- using bdat}
 
-\item{covariate}{is the name of a covariate to be used in created covariate dependent treatment effects}
+\item{covariate}{is the name of a covariate to be used in created covariate dependent treatment effects. If NULL then the tau_fn should not use a covariate. If "newcov", then create a new covariate with a known (moderate) relationship with the potential outcome under control. This relationship is currently fixed with an R^2 of about .1.}
 
 \item{splitby}{A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))}
 

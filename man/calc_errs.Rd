@@ -9,7 +9,8 @@ calc_errs(
   truevar_name,
   trueeffect_tol = .Machine$double.eps,
   blockid = "bF",
-  thealpha = 0.05
+  thealpha = 0.05,
+  fwer = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ calc_errs(
 \item{blockid}{A character name of the column in idat and bdat indicating the block.}
 
 \item{thealpha}{Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)}
+
+\item{fwer}{Indicates that we are trying to control FWER. Right now, we do this by default in report_detections but this indicates when we should be looking at FDR}
 }
 \value{
 False positive proportion out of the tests across the blocks, The

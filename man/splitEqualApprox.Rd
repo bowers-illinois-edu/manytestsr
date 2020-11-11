@@ -17,5 +17,5 @@ A factor categorizing blocks into groups.
 \description{
 A splitting function takes block ids and block ordering
 vector (or vectors) and produces a factor that assigns some block ids to one
-group or another group such that the sum of x within one group is approximately equal to the sum of x in the other group.
+group or another group such that the sum of x within one group is approximately equal to the sum of x in the other group. If x is something like block-size then this equalized the total observations in each split. If x is a covariate, then this splitting approach may make less conceptual sense --- if x <- c(1,2,3,4) it would put 1 and 3 in one group and 2 and 4 in another group.
 }

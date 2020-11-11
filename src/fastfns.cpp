@@ -21,6 +21,12 @@ double fastMean(const arma::vec & X){
 }
 
 // [[Rcpp::export]]
+double fastMedian(const arma::vec & X){
+    double out = arma::median(X);
+    return(out);
+}
+
+// [[Rcpp::export]]
 double fastVar(const arma::vec & X){
     double out = arma::var(X);
     return(out);

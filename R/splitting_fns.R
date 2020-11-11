@@ -9,6 +9,7 @@
 #' @param x A vector that we can use to order the blocks
 #' @return A factor categorizing blocks into groups.
 #' @importFrom ClusterR KMeans_rcpp
+#' @importFrom Ckmeans.1d.dp Ckmeans.1d.dp
 #' @export
 splitCluster <- function(bid, x) {
   stopifnot("x must be numeric or integer" = is.numeric(x))
@@ -23,26 +24,30 @@ splitCluster <- function(bid, x) {
     group <- factor(c(0, 1))
     return(group)
   }
-  if (length(x) == 3) {
-    # if we only have 3 values for x, make two groups with 1 group with the highest value
-    # and the other group with the 2 other values.
-    mnx <- fastMean(x)
-    rank_dists <- rank(abs(x - mnx))
-    group <- factor(as.numeric(rank_dists == max(rank_dists)))
-    return(group)
-  }
+  ##if (length(x) == 3) {
+  ##  # if we only have 3 values for x, make two groups with 1 group with the highest value
+  ##  # and the other group with the 2 other values.
+  ##  mnx <- fastMean(x)
+  ##  rank_dists <- rank(abs(x - mnx))
+  ##  group <- factor(as.numeric(rank_dists == max(rank_dists)))
+  ##  return(group)
+  ##}
 
-  # Trying to handle some edge
-  # cases with this function. Mostly KMeans_cpp works well but kmeans handles
-  # some cases where KMeans_cpp throws an error
-  clus <- tryCatch(KMeans_rcpp(as.matrix(x), clusters = 2, num_init = 2,
-          initializer = "optimal_init")$clusters, error = function(e) {
-      kmeans(x, centers = 2)$cluster})
+  ### Trying to handle some edge
+  ### cases with this function. Mostly KMeans_cpp works well but kmeans handles
+  ### some cases where KMeans_cpp throws an error
+  ##clus <- tryCatch(KMeans_rcpp(as.matrix(x), clusters = 2, num_init = 2,
+  ##        initializer = "optimal_init")$clusters, error = function(e) {
+  ##    kmeans(x, centers = 2)$cluster})
 
-  group <- factor(as.numeric(clus == 1))
+  ## Approach 2:
+ clus <- Ckmeans.1d.dp(x, k=2)$cluster
+ group <- factor(as.numeric(clus == 1))
   # names(group) <- bid (no longer necessary)
   return(group)
 }
+
+
 
 ## #### Deprecating the following function since it is slow and doesn't really add that much over splitEqualApprox
 ## #' Splitting function: Equal Splits

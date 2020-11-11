@@ -26,7 +26,7 @@ tau_norm_covariate_levels(ybase, tau_sds, covariate)
 
 \item{tau_sds}{is the number of sds of ybase to shift the distrbution}
 
-\item{covariate}{Contains information about covariates currently a character name of a column in idat. It is NULL if not used.}
+\item{covariate}{Contains information about covariates currently a character name of a column in idat. It is NULL if not used. Mostly it is a vector the same length as ybase.}
 }
 \value{
 A vector of individual level causal effects (taus) that we will add to ybase (potential outcome to control) to get y1var or potential outcome to treatment.

@@ -5,6 +5,10 @@ fastMean <- function(X) {
     .Call(`_manytestsr_fastMean`, X)
 }
 
+fastMedian <- function(X) {
+    .Call(`_manytestsr_fastMedian`, X)
+}
+
 fastVar <- function(X) {
     .Call(`_manytestsr_fastVar`, X)
 }

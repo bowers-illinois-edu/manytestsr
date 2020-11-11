@@ -17,6 +17,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fastMedian
+double fastMedian(const arma::vec& X);
+RcppExport SEXP _manytestsr_fastMedian(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(fastMedian(X));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fastVar
 double fastVar(const arma::vec& X);
 RcppExport SEXP _manytestsr_fastVar(SEXP XSEXP) {
@@ -245,6 +256,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_fastMean", (DL_FUNC) &_manytestsr_fastMean, 1},
+    {"_manytestsr_fastMedian", (DL_FUNC) &_manytestsr_fastMedian, 1},
     {"_manytestsr_fastVar", (DL_FUNC) &_manytestsr_fastVar, 1},
     {"_manytestsr_fastcolMeans", (DL_FUNC) &_manytestsr_fastcolMeans, 1},
     {"_manytestsr_fastrowMeans", (DL_FUNC) &_manytestsr_fastrowMeans, 1},
