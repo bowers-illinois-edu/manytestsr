@@ -29,7 +29,8 @@ Imports:
     ggplot2 (>= 3.3.0),
     ClusterR (>= 1.2.2),
     Ckmeans.1d.dp (>= 4.3.3),
-    randomizr (>= 0.20.0)
+    randomizr (>= 0.20.0),
+    onlineFDR (>= 1.5.0)
 Remotes:
     dsrobertson/onlineFDR
 LinkingTo: Rcpp, RcppArmadillo
