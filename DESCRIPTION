@@ -21,7 +21,6 @@ Imports:
     RcppArmadillo (>= 0.9.900.1.0),
     Rfast (>= 1.9.5),
     stringi (>= 1.4.5),
-    onlineFDR (>= 1.5.0),
     coin (>= 1.3.0),
     tidygraph (>= 1.1.2),
     ggraph (>= 2.0.2),
@@ -30,7 +29,10 @@ Imports:
     ggplot2 (>= 3.3.0),
     ClusterR (>= 1.2.2),
     Ckmeans.1d.dp (>= 4.3.3),
-    randomizr (>= 0.20.0)
+    randomizr (>= 0.20.0),
+    onlineFDR (>= 1.5.0)
+Remotes:
+    dsrobertson/onlineFDR
 LinkingTo: Rcpp, RcppArmadillo
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)

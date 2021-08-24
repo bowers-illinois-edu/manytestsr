@@ -239,10 +239,8 @@ findBlocks <-
       setnames(pb, "p", pnm)
       setkeyv(pb, "biggrp")
       bdat[pb, (pnm) := get(paste0("i.", pnm)), on = "biggrp"]
-      # Recall that the siup requires a hierarchy of p-values. So, only
-      # keep the maximum p-value associated with any given block as pfinalb.
-      # bdat[, pfinalbminus1 := pfinalb] # keep track of previous pvalues
-      bdat[(testable), pfinalb := pmax(get(pnm), pfinalb)] # get(paste0("p", i - 1)))]
+      # bdat[(testable), pfinalb := pmax(get(pnm), pfinalb)]
+      bdat[(testable), pfinalb := get(pnm)] # get(paste0("p", i - 1)))]
       # Now decide which blocks (units) can be tested again.
       # If a split contains only one block. We cannot test further.
       ## bdat[, blocksbygroup := uniqueN(get(blockid)), by = biggrp]
