@@ -36,16 +36,16 @@ These functions create individual level causal effects, tau_i, that can be combi
 }
 \section{Functions}{
 \itemize{
-\item \code{tau_norm_outliers}: Draws from a Normal but also adds a few outliers.
+\item \code{tau_norm_outliers()}: Draws from a Normal but also adds a few outliers.
 
-\item \code{tau_norm}: A basic function with no outliers
+\item \code{tau_norm()}: A basic function with no outliers
 
-\item \code{tau_norm_covariate}: A basic function that specifies a tau_sds*2 size effect if cov>median(cov) and otherwise is a tau_sds/2 size effect. The idea is to keep the average individual effect size the same as other functions --- i.e. about tau_sds --- but to make a strong but simple relationship with a covariate.
+\item \code{tau_norm_covariate()}: A basic function that specifies a tau_sds*2 size effect if cov>median(cov) and otherwise is a tau_sds/2 size effect. The idea is to keep the average individual effect size the same as other functions --- i.e. about tau_sds --- but to make a strong but simple relationship with a covariate.
 
-\item \code{tau_norm_covariate_outliers}: A basic function that specifies a tau_sds size effect if cov>median(cov) and otherwise is a tau_sds/4 size effect
+\item \code{tau_norm_covariate_outliers()}: A basic function that specifies a tau_sds size effect if cov>median(cov) and otherwise is a tau_sds/4 size effect
 
-\item \code{tau_norm_covariate_cont}: A basic function that specifies a tau_sds size effect if cov>median(cov) and otherwise is a tau_sds/4 size effect
+\item \code{tau_norm_covariate_cont()}: A basic function that specifies a tau_sds size effect if cov>median(cov) and otherwise is a tau_sds/4 size effect
 
-\item \code{tau_norm_covariate_levels}: A basic function that specifies a tau_sds size effect that varies, randomly, by level of covariate. We envision this to be used with covariate that have relatively few levels into which the outcome values can be grouped.
+\item \code{tau_norm_covariate_levels()}: A basic function that specifies a tau_sds size effect that varies, randomly, by level of covariate. We envision this to be used with covariate that have relatively few levels into which the outcome values can be grouped.
+
 }}
-

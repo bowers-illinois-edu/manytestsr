@@ -476,7 +476,7 @@ test_that(
           p_adj_method = "split",
           splitfn = getFromNamespace(x[["sfn"]], ns = "manytestsr"),
           splitby = x[["splitby"]],
-          ncores = 6
+          ncores = 1
         )
         return(p_sims_tab)
       }

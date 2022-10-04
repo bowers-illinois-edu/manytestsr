@@ -33,6 +33,6 @@ A p-value
 }
 \description{
 These functions accept a data frame and perhaps test specific arguments
-(like whether or not the test will be asympotic or simulation based). It
+(like whether or not the test will be asymptotic or simulation based). It
 produces a p-value.
 }

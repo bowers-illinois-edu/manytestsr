@@ -1,9 +1,9 @@
-#define RCPP_ARMADILLO_RETURN_COLVEC_AS_VECTOR
+// [[Rcpp::depends(RcppArmadillo)]]
+
 #include <RcppArmadillo.h>
 using namespace Rcpp;
-using namespace arma;
+// using namespace arma;
 
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp11)]]
 
 // Make these functions available *within* C++ in addition to R

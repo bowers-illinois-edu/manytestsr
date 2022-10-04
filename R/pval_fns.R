@@ -1,9 +1,9 @@
-# Functions for producing p-values
+# Functions for producing p-values / Test-statistics
 
 #' P-value function: T-test
 #'
 #' These functions accept a data frame and perhaps test specific arguments
-#' (like whether or not the test will be asympotic or simulation based). It
+#' (like whether or not the test will be asymptotic or simulation based). It
 #' produces a p-value.
 #'
 #' @param dat An object inheriting from class data.frame
@@ -96,7 +96,7 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 #'
 #' @description
 #' These functions accept a data frame and perhaps test specific arguments
-#' (like whether or not the test will be asympotic or simulation based). It
+#' (like whether or not the test will be asymptotic or simulation based). It
 #' produces a p-value.
 #'
 #' @details

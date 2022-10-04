@@ -1,18 +1,22 @@
+// [[Rcpp::depends(RcppArmadillo)]]
+
+// This next is in Makevars
+// #define RCPP_ARMADILLO_RETURN_COLVEC_AS_VECTOR
+
 // Protect against compilers without OpenMP
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
-#define RCPP_ARMADILLO_RETURN_COLVEC_AS_VECTOR
-
 #include <RcppArmadillo.h>
-#include "fastfns.h"
-using namespace Rcpp;
-using namespace arma;
 
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::plugins(openmp)]]
+
+#include "fastfns.h"
+
+// using namespace arma;
+using namespace Rcpp;
 
 // [[Rcpp::export]]
 double fastMean(const arma::vec & X){
@@ -48,7 +52,7 @@ arma::vec fastrowMeans(const arma::mat & X){
 // [[Rcpp::export]]
 arma::vec fastrowMads(const arma::mat & X){
     int n = X.n_rows;
-    vec res(n);
+    arma::vec res(n);
     // this next is the scale factor imagining normal data
     // https://en.wikipedia.org/wiki/Median_absolute_deviation#:~:text=In%20statistics%2C%20the%20median%20absolute,MAD%20calculated%20from%20a%20sample.
     // using it for unit testing. Shouldn't matter.
@@ -67,7 +71,7 @@ arma::vec fastrowMads2(const arma::mat & X){
     // https://en.wikipedia.org/wiki/Median_absolute_deviation#:~:text=In%20statistics%2C%20the%20median%20absolute,MAD%20calculated%20from%20a%20sample.
     // using it for unit testing. Shouldn't matter.
     //const double aconstant = 1.4826;
-    vec meddev = 1.4826 * median( abs(X.each_col() - median(X,1)), 1);
+    arma::vec meddev = 1.4826 * median( abs(X.each_col() - median(X,1)), 1);
     return meddev;
 }
 
@@ -98,8 +102,8 @@ SEXP fastrowMaxs2(SEXP x){
 //[[Rcpp::export]]
 arma::mat fastcova(const arma::mat & X){
     int n;
-    rowvec m;
-    mat s;
+    arma::rowvec m;
+    arma::mat s;
     n = X.n_rows;
     m = arma::mean(X,0) * sqrt(n);
     // arma::vec m = sqrt(n) * fastcolMeans(x);
@@ -131,7 +135,7 @@ arma::mat vecdist_arma(const arma::vec & x){
     int n=x.n_elem, i = 0, j = 0;
     double d;
     // arma::mat out(n,n);
-    arma::mat out = zeros(n,n);
+    arma::mat out = arma::zeros(n,n);
     for (i = 0; i < n - 1; i++){
         for (j = i + 1; j < n ; j ++){
             // d = std::sqrt(std::pow( as_scalar( (x(i) - x(j)) ),2));
@@ -154,7 +158,7 @@ arma::mat vecdist3(const arma::vec & A){
       // and https://github.com/RoyiAvital/Projects/tree/master/CalcDistanceMatrix
     // int n = A.nrow();
     // arma::mat A = arma::mat(x.begin(), n, 1, false);
-    uword n = A.n_elem;
+    arma::uword n = A.n_elem;
 
     // arma::colvec An =  sum(square(A),1);
     arma::mat C(n,n);
@@ -197,7 +201,7 @@ Rcpp::NumericMatrix vecdist2(const Rcpp::NumericVector & x){
 arma::vec avg_rank_arma(const arma::vec & x)
 {
     R_xlen_t sz = x.n_elem;
-    arma::vec w = linspace(0, sz-1, sz);
+    arma::vec w = arma::linspace(0, sz-1, sz);
     std::sort(w.begin(), w.end(),
         [&x](std::size_t i, std::size_t j) { return x[i] < x[j]; });
 
@@ -357,8 +361,8 @@ Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec & x,const arma::vec
     arma::vec dist_i(n);
     arma::vec dist_rank_i(n);
 
-    for(uword i = 0; i < n ; i++){
-        for(uword j = 0; j < n ; j++){
+    for(arma::uword i = 0; i < n ; i++){
+        for(arma::uword j = 0; j < n ; j++){
             dist_i(j) = std::abs( x(i) - x(j) );
             dist_rank_i(j) = std::abs( rankx(i) - rankx(j) );
         }
@@ -415,6 +419,12 @@ Rcpp::List fast_dists_by_unit_arma2_par(const arma::vec & x,const arma::vec & Z,
         maddrx(i) = fastmad_arma(dist_rank_i);
     }
 
+    // data.table does not like a list of matrices even if one of their dimensions is 1.
+    // so, remove the dimensions. There must a be a more efficient way to do this.
+    // The method is to use RCPP_ARMADILLO_RETURN_COLVEC_AS_VECTOR in Makevars or as a define statement above (which doesn't work when in a package)
+    // NumericVector rmndx = wrap(mndx) ;
+    // rmndx.attr( "dim" ) = R_NilValue ;
+
     //  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
     Rcpp::List res = List::create(mndx, mndrx, maddx, maddrx, maxdx, maxdrx, zx, rankx);
     return(res);
@@ -436,8 +446,8 @@ Rcpp::List fast_dists_and_trans_by_unit_arma2(const arma::vec & x,const arma::ve
     arma::vec mndrx(n);
     arma::vec maxdrx(n);
     arma::vec maddrx(n);
- 
-    for(uword i = 0; i < n ; i++){
+
+    for(arma::uword i = 0; i < n ; i++){
         arma::vec dist_i(n);
         arma::vec dist_rank_i(n);
         dist_i = sqrt(pow( x(i) - x,2 ));

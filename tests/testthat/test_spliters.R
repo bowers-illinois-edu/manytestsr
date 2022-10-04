@@ -50,7 +50,7 @@ bdat4[, lvs := interaction(lv1, lv2, lv3, lex.order = TRUE, drop = TRUE)]
 
 with(bdat4, table(lv1, lv3))
 with(bdat4, table(lv1, lv2))
-table(bdat4$lv1_2)
+table(bdat4$lv1)
 
 ## Test pre-specified splitters
 bdat4[, gf5 := splitSpecified(bF, x = data.table(lv1, lv2, bF))]
@@ -368,3 +368,4 @@ for (i in 1:3) {
     })
   }
 }
+
