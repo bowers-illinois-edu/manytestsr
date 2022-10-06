@@ -90,7 +90,14 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
           splitfn = splitfn, splitby = splitby, thealpha = thealpha,
           stop_splitby_constant = stop_splitby_constant, ncores = ncores, return_details = return_details), simplify = FALSE)
 
-  p_sims <- data.table::rbindlist(p_sims_lst)
+  if (length(p_sims_lst) == 1) {
+      ## If we are using this function to apply to a given dataset, and so want
+      ## details about the blocks, the results are a list of objects from
+      ## calc_errs
+      p_sims <- p_sims_lst[[1]]
+  } else {
+      p_sims <- data.table::rbindlist(p_sims_lst)
+  }
 
   return(p_sims)
 }
