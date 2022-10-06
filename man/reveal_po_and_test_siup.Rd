@@ -23,7 +23,8 @@ reveal_po_and_test_siup(
   splitby,
   thealpha = 0.05,
   stop_splitby_constant = TRUE,
-  ncores = 1
+  ncores = 1,
+  return_details = FALSE
 )
 }
 \arguments{
@@ -64,6 +65,11 @@ reveal_po_and_test_siup(
 \item{stop_splitby_constant}{TRUE is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.}
 
 \item{ncores}{The number of cores or threads to use for the test statistic creation and possible permutation testing}
+
+\item{return_details}{TRUE means that the function should return a list of
+the original data ("detobj"), a summary of the results ("detresults"), and a
+node level dataset  ("detnodes"). Default here is FALSE. Only use TRUE when
+not using simulations.}
 }
 \value{
 False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).

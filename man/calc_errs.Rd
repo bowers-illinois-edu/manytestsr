@@ -10,7 +10,8 @@ calc_errs(
   trueeffect_tol = .Machine$double.eps,
   blockid = "bF",
   thealpha = 0.05,
-  fwer = FALSE
+  fwer = FALSE,
+  return_details = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,11 @@ calc_errs(
 \item{thealpha}{Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)}
 
 \item{fwer}{Indicates that we are trying to control FWER. Right now, we do this by default in report_detections but this indicates when we should be looking at FDR}
+
+\item{return_details}{TRUE means that the function should return a list of
+the original data ("detobj"), a summary of the results ("detresults"), and a
+node level dataset  ("detnodes"). Default here is FALSE. Only use TRUE when
+not using simulations.}
 }
 \value{
 False positive proportion out of the tests across the blocks, The

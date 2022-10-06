@@ -23,11 +23,15 @@
 #' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
 #' @param stop_splitby_constant TRUE is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
+#' @param return_details TRUE means that the function should return a list of
+#' the original data ("detobj"), a summary of the results ("detresults"), and a
+#' node level dataset  ("detnodes"). Default here is FALSE. Only use TRUE when
+#' not using simulations.
 #' @return A pvalue for each block
 #' @export
 padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | blockF, ybase,
                          prop_blocks_0, tau_fn, tau_size, pfn, afn, p_adj_method, nsims, ncores = 1,
-                         splitfn = NULL, covariate = NULL, splitby = NULL, thealpha = .05, stop_splitby_constant = TRUE) {
+                         splitfn = NULL, covariate = NULL, splitby = NULL, thealpha = .05, stop_splitby_constant = TRUE, return_details = FALSE) {
   if (!is.null(afn) & is.character(afn)) {
     if (afn == "NULL") {
       afn <- NULL
@@ -48,11 +52,13 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
   ## If covariate="newcov" then make a covariate with a known relationship with
   ## the potential outcome to control (this to avoid problems with some created
   ## covariates perfectly predicting the outcome under control)
-  if(covariate == "newcov" | splitby == "newcov"){
-      datnew[, newcov := { tmp <- .01 * sd(get(ybase)) * get(ybase) + rnorm(.N, mean=0, sd=sd(get(ybase)));
-      ifelse(tmp<0,0,tmp) },by=blockid]
-      newcovb <- datnew[,.(newcov=mean(newcov)), by = blockid]
-      bdatnew <- bdatnew[newcovb]
+  if (covariate == "newcov" || splitby == "newcov") {
+    datnew[, newcov := {
+      tmp <- .01 * sd(get(ybase)) * get(ybase) + rnorm(.N, mean = 0, sd = sd(get(ybase)))
+      ifelse(tmp < 0, 0, tmp)
+    }, by = blockid]
+    newcovb <- datnew[, .(newcov = mean(newcov)), by = blockid]
+    bdatnew <- bdatnew[newcovb]
   }
 
   datnew$y1new <- create_effects(
@@ -77,14 +83,16 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
     reveal_and_test_fn <- reveal_po_and_test
   }
 
-    p_sims_lst <- replicate(nsims, reveal_and_test_fn(
-      idat = datnew, bdat = bdatnew, blockid = blockid, trtid = trtid, y1var = "y1new",
-      fmla = fmla, ybase = ybase, prop_blocks_0 = prop_blocks_0,
-      tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method, splitfn = splitfn, splitby = splitby, thealpha = thealpha, stop_splitby_constant = stop_splitby_constant,
-      ncores=ncores), simplify = FALSE)
-    p_sims <- data.table::rbindlist(p_sims_lst)
+  p_sims_lst <- replicate(nsims, reveal_and_test_fn(
+          idat = datnew, bdat = bdatnew, blockid = blockid, trtid = trtid, y1var = "y1new",
+          fmla = fmla, ybase = ybase, prop_blocks_0 = prop_blocks_0,
+          tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method,
+          splitfn = splitfn, splitby = splitby, thealpha = thealpha,
+          stop_splitby_constant = stop_splitby_constant, ncores = ncores, return_details = return_details), simplify = FALSE)
 
-    return(p_sims)
+  p_sims <- data.table::rbindlist(p_sims_lst)
+
+  return(p_sims)
 }
 
 #' Repeat experiment, reveal treatment effects from the potential outcomes, test within each block, summarize
@@ -109,33 +117,46 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
 #' @param copydts TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.
 #' @param stop_splitby_constant FALSE (not used here because this algorithmn does not split) is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
 #' @param ncores The number of cores or threads to use for the test statistic creation and possible permutation testing
+#' @param return_details TRUE means that the function should return a list of
+#' the original data ("detobj"), a summary of the results ("detresults"), and a
+#' node level dataset  ("detnodes"). Default here is FALSE. Only use TRUE when
+#' not using simulations.
 #' @return False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
 #' @export
 reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y1var,
                                prop_blocks_0, tau_fn, tau_size, pfn, p_adj_method = "fdr",
-                               afn = NULL, splitfn = NULL, splitby = NULL, thealpha = .05, copydts = FALSE, stop_splitby_constant = FALSE,ncores=1) {
+                               afn = NULL, splitfn = NULL, splitby = NULL, thealpha = .05, copydts = FALSE, stop_splitby_constant = FALSE, ncores = 1, return_details = FALSE) {
   stopifnot(is.null(splitfn) | splitfn == "NULL")
-  idat[, newZ := sample(get(trtid)), by = blockid] # make no effects within block by shuffling treatment, this is the engine of variability in the sim
-  idat[, Y := get(y1var) * newZ + get(ybase) * (1 - newZ)] # reveal relevant potential outcomes with possible known effect
-  idat[, newZF := factor(newZ)] # the pvalue functions want a factor
+  # make no effects within block by shuffling treatment, this is the engine of variability in the sim
+  idat[, newZ := sample(get(trtid)), by = blockid]
+  # reveal relevant potential outcomes with possible known effect
+  idat[, Y := get(y1var) * newZ + get(ybase) * (1 - newZ)]
+  # the pvalue functions want a factor
+  idat[, newZF := factor(newZ)]
   fmla <- Y ~ newZF
   # idat[, Y := get(y1var) * get(trtid) + get(ybase) * (1 - get(trtid))] # reveal relevant potential outcomes with possible known effect
 
-  if(ncores>1){ parallel="multicore" }
-  if(ncores==1){ parallel="no" }
+  if (ncores > 1) {
+    parallel <- "multicore"
+  }
+  if (ncores == 1) {
+    parallel <- "no"
+  }
 
   res <- adjust_block_tests(
     idat = idat, bdat = bdat, blockid = blockid, p_adj_method = p_adj_method,
     pfn = pfn, fmla = fmla,
-    copydts = copydts, ncores=ncores, parallel=parallel
+    copydts = copydts, ncores = ncores, parallel = parallel
   )
-  res[, hit := max_p < thealpha] # doing FDR==.05 for now. All that really matters is some fixed number.
+  # doing FDR==.05 for now. All that really matters is some fixed number.
+  res[, hit := max_p < thealpha]
 
   errs <- calc_errs(
     testobj = res,
     truevar_name = "trueate",
     trueeffect_tol = .Machine$double.eps,
-    blockid = blockid
+    blockid = blockid,
+    return_details = return_details
   )
 
   return(errs)
@@ -165,11 +186,15 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
 #' @param stop_splitby_constant TRUE is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
 #' @param ncores The number of cores or threads to use for the test statistic creation and possible permutation testing
+#' @param return_details TRUE means that the function should return a list of
+#' the original data ("detobj"), a summary of the results ("detresults"), and a
+#' node level dataset  ("detnodes"). Default here is FALSE. Only use TRUE when
+#' not using simulations.
 #' @return False positive proportion out of the tests across the blocks, The false discovery rate (proportion rejected of false nulls out of all rejections), the power of the adjusted tests across blocks (the proportion of correctly rejected hypotheses out of all correct hypotheses --- in this case correct means non-null), and power of the unadjusted test (proportion correctly rejected out of  all correct hypothesis, but using unadjusted p-values).
 #' @export
 reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF | blockF, ybase, y1var,
                                     prop_blocks_0, tau_fn, tau_size, pfn, afn, p_adj_method = "split",
-                                    copydts = FALSE, splitfn, splitby, thealpha = .05, stop_splitby_constant = TRUE, ncores=1) {
+                                    copydts = FALSE, splitfn, splitby, thealpha = .05, stop_splitby_constant = TRUE, ncores = 1, return_details=FALSE) {
   if (!is.null(afn) & is.character(afn)) {
     if (afn == "NULL") {
       afn <- NULL
@@ -178,7 +203,11 @@ reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF
     }
   }
 
-if(ncores>1){ parallel="multicore" } else {parallel="no"}
+  if (ncores > 1) {
+    parallel <- "multicore"
+  } else {
+    parallel <- "no"
+  }
   # 	message(tau_size)
   # 	make relationship between treatment and outcome 0 on average in preparation for power analysis and error rate sims
   idat[, newZ := sample(get(trtid)), by = blockid]
@@ -194,14 +223,15 @@ if(ncores>1){ parallel="multicore" } else {parallel="no"}
     idat = idat, bdat = bdat, blockid = blockid, splitfn = splitfn,
     pfn = pfn, alphafn = afn, thealpha = thealpha,
     fmla = fmla,
-    parallel = parallel, ncores=ncores, copydts = copydts, splitby = splitby, stop_splitby_constant = stop_splitby_constant
+    parallel = parallel, ncores = ncores, copydts = copydts, splitby = splitby, stop_splitby_constant = stop_splitby_constant
   )
 
   errs <- calc_errs(
     testobj = res,
     truevar_name = "trueate",
     trueeffect_tol = .Machine$double.eps,
-    blockid = blockid
+    blockid = blockid,
+    return_details = return_details
   )
 
   return(errs)
@@ -219,6 +249,10 @@ if(ncores>1){ parallel="multicore" } else {parallel="no"}
 #' @param blockid A character name of the column in idat and bdat indicating the block.
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
 #' @param fwer Indicates that we are trying to control FWER. Right now, we do this by default in report_detections but this indicates when we should be looking at FDR
+#' @param return_details TRUE means that the function should return a list of
+#' the original data ("detobj"), a summary of the results ("detresults"), and a
+#' node level dataset  ("detnodes"). Default here is FALSE. Only use TRUE when
+#' not using simulations.
 #' @return False positive proportion out of the tests across the blocks, The
 #' false discovery rate (proportion rejected of false nulls out of all
 #' rejections), the power of the adjusted tests across blocks (the proportion
@@ -232,7 +266,8 @@ calc_errs <- function(testobj,
                       trueeffect_tol = .Machine$double.eps,
                       blockid = "bF",
                       thealpha = .05,
-                      fwer=FALSE) {
+                      fwer = FALSE,
+                      return_details = FALSE) {
   simp_summary <- function(x) {
     ## x is the true effect size in the block (probably the true mean effect size).
     x <- abs(x) ## We want look at relative sizes of detected effects and don't care about large negative versus positive effects
@@ -324,7 +359,12 @@ calc_errs <- function(testobj,
     meangrpsize = mean(grpsize),
     medgrpsize = median(grpsize)
   )]
-  # One row of results at the end.
+  # One row of results
   detresults <- cbind(deterrs, detates)
-  return(detresults)
+  if (!return_details) {
+      return(detresults)
+  } else {
+      res <- list(detresults = detresults, detobj = detobj, detnodes = detnodes)
+      return(res)
+  }
 }

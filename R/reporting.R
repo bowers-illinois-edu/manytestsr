@@ -169,7 +169,8 @@ make_tree <- function(orig_res, blockid = "bF") {
 
 #' Make a plot of the nodes
 #'
-#' Given the results of the splitting and testing algorithm in the form of a , make a node level data set for use in reporting results in terms of a binary tree graph. This does not print or plot the graph. You'll need to do that with the resulting object.
+#' Given the results of the splitting and testing algorithm in the form of a
+#' graph from [make_tree], make a node level data set for use in reporting results in terms of a binary tree graph. This does not print or plot the graph. You'll need to do that with the resulting object.
 #' @param res_graph A tidygraph object produced from make_tree
 #' @return A ggraph object
 #' @import ggraph
