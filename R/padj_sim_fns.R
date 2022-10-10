@@ -13,6 +13,7 @@
 #' @param prop_blocks_0 Is the proportion of blocks with no effects at all
 #' @param tau_fn Is a function that turns ybase into the potential outcome under treatment --- it is a treatment effect creating function.
 #' @param tau_size Is the parameter for the tau_fn --- like the true average effect size within a block.
+#' @param by_block Is an argument to [create_effects] to create true effects by block or across the whole dataset
 #' @param pfn A function to produce pvalues --- using idat.
 #' @param afn A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator.
 #' @param p_adj_method Is "split" to use [findBlocks] for top-down testing and "fdr" or "holm" etc to use [stats::p.adjust] and do the test in every block.
@@ -30,8 +31,9 @@
 #' @return A pvalue for each block
 #' @export
 padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | blockF, ybase,
-                         prop_blocks_0, tau_fn, tau_size, pfn, afn, p_adj_method, nsims, ncores = 1,
-                         splitfn = NULL, covariate = NULL, splitby = NULL, thealpha = .05, stop_splitby_constant = TRUE, return_details = FALSE) {
+                         prop_blocks_0, tau_fn, tau_size, by_block=TRUE, pfn, afn, p_adj_method, nsims, ncores = 1,
+                         splitfn = NULL, covariate = NULL, splitby = NULL, thealpha = .05, 
+                         stop_splitby_constant = TRUE, return_details = FALSE) {
   if (!is.null(afn) & is.character(afn)) {
     if (afn == "NULL") {
       afn <- NULL
@@ -64,7 +66,7 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
   datnew$y1new <- create_effects(
     idat = datnew, ybase = ybase, blockid = blockid,
     tau_fn = tau_fn, tau_size = tau_size,
-    prop_blocks_0 = prop_blocks_0, covariate = covariate
+    prop_blocks_0 = prop_blocks_0, covariate = covariate, by_block=by_block
   )
   datnew[, trueblocks := ifelse(abs(y1new - get(ybase)) <= .Machine$double.eps, 0, 1)]
   datnew[, trueate := mean(y1new - get(ybase)), by = blockid]

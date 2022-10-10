@@ -14,6 +14,7 @@ padj_test_fn(
   prop_blocks_0,
   tau_fn,
   tau_size,
+  by_block = TRUE,
   pfn,
   afn,
   p_adj_method,
@@ -45,6 +46,8 @@ padj_test_fn(
 \item{tau_fn}{Is a function that turns ybase into the potential outcome under treatment --- it is a treatment effect creating function.}
 
 \item{tau_size}{Is the parameter for the tau_fn --- like the true average effect size within a block.}
+
+\item{by_block}{Is an argument to \link{create_effects} to create true effects by block or across the whole dataset}
 
 \item{pfn}{A function to produce pvalues --- using idat.}
 

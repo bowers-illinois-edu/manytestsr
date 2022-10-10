@@ -104,7 +104,7 @@ create_effects <- function(idat, ybase, blockid, tau_fn, tau_size, covariate = N
     }
   }
 
-  # We could choose blocks at random to zero out but not sure we want to add noise that is hard to replicate.
+  ## Choose blocks at random to set to zero
   blocks <- sort(as.character(unique(idatnew[[blockid]])))
   num_blocks <- length(blocks)
   n_null_blocks <- round(num_blocks * prop_blocks_0)
@@ -124,6 +124,14 @@ create_effects <- function(idat, ybase, blockid, tau_fn, tau_size, covariate = N
 #' @param covariate Contains information about covariates currently a character name of a column in idat. It is NULL if not used. Mostly it is a vector the same length as ybase.
 #' @return A vector of individual level causal effects (taus) that we will add to ybase (potential outcome to control) to get y1var or potential outcome to treatment.
 
+#' @describeIn Tau_Functions A basic function with no outliers
+#' @export
+tau_norm <- function(ybase, tau_sds, covariate) {
+  ## covariate ignored here.
+  n <- length(ybase)
+  rnorm(n, mean = sd(ybase) * tau_sds, sd = sd(ybase) / 2)
+}
+
 #' @describeIn Tau_Functions Draws from a Normal but also adds a few outliers.
 #' @export
 tau_norm_outliers <- function(ybase, tau_sds, covariate) {
@@ -136,14 +144,6 @@ tau_norm_outliers <- function(ybase, tau_sds, covariate) {
     # 2 large outliers
     c(rnorm(n - num_outliers, mean = sd(ybase) * tau_sds, sd = sd(ybase) / 2), rnorm(num_outliers, mean = sd(ybase) * tau_sds * 4, sd = sd(ybase) * 4))
   }
-}
-
-#' @describeIn Tau_Functions A basic function with no outliers
-#' @export
-tau_norm <- function(ybase, tau_sds, covariate) {
-  ## covariate ignored here.
-  n <- length(ybase)
-  rnorm(n, mean = sd(ybase) * tau_sds, sd = sd(ybase) / 2)
 }
 
 #' @describeIn Tau_Functions A basic function that specifies a tau_sds*2 size effect if cov>median(cov) and otherwise is a tau_sds/2 size effect. The idea is to keep the average individual effect size the same as other functions --- i.e. about tau_sds --- but to make a strong but simple relationship with a covariate.
