@@ -54,7 +54,7 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
   ## If covariate="newcov" then make a covariate with a known relationship with
   ## the potential outcome to control (this to avoid problems with some created
   ## covariates perfectly predicting the outcome under control)
-  if (covariate == "newcov" || splitby == "newcov") {
+  if ( (!is.null(covariate) && covariate == "newcov") || (!is.null(splitby) && splitby == "newcov")) {
     datnew[, newcov := {
       tmp <- .01 * sd(get(ybase)) * get(ybase) + rnorm(.N, mean = 0, sd = sd(get(ybase)))
       ifelse(tmp < 0, 0, tmp)
