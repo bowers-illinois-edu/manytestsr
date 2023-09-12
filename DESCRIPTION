@@ -8,7 +8,7 @@ Authors@R:
            email = "jake@jakebowers.org",
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: Implements the nesting or top-down procedures detailed in Bowers and Chen 2020.
-License: MIT + file LICENSE
+License: `use_mit_license()`
 Encoding: UTF-8
 LazyData: true
 Suggests:
@@ -36,5 +36,5 @@ Remotes:
 LinkingTo: Rcpp, RcppArmadillo
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 SystemRequirements: C++11
