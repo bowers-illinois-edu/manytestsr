@@ -5,5 +5,4 @@
 ```
 devtools::document()
 devtools::check()
-
 ```
