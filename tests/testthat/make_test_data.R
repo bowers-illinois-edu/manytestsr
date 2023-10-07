@@ -85,7 +85,7 @@ idat[, bF2 := factor(b2)]
 setkey(idat, "bF2")
 ## Make a dataset with unequal sized blocks
 idat2 <- bdat2[idat]
-idat3 <- idat2[, sample(.N, size =  unique( (.N * nb) / 10 ), replace = TRUE), by = bF2]
+idat3 <- idat2[, sample(.N, size = unique((.N * nb) / 10), replace = TRUE), by = bF2]
 ## Now giving it the same blocking names as idat for ease with testing
 idat3$bF <- idat3$bF2
 setkey(idat3, bF)

@@ -6,20 +6,22 @@
 #' @param x Is a numeric vector (the  outcome variable)
 #' @param Z is just a placeholder and not used but is a part of the api for distance functions
 #' @return A list  for inclusion in a data.table with  distances between each unit and other units as well as some transformations of those distances
-#' @importFrom Rfast Dist rowmeans rowMads rowMaxs
+#' @importFrom Rfast Dist rowmeans rowMads rowMaxs Rank vecdist rowmeans
 #' @export
 dists_and_trans <- function(x, Z) {
-  dx <- vecdist2(x)
-  rankx <- Rank(x)
-  dxRank0 <- vecdist2(rankx) # distance among the ranks
+  dx <- Rfast::vecdist(x)
+  rankx <- Rfast::Rank(x)
+  dxRank0 <- Rfast::vecdist(rankx) # distance among the ranks
+  mhdist0 <- zscore_vec(x) ## calling it mhdist but really just zscore
+  mhdist <- ifelse(is.na(mhdist0)|is.nan(mhdist0),0,mhdist0)
   res <- list(
-    mndist = as.numeric(fastrowMeans(dx)),
-    mndistRank0 = as.numeric(fastrowMeans(dxRank0)),
-    maddist = rowMads(dx),
-    maddistRank0 = rowMads(dxRank0),
-    maxdist = as.numeric(fastrowMaxs2(dx)),
-    maxdistRank0 = as.numeric(fastrowMaxs2(dxRank0)),
-    mhdist = zscore_vec(x), ## really just the zscore
+    mndist = Rfast::rowmeans(dx),#as.numeric(fastrowMeans(dx)),
+    mndistRank0 = Rfast::rowmeans(dxRank0),#as.numeric(fastrowMeans(dxRank0)),
+   # maddist = Rfast::rowMads(dx),
+   # maddistRank0 = Rfast::rowMads(dxRank0),
+    maxdist = Rfast::rowMaxs(dx,value=TRUE), #as.numeric(fastrowMaxs2(dx)),
+    maxdistRank0 = Rfast::rowMaxs(dxRank0,value=TRUE), #as.numeric(fastrowMaxs2(dxRank0)),
+    mhdist = mhdist,
     rankx = rankx
   )
   return(res)

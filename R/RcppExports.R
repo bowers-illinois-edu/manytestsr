@@ -25,8 +25,16 @@ fastrowMads <- function(X) {
     .Call(`_manytestsr_fastrowMads`, X)
 }
 
+fastrowMads4 <- function(X) {
+    .Call(`_manytestsr_fastrowMads4`, X)
+}
+
 fastrowMads2 <- function(X) {
     .Call(`_manytestsr_fastrowMads2`, X)
+}
+
+fastrowMads3 <- function(X) {
+    .Call(`_manytestsr_fastrowMads3`, X)
 }
 
 fastrowMaxs <- function(X) {
@@ -41,20 +49,24 @@ fastcova <- function(X) {
     .Call(`_manytestsr_fastcova`, X)
 }
 
+zscore_vec2 <- function(x) {
+    .Call(`_manytestsr_zscore_vec2`, x)
+}
+
 zscore_vec <- function(X) {
     .Call(`_manytestsr_zscore_vec`, X)
 }
 
-vecdist_arma <- function(x) {
-    .Call(`_manytestsr_vecdist_arma`, x)
-}
-
-vecdist3 <- function(A) {
-    .Call(`_manytestsr_vecdist3`, A)
+vecdist_squared <- function(A) {
+    .Call(`_manytestsr_vecdist_squared`, A)
 }
 
 vecdist2 <- function(x) {
     .Call(`_manytestsr_vecdist2`, x)
+}
+
+vecdist_arma <- function(x) {
+    .Call(`_manytestsr_vecdist_arma`, x)
 }
 
 avg_rank_arma <- function(x) {
@@ -87,5 +99,17 @@ fast_dists_by_unit_arma2_par <- function(x, Z, threads = 4L) {
 
 fast_dists_and_trans_by_unit_arma2 <- function(x, Z) {
     .Call(`_manytestsr_fast_dists_and_trans_by_unit_arma2`, x, Z)
+}
+
+manhattan_dist <- function(x) {
+    .Call(`_manytestsr_manhattan_dist`, x)
+}
+
+euc_dist_arma1 <- function(x) {
+    .Call(`_manytestsr_euc_dist_arma1`, x)
+}
+
+vecdist3 <- function(x) {
+    .Call(`_manytestsr_vecdist3`, x)
 }
 

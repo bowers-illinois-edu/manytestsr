@@ -121,6 +121,7 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 #' @importFrom coin independence_test pvalue approximate exact asymptotic
 #' @importFrom Rfast Rank
 #' @importFrom parallel detectCores
+#' @importFrom dataPreparation which_are_constant
 #' @export
 pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
                        parallel = "yes", ncpu = NULL, groups = NULL, distfn = dists_and_trans,adaptive_dist_function=TRUE) {
@@ -140,14 +141,16 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
       ncpu <- detectCores()
   }
 
+  ## the dists_and_trans function is very fast but very memory intensive. When n is large it can require GB versus KB
+  ## This should be about the sizes of the blocks not the overall size. TODO
   if(adaptive_dist_function){
-      if(dat_size <=20){
-          distfn <- fast_dists_and_trans
+      if(dat_size <=100){
+          distfn <- dists_and_trans
       }
-      if(parallel!="no" & dat_size > 20){
+      if(parallel!="no" & dat_size > 100){
           distfn <- fast_dists_by_unit_arma_parR(threads=ncpu)
       }
-      if(parallel=="no" & dat_size > 20){
+      if(parallel=="no" & dat_size > 100){
           distfn <- fast_dists_and_trans_by_unit_arma
       }
   }
@@ -155,23 +158,29 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
   thetreat <- fmla_vars[[2]]
   thedat <- copy(dat)
   outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
+  # outcome_names <- c(theresponse, "mndist", "mndistRank0",  "maxdist", "maxdistRank0", "zscoreY", "rankY")
   if (length(fmla_vars) == 3) {
     theblock <- fmla_vars[[3]]
     thedat[, outcome_names[-1] := distfn(get(theresponse),Z=1), by = get(theblock)]
     # If one of the test statistics is constant, drop it.
     # https://stackoverflow.com/questions/15068981/removal-of-constant-columns-in-r
-    # anyconstant_cols <-  whichAreConstant(thedat[,.SD,.SDcols=outcome_names], verbose=FALSE)
-    # if(length(anyconstant_cols)>0) { outcome_names <- outcome_names[-anyconstant_cols] }
+    anyconstant_cols <-  dataPreparation::which_are_constant(thedat[,.SD,.SDcols=outcome_names], verbose=FALSE)
+    if(length(anyconstant_cols)>0) { outcome_names <- outcome_names[-anyconstant_cols] }
     newfmla_text <- paste(paste(outcome_names, collapse = "+"), "~", thetreat, "|", theblock, sep = "")
   } else {
     theblock <- NULL
     # This next is faster than doing it in two lines
     thedat[, outcome_names[-1] := distfn(get(theresponse),Z=1)]
+    # If one of the test statistics is constant, drop it.
+    # https://stackoverflow.com/questions/15068981/removal-of-constant-columns-in-r
+    anyconstant_cols <-  dataPreparation::which_are_constant(thedat[,.SD,.SDcols=outcome_names], verbose=FALSE)
+    if(length(anyconstant_cols)>0) { outcome_names <- outcome_names[-anyconstant_cols] }
     newfmla_text <- paste(paste(outcome_names, collapse = "+"), "~", thetreat, sep = "")
   }
   newfmla <- as.formula(newfmla_text)
   if (is.null(simthresh) | nrow(thedat) > simthresh) {
     suppressWarnings(
+     # thep <- pvalue(independence_test(newfmla, data = thedat, teststat = "maximum", alternative="greater"))[[1]]
       thep <- pvalue(independence_test(newfmla, data = thedat, teststat = "quadratic"))[[1]]
     )
   } else {
@@ -182,6 +191,7 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
       thep <- pvalue(independence_test(newfmla,
         data = thedat,
         teststat = "quadratic",
+##	alternative= "greater",
         distribution = approximate(
           nresample = sims,
           parallel = parallel,

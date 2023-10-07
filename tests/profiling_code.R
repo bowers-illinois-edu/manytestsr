@@ -13,7 +13,7 @@ if (interactive) {
   library(Rfast)
   library(microbenchmark)
   library(bench)
-  load_all() ## use  this during debugging
+  devtools::load_all() ## use  this during debugging
   library(devtools)
 }
 
@@ -71,10 +71,11 @@ block_tests_fdr <- adjust_block_tests(idat = idatB1000, bdat = bdatB1000, blocki
 Rprof(NULL)
 summaryRprof(lines = "both")
 
-
+## Now testing speed of the euclidean distance function
 set.seed(12345)
 xblah <- as.numeric(seq(1.0, 1000.0, length = 2000))
 x <- as.numeric(1:10)
+xblah <- rnorm(5000)
 
 ### Faster euclidean distances
 ## First make sure I get it
@@ -84,8 +85,9 @@ dist2 <- sqrt(outer(xblah, xblah, FUN = function(x, y) {
 testdist <- Dist(xblah)
 stopifnot(all.equal(dist2, testdist))
 
-fn0 <- function() { Rfast::vecdist(xblah) }
-fn1 <- function() { Dist(xblah) }
+fn0 <- function() { Rfast::vecdist(xblah) } ## abs dist
+fn1 <- function() { Dist(xblah,square=TRUE) }
+fn8 <- function() { Dist(xblah,method="manhattan") }
 fn4 <- function() { vecdist2(xblah) }
 fn5 <- function() { vecdist_arma(xblah) }
 fn6 <- function() {
@@ -93,18 +95,24 @@ fn6 <- function() {
   dimnames(mat) <- NULL
   return(mat)
 }
-fn7 <- function() { vecdist3(xblah) }
+fn7 <- function() { vecdist_squared(xblah) }
 
+all.equal(fn0(), fn1()) ## fn1 is squared, fn0 is sqrt
 all.equal(fn6(), fn0())
 all.equal(fn6(), fn1())
+all.equal(fn7(), fn1())
 all.equal(fn6(), fn4())
 all.equal(fn6(), fn5())
-all.equal(fn6(), fn7())
+all.equal(fn6(), fn7()) ## one is squared
+all.equal(fn6(), fn8()) ## one is squared
 ## microbenchmark(vecdist=fn0(),Dist=fn1(),eigendist=fn2(),fastDist=fn3(),vecdist2=fn4(),vecdist_arma=fn5(),base=fn6(),times=1000)
 
-microbenchmark::microbenchmark(vecdist = fn0(), Dist = fn1(), vecdist2 = fn4(), vecdist3 = fn7(), vecdist_arma = fn5(), base = fn6(), times = 10)
+bench1 <- microbenchmark::microbenchmark(vecdist = fn0(), DistSq = fn1(), vecdist2 = fn4(), vecdist_squared = fn7(), vecdist_arma = fn5(), base = fn6(), DistAbs=fn8(), times = 100)
 
-## Another version of vecdist3 but in R
+bench1
+
+
+## Another version of vecdist_squared but in R
 tmpfn <- function(x) {
   C <- -2 * (x %*% t(x))
   An <- matrix(x, ncol = 1)^2
@@ -225,7 +233,7 @@ y <- as.numeric(seq(1.0,10.0,length=100))
 vecd1 <- Rfast::vecdist(y)
 vecd2 <- vecdist_arma(y)
 vecd3 <- vecdist2(y)
-vecd4 <- vecdist3(y)
+vecd4 <- vecdist_squared(y)
 
 all.equal(vecd1, vecd2)
 all.equal(vecd1, vecd3)
@@ -305,7 +313,7 @@ ybig <- as.numeric(seq(1.0,10000.0))
 vecd1big <- Rfast::vecdist(ybig)
 vecd2big <- vecdist_arma(ybig) ## with latest compiler flag this works but is slow
 vecd3big <- vecdist2(ybig)
-vecd4big <- vecdist3(ybig)
+vecd4big <- vecdist_squared(ybig)
 
 microbenchmark::microbenchmark( fast_dists_and_trans_by_unit(ybig, Z = 1),fast_dists_and_trans(y, Z = 1), times = 1)
 

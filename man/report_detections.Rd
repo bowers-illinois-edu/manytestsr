@@ -20,7 +20,7 @@ block (or the groups containing that block). fwer=FALSE to detect blocks (or gro
 
 \item{alpha}{Is the false positive rate used for detecting an effect if it is constant (i.e. not an FDR-style approach).}
 
-\item{only_hits}{(default FALSE) returns only the detected blocks}
+\item{only_hits}{(default FALSE) returns only the detected blocks instead of all of them}
 
 \item{blockid}{Name of block variable (the blocking variable is a factor)}
 }

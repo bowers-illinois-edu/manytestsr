@@ -184,7 +184,6 @@ resnms <- apply(alpha_and_splits, 1, function(x) {
 
 
 test_that("alphafns work across splitters for no effects", {
-
   ## First with no effects at all. So, basically no splitting should happen and no discoveries should be reported.
   tau_null <- mapply(
     FUN = function(afn = afn, sfn = sfn, sby = sby) {

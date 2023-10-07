@@ -77,6 +77,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fastrowMads4
+Rcpp::NumericVector fastrowMads4(Rcpp::NumericMatrix& X);
+RcppExport SEXP _manytestsr_fastrowMads4(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(fastrowMads4(X));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fastrowMads2
 arma::vec fastrowMads2(const arma::mat& X);
 RcppExport SEXP _manytestsr_fastrowMads2(SEXP XSEXP) {
@@ -85,6 +96,17 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
     rcpp_result_gen = Rcpp::wrap(fastrowMads2(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fastrowMads3
+Rcpp::NumericVector fastrowMads3(const Rcpp::NumericMatrix& X);
+RcppExport SEXP _manytestsr_fastrowMads3(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(fastrowMads3(X));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -121,6 +143,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// zscore_vec2
+Rcpp::NumericVector zscore_vec2(const Rcpp::NumericVector& x);
+RcppExport SEXP _manytestsr_zscore_vec2(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(zscore_vec2(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // zscore_vec
 Rcpp::NumericVector zscore_vec(const arma::vec& X);
 RcppExport SEXP _manytestsr_zscore_vec(SEXP XSEXP) {
@@ -132,25 +165,14 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// vecdist_arma
-arma::mat vecdist_arma(const arma::vec& x);
-RcppExport SEXP _manytestsr_vecdist_arma(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(vecdist_arma(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// vecdist3
-arma::mat vecdist3(const arma::vec& A);
-RcppExport SEXP _manytestsr_vecdist3(SEXP ASEXP) {
+// vecdist_squared
+arma::mat vecdist_squared(const arma::vec& A);
+RcppExport SEXP _manytestsr_vecdist_squared(SEXP ASEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type A(ASEXP);
-    rcpp_result_gen = Rcpp::wrap(vecdist3(A));
+    rcpp_result_gen = Rcpp::wrap(vecdist_squared(A));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -162,6 +184,17 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type x(xSEXP);
     rcpp_result_gen = Rcpp::wrap(vecdist2(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// vecdist_arma
+arma::mat vecdist_arma(const arma::vec& x);
+RcppExport SEXP _manytestsr_vecdist_arma(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(vecdist_arma(x));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -177,12 +210,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // fast_dists_and_trans
-Rcpp::List fast_dists_and_trans(const arma::vec& x, const arma::vec& Z);
+Rcpp::List fast_dists_and_trans(const Rcpp::NumericVector& x, const arma::vec& Z);
 RcppExport SEXP _manytestsr_fast_dists_and_trans(SEXP xSEXP, SEXP ZSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type Z(ZSEXP);
     rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans(x, Z));
     return rcpp_result_gen;
@@ -258,6 +291,39 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// manhattan_dist
+NumericMatrix manhattan_dist(arma::vec x);
+RcppExport SEXP _manytestsr_manhattan_dist(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(manhattan_dist(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// euc_dist_arma1
+arma::mat euc_dist_arma1(const arma::vec& x);
+RcppExport SEXP _manytestsr_euc_dist_arma1(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(euc_dist_arma1(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// vecdist3
+Rcpp::NumericMatrix vecdist3(const NumericVector& x);
+RcppExport SEXP _manytestsr_vecdist3(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(vecdist3(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_fastMean", (DL_FUNC) &_manytestsr_fastMean, 1},
@@ -266,14 +332,17 @@ static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_fastcolMeans", (DL_FUNC) &_manytestsr_fastcolMeans, 1},
     {"_manytestsr_fastrowMeans", (DL_FUNC) &_manytestsr_fastrowMeans, 1},
     {"_manytestsr_fastrowMads", (DL_FUNC) &_manytestsr_fastrowMads, 1},
+    {"_manytestsr_fastrowMads4", (DL_FUNC) &_manytestsr_fastrowMads4, 1},
     {"_manytestsr_fastrowMads2", (DL_FUNC) &_manytestsr_fastrowMads2, 1},
+    {"_manytestsr_fastrowMads3", (DL_FUNC) &_manytestsr_fastrowMads3, 1},
     {"_manytestsr_fastrowMaxs", (DL_FUNC) &_manytestsr_fastrowMaxs, 1},
     {"_manytestsr_fastrowMaxs2", (DL_FUNC) &_manytestsr_fastrowMaxs2, 1},
     {"_manytestsr_fastcova", (DL_FUNC) &_manytestsr_fastcova, 1},
+    {"_manytestsr_zscore_vec2", (DL_FUNC) &_manytestsr_zscore_vec2, 1},
     {"_manytestsr_zscore_vec", (DL_FUNC) &_manytestsr_zscore_vec, 1},
-    {"_manytestsr_vecdist_arma", (DL_FUNC) &_manytestsr_vecdist_arma, 1},
-    {"_manytestsr_vecdist3", (DL_FUNC) &_manytestsr_vecdist3, 1},
+    {"_manytestsr_vecdist_squared", (DL_FUNC) &_manytestsr_vecdist_squared, 1},
     {"_manytestsr_vecdist2", (DL_FUNC) &_manytestsr_vecdist2, 1},
+    {"_manytestsr_vecdist_arma", (DL_FUNC) &_manytestsr_vecdist_arma, 1},
     {"_manytestsr_avg_rank_arma", (DL_FUNC) &_manytestsr_avg_rank_arma, 1},
     {"_manytestsr_fast_dists_and_trans", (DL_FUNC) &_manytestsr_fast_dists_and_trans, 2},
     {"_manytestsr_avg_rank", (DL_FUNC) &_manytestsr_avg_rank, 1},
@@ -282,6 +351,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_fast_dists_and_trans_by_unit_arma", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit_arma, 2},
     {"_manytestsr_fast_dists_by_unit_arma2_par", (DL_FUNC) &_manytestsr_fast_dists_by_unit_arma2_par, 3},
     {"_manytestsr_fast_dists_and_trans_by_unit_arma2", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit_arma2, 2},
+    {"_manytestsr_manhattan_dist", (DL_FUNC) &_manytestsr_manhattan_dist, 1},
+    {"_manytestsr_euc_dist_arma1", (DL_FUNC) &_manytestsr_euc_dist_arma1, 1},
+    {"_manytestsr_vecdist3", (DL_FUNC) &_manytestsr_vecdist3, 1},
     {NULL, NULL, 0}
 };
 

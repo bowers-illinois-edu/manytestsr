@@ -493,6 +493,6 @@ test_that(
       "false_nondisc_prop"
     ), by = .id]
     err_rates2
-    expect_lte(max(err_rates2$false_pos_prop), .05+2*(sqrt( .025 / 100 )))
+    expect_lte(max(err_rates2$false_pos_prop), .05 + 2 * (sqrt(.025 / 100)))
   }
 )
