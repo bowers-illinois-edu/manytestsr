@@ -9,20 +9,27 @@
 #' @importFrom Rfast Dist rowmeans rowMads rowMaxs Rank vecdist rowmeans
 #' @export
 dists_and_trans <- function(x, Z) {
+	require(robustbase)
   dx <- Rfast::vecdist(x)
   rankx <- Rfast::Rank(x)
   dxRank0 <- Rfast::vecdist(rankx) # distance among the ranks
   mhdist0 <- zscore_vec(x) ## calling it mhdist but really just zscore
   mhdist <- ifelse(is.na(mhdist0)|is.nan(mhdist0),0,mhdist0)
+  robmn1 <- rowMeans(sqrt(dx))
+  robmn2 <- apply(dx,1,function(x){ huberM(x,mu=mean(x,trim=.05))$mu })
+  tanhx <- tanh(x)
   res <- list(
     mndist = Rfast::rowmeans(dx),#as.numeric(fastrowMeans(dx)),
     mndistRank0 = Rfast::rowmeans(dxRank0),#as.numeric(fastrowMeans(dxRank0)),
-   # maddist = Rfast::rowMads(dx),
-   # maddistRank0 = Rfast::rowMads(dxRank0),
+    maddist = Rfast::rowMads(dx),
+    maddistRank0 = Rfast::rowMads(dxRank0),
     maxdist = Rfast::rowMaxs(dx,value=TRUE), #as.numeric(fastrowMaxs2(dx)),
     maxdistRank0 = Rfast::rowMaxs(dxRank0,value=TRUE), #as.numeric(fastrowMaxs2(dxRank0)),
     mhdist = mhdist,
-    rankx = rankx
+    rankx = rankx,
+    robmn1 = robmn1,
+    robmn2 = robmn2,
+    tanhx = tanhx
   )
   return(res)
 }
