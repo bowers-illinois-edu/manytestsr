@@ -24,7 +24,7 @@ Rcpp::NumericMatrix vecdist2(const Rcpp::NumericVector & x);
 void minus_c(double f[],double &x,double *y,int offset,int &len);
 Rcpp::NumericVector avg_rank(const Rcpp::NumericVector & x);
 Rcpp::List fast_dists_and_trans_by_unit(const Rcpp::NumericVector & x, const Rcpp::NumericVector & Z);
-double fastmad(const Rcpp::NumericVector & x);
+double fastmad(const Rcpp::NumericVector & x, double center=-99.0);
 void inner_dist(double f[],double &x,double *y,int offset,int &len);
 Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec & x,const arma::vec & Z);
 Rcpp::List fast_dists_and_trans_by_unit_arma2(const arma::vec & x,const arma::vec & Z);

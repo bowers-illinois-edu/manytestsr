@@ -19,6 +19,9 @@
 #include <RcppDist.h>
 #include "fastfns.h"
 
+//#include <algorithm>
+//#include <iterator>
+
 // [[Rcpp::depends(RcppArmadillo, RcppDist)]]
 
 using namespace arma;
@@ -363,19 +366,9 @@ Rcpp::List fast_dists_and_trans(const Rcpp::NumericVector & x, const arma::vec &
   }
 
 // [[Rcpp::export]]
-double fastmad(const Rcpp::NumericVector & x) {
-   // https://gallery.rcpp.org/articles/robust-estimators/
-   // scale_factor = 1.4826; default for normal distribution consistent with R
-  double medx = Rcpp::median(x);
-  Rcpp::NumericVector med_devs = Rcpp::abs( x - medx );
-  return( 1.4826 * Rcpp::median(med_devs) );
-}
-
-
-// [[Rcpp::export]]
 double fastmad_arma(const arma::vec & x) {
-   // https://gallery.rcpp.org/articles/robust-estimators/
-   // scale_factor = 1.4826; default for normal distribution consistent with R
+	// https://gallery.rcpp.org/articles/robust-estimators/
+	// scale_factor = 1.4826; default for normal distribution consistent with R
   double medx = arma::median(x);
   arma::vec med_devs = arma::abs( x - medx );
   return( 1.4826 * arma::median(med_devs) );
@@ -602,46 +595,102 @@ Rcpp::NumericMatrix vecdist3(const NumericVector& x){
 }
 
 
-/*
+
 // [[Rcpp::export]]
 NumericMatrix vecdist_rcpp(const NumericVector& x) {
   int n = x.size();
   NumericMatrix distance_matrix(n, n);
-
   // Calculate the squared Euclidean distance between each pair of vectors.
-  transform(distance_matrix.begin(), distance_matrix.end(), distance_matrix.begin(),
-            [&](NumericVector& row) {
+  std::transform(distance_matrix.begin(), distance_matrix.end(), distance_matrix.begin(),
+            [&](NumericVector row) {
               for (int j = 0; j < n; j++) {
                 double distance = 0;
                 for (int k = 0; k < n; k++) {
                   distance += (x[k] - x[j]) * (x[k] - x[j]);
                 }
-                row[j] = sqrt(distance);
+                row[j] = std::sqrt(distance);
               }
-              return row;
+              return Rcpp::as<double>(row);
             });
-
   // Set the diagonal entries to zero.
-  distance_matrix.diag(0) = 0;
-
+  distance_matrix.fill_diag(0);
   return distance_matrix;
 }
 
-*/
 
-/*
-//This next uses sqdist from RcppDist
 // [[Rcpp::export]]
-NumericMatrix vecdist_rcpp_improved(const NumericVector& x) {
-  int n = x.size();
-  NumericMatrix distance_matrix(n, n);
+double trimmed_mean(const NumericVector& x, double trim_percent) {
+    // Validate trim_percent
+    if (trim_percent < 0.0 || trim_percent >= 0.5) {
+        stop("trim_percent must be in [0, 0.5)");
+    }
 
-  // Calculate the squared Euclidean distance between each pair of vectors.
-  distance_matrix = RcppDist::sqdist(x, x);
+    // Copy data to a new vector and sort
+    NumericVector sorted_x = clone(x);
+    std::sort(sorted_x.begin(), sorted_x.end());
 
-  // Set the diagonal entries to zero.
-  distance_matrix.diag(0) = 0;
+    // Determine the number of observations to trim
+    int n = sorted_x.size();
+    int trim_count = static_cast<int>(n * trim_percent);
 
-  return distance_matrix;
+    // Calculate trimmed sum
+    double sum = 0.0;
+    for (int i = trim_count; i < n - trim_count; ++i) {
+        sum += sorted_x[i];
+    }
+
+    // Return the trimmed mean
+    return sum / (n - 2 * trim_count);
 }
-*/
+
+
+// [[Rcpp::export]]
+double fastmad(const Rcpp::NumericVector & x, double center) {
+  // Calculate the median of the vector if the center is not specified.
+
+  if (center<0) {
+    center = median(x);
+  }
+
+  // Calculate the median absolute distance from the center.
+  NumericVector med_devs = Rcpp::abs(x - center);
+  return(1.4826 * median(med_devs));
+}
+
+
+// [[Rcpp::export]]
+double huberM(NumericVector x, double k = 1.5,
+		double tol = 1e-06, double trim=.05) {
+
+	int n = x.size();
+	double mu, s;
+
+	// Handling NA values in 'x'
+	x = na_omit(x);
+
+	mu = median(x);
+	if (mu==0) {
+		mu = trimmed_mean(x,trim);
+	}
+
+	s = fastmad(x);
+	if(s<=0){
+		s = fastmad(x,mu);
+	}
+
+	//int it = 0;
+	while (true) {
+		//  it++;
+		NumericVector y = clamp(mu - k * s, x, mu + k * s);
+		double mu1;
+		mu1 = sum(y) / n;
+		if (std::isnan(mu1) || std::abs(mu - mu1) < tol * s) {
+			break;
+		}
+		mu = mu1;
+	}
+
+	return mu;
+}
+
+

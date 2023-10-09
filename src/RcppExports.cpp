@@ -232,17 +232,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// fastmad
-double fastmad(const Rcpp::NumericVector& x);
-RcppExport SEXP _manytestsr_fastmad(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(fastmad(x));
-    return rcpp_result_gen;
-END_RCPP
-}
 // fastmad_arma
 double fastmad_arma(const arma::vec& x);
 RcppExport SEXP _manytestsr_fastmad_arma(SEXP xSEXP) {
@@ -324,6 +313,55 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// vecdist_rcpp
+NumericMatrix vecdist_rcpp(const NumericVector& x);
+RcppExport SEXP _manytestsr_vecdist_rcpp(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(vecdist_rcpp(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// trimmed_mean
+double trimmed_mean(const NumericVector& x, double trim_percent);
+RcppExport SEXP _manytestsr_trimmed_mean(SEXP xSEXP, SEXP trim_percentSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type trim_percent(trim_percentSEXP);
+    rcpp_result_gen = Rcpp::wrap(trimmed_mean(x, trim_percent));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fastmad
+double fastmad(const Rcpp::NumericVector& x, double center);
+RcppExport SEXP _manytestsr_fastmad(SEXP xSEXP, SEXP centerSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type center(centerSEXP);
+    rcpp_result_gen = Rcpp::wrap(fastmad(x, center));
+    return rcpp_result_gen;
+END_RCPP
+}
+// huberM
+double huberM(NumericVector x, double k, double tol, double trim);
+RcppExport SEXP _manytestsr_huberM(SEXP xSEXP, SEXP kSEXP, SEXP tolSEXP, SEXP trimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type k(kSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< double >::type trim(trimSEXP);
+    rcpp_result_gen = Rcpp::wrap(huberM(x, k, tol, trim));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_fastMean", (DL_FUNC) &_manytestsr_fastMean, 1},
@@ -346,7 +384,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_avg_rank_arma", (DL_FUNC) &_manytestsr_avg_rank_arma, 1},
     {"_manytestsr_fast_dists_and_trans", (DL_FUNC) &_manytestsr_fast_dists_and_trans, 2},
     {"_manytestsr_avg_rank", (DL_FUNC) &_manytestsr_avg_rank, 1},
-    {"_manytestsr_fastmad", (DL_FUNC) &_manytestsr_fastmad, 1},
     {"_manytestsr_fastmad_arma", (DL_FUNC) &_manytestsr_fastmad_arma, 1},
     {"_manytestsr_fast_dists_and_trans_by_unit_arma", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit_arma, 2},
     {"_manytestsr_fast_dists_by_unit_arma2_par", (DL_FUNC) &_manytestsr_fast_dists_by_unit_arma2_par, 3},
@@ -354,6 +391,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_manhattan_dist", (DL_FUNC) &_manytestsr_manhattan_dist, 1},
     {"_manytestsr_euc_dist_arma1", (DL_FUNC) &_manytestsr_euc_dist_arma1, 1},
     {"_manytestsr_vecdist3", (DL_FUNC) &_manytestsr_vecdist3, 1},
+    {"_manytestsr_vecdist_rcpp", (DL_FUNC) &_manytestsr_vecdist_rcpp, 1},
+    {"_manytestsr_trimmed_mean", (DL_FUNC) &_manytestsr_trimmed_mean, 2},
+    {"_manytestsr_fastmad", (DL_FUNC) &_manytestsr_fastmad, 2},
+    {"_manytestsr_huberM", (DL_FUNC) &_manytestsr_huberM, 4},
     {NULL, NULL, 0}
 };
 

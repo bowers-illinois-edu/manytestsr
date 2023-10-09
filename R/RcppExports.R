@@ -81,10 +81,6 @@ avg_rank <- function(x) {
     .Call(`_manytestsr_avg_rank`, x)
 }
 
-fastmad <- function(x) {
-    .Call(`_manytestsr_fastmad`, x)
-}
-
 fastmad_arma <- function(x) {
     .Call(`_manytestsr_fastmad_arma`, x)
 }
@@ -111,5 +107,21 @@ euc_dist_arma1 <- function(x) {
 
 vecdist3 <- function(x) {
     .Call(`_manytestsr_vecdist3`, x)
+}
+
+vecdist_rcpp <- function(x) {
+    .Call(`_manytestsr_vecdist_rcpp`, x)
+}
+
+trimmed_mean <- function(x, trim_percent) {
+    .Call(`_manytestsr_trimmed_mean`, x, trim_percent)
+}
+
+fastmad <- function(x, center) {
+    .Call(`_manytestsr_fastmad`, x, center)
+}
+
+huberM <- function(x, k = 1.5, tol = 1e-06, trim = .05) {
+    .Call(`_manytestsr_huberM`, x, k, tol, trim)
 }
 
