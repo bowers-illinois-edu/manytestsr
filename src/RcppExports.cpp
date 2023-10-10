@@ -88,6 +88,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fastcolMads4
+Rcpp::NumericVector fastcolMads4(Rcpp::NumericMatrix& X);
+RcppExport SEXP _manytestsr_fastcolMads4(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(fastcolMads4(X));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fastrowMads2
 arma::vec fastrowMads2(const arma::mat& X);
 RcppExport SEXP _manytestsr_fastrowMads2(SEXP XSEXP) {
@@ -140,6 +151,18 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
     rcpp_result_gen = Rcpp::wrap(fastcova(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// replace_na_nan
+NumericVector replace_na_nan(NumericVector x, double replacement);
+RcppExport SEXP _manytestsr_replace_na_nan(SEXP xSEXP, SEXP replacementSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type replacement(replacementSEXP);
+    rcpp_result_gen = Rcpp::wrap(replace_na_nan(x, replacement));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -348,9 +371,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// huberM
-double huberM(NumericVector x, double k, double tol, double trim);
-RcppExport SEXP _manytestsr_huberM(SEXP xSEXP, SEXP kSEXP, SEXP tolSEXP, SEXP trimSEXP) {
+// fast_huberM
+double fast_huberM(NumericVector x, double k, double tol, double trim);
+RcppExport SEXP _manytestsr_fast_huberM(SEXP xSEXP, SEXP kSEXP, SEXP tolSEXP, SEXP trimSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -358,7 +381,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type k(kSEXP);
     Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
     Rcpp::traits::input_parameter< double >::type trim(trimSEXP);
-    rcpp_result_gen = Rcpp::wrap(huberM(x, k, tol, trim));
+    rcpp_result_gen = Rcpp::wrap(fast_huberM(x, k, tol, trim));
+    return rcpp_result_gen;
+END_RCPP
+}
+// col_huberM
+NumericVector col_huberM(NumericMatrix dx, double k, double tol, double trim);
+RcppExport SEXP _manytestsr_col_huberM(SEXP dxSEXP, SEXP kSEXP, SEXP tolSEXP, SEXP trimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type dx(dxSEXP);
+    Rcpp::traits::input_parameter< double >::type k(kSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< double >::type trim(trimSEXP);
+    rcpp_result_gen = Rcpp::wrap(col_huberM(dx, k, tol, trim));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -371,11 +408,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_fastrowMeans", (DL_FUNC) &_manytestsr_fastrowMeans, 1},
     {"_manytestsr_fastrowMads", (DL_FUNC) &_manytestsr_fastrowMads, 1},
     {"_manytestsr_fastrowMads4", (DL_FUNC) &_manytestsr_fastrowMads4, 1},
+    {"_manytestsr_fastcolMads4", (DL_FUNC) &_manytestsr_fastcolMads4, 1},
     {"_manytestsr_fastrowMads2", (DL_FUNC) &_manytestsr_fastrowMads2, 1},
     {"_manytestsr_fastrowMads3", (DL_FUNC) &_manytestsr_fastrowMads3, 1},
     {"_manytestsr_fastrowMaxs", (DL_FUNC) &_manytestsr_fastrowMaxs, 1},
     {"_manytestsr_fastrowMaxs2", (DL_FUNC) &_manytestsr_fastrowMaxs2, 1},
     {"_manytestsr_fastcova", (DL_FUNC) &_manytestsr_fastcova, 1},
+    {"_manytestsr_replace_na_nan", (DL_FUNC) &_manytestsr_replace_na_nan, 2},
     {"_manytestsr_zscore_vec2", (DL_FUNC) &_manytestsr_zscore_vec2, 1},
     {"_manytestsr_zscore_vec", (DL_FUNC) &_manytestsr_zscore_vec, 1},
     {"_manytestsr_vecdist_squared", (DL_FUNC) &_manytestsr_vecdist_squared, 1},
@@ -394,7 +433,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_vecdist_rcpp", (DL_FUNC) &_manytestsr_vecdist_rcpp, 1},
     {"_manytestsr_trimmed_mean", (DL_FUNC) &_manytestsr_trimmed_mean, 2},
     {"_manytestsr_fastmad", (DL_FUNC) &_manytestsr_fastmad, 2},
-    {"_manytestsr_huberM", (DL_FUNC) &_manytestsr_huberM, 4},
+    {"_manytestsr_fast_huberM", (DL_FUNC) &_manytestsr_fast_huberM, 4},
+    {"_manytestsr_col_huberM", (DL_FUNC) &_manytestsr_col_huberM, 4},
     {NULL, NULL, 0}
 };
 

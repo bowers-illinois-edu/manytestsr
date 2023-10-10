@@ -146,6 +146,7 @@ test_that("pIndepDist works as expected", {
   expect_lt(res_normb_b1, .05)
 })
 
+## Start here. TODO. Find the actual test stats.
 
  load(file=here::here("tests","dpp_dat.rda"))
 
@@ -457,6 +458,8 @@ dppb1 <- dat[,.(avgR01mdsd=sd(R01md),avgR01sd=sd(R01TMCRET)),by=blockF]
 dppb1[avgR01sd==0,]
 
 dist_lst <- lapply(split(dat,dat$blockF),function(dat){ vecdist(dat$R01TMCRET) })
+
+
 
 
 test_that("Ordinary tests do not reject when effects cancel across blocks", {

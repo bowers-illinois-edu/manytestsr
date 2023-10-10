@@ -29,6 +29,10 @@ fastrowMads4 <- function(X) {
     .Call(`_manytestsr_fastrowMads4`, X)
 }
 
+fastcolMads4 <- function(X) {
+    .Call(`_manytestsr_fastcolMads4`, X)
+}
+
 fastrowMads2 <- function(X) {
     .Call(`_manytestsr_fastrowMads2`, X)
 }
@@ -47,6 +51,10 @@ fastrowMaxs2 <- function(x) {
 
 fastcova <- function(X) {
     .Call(`_manytestsr_fastcova`, X)
+}
+
+replace_na_nan <- function(x, replacement = 0) {
+    .Call(`_manytestsr_replace_na_nan`, x, replacement)
 }
 
 zscore_vec2 <- function(x) {
@@ -121,7 +129,11 @@ fastmad <- function(x, center) {
     .Call(`_manytestsr_fastmad`, x, center)
 }
 
-huberM <- function(x, k = 1.5, tol = 1e-06, trim = .05) {
-    .Call(`_manytestsr_huberM`, x, k, tol, trim)
+fast_huberM <- function(x, k = 1.5, tol = 1e-06, trim = .05) {
+    .Call(`_manytestsr_fast_huberM`, x, k, tol, trim)
+}
+
+col_huberM <- function(dx, k = 1.5, tol = 1e-06, trim = .05) {
+    .Call(`_manytestsr_col_huberM`, dx, k, tol, trim)
 }
 

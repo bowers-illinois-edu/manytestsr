@@ -88,6 +88,20 @@ Rcpp::NumericVector fastrowMads4(Rcpp::NumericMatrix & X){
     return res;
 }
 
+// [[Rcpp::export]]
+Rcpp::NumericVector fastcolMads4(Rcpp::NumericMatrix & X){
+    int n = X.ncol();
+    Rcpp::NumericVector res(n);
+    // this next is the scale factor imagining normal data
+    // https://en.wikipedia.org/wiki/Median_absolute_deviation#:~:text=In%20statistics%2C%20the%20median%20absolute,MAD%20calculated%20from%20a%20sample.
+    // using it for unit testing. Shouldn't matter.
+    //const double aconstant = 1.4826;
+    for(int i=0;i<n;++i){
+        res[i] = fastmad(X(_,i));
+    }
+    return res;
+}
+
 
 // [[Rcpp::export]]
 arma::vec fastrowMads2(const arma::mat & X){
@@ -157,7 +171,10 @@ arma::mat fastcova(const arma::mat & X){
     return s;
 }
 
-
+// [[Rcpp::export]]
+NumericVector replace_na_nan(NumericVector x, double replacement = 0) {
+    return ifelse(is_na(x) | is_nan(x), replacement, x);
+}
 
 //[[Rcpp::export]]
 Rcpp::NumericVector zscore_vec2(const Rcpp::NumericVector & x){
@@ -167,13 +184,10 @@ Rcpp::NumericVector zscore_vec2(const Rcpp::NumericVector & x){
     //https://learn.stat.ubc.ca/~andy.leung/files/seminars-talks/2012/03/RcppDemo.pdf
     //https://github.com/RfastOfficial/Rfast/blob/master/src/maha.cpp
     // This is just a z-score in the end.
-	Rcpp::NumericVector res2 =  Rcpp::pow( x - Rcpp::mean(x),2 )/Rcpp::var(x) ;
-    //Rcpp::NumericVector res2 = Rcpp::wrap(res1);
-    res2.attr("dim") = R_NilValue;
-    // why doesn't .as_col() or  vectorise() work?
-    //std::vector<double> res2 = conv_to<vector<double>>::from(res1)
-    return res2;
-    // return res;
+    Rcpp::NumericVector res0 =  Rcpp::pow( x - Rcpp::mean(x),2 )/Rcpp::var(x) ;
+    Rcpp::NumericVector res = replace_na_nan(res0);
+    res.attr("dim") = R_NilValue;
+    return res;
 }
 
 //[[Rcpp::export]]
@@ -659,7 +673,7 @@ double fastmad(const Rcpp::NumericVector & x, double center) {
 
 
 // [[Rcpp::export]]
-double huberM(NumericVector x, double k = 1.5,
+double fast_huberM(NumericVector x, double k = 1.5,
 		double tol = 1e-06, double trim=.05) {
 
 	int n = x.size();
@@ -675,16 +689,19 @@ double huberM(NumericVector x, double k = 1.5,
 
 	s = fastmad(x);
 	if(s<=0){
+		mu = trimmed_mean(x,trim);
 		s = fastmad(x,mu);
+       // Rcpp::Rcout << "mu" << std::endl;
+       // Rcpp::Rcout << "s" << std::endl;
 	}
 
-	//int it = 0;
+	int it = 0;
 	while (true) {
-		//  it++;
+		it++;
 		NumericVector y = clamp(mu - k * s, x, mu + k * s);
 		double mu1;
 		mu1 = sum(y) / n;
-		if (std::isnan(mu1) || std::abs(mu - mu1) < tol * s) {
+		if (std::isnan(mu1) || std::abs(mu - mu1) < tol * s || it>=10) {
 			break;
 		}
 		mu = mu1;
@@ -693,4 +710,12 @@ double huberM(NumericVector x, double k = 1.5,
 	return mu;
 }
 
-
+//[[Rcpp::export]]
+NumericVector col_huberM(NumericMatrix dx, double k=1.5, double tol = 1e-06, double trim=.05) {
+	int n=dx.ncol();
+	NumericVector res(n);
+	for (int i = 0; i < n; i++) {
+                res[i] = fast_huberM(dx(_,i),k,tol,trim);
+              }
+	return(res);
+}

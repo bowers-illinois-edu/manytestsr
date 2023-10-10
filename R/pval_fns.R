@@ -157,7 +157,8 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
 
   thetreat <- fmla_vars[[2]]
   thedat <- copy(dat)
-  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
+outcome_names <- c(theresponse,"mndist","mndistRank0","maddist", "maddistRank0","maxdist","maxdistRank0", "mhdist","rankx", "mnsqrtdist","hubmn","tanhx")
+#  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
   # outcome_names <- c(theresponse, "mndist", "mndistRank0",  "maxdist", "maxdistRank0", "zscoreY", "rankY")
   if (length(fmla_vars) == 3) {
     theblock <- fmla_vars[[3]]
