@@ -6,7 +6,7 @@ context("Performance of  P-value Functions")
 
 ## The next lines are for use when creating the tests.
 ## Change interactive<-FALSE for production
-interactive <- FALSE
+interactive <- TRUE
 if (interactive) {
   library(here)
   library(data.table)
@@ -146,134 +146,66 @@ test_that("pIndepDist works as expected", {
   expect_lt(res_normb_b1, .05)
 })
 
-## Start here. TODO. Find the actual test stats.
+test_that("Ordinary tests do not reject when effects cancel across blocks", {
+		  expect_gt(pvalue(oneway_test(Y ~ ZF | bF, data = idat)), .05)
+		  expect_gt(pvalue(wilcox_test(Y ~ ZF | bF, data = idat)), .05)
+		  })
 
+test_that("Ordinary tests do reject when effects are large within blocks even if they cancel across blocks", {
+		  expect_lt(max(idat[, list(p = pvalue(wilcox_test(Y ~ ZF, data = .SD))), by = bF]$p), .05)
+		  })
+
+test_that("passing a block factor to a p-value function with one block gives the same results as  omitting it", {
+		  res_cancel_b1_block <- pIndepDist(dat = b1, fmla = Y ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
+		  res_cancel_b1_noblock <- pIndepDist(dat = b1, fmla = Y ~ ZF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
+		  expect_equal(res_cancel_b1_block, res_cancel_b1_block)
+		  res_null_b1_block <- pIndepDist(dat = b1, fmla = Ynull ~ ZF | bF, distfn = dists_and_trans, , ncpu = 4, parallel = "multicore")
+		  res_null_b1_noblock <- pIndepDist(dat = b1, fmla = Ynull ~ ZF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
+		  expect_equal(res_null_b1_block, res_null_b1_block)
+		  })
+
+
+## Now using more discrete type data typical of policy applications
+## Here we have a lot of zeros which creates ties and/or makes measures of spread degenerate --- no variance within certain blocks for example.
+## Find the actual test stats 
  load(file=here::here("tests","dpp_dat.rda"))
-
+table(dpp_dat$R01TMCRET, exclude = c())
+table(dpp_dat$R02TMCRET, exclude = c())
+## ## Ranks more powerful. R02 easier to detect effects.
  pIndepDist(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF, adaptive_dist_function=FALSE)
+ pIndepDist(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF, adaptive_dist_function=TRUE)
  pIndepDist(dat = dpp_dat, fmla = R02TMCRET ~ trtF | blockF)
  pWilcox(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF)
  pWilcox(dat = dpp_dat, fmla = R02TMCRET ~ trtF | blockF)
  pOneway(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF)
  pOneway(dat = dpp_dat, fmla = R02TMCRET ~ trtF | blockF)
 
+## Checking the code above: pOneway and pWilcox should be like these
+ot0 <- independence_test(R01TMCRET~trtF | blockF, data=dpp_dat)
+wt0 <- independence_test(rank(R01TMCRET)~trtF | blockF, data=dpp_dat)
 
-independence_test(R01TMCRET~trtF | blockF, data=dpp_dat)
-independence_test(rank(R01TMCRET)~trtF | blockF, data=dpp_dat)
 ot1 <- oneway_test(R01TMCRET~trtF | blockF, data=dpp_dat)
 wt1 <- wilcox_test(R01TMCRET~trtF | blockF, data=dpp_dat)
-it1 <- independence_test(R01TMCRET+rank(R01TMCRET)~trtF | blockF, data=dpp_dat)
 
-statistic(ot1)
-statistic(wt1)
-statistic(it1,"standardized",partial=FALSE)
-statistic(it1,"standardized",partial=TRUE)
-covariance(it1)
-variance(ot1)
-variance(wt1)
-cov2cor(covariance(it1))
-sigma1 <- covariance(it1)
-it1_stats <- statistic(it1,"standardized",partial=FALSE)
-library(mvtnorm)
-dist <- Rfast::rmvnorm(n=1000,mu=rep(0,2),sigma=sigma1)
-ps <- matrix(nrow=nrow(dist),ncol=ncol(dist))
-ps[,1] <- pnorm(dist[,1],mean=0,sd=sqrt(variance(ot1)))
-ps[,2] <- pnorm(dist[,2],mean=0,sd=sqrt(variance(wt1)))
-minp <- apply(ps,1,min)
-alpha <- 0.05
-threshold <- quantile(minp, alpha)
-threshold ## a bit higher than pvalue(wt1) but not so high as pvalue(it1)
+stopifnot(all.equal(pvalue(ot0),pvalue(ot1)))
+stopifnot(all.equal(pvalue(wt0),pvalue(wt1)))
 
-
-
-set.seed(1235)
-ot1dist <- rperm(ot1,n=1000)
-set.seed(1235)
-wt1dist <- rperm(wt1,n=1000)
-
-## from Alex
-
-library(mvtnorm)
-library(randomizr)
-# Helper functions
-do_t_test <- function(Y, Z){
-  t.test(Y[Z==1], Y[Z==0])$p.value
-}
-permute_treat <- function(){
-  treatment_sim <- complete_ra(n, m=n/2)
-  ps_sim <- apply(outcomes, 2, do_t_test, Z = treatment_sim)
-  return(ps_sim)
-}
-threshold_finder<- function(threshold){
-  mean(apply(many_ps, 2, x <- function(x) sum(x <= threshold) > 0 ))
-}
-# Set a seed
-set.seed(343)
-# Generate correlated outcomes
-# Outcomes are unrelated to treatment
-# All null hypotheses are true
-n <- 1000
-k <- 100; r <- .7; s <- 1
-sigma <- matrix(s*r, k,k)
-diag(sigma) <- s
-outcomes <- rmvnorm(n=n, mean=rep(0, k), sigma=sigma)
-# Complete Random Assignment
-treatment <- complete_ra(n, m=n/2)
-# Conduct k hypothesis tests
-p_obs <- apply(outcomes, 2, do_t_test, Z = treatment)
-# Simulate under the sharp null
-many_ps <- replicate(1000, permute_treat(), simplify = TRUE)
-# Obtain the Type I error rate for a series of thresholds
-thresholds <- seq(0, 0.05, length.out = 1000)
-type_I_rate <- sapply(thresholds, threshold_finder)
-# Find the largest threshold that yields an alpha type I error rate
-target_p_value <- thresholds[max(which(type_I_rate <=0.05))]
-# Apply target p_value to observed p_values
-sig_simulated <- p_obs <= target_p_value
-# Compare to raw p-values
-sig <- p_obs <= 0.05
-sig
-p_obs[sig]
-
-
-# L tests
-COV <- cov2cor(covariance(it1))
-L <- ncol(COV)
-
-# For a range of quantiles (z-values in the context of a standard normal distribution)
-z_values <- qnorm(seq(0.001, 0.999, by=0.001))
-
-get_prob_max_z_below <- function(z, COV) {
-  lower <- rep(-Inf, L)
-  upper <- rep(z, L)
-  prob <- pmvnorm(lower = lower, upper = upper, sigma = COV)
-  return(prob)
-}
-
-prob_max_z_below_values <- sapply(z_values, function(z) get_prob_max_z_below(z, COV))
-
-# Obtain the significance level for p_min
-alpha <- 0.05
-adjusted_z <- approx(prob_max_z_below_values, z_values, xout = 1 - alpha)$y
-
-# Convert z-value to p-value
-adjusted_p_value <- 1 - pnorm(adjusted_z)
-print(adjusted_p_value)
-
-## Note that Sidak method  p_{aj} = 1 − (1 − p_j)^M for M tests. And if M=g(j),
-## Sankoh et al 1997 suggest sqrt(M). The idea is that M=1 when all the tests
-## are perfectly correlated and M when they are perfectly independent. Or g(j)= M^{1 - R^2(j)}. (TCH = Tukey-Ciminera-Heyse; D/AP = Dubey/Armitage-Parmar; RSA = R2 adjustment.)
-
+## See where the loss of power is happening
 dat <- copy(dpp_dat)
 dat[,Y:=R01TMCRET]
-outcome_names <- c("Y", "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY","robmn1","robmn2","tanhx")
+# outcome_names <- c("Y", "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY","robmn1","robmn2","tanhx")
+outcome_names <- c("Y", "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY") #,"robmn1","robmn2","tanhx")
 dat[, (outcome_names[-1]):=dists_and_trans(R01TMCRET),by=blockF]
 
 idatnew <- copy(idat)
 idatnew[, (outcome_names[-1]):=dists_and_trans(Y),by=bF]
 
+## Compare the combined with one by one.
+## A function to allow us to Try subsets of the transformed variables on both the more continuous and less continuous data
+## Is mad and max either irrelevant or a problem?
+## Can we get away with fewer functions of the outcome and its distances?
 test_fn <- function(indx,thedat,the_outcome_names=outcome_names,raw_outcome_nm,trtnm,blocknm){
-	##fmlatxt <- paste(paste(c(raw_outcome_nm,outcome_names[indx]),collapse="+"),"~",trtnm,"|",blocknm,collapse="")
+  ## Assume that outcome_names[1] is "Y"
 	outcome_names0 <- c(raw_outcome_nm,the_outcome_names[-1])
 	if(length(indx)>1){
 	fmlatxt <- paste(paste(outcome_names0[indx],collapse="+"),"~",trtnm,"|",blocknm,collapse="")
@@ -284,12 +216,106 @@ test_fn <- function(indx,thedat,the_outcome_names=outcome_names,raw_outcome_nm,t
 	t1 <- independence_test(fmla,data=thedat,teststat="quadratic",distribution=asymptotic())
 	res0 <- as.data.frame(matrix(ncol=length(outcome_names0)+1,nrow=1))
 	names(res0) <- c(outcome_names0,"p")
-	#names(res0)<-c("raw_outcome",outcome_names,"p")
-	#res0$raw_outcome<-raw_outcome_nm
 	res0[,outcome_names0[indx]] <- outcome_names0[indx]
 	res0$p=pvalue(t1)[[1]]
 	return(res0)
 }
+
+
+res_dppR01_singles<- sapply(1:length(outcome_names),function(i){ test_fn(indx=i,thedat=dat,raw_outcome_nm="Y",trtnm="trtF",blocknm="blockF")})
+colnames(res_dppR01_singles) <- outcome_names
+single_ps <- unlist(res_dppR01_singles["p",] )
+single_ps
+p.adjust(single_ps,method="holm")
+
+y_fmlatxt <- as.formula(paste(paste(outcome_names,collapse="+"),"~trtF|blockF",collapse=""))
+it_dat_quad <- independence_test(y_fmlatxt,data=dat,teststat="quadratic")
+it_dat_max <- independence_test(y_fmlatxt,data=dat,teststat="maximum")
+
+pvalue(it_dat_quad)
+pvalue(it_dat_max)
+
+## The basic test statistics and their implied covariances are all the same
+it_dat_quad_stat <- drop(statistic(it_dat_quad,"standardized",partial=TRUE)) ## from array [1,1:9,1:44] to just [1:9,1:44]
+it_dat_max_stat <- drop(statistic(it_dat_max,"standardized",partial=TRUE))
+all.equal(it_dat_max_stat,it_dat_quad_stat)
+
+statistic(it_dat_quad,type="test")
+statistic(it_dat_max,type="test")
+
+thevar <- variance(it_dat_quad)
+thecov <- covariance(it_dat_quad)
+invcov <- zapsmall(covariance(it_dat_quad,invert=TRUE))
+T <- statistic(it_dat_quad,type="linear")
+mu <- expectation(it_dat_quad)
+thecorr <- cov2cor(thecov)
+
+myquadt <- as.vector(T - mu) %*% invcov %*% as.vector(T - mu)
+## This is the max test stat.
+## The covariances don't matter just the variances.
+statistic(it_dat_max,type="test")
+mymaxt <- max(abs( (T - mu)/ sqrt(thevar) ) )
+
+set.seed(1234)
+pvalue(it_dat_max)
+set.seed(1234)
+pvalue(it_dat_max,method="global",distribution="joint")
+pvalue(it_dat_max,method="global",distribution="marginal",type="Sidak")
+pvalue(it_dat_max,method="single-step",distribution="joint",type="Sidak")
+pvalue(it_dat_max,method="step-down",distribution="joint",type="Sidak")
+pvalue(it_dat_max,method="single-step",distribution="marginal",type="Sidak")
+pvalue(it_dat_max,method="step-down",distribution="marginal",type="Sidak")
+pvalue(it_dat_max,method="unadjusted")
+single_ps
+
+
+library(mvtnorm)
+1 - coin:::pmvn(lower=-abs(mymaxt),upper=abs(mymaxt),mean=rep(0,ncol(thecorr)), corr=thecorr,conf.int=FALSE)
+1- pmvnorm(lower=-abs(mymaxt),upper=abs(mymaxt),mean=rep(0,ncol(thecorr)), corr=thecorr,keepAttr = FALSE)
+pvalue(it_dat_max,distribution="joint",method="global")[1]
+
+## Now try without mad or max
+newcorr <- thecorr[c(1:3,8:9),c(1:3,8:9)]
+1- pmvnorm(lower=-abs(mymaxt),upper=abs(mymaxt),mean=rep(0,ncol(newcorr)), corr=newcorr,keepAttr = FALSE)
+library(robust)
+
+
+
+debugonce(pvalue,signature="MaxTypeIndependenceTest")
+debugonce(pvalue,signature="IndependenceTest")
+pvalue(it_dat_max)
+undebug(pvalue,signature="IndependenceTest")
+undebug(pvalue,signature="MaxTypeIndependenceTest")
+
+eval(debugcall(pvalue(it_dat_max),once=TRUE))
+
+abs(( statistic(it_dat_max,type="standardized") - coin::expectation(it_dat_max) ) / sqrt(variance(it_dat_max)))
+
+
+
+drop(statistic(it_dat_quad,"standardized",partial=FALSE))
+drop(statistic(it_dat_max,"standardized",partial=FALSE))
+
+## Does it matter that some are negative?
+## If we removed the mads (with low correlations and thus perhaps higher adjustment) would we do a better job?
+cov_it_dat_quad_stat <- covariance(it_dat_quad)
+cov_it_dat_max_stat <- covariance(it_dat_max)
+all.equal(cov_it_dat_max_stat,cov_it_dat_quad_stat)
+
+options(digits=4)
+zapsmall(cov2cor(cov_it_dat_quad_stat))
+zapsmall(cov2cor(cov_it_dat_max_stat))
+
+## Some blocks have constant outcomes and so all test statistics are NaN
+dat %>% filter(blockF=="Block0092")
+## Others are small: hard to calc some of this stuff in pairs like mean distances (difference in mean distance between trt and ctrl is 0)
+dat %>% filter(blockF=="Block0109")
+## Other have little variance
+dat %>% filter(blockF=="Block0110")
+
+## Try without the mads
+
+
 
 num_cols <- 1:(length(outcome_names))
 poss_cols0 <- lapply(num_cols,function(i){ combn(length(outcome_names),num_cols[i],simplify=FALSE) })
@@ -315,7 +341,6 @@ res_normb <- dplyr::bind_rows(res_normb_lst)
 res_dppR01 <- dplyr::bind_rows(res_dppR01_lst)
 res_dppR02 <- dplyr::bind_rows(res_dppR02_lst)
 
-## Do we need mean distance?
 num_not_na <- function(x){ sum(!is.na(x)) }
 
 ## Check for degenerate statistic? (attr(mat,"r") >= num obs  - num strata from RItools)
@@ -325,7 +350,6 @@ res_cancel <- res_cancel %>% rowwise() %>%
 	mutate(num_stats=num_not_na(c_across(one_of(outcome_names)))) %>% ungroup() %>% arrange(desc(num_stats),p)
 summary(res_cancel$p)
 table(res_cancel$num_stats)
-res_cancel %>% filter(num_stats >=11 )
 ## For res_cancel including everything works great.
 quantile(res_cancel$p,seq(0,1,.1))
 res_cancel_high_power <- res_cancel %>% filter(p <= .05) %>% rowwise() %>%
@@ -335,10 +359,9 @@ res_cancel_high_power %>% summarize(across(one_of(outcome_names),num_not_na))
 res_cancel_high_power %>% head()
 
 res_cancel_low_power <- res_cancel %>% filter(p >= .1) %>% rowwise() %>%
-	mutate(num_stats=num_na(c_across(one_of(outcome_names)))) %>% ungroup() %>% arrange(desc(num_stats),p)
+	mutate(num_stats=num_not_na(c_across(one_of(outcome_names)))) %>% ungroup() %>% arrange(desc(num_stats),p)
 res_cancel_low_power
-## low power never includes tanhx
-res_cancel_low_power %>% summarize(across(one_of(outcome_names),num_not_na))
+res_cancel_low_power %>% summarize(across(one_of(outcome_names),num_not_na),n())
 
 homog_outcome_names <- c("Yhomog",outcome_names[-1])
 res_homog <- res_homog %>% rowwise() %>%
@@ -349,8 +372,8 @@ res_homog_low_power <- res_homog %>% filter(p > .05)
 table(res_homog_low_power$num_stats,exclude=c())
 table(res_homog_high_power$num_stats,exclude=c())
 
-res_homog_low_power %>% filter(num_stats>=8)
-res_homog_high_power %>% filter(num_stats>10) ## 12 is great, as would be 11 (doesn't matter which we drop)
+res_homog_low_power %>% filter(num_stats>=6)
+res_homog_high_power %>% filter(num_stats>=8)
 
 normb_outcome_names <- c("Ynormb",outcome_names[-1])
 res_normb <- res_normb %>% rowwise() %>%
@@ -359,21 +382,30 @@ quantile(res_normb$p,seq(0,1,.1))
 res_normb_high_power <- res_normb %>% filter(p <= .05)
 res_normb_low_power <- res_normb %>% filter(p > .05)
 table(res_normb_low_power$num_stats,exclude=c())
-res_normb_low_power %>% filter(num_stats ==8)
-res_normb_high_power %>% filter(num_stats>10) ## 12 is great, as would be 11 (doesn't matter which we drop)
+res_normb_low_power %>% filter(num_stats >= 6)
+res_normb_high_power %>% filter(num_stats>=8) 
 
 
 res_dppR01 <- res_dppR01 %>% rowwise() %>%
 	mutate(num_stats=num_not_na(c_across(one_of(outcome_names)))) %>% ungroup() %>% arrange(desc(num_stats),p)
+## Few test stats work with this outcome with so many zeros
 quantile(res_dppR01$p,seq(0,1,.1))
 res_dppR01_high_power <- res_dppR01 %>% filter(p <= .05)
 res_dppR01_low_power <- res_dppR01 %>% filter(p > .05)
+## Only a few test stats seem to work
 table(res_dppR01_high_power$num_stats,exclude=c())
 table(res_dppR01_low_power$num_stats,exclude=c())
-res_dppR01_low_power %>% filter(num_stats==8)
-res_dppR01_high_power %>% filter(num_stats==8) ## 12 is great, as would be 11 (doesn't matter which we drop)
+res_dppR01_low_power 
+res_dppR01_high_power %>% filter(num_stats>=3)
 res_dppR01_high_power %>% arrange(desc(num_stats),p)
 quantile(res_dppR01_high_power$p,seq(0,1,.1))
+## The p-values are barely less than .05 with the different sets of three  stats (.04..)
+## The lower p-values arise with 2 and 1 test stat.
+## Only one uses the raw outcome:
+res_dppR01_high_power %>% filter(!is.na(Y))
+res_dppR01_high_power %>% filter(!is.na(zscoreY))
+res_dppR01_high_power %>% filter(!is.na(rankY))
+res_dppR01_high_power %>% filter(!is.na(mndist))
 
 dpp02_outcome_names <- c("R02TMCRET",outcome_names[-1])
 res_dppR02 <- res_dppR02 %>% rowwise() %>%
@@ -459,23 +491,3 @@ dppb1[avgR01sd==0,]
 
 dist_lst <- lapply(split(dat,dat$blockF),function(dat){ vecdist(dat$R01TMCRET) })
 
-
-
-
-test_that("Ordinary tests do not reject when effects cancel across blocks", {
-		  expect_gt(pvalue(oneway_test(Y ~ ZF | bF, data = idat)), .05)
-		  expect_gt(pvalue(wilcox_test(Y ~ ZF | bF, data = idat)), .05)
-		  })
-
-test_that("Ordinary tests do reject when effects are large within blocks even if they cancel across blocks", {
-		  expect_lt(max(idat[, list(p = pvalue(wilcox_test(Y ~ ZF, data = .SD))), by = bF]$p), .05)
-		  })
-
-test_that("passing a block factor to a p-value function with one block gives the same results as  omitting it", {
-		  res_cancel_b1_block <- pIndepDist(dat = b1, fmla = Y ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
-		  res_cancel_b1_noblock <- pIndepDist(dat = b1, fmla = Y ~ ZF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
-		  expect_equal(res_cancel_b1_block, res_cancel_b1_block)
-		  res_null_b1_block <- pIndepDist(dat = b1, fmla = Ynull ~ ZF | bF, distfn = dists_and_trans, , ncpu = 4, parallel = "multicore")
-		  res_null_b1_noblock <- pIndepDist(dat = b1, fmla = Ynull ~ ZF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
-		  expect_equal(res_null_b1_block, res_null_b1_block)
-		  })

@@ -14,6 +14,8 @@ dists_and_trans <- function(x, Z) {
 	dxRank0 <- Rfast::vecdist(rankx) # distance among the ranks
 	mhdist0 <- zscore_vec2(x) ## calling it mhdist but really just zscore
 	mhdist <- ifelse(is.na(mhdist0)|is.nan(mhdist0),0,mhdist0)
+	## From fastfns.cpp, fast_dists_and_trans
+	#     List res = List::create(...
 	res <- list(
 		    mndist = Rfast::colmeans(dx),
 		    mndistRank0 = Rfast::colmeans(dxRank0),
@@ -22,10 +24,10 @@ dists_and_trans <- function(x, Z) {
 		    maxdist = Rfast::colMaxs(dx,value=TRUE),
 		    maxdistRank0 = Rfast::colMaxs(dxRank0,value=TRUE),
 		    mhdist = mhdist,
-		    rankx = rankx,
-		    mnsqrtdist = Rfast::colmeans(sqrt(dx)),
-		    hubmn = col_huberM(dx),
-		    tanhx = tanh(x)
+		    rankx = rankx#,
+		    #mnsqrtdist = Rfast::colmeans(sqrt(dx)),
+		    #hubmn = col_huberM(dx),
+		    #tanhx = tanh(x)
 	)
   return(res)
 }
