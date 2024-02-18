@@ -2,7 +2,7 @@
 context("Comparing implementations of the basic distance based creation function for use in pIndepDist")
 
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
-interactive <- TRUE
+interactive <- FALSE
 if (interactive) {
   library(here)
   library(data.table)
@@ -23,27 +23,24 @@ test_length_fn <- function(obj1, obj2) {
 }
 
 test_contents_fn <- function(obj1, obj2) {
-  expect_equal(obj1[[1]], obj2[[1]])
-  expect_equal(obj1[[2]], obj2[[2]])
-  expect_equal(obj1[[3]], obj2[[3]])
-  expect_equal(obj1[[4]], obj2[[4]])
-  expect_equal(obj1[[5]], obj2[[5]])
-  expect_equal(obj1[[6]], obj2[[6]])
-  # expect_equal(obj1[[7]], obj2[[7]])
-  # expect_equal(obj1[[8]], obj2[[8]])
+  lenobj1 <- length(obj1)
+  lenobj2 <- length(obj2)
+  stopifnot(all.equal(lenobj1, lenobj2))
+  for (i in 1:lenobj1) {
+    expect_equal(obj1[[i]], obj2[[i]])
+  }
 }
 
 numcores <- parallel::detectCores(logical = FALSE)
 numcores <- 4 # floor(cores/2)
 
-test_that("All algorithmns give the same answers", {
+test_that("All algorithms give the same answers", {
   y <- rnorm(10)
   tmp1 <- dists_and_trans(y)
   tmp2 <- fast_dists_and_trans(y, Z = 1)
-  #     List res = List::create(mndx, mndrx, maddx, maddrx, maxdx, maxdrx, zx, rankx);
   tmp3 <- fast_dists_and_trans_by_unit_arma(y, Z = 1)
   tmp4 <- fast_dists_and_trans_by_unit_arma2(y, Z = 1)
-  tmp5 <- fast_dists_by_unit_arma2_par(y, Z = 1, threads = numcores)
+  tmp5 <- fast_dists_and_trans_by_unit_arma2_par(y, Z = 1, threads = numcores)
   #
   test_length_fn(tmp1, tmp2)
   test_length_fn(tmp1, tmp3)
@@ -60,7 +57,7 @@ test_that("All algorithmns give the same answers", {
   tmp2 <- fast_dists_and_trans(y, Z = 1)
   tmp3 <- fast_dists_and_trans_by_unit_arma(y, Z = 1)
   tmp4 <- fast_dists_and_trans_by_unit_arma2(y, Z = 1)
-  tmp5 <- fast_dists_by_unit_arma2_par(y, Z = 1, threads = numcores)
+  tmp5 <- fast_dists_and_trans_by_unit_arma2_par(y, Z = 1, threads = numcores)
   #
   test_length_fn(tmp1, tmp2)
   test_length_fn(tmp1, tmp3)
@@ -73,105 +70,54 @@ test_that("All algorithmns give the same answers", {
   test_contents_fn(tmp1, tmp5)
 })
 
-## ## ### Check timing and core usage
+## ## ## ### Check timing and core usage
 ## cores <- parallel::detectCores(logical = FALSE)
 ## set.seed(12345)
-## y <- rchisq(5000, df = 1)
+## y <- rchisq(100, df = 1)
 ##
 ## res1 <- bench::mark(
 ##   main = dists_and_trans(y),
 ##   fastdandtrans = fast_dists_and_trans(y, Z = 1),
 ##   byunit_arma = fast_dists_and_trans_by_unit_arma(y, Z = 1),
 ##   byunit_arma2 = fast_dists_and_trans_by_unit_arma2(y, Z = 1),
-##   byunit_par = fast_dists_by_unit_arma2_par(y, Z = 1, threads = 7),
-##   min_iterations = 100, max_iterations = 200, check = FALSE, filter_gc = FALSE
+##   byunit_par = fast_dists_and_trans_by_unit_arma2_par(y, Z = 1, threads = 7),
+##   min_iterations = 100, max_iterations = 1000, check = FALSE, filter_gc = FALSE ## max_iterations to 1000 for below n=1000
 ## )
-## Seems like dists_and_trans is much faster with n=5000 (and also with n=100, n=1000, etc..)
-# But it is using a ridiculous amount of memory (382MB versus 354K).
-## The by unit approaches are so so much better given memory (for n=10000, like 1+GB versus 700 K)
-# res1
+## ## Seems like dists_and_trans is much faster with n=5000 (and also with n=100, n=1000, etc..)
+## # But it is using a ridiculous amount of memory (382MB versus 354K).
+## ## The by unit approaches are so so much better given memory (for n=10000, like 1+GB versus 700 K)
+## res1 %>% arrange(median)
+# >  res1 (n=100)
+##   expression         min   median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory              time               gc
+##   <bch:expr>    <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl> <int> <dbl>   <bch:tm> <list> <list>              <list>             <list>
+## 1 main            29.7µs   46.3µs    21709.  176.27KB        0  1000     0     46.1ms <NULL> <Rprofmem [14 × 3]> <bench_tm [1,000]> <tibble [1,000 × 3]>
+## 2 byunit_par     136.4µs  139.5µs     7086.    6.63KB        0  1000     0    141.1ms <NULL> <Rprofmem [6 × 3]>  <bench_tm [1,000]> <tibble [1,000 × 3]>
+## 3 byunit_arma2   149.4µs  152.3µs     6505.    6.63KB        0  1000     0    153.7ms <NULL> <Rprofmem [6 × 3]>  <bench_tm [1,000]> <tibble [1,000 × 3]>
+## 4 byunit_arma    181.3µs  182.6µs     5416.    6.63KB        0  1000     0    184.6ms <NULL> <Rprofmem [6 × 3]>  <bench_tm [1,000]> <tibble [1,000 × 3]>
+## 5 fastdandtrans  227.7µs  270.9µs     3417.    6.63KB        0  1000     0    292.7ms <NULL> <Rprofmem [6 × 3]>  <bench_tm [1,000]> <tibble [1,000 × 3]>
 # >  res1 (n=1000)
-# # A tibble: 5 × 13
-#      expression       min  median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory     time
-#     <bch:expr>   <bch:t> <bch:t>     <dbl> <bch:byt>    <dbl> <int> <dbl>   <bch:tm> <list> <list>     <list>
-#   1 main          21.2ms  21.8ms     45.3     15.4MB   0.453    100     1       2.2s <NULL> <Rprofmem> <bench_tm>
-#   2 fastdandtra… 118.5ms   124ms      7.94    92.1MB   0.715    100     9      12.6s <NULL> <Rprofmem> <bench_tm>
-#   3 byunit_arma  167.9ms 175.5ms      5.70    73.2KB   0        100     0      17.5s <NULL> <Rprofmem> <bench_tm>
-#   4 byunit_arma2 166.1ms 169.6ms      5.87    73.2KB   0.0587   100     1        17s <NULL> <Rprofmem> <bench_tm>
-#   5 byunit_par   167.1ms 170.2ms      5.88    73.2KB   0        100     0        17s <NULL> <Rprofmem> <bench_tm>
-#   # ℹ 1 more variable: gc <list>
+##   expression         min   median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory              time             gc
+##   <bch:expr>    <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl> <int> <dbl>   <bch:tm> <list> <list>              <list>           <list>
+## 1 main            1.91ms   2.16ms     399.     15.3MB     12.0   200     6   500.93ms <NULL> <Rprofmem [14 × 3]> <bench_tm [200]> <tibble [200 × 3]>
+## 2 byunit_par     10.37ms  10.48ms      95.4    41.8KB      0     100     0      1.05s <NULL> <Rprofmem [6 × 3]>  <bench_tm [100]> <tibble [100 × 3]>
+## 3 byunit_arma2   10.51ms  10.63ms      94.0    41.8KB      0     100     0      1.06s <NULL> <Rprofmem [6 × 3]>  <bench_tm [100]> <tibble [100 × 3]>
+## 4 byunit_arma    16.56ms   16.9ms      59.1    41.8KB      0     100     0      1.69s <NULL> <Rprofmem [6 × 3]>  <bench_tm [100]> <tibble [100 × 3]>
+## 5 fastdandtrans  23.97ms  26.89ms      35.9    41.8KB      0     100     0      2.79s <NULL> <Rprofmem [6 × 3]>  <bench_tm [100]> <tibble [100 × 3]>
 # (n=5000)
-### A tibble: 5 × 13
-##  expression         min   median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc
-##  <bch:expr>    <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl> <int> <dbl>
-## 1 main            89.6ms   92.4ms     10.7     61.3MB   8.66     100    81
-## 2 fastdandtrans  525.6ms  602.5ms      1.70   367.2MB   8.12     100   477
-## 3 byunit_arma    701.6ms  706.1ms      1.42   143.5KB   0        100     0
-## 4 byunit_arma2   674.6ms  679.8ms      1.47   143.5KB   0.0147   100     1
-## 5 byunit_par     673.6ms  678.6ms      1.47   143.5KB   0        100     0
-##
+##   expression         min   median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory              time             gc
+##   <bch:expr>    <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl> <int> <dbl>   <bch:tm> <list> <list>              <list>           <list>
+## 1 main              52ms   55.7ms     16.4      382MB     16.6   100   101      6.09s <NULL> <Rprofmem [14 × 3]> <bench_tm [100]> <tibble [100 × 3]>
+## 2 byunit_par       271ms  274.3ms      3.63     198KB      0     100     0     27.57s <NULL> <Rprofmem [6 × 3]>  <bench_tm [100]> <tibble [100 × 3]>
+## 3 byunit_arma2     274ms    287ms      3.15     198KB      0     100     0     31.75s <NULL> <Rprofmem [6 × 3]>  <bench_tm [100]> <tibble [100 × 3]>
+## 4 byunit_arma      438ms  439.1ms      2.25     198KB      0     100     0     44.46s <NULL> <Rprofmem [6 × 3]>  <bench_tm [100]> <tibble [100 × 3]>
+## 5 fastdandtrans    636ms  818.2ms      1.22     198KB      0     100     0      1.36m <NULL> <Rprofmem [6 × 3]>  <bench_tm [100]> <tibble [100 × 3]>
+
 ## bench1 <- microbenchmark::microbenchmark(
 ##   main = dists_and_trans(y),
 ##   fastdandtrans = fast_dists_and_trans(y, Z = 1),
 ##   byunit_arma = fast_dists_and_trans_by_unit_arma(y, Z = 1),
 ##   byunit_arma2 = fast_dists_and_trans_by_unit_arma2(y, Z = 1),
-##   byunit_par = fast_dists_by_unit_arma2_par(y, Z = 1, threads = 7),
+##   byunit_par = fast_dists_and_trans_by_unit_arma2_par(y, Z = 1, threads = 7),
 ##   times = 100
 ## )
 ## bench1
-
-## ## Look at how this works with the dpp data (moving most of this work to the test_pval_fns.R. Leaving this for now
-## load(file = here::here("tests", "dpp_dat.rda"))
-## table(dpp_dat$R01TMCRET, exclude = c())
-## table(dpp_dat$R02TMCRET, exclude = c())
-## ## Ranks more powerful. R02 easier to detect effects.
-## pIndepDist(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF)
-## pIndepDist(dat = dpp_dat, fmla = R02TMCRET ~ trtF | blockF)
-## pWilcox(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF)
-## pWilcox(dat = dpp_dat, fmla = R02TMCRET ~ trtF | blockF)
-## pOneway(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF)
-## pOneway(dat = dpp_dat, fmla = R02TMCRET ~ trtF | blockF)
-
-## dpp_dat[,tmpy:=rchisq(.N,df=1)+trt*rnorm(.N),by=blockF]
-## dpp_dat[,tmpy:=rnorm(.N)+trt*rnorm(.N),by=blockF]
-## dpp_dat[, tmpy := R01TMCRET]
-## tmpdat <- copy(dpp_dat)
-## tmpdat[, dists_and_trans(tmpy), by = blockF]
-## tmpdat[, c("mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY") := dists_and_trans(tmpy), by = blockF]
-##
-## tsmat <- as.matrix(tmpdat[, c("tmpy", "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")])
-## cor(tsmat)
-## solve(cor(tsmat))
-##
-## outcomenms <- c("tmpy", "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
-##
-## test_fn <- function(indx) {
-##   fmlatxt <- paste(paste(outcomenms[indx], collapse = "+"), "~trtF|blockF", collapse = "")
-##   fmla <- as.formula(fmlatxt)
-##   t1 <- independence_test(fmla, data = tmpdat, teststat = "maximum", distribution = asymptotic())
-##   pvalue(t1)[[1]]
-## }
-##
-## test_fn(indx = 1:length(outcomenms))
-## ## Very little penalty for including highly correlated variables. (here even repeating a column)
-## test_fn(indx = c(1, 1, 1:length(outcomenms)))
-##
-## res1 <- sapply(1:length(outcomenms), function(i) {
-##   test_fn(indx = i)
-## })
-## names(res1) <- outcomenms
-## res1
-## ## Most power here is meandist, rank, std, raw --- mad is terrible as are the maximum distances.
-## ##         tmpy       mndist  mndistRank0      maddist maddistRank0      maxdist maxdistRank0      zscoreY        rankY
-## ##      0.05972      0.02646      0.01075      0.94665      0.96880      0.92711      0.70799      0.03700      0.03663
-## ## Look at combinations of them
-## all_but_one <- combn(9, 8)
-## res2 <- apply(all_but_one, 2, function(i) {
-##   test_fn(indx = i)
-## })
-## names(res2) <- apply(all_but_one, 2, function(idx) {
-##   setdiff(1:ncol(all_but_one), idx)
-## })
-## res2
-## ## Works well without the mad and max
-## ## test_fn(indx=c(1,2,3,8,9))
