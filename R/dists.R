@@ -9,26 +9,29 @@
 #' @importFrom Rfast Dist rowmeans rowMads rowMaxs Rank vecdist rowmeans
 #' @export
 dists_and_trans <- function(x, Z) {
-	dx <- Rfast::vecdist(x)
-	rankx <- Rfast::Rank(x)
-	dxRank0 <- Rfast::vecdist(rankx) # distance among the ranks
-	mhdist0 <- zscore_vec2(x) ## calling it mhdist but really just zscore
-	mhdist <- ifelse(is.na(mhdist0)|is.nan(mhdist0),0,mhdist0)
-	## From fastfns.cpp, fast_dists_and_trans
-	#     List res = List::create(...
-	res <- list(
-		    mndist = Rfast::colmeans(dx),
-		    mndistRank0 = Rfast::colmeans(dxRank0),
-		    maddist = Rfast::colMads(dx),
-		    maddistRank0 = Rfast::colMads(dxRank0),
-		    maxdist = Rfast::colMaxs(dx,value=TRUE),
-		    maxdistRank0 = Rfast::colMaxs(dxRank0,value=TRUE),
-		    mhdist = mhdist,
-		    rankx = rankx#,
-		    #mnsqrtdist = Rfast::colmeans(sqrt(dx)),
-		    #hubmn = col_huberM(dx),
-		    #tanhx = tanh(x)
-	)
+  dx <- Rfast::vecdist(x)
+  rankx <- Rfast::Rank(x)
+  dxRank0 <- Rfast::vecdist(rankx) # distance among the ranks
+  #mhdist0 <- zscore_vec2(x) ## calling it mhdist but really just zscore
+  #mhdist <- ifelse(is.na(mhdist0) | is.nan(mhdist0), 0, mhdist0)
+
+## outcome_names <- c(theresponse,"mndist","mndistRank0","maxdist","rankY","tanhx")
+  ## From fastfns.cpp, fast_dists_and_trans
+  #     List res = List::create(...
+  res <- list(
+    mndist = Rfast::colmeans(dx),
+    mndistRank0 = Rfast::colmeans(dxRank0),
+    #maddist = Rfast::colMads(dx),
+    #maddistRank0 = Rfast::colMads(dxRank0),
+    maxdist = Rfast::colMaxs(dx, value = TRUE),
+    #maxdistRank0 = Rfast::colMaxs(dxRank0, value = TRUE),
+    #mhdist = mhdist,
+    rankY = rankx,
+    #mnsqrtdist = Rfast::colmeans(sqrt(dx)),
+    #hubmn = col_huberM(dx),
+    tanhx = tanh(x) # ,
+    # propgt0 = mean(x > 0)
+  )
   return(res)
 }
 
@@ -37,9 +40,11 @@ dists_and_trans <- function(x, Z) {
 #' @param threads Is an integer with the number of cores to use.
 #' @return A distance creation function taking x (a numeric vector, usually the outcome) and a variable Z which is not used.
 #' @export
-fast_dists_by_unit_arma_parR <- function(threads) {
-    force(threads)
-    return(function(x,Z){ fast_dists_by_unit_arma2_par(x,Z,threads=threads) })
+fast_dists_and_trans_by_unit_arma_parR <- function(threads) {
+  force(threads)
+  return(function(x, Z) {
+    fast_dists_and_trans_by_unit_arma2_par(x, Z, threads = threads)
+  })
 }
 
 
