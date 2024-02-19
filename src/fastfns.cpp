@@ -24,6 +24,10 @@
 using namespace arma;
 using namespace Rcpp;
 
+extern "C" {
+SEXP vecdist(SEXP x);
+}
+
 // [[Rcpp::export]]
 double fastMean(const arma::vec &X) {
   double out = arma::mean(X);
@@ -215,7 +219,22 @@ arma::mat vecdist_arma(const arma::vec &x) {
   return (out);
 }
 
-// from edited from Rfast dists_vec.cpp
+
+// [[Rcpp::export]]
+arma::mat vecdist4_arma(const arma::vec &x) {
+  int n = x.size();
+  arma::mat D(n, n);
+
+  // Calculate squared Euclidean distances using Armadillo's `dist()` function
+  D = arma::pow(arma::repmat(x.t(), n, 1) - arma::repmat(x, 1, n), 2);
+
+  // Set diagonal elements to zero and take the square root for distance
+  D.diag(0.0);
+  D = arma::sqrt(D);
+
+  return D;
+}
+
 
 //[[Rcpp::export]]
 arma::mat vecdist3_arma(const arma::vec &A) {
@@ -266,6 +285,7 @@ Rcpp::NumericMatrix vecdist2(const Rcpp::NumericVector &x) {
   UNPROTECT(1);
   return F;
 }
+
 
 // [[Rcpp::export]]
 arma::vec avg_rank_arma(const arma::vec &x) {
@@ -387,27 +407,6 @@ Rcpp::NumericMatrix vecdist3(const NumericVector &x) {
   }
 
   return result;
-}
-
-// [[Rcpp::export]]
-NumericMatrix vecdist_rcpp(const NumericVector &x) {
-  int n = x.size();
-  NumericMatrix distance_matrix(n, n);
-  // Calculate the squared Euclidean distance between each pair of vectors.
-  std::transform(distance_matrix.begin(), distance_matrix.end(),
-                 distance_matrix.begin(), [&](NumericVector row) {
-                   for (int j = 0; j < n; j++) {
-                     double distance = 0;
-                     for (int k = 0; k < n; k++) {
-                       distance += (x[k] - x[j]) * (x[k] - x[j]);
-                     }
-                     row[j] = std::sqrt(distance);
-                   }
-                   return Rcpp::as<double>(row);
-                 });
-  // Set the diagonal entries to zero.
-  distance_matrix.fill_diag(0);
-  return distance_matrix;
 }
 
 // [[Rcpp::export]]

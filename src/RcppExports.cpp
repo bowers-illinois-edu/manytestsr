@@ -248,6 +248,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// vecdist4_arma
+arma::mat vecdist4_arma(const arma::vec& x);
+RcppExport SEXP _manytestsr_vecdist4_arma(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(vecdist4_arma(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // vecdist3_arma
 arma::mat vecdist3_arma(const arma::vec& A);
 RcppExport SEXP _manytestsr_vecdist3_arma(SEXP ASEXP) {
@@ -336,17 +347,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// vecdist_rcpp
-NumericMatrix vecdist_rcpp(const NumericVector& x);
-RcppExport SEXP _manytestsr_vecdist_rcpp(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericVector& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(vecdist_rcpp(x));
-    return rcpp_result_gen;
-END_RCPP
-}
 // trimmed_mean
 double trimmed_mean(const NumericVector& x, double trim_percent);
 RcppExport SEXP _manytestsr_trimmed_mean(SEXP xSEXP, SEXP trim_percentSEXP) {
@@ -422,6 +422,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_zscore_vec2", (DL_FUNC) &_manytestsr_zscore_vec2, 1},
     {"_manytestsr_zscore_vec", (DL_FUNC) &_manytestsr_zscore_vec, 1},
     {"_manytestsr_vecdist_arma", (DL_FUNC) &_manytestsr_vecdist_arma, 1},
+    {"_manytestsr_vecdist4_arma", (DL_FUNC) &_manytestsr_vecdist4_arma, 1},
     {"_manytestsr_vecdist3_arma", (DL_FUNC) &_manytestsr_vecdist3_arma, 1},
     {"_manytestsr_vecdist2", (DL_FUNC) &_manytestsr_vecdist2, 1},
     {"_manytestsr_avg_rank_arma", (DL_FUNC) &_manytestsr_avg_rank_arma, 1},
@@ -430,7 +431,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_manhattan_dist", (DL_FUNC) &_manytestsr_manhattan_dist, 1},
     {"_manytestsr_euc_dist_arma1", (DL_FUNC) &_manytestsr_euc_dist_arma1, 1},
     {"_manytestsr_vecdist3", (DL_FUNC) &_manytestsr_vecdist3, 1},
-    {"_manytestsr_vecdist_rcpp", (DL_FUNC) &_manytestsr_vecdist_rcpp, 1},
     {"_manytestsr_trimmed_mean", (DL_FUNC) &_manytestsr_trimmed_mean, 2},
     {"_manytestsr_fastmad", (DL_FUNC) &_manytestsr_fastmad, 2},
     {"_manytestsr_fast_huberM", (DL_FUNC) &_manytestsr_fast_huberM, 4},

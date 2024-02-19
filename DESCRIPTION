@@ -35,7 +35,7 @@ Imports:
     dataPreparation (>= 1.1.0)
 Remotes:
     dsrobertson/onlineFDR
-LinkingTo: Rcpp, RcppArmadillo, RcppDist
+LinkingTo: Rcpp, RcppArmadillo, RcppDist, Rfast
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1

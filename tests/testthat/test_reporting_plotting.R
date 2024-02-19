@@ -15,6 +15,7 @@ if (interactive) {
   setDTthreads(1)
   load_all() ## use  this during debugging
 }
+library(here)
 
 ## Shuffle order  of the blocks so that the first set and the second set don't  automatically go together
 set.seed(12345)
@@ -120,7 +121,7 @@ tree1tib <- tree1 %>%
   activate(nodes) %>%
   as_tibble()
 
-load(here("tests","dpp_dat.rda"))
+load(here("tests", "dpp_dat.rda"))
 dpp_dat <- droplevels(dpp_dat)
 
 dpp_bdat <- dpp_dat %>%
@@ -181,4 +182,3 @@ ggraph(dpp_blocks_1_tree, layout = "dendrogram") +
   geom_edge_diagonal() +
   geom_node_point(aes(filter = leaf)) +
   coord_fixed()
-

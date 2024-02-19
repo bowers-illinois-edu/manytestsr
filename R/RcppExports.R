@@ -85,6 +85,10 @@ vecdist_arma <- function(x) {
     .Call(`_manytestsr_vecdist_arma`, x)
 }
 
+vecdist4_arma <- function(x) {
+    .Call(`_manytestsr_vecdist4_arma`, x)
+}
+
 vecdist3_arma <- function(A) {
     .Call(`_manytestsr_vecdist3_arma`, A)
 }
@@ -115,10 +119,6 @@ euc_dist_arma1 <- function(x) {
 
 vecdist3 <- function(x) {
     .Call(`_manytestsr_vecdist3`, x)
-}
-
-vecdist_rcpp <- function(x) {
-    .Call(`_manytestsr_vecdist_rcpp`, x)
 }
 
 trimmed_mean <- function(x, trim_percent) {

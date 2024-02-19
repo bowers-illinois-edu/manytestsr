@@ -19,13 +19,9 @@ Rcpp::List fast_dists_and_trans(const arma::vec &x, const arma::vec &Z) {
   arma::mat dx(n, n), dxRank0(n, n);
   arma::vec mndx(n), mndrx(n), maxdx(n), rankx(n), tanhx(n);
 
-  dx = vecdist3_arma(x);
-  //  Rcpp::NumericMatrix dxTmp =
-  //  vecdist2(Rcpp::NumericVector(x.begin(),x.end()));
-  // dx = as<arma::mat>(dxTmp);
-  // arma::mat dx(dxTmp.begin(), n, n, false);
-
   rankx = avg_rank_arma(x);
+
+  dx = vecdist3_arma(x);
   dxRank0 = vecdist3_arma(rankx);
   // Rcpp::NumericMatrix drxTmp =
   // vecdist2(Rcpp::NumericVector(rankx.begin(),rankx.end())); arma::mat
