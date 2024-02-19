@@ -151,15 +151,15 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
       distfn <- fast_dists_and_trans_by_unit_arma_parR(threads = ncpu)
     }
     if (parallel == "no" & dat_size > 100) {
-      distfn <- fast_dists_and_trans_by_unit_arma
+      distfn <- fast_dists_and_trans_by_unit_arma2
     }
   }
 
   thetreat <- fmla_vars[[2]]
   thedat <- copy(dat)
- #  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "mhdist", "rankx", "mnsqrtdist", "hubmn", "tanhx")
+  #  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "mhdist", "rankx", "mnsqrtdist", "hubmn", "tanhx")
   # outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist", "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
-outcome_names <- c(theresponse,"mndist","mndistRank0","maxdist","rankY","tanhx")
+  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maxdist", "rankY", "tanhx")
   if (length(fmla_vars) == 3) {
     theblock <- fmla_vars[[3]]
     thedat[, outcome_names[-1] := distfn(get(theresponse), Z = 1), by = get(theblock)]

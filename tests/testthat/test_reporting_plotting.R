@@ -17,6 +17,165 @@ if (interactive) {
 }
 library(here)
 
+### Test with the real data (Detroit Promise Path)
+load(here("tests", "dpp_dat.rda"))
+dpp_dat <- droplevels(dpp_dat)
+## nrow(dpp_dat)
+## 1268 total first year students
+
+## Make the block-level dataset
+dpp_bdat <- dpp_dat %>%
+  group_by(blockF) %>%
+  summarize(
+    nb = n(),
+    pb = mean(trt),
+    hwt = (nb / nrow(dpp_dat)) * (pb * (1 - pb)),
+    site = unique(STSITE),
+    cohort = unique(STCOHORT),
+    site_cohort_block = unique(site_cohort_block)
+  ) %>%
+  as.data.table()
+dpp_bdat
+
+## Varying block sizes, some variation in proportion in treatment within block
+## Blocks created by site and cohort (site is a community college, cohort is a year Fall 2016, Spring 2017 Fall 2017) and I think also the
+## date of randomization.
+
+### > table(dpp_dat$STSITE,dpp_dat$STCOHORT)
+###
+###          1   2   3
+###   HFCC 261   9 303
+###   MCC   74   5  70
+###   OCC   93   4  88
+###   SC    42   4  59
+###   WCCC 119  13 124
+
+## So, for example, the first cohort for HFCC had three randomization blocks, but the second cohort had only one moment of randomization.
+dpp_dat[, length(unique(blockF)), by = interaction(STSITE, STCOHORT)]
+##     interaction    V1
+##          <fctr> <int>
+##  1:      HFCC.1     4
+##  2:       MCC.3     3
+##  3:       OCC.1     4
+##  4:       MCC.1     4
+##  5:      HFCC.3     4
+##  6:        SC.1     4
+##  7:      WCCC.3     4
+##  8:       OCC.3     4
+##  9:      WCCC.1     4
+## 10:        SC.3     4
+## 11:      HFCC.2     1
+## 12:        SC.2     1
+## 13:       OCC.2     1
+## 14:      WCCC.2     1
+## 15:       MCC.2     1
+
+pIndepDist(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF)
+pIndepDist(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF, distfn = fast_dists_and_trans_by_unit_arma2, adaptive_dist_function = FALSE)
+pIndepDist(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF, distfn = dists_and_trans, adaptive_dist_function = FALSE)
+pIndepDist(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF, distfn = fast_dists_and_trans_by_unit_arma_parR(threads = 4), adaptive_dist_function = FALSE)
+pIndepDist(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF)
+pIndepDist(dat = dpp_dat, fmla = R02TMCRET ~ trtF | blockF)
+## for comparison:
+pOneway(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF)
+pOneway(dat = dpp_dat, fmla = R02TMCRET ~ trtF | blockF)
+
+
+splitSpecifiedFactor(dpp_bdat$blockF, dpp_bdat$site_cohort_block)
+splitSpecifiedFactorMulti(dpp_bdat$blockF, dpp_bdat$site_cohort_block)
+splitSpecified(dpp_bdat$blockF, dpp_bdat[, .(site, cohort, blockF)])
+
+## findBlocks returns a data.table/data.frame with each row describing a block.
+
+dpp_blocks_1 <- findBlocks(
+  idat = dpp_dat, bdat = dpp_bdat, blockid = "blockF",
+  pfn = pIndepDist, fmla = R01TMCRET ~ trtF | blockF,
+  splitfn = splitSpecifiedFactor,
+  alphafn = NULL,
+  splitby = "site_cohort_block",
+  blocksize = "hwt",
+  copydts = TRUE, ncores = 8, parallel = "multicore", trace = FALSE
+)
+
+dpp_blocks_2 <- findBlocks(
+  idat = dpp_dat, bdat = dpp_bdat, blockid = "blockF",
+  pfn = pIndepDist, fmla = R01TMCRET ~ trtF | blockF,
+  splitfn = splitSpecifiedFactorMulti,
+  alphafn = NULL,
+  splitby = "site_cohort_block",
+  # splitby = dpp_bdat[, .(site, cohort, blockF)],
+  blocksize = "hwt",
+  copydts = TRUE, ncores = 8, parallel = "multicore", trace = FALSE
+)
+## report_detections
+detections_dpp_1 <- report_detections(dpp_blocks_1, fwer = TRUE, only_hits = FALSE, blockid = "blockF")
+detections_dpp_2 <- report_detections(dpp_blocks_2, fwer = TRUE, only_hits = FALSE, blockid = "blockF")
+
+detections_dpp %>%
+  select(blockF, site_cohort_block, pfinalb, fin_nodenum, fin_parent, fin_parent_p, max_p, hit, fin_grp, hit_grp) %>%
+  arrange(fin_nodenum) %>%
+  as.data.table()
+
+
+dpp_blocks_2_tree <- make_tree(dpp_blocks_2, blockid = "blockF")
+
+## Makes a tree-like object with each node a test
+dpp_blocks_1_tree <- make_tree(dpp_blocks_1, blockid = "blockF")
+## In this case, we have five tests.
+### The overall test rejected
+## Then it split by TODO
+### And could not reject in one set of blocks but could in another set.
+### It split again, but could not reject. So, the effect is localized among those blocks.
+dpp_blocks_1_tree
+dpp_nodes_df <- as.data.frame(dpp_blocks_1_tree)
+
+dpp_nodes_df %>% select("nodenum", "p", "a", "name", "parent_name", "out_degree", "hit")
+
+conflicts_prefer(dplyr::filter)
+## These are the first two splits
+
+### This side of the tree could not reject.
+detections_dpp %>%
+  filter(hit_grp == dpp_nodes_df$nodenum[2]) %>%
+  select(hit_grp, fin_grp, hit, single_hit, site, cohort, blockF, max_p)
+
+## There was one rejection here: So, we can localize some effects within these sites and cohorts:
+## The effect was in HFCC in cohorts 1,2,3
+detections_dpp %>%
+  filter(hit_grp == dpp_nodes_df$nodenum[3]) %>%
+  select(hit_grp, fin_grp, hit, single_hit, site, cohort, blockF, max_p, fin_parent_p)
+## Were there any non-detections in HFCC? (No. Basically something was working well in the HFCC implementation and/or it was big enough to detect effects)
+detections_dpp %>%
+  filter(site == "HFCC") %>%
+  select(hit_grp, fin_grp, hit, single_hit, site, cohort, blockF, max_p, fin_parent_p)
+
+
+make_graph(make_tree(dpp_blocks_1, blockid = "blockF"))
+
+tmp2 <- dpp_blocks_1_tree %>%
+  activate(nodes) %>%
+  as_tibble()
+tmp3 <- left_join(tmp2, dpp_bdat[, c("blockF", "site", "cohort", "site_cohort_block")], by = join_by(bF == blockF))
+
+dpp_blocks_1_tree <- dpp_blocks_1_tree %>%
+  activate(nodes) %>%
+  mutate(bFnew = stri_replace_all(bF, "", regex = "Block0+"))
+
+ggraph(dpp_blocks_1_tree, layout = "tree") +
+  geom_edge_diagonal() +
+  geom_node_label(aes(label = round(p, 3), colour = hit),
+    repel = FALSE, show.legend = FALSE, label.r = unit(0.5, "lines"),
+    label.padding = unit(.01, "lines"), label.size = 0
+  )
+
+ggraph(dpp_blocks_1_tree, layout = "dendrogram") +
+  geom_edge_diagonal() +
+  geom_node_point(aes(filter = leaf)) +
+  coord_fixed()
+
+
+
+## Setup the fake data
 ## Shuffle order  of the blocks so that the first set and the second set don't  automatically go together
 set.seed(12345)
 bdat4 <- bdat3[sample(.N), ]
@@ -120,65 +279,3 @@ det1 <- report_detections(res[["splitSpecifiedFactor_lvs2_FALSE"]], blockid = "b
 tree1tib <- tree1 %>%
   activate(nodes) %>%
   as_tibble()
-
-load(here("tests", "dpp_dat.rda"))
-dpp_dat <- droplevels(dpp_dat)
-
-dpp_bdat <- dpp_dat %>%
-  group_by(blockF) %>%
-  summarize(
-    nb = n(),
-    pb = mean(trt),
-    hwt = (nb / nrow(dpp_dat)) * (pb * (1 - pb)),
-    site = unique(STSITE),
-    cohort = unique(STCOHORT),
-    site_cohort_block = unique(site_cohort_block)
-  ) %>%
-  as.data.table()
-head(dpp_bdat)
-
-pIndepDist(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF)
-pIndepDist(dat = dpp_dat, fmla = R02TMCRET ~ trtF | blockF)
-
-dpp_blocks_1 <- findBlocks(
-  idat = dpp_dat, bdat = dpp_bdat, blockid = "blockF",
-  pfn = pWilcox, fmla = R01TMCRET ~ trtF | blockF,
-  splitfn = splitSpecifiedFactor,
-  alphafn = NULL,
-  splitby = "site_cohort_block",
-  blocksize = "hwt",
-  copydts = TRUE, ncores = 8, parallel = "multicore", trace = FALSE
-)
-
-
-detections_dpp <- report_detections(dpp_blocks_1, fwer = TRUE, only_hits = FALSE, blockid = "blockF")
-
-tmp <- detections_dpp %>%
-  select(blockF, site_cohort_block, pfinalb, fin_nodenum, fin_parent, fin_parent_p, max_p, hit, fin_grp, hit_grp) %>%
-  arrange(fin_nodenum)
-
-dpp_blocks_1_tree <- make_tree(dpp_blocks_1, blockid = "blockF")
-
-
-make_graph(make_tree(dpp_blocks_1, blockid = "blockF"))
-
-tmp2 <- dpp_blocks_1_tree %>%
-  activate(nodes) %>%
-  as_tibble()
-tmp3 <- left_join(tmp2, dpp_bdat[, c("blockF", "site", "cohort", "site_cohort_block")], by = join_by(bF == blockF))
-
-dpp_blocks_1_tree <- dpp_blocks_1_tree %>%
-  activate(nodes) %>%
-  mutate(bFnew = stri_replace_all(bF, "", regex = "Block0+"))
-
-ggraph(dpp_blocks_1_tree, layout = "tree") +
-  geom_edge_diagonal() +
-  geom_node_label(aes(label = round(p, 3), colour = hit),
-    repel = FALSE, show.legend = FALSE, label.r = unit(0.5, "lines"),
-    label.padding = unit(.01, "lines"), label.size = 0
-  )
-
-ggraph(dpp_blocks_1_tree, layout = "dendrogram") +
-  geom_edge_diagonal() +
-  geom_node_point(aes(filter = leaf)) +
-  coord_fixed()

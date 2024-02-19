@@ -20,29 +20,29 @@ splitCluster <- function(bid, x) {
     return(group)
   }
   if (length(x) == 2) {
-      # If there are only two values for x, split into two groups.
+    # If there are only two values for x, split into two groups.
     group <- factor(c(0, 1))
     return(group)
   }
-  ##if (length(x) == 3) {
+  ## if (length(x) == 3) {
   ##  # if we only have 3 values for x, make two groups with 1 group with the highest value
   ##  # and the other group with the 2 other values.
   ##  mnx <- fastMean(x)
   ##  rank_dists <- rank(abs(x - mnx))
   ##  group <- factor(as.numeric(rank_dists == max(rank_dists)))
   ##  return(group)
-  ##}
+  ## }
 
   ### Trying to handle some edge
   ### cases with this function. Mostly KMeans_cpp works well but kmeans handles
   ### some cases where KMeans_cpp throws an error
-  ##clus <- tryCatch(KMeans_rcpp(as.matrix(x), clusters = 2, num_init = 2,
+  ## clus <- tryCatch(KMeans_rcpp(as.matrix(x), clusters = 2, num_init = 2,
   ##        initializer = "optimal_init")$clusters, error = function(e) {
   ##    kmeans(x, centers = 2)$cluster})
 
   ## Approach 2:
- clus <- Ckmeans.1d.dp(x, k=2)$cluster
- group <- factor(as.numeric(clus == 1))
+  clus <- Ckmeans.1d.dp(x, k = 2)$cluster
+  group <- factor(as.numeric(clus == 1))
   # names(group) <- bid (no longer necessary)
   return(group)
 }
@@ -147,6 +147,8 @@ splitLOO <- function(bid, x) {
 
 #' A set of pre-specified splits
 #'
+#' This function does binary splits using a factor variable with dots separating the names of the subgroups
+#'
 #' @param bid Block id
 #' @param x Is a a factor with levels like "state.district.school". The splits will occur from left to right depending on whether there is existing variation at that level
 #' @importFrom stringi stri_split_regex
@@ -180,6 +182,45 @@ splitSpecifiedFactor <- function(bid, x) {
   return(group)
 }
 
+
+#' A set of pre-specified splits
+#'
+#' This function allows for more than two splits at each level
+#'
+#' @param bid Block id
+#' @param x Is a a factor with levels like "state.district.school". The splits will occur from left to right depending on whether there is existing variation at that level
+#' @importFrom stringi stri_split_regex
+#' @export
+splitSpecifiedFactorMulti <- function(bid, x) {
+  stopifnot(is.factor(x))
+  stopifnot("The factor must have categories separately by dots '.' and have at least one such separation." = stri_count_fixed(x, ".") > 0)
+  if (length(unique(x)) == 1) {
+    # Random splits used with stop_splitby_constant=FALSE otherwise findBlocks should stop before this
+    group <- factor(sample(rep_len(c(0, 1), length.out = length(x))))
+    return(group)
+  }
+  if (length(x) == 2) {
+    group <- factor(c(0, 1))
+    return(group)
+  }
+  x_split <- stri_split_regex(x, "\\.", simplify = TRUE)
+  # Which  column varies (recalling that after previous splits some columns may have no variance).
+  # try dataPreparation::whichAreConstant() or grab that function's C code in the future since it is much faster than below
+  which_varies <- apply(x_split, 2, function(x) {
+    length(unique(x))
+  })
+  # Split on the first column with variance from the beginning
+  split_on <- which(which_varies > 1)[1]
+  # if (is.na(split_on)) {
+  #  group <- factor(rep_len(0, length.out=length(x)))
+  # } else {
+  # as.numeric of factors creates a vector that starts a 1
+  group <- factor(as.numeric(factor(x_split[, split_on])) - 1)
+  # }
+  return(group)
+}
+
+
 #' A set of pre-specified splits using a data.table object
 #'
 #' @param bid Block id
@@ -204,7 +245,7 @@ splitSpecified <- function(bid, x) {
     group <- factor(rep_len(0, length.out = nrow(x)))
   } else {
     # as.numeric of factors creates a vector that starts a 1
-    group <- factor(as.numeric(x[, get(split_on)]) - 1)
+    group <- as.numeric(factor(x[, get(split_on)])) - 1
   }
   return(group)
 }
