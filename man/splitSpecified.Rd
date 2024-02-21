@@ -2,7 +2,7 @@
 % Please edit documentation in R/splitting_fns.R
 \name{splitSpecified}
 \alias{splitSpecified}
-\title{A set of pre-specified splits using a data.table object}
+\title{A set of pre-specified splits using a data.table object (Deprecate)}
 \usage{
 splitSpecified(bid, x)
 }
@@ -13,5 +13,5 @@ splitSpecified(bid, x)
 Column one should be highest level and each other column should be nested}
 }
 \description{
-A set of pre-specified splits using a data.table object
+A set of pre-specified splits using a data.table object (Deprecate)
 }

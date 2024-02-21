@@ -55,12 +55,12 @@ test_that("Basics of the omnibus test works as expected in regards False Positiv
   corTZ <- zapsmall(cov2cor(covariance(it1a)))
   ## This is the quadratic form
   (statistic(it1a, "linear") - coin::expectation(it1a)) %*% solve(covariance(it1a)) %*% t(statistic(it1a, "linear") - coin::expectation(it1a))
-  statistic(it1a,type="test")
+  statistic(it1a, type = "test")
   ## This is the max form
-  it1a_max <- independence_test(bigfmla,data=idat,teststat="maximum")
-  statistic(it1a,type="test")
+  it1a_max <- independence_test(bigfmla, data = idat, teststat = "maximum")
+  statistic(it1a, type = "test")
   ## Fix this next
-  max(abs((statistic(it1a_max, "linear") - coin::expectation(it1a_max)))/sqrt(variance(it1a_max)))
+  max(abs((statistic(it1a_max, "linear") - coin::expectation(it1a_max))) / sqrt(variance(it1a_max)))
   b1fmla_txt <- paste(paste(Yvers, collapse = "+"), "~ZF", sep = "")
   b1fmla <- as.formula(b1fmla_txt)
   b1ta <- independence_test(b1fmla, data = b1, teststat = "quadratic")
@@ -125,22 +125,38 @@ idat[, list(
 
 
 test_that("pIndepDist works as expected", {
-  res_cancel_idat <- pIndepDist(dat = idat, fmla = Y ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore", adaptive_dist_function
-  =FALSE)
-  res_cancel_b1 <- pIndepDist(dat = b1, fmla = Y ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore", adaptive_dist_function
-  =FALSE)
-  res_null_idat <- pIndepDist(dat = idat, fmla = Ynull ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore", adaptive_dist_function
-  =FALSE)
-  res_null_b1 <- pIndepDist(dat = b1, fmla = Ynull ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore", adaptive_dist_function
-  =FALSE)
-  res_homog_idat <- pIndepDist(dat = idat, fmla = Yhomog ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore", adaptive_dist_function
-  =FALSE)
-  res_homog_b1 <- pIndepDist(dat = b1, fmla = Yhomog ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore", adaptive_dist_function
-  =FALSE)
-  res_normb_idat <- pIndepDist(dat = idat, fmla = Ynormb ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore", adaptive_dist_function
-  =FALSE)
-  res_normb_b1 <- pIndepDist(dat = b1, fmla = Ynormb ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore", adaptive_dist_function
-  =FALSE)
+  res_cancel_idat <- pIndepDist(
+    dat = idat, fmla = Y ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore",
+    adaptive_dist_function = FALSE
+  )
+  res_cancel_b1 <- pIndepDist(
+    dat = b1, fmla = Y ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore",
+    adaptive_dist_function = FALSE
+  )
+  res_null_idat <- pIndepDist(
+    dat = idat, fmla = Ynull ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore",
+    adaptive_dist_function = FALSE
+  )
+  res_null_b1 <- pIndepDist(
+    dat = b1, fmla = Ynull ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore",
+    adaptive_dist_function = FALSE
+  )
+  res_homog_idat <- pIndepDist(
+    dat = idat, fmla = Yhomog ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore",
+    adaptive_dist_function = FALSE
+  )
+  res_homog_b1 <- pIndepDist(
+    dat = b1, fmla = Yhomog ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore",
+    adaptive_dist_function = FALSE
+  )
+  res_normb_idat <- pIndepDist(
+    dat = idat, fmla = Ynormb ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore",
+    adaptive_dist_function = FALSE
+  )
+  res_normb_b1 <- pIndepDist(
+    dat = b1, fmla = Ynormb ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore",
+    adaptive_dist_function = FALSE
+  )
   expect_lt(res_cancel_idat, .05)
   expect_lt(res_cancel_b1, .05)
   expect_gt(res_null_idat, .05)
@@ -152,22 +168,22 @@ test_that("pIndepDist works as expected", {
 })
 
 test_that("Ordinary tests do not reject when effects cancel across blocks", {
-		  expect_gt(pvalue(oneway_test(Y ~ ZF | bF, data = idat)), .05)
-		  expect_gt(pvalue(wilcox_test(Y ~ ZF | bF, data = idat)), .05)
-		  })
+  expect_gt(pvalue(oneway_test(Y ~ ZF | bF, data = idat)), .05)
+  expect_gt(pvalue(wilcox_test(Y ~ ZF | bF, data = idat)), .05)
+})
 
 test_that("Ordinary tests do reject when effects are large within blocks even if they cancel across blocks", {
-		  expect_lt(max(idat[, list(p = pvalue(wilcox_test(Y ~ ZF, data = .SD))), by = bF]$p), .05)
-		  })
+  expect_lt(max(idat[, list(p = pvalue(wilcox_test(Y ~ ZF, data = .SD))), by = bF]$p), .05)
+})
 
 test_that("passing a block factor to a p-value function with one block gives the same results as  omitting it", {
-		  res_cancel_b1_block <- pIndepDist(dat = b1, fmla = Y ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
-		  res_cancel_b1_noblock <- pIndepDist(dat = b1, fmla = Y ~ ZF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
-		  expect_equal(res_cancel_b1_block, res_cancel_b1_block)
-		  res_null_b1_block <- pIndepDist(dat = b1, fmla = Ynull ~ ZF | bF, distfn = dists_and_trans, , ncpu = 4, parallel = "multicore")
-		  res_null_b1_noblock <- pIndepDist(dat = b1, fmla = Ynull ~ ZF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
-		  expect_equal(res_null_b1_block, res_null_b1_block)
-		  })
+  res_cancel_b1_block <- pIndepDist(dat = b1, fmla = Y ~ ZF | bF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
+  res_cancel_b1_noblock <- pIndepDist(dat = b1, fmla = Y ~ ZF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
+  expect_equal(res_cancel_b1_block, res_cancel_b1_block)
+  res_null_b1_block <- pIndepDist(dat = b1, fmla = Ynull ~ ZF | bF, distfn = dists_and_trans, , ncpu = 4, parallel = "multicore")
+  res_null_b1_noblock <- pIndepDist(dat = b1, fmla = Ynull ~ ZF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
+  expect_equal(res_null_b1_block, res_null_b1_block)
+})
 
 
 ## Below is the search for a better set of test statistics:
@@ -175,47 +191,46 @@ test_that("passing a block factor to a p-value function with one block gives the
 ## outcome_names <- c(theresponse,"mndist","mndistRank0","maxdist","rankY","tanhx")
 ## See pval_fns.R, dists.R, and code for fast_dists... in the fastfns.cpp file
 
-## Now using more discrete type data typical of policy applications
+## Now using more discrete type data typical of policy applications.
 ## Here we have a lot of zeros which creates ties and/or makes measures of spread degenerate --- no variance within certain blocks for example.
 ## Find the actual test stats
- load(file=here::here("tests","dpp_dat.rda"))
+data(example_dat,package="manytestsr")
+example_dat$blockF <- factor(example_dat$blockF)
+test_that("Test using data with lots of zeros and ties", {
+  example_Y1 <- pIndepDist(dat = example_dat, fmla = Y1 ~ trtF | blockF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
+  expect_lt(example_Y1, .05)
+})
 
-
- test_that("Test using data with lots of zeros and ties", {
-   dpp_R01 <- pIndepDist(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
-   expect_lt(dpp_R01,.05)
- })
-
-table(dpp_dat$R01TMCRET, exclude = c())
-table(dpp_dat$R02TMCRET, exclude = c())
+table(example_dat$Y1, exclude = c())
+table(example_dat$Y2, exclude = c())
 #
-# ## ## Ranks more powerful. R02 easier to detect effects.
-#  pIndepDist(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF, adaptive_dist_function=FALSE)
-#  pIndepDist(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF, adaptive_dist_function=TRUE)
-#  pIndepDist(dat = dpp_dat, fmla = R02TMCRET ~ trtF | blockF)
-#  pWilcox(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF)
-#  pWilcox(dat = dpp_dat, fmla = R02TMCRET ~ trtF | blockF)
-#  pOneway(dat = dpp_dat, fmla = R01TMCRET ~ trtF | blockF)
-#  pOneway(dat = dpp_dat, fmla = R02TMCRET ~ trtF | blockF)
+# ## ## Ranks more powerful. Y2 easier to detect effects.
+#  pIndepDist(dat = example_dat, fmla = Y1 ~ trtF | blockF, adaptive_dist_function=FALSE)
+#  pIndepDist(dat = example_dat, fmla = Y1 ~ trtF | blockF, adaptive_dist_function=TRUE)
+#  pIndepDist(dat = example_dat, fmla = Y2 ~ trtF | blockF)
+#  pWilcox(dat = example_dat, fmla = Y1 ~ trtF | blockF)
+#  pWilcox(dat = example_dat, fmla = Y2 ~ trtF | blockF)
+#  pOneway(dat = example_dat, fmla = Y1 ~ trtF | blockF)
+#  pOneway(dat = example_dat, fmla = Y2 ~ trtF | blockF)
 #
 # ## Checking the code above: pOneway and pWilcox should be like these
-# ot0 <- independence_test(R01TMCRET~trtF | blockF, data=dpp_dat)
-# wt0 <- independence_test(rank(R01TMCRET)~trtF | blockF, data=dpp_dat)
+# ot0 <- independence_test(Y1~trtF | blockF, data=example_dat)
+# wt0 <- independence_test(rank(Y1)~trtF | blockF, data=example_dat)
 #
-# ot1 <- oneway_test(R01TMCRET~trtF | blockF, data=dpp_dat)
-# wt1 <- wilcox_test(R01TMCRET~trtF | blockF, data=dpp_dat)
+# ot1 <- oneway_test(Y1~trtF | blockF, data=example_dat)
+# wt1 <- wilcox_test(Y1~trtF | blockF, data=example_dat)
 #
 # stopifnot(all.equal(pvalue(ot0),pvalue(ot1)))
 # stopifnot(all.equal(pvalue(wt0),pvalue(wt1)))
 #
 # ## See where the loss of power is happening
-# dat <- copy(dpp_dat)
-# dat[,Y:=R01TMCRET]
+# dat <- copy(example_dat)
+# dat[,Y:=Y1]
 #
 # dists <- with(idat[bF == 1], dists_and_trans(Ynull, Z))
 # outcome_names <- c("Y",names(dists))
 # rm(dists)
-# dat[, (outcome_names[-1]):=dists_and_trans(R01TMCRET),by=blockF]
+# dat[, (outcome_names[-1]):=dists_and_trans(Y1),by=blockF]
 #
 # idatnew <- copy(idat)
 # idatnew[, (outcome_names[-1]):=dists_and_trans(Y),by=bF]
@@ -242,9 +257,9 @@ table(dpp_dat$R02TMCRET, exclude = c())
 # }
 #
 #
-# res_dppR01_singles<- sapply(1:length(outcome_names),function(i){ test_fn(indx=i,thedat=dat,raw_outcome_nm="Y",trtnm="trtF",blocknm="blockF")})
-# colnames(res_dppR01_singles) <- outcome_names
-# single_ps <- unlist(res_dppR01_singles["p",] )
+# res_exampleY1_singles<- sapply(1:length(outcome_names),function(i){ test_fn(indx=i,thedat=dat,raw_outcome_nm="Y",trtnm="trtF",blocknm="blockF")})
+# colnames(res_exampleY1_singles) <- outcome_names
+# single_ps <- unlist(res_exampleY1_singles["p",] )
 # single_ps
 # p.adjust(single_ps,method="holm")
 #
@@ -354,14 +369,14 @@ table(dpp_dat$R02TMCRET, exclude = c())
 # res_homog_lst<- mclapply(poss_cols,function(i){ test_fn(indx=i,thedat=idatnew,raw_outcome_nm="Yhomog",trtnm="ZF",blocknm="bF")})
 # res_normb_lst<- mclapply(poss_cols,function(i){ test_fn(indx=i,thedat=idatnew,raw_outcome_nm="Ynormb",trtnm="ZF",blocknm="bF")})
 #
-# res_dppR01_lst <- mclapply(poss_cols,function(i){ test_fn(indx=i,thedat=dat,raw_outcome_nm="Y",trtnm="trtF",blocknm="blockF")})
-# res_dppR02_lst <- mclapply(poss_cols,function(i){ test_fn(indx=i,thedat=dat,raw_outcome_nm="R02TMCRET",trtnm="trtF",blocknm="blockF")})
+# res_exampleY1_lst <- mclapply(poss_cols,function(i){ test_fn(indx=i,thedat=dat,raw_outcome_nm="Y",trtnm="trtF",blocknm="blockF")})
+# res_exampleY2_lst <- mclapply(poss_cols,function(i){ test_fn(indx=i,thedat=dat,raw_outcome_nm="Y2",trtnm="trtF",blocknm="blockF")})
 #
 # res_cancel <- dplyr::bind_rows(res_cancel_lst)
 # res_homog <- dplyr::bind_rows(res_homog_lst)
 # res_normb <- dplyr::bind_rows(res_normb_lst)
-# res_dppR01 <- dplyr::bind_rows(res_dppR01_lst)
-# res_dppR02 <- dplyr::bind_rows(res_dppR02_lst)
+# res_exampleY1 <- dplyr::bind_rows(res_exampleY1_lst)
+# res_exampleY2 <- dplyr::bind_rows(res_exampleY2_lst)
 #
 # num_not_na <- function(x){ sum(!is.na(x)) }
 #
@@ -408,39 +423,39 @@ table(dpp_dat$R02TMCRET, exclude = c())
 # res_normb_high_power %>% filter(num_stats>=8)
 #
 #
-# res_dppR01 <- res_dppR01 %>% rowwise() %>%
+# res_exampleY1 <- res_exampleY1 %>% rowwise() %>%
 # 	mutate(num_stats=num_not_na(c_across(one_of(outcome_names)))) %>% ungroup() %>% arrange(desc(num_stats),p)
 # ## Few test stats work with this outcome with so many zeros
-# quantile(res_dppR01$p,seq(0,1,.1))
-# res_dppR01_high_power <- res_dppR01 %>% filter(p <= .05)
-# res_dppR01_low_power <- res_dppR01 %>% filter(p > .05)
+# quantile(res_exampleY1$p,seq(0,1,.1))
+# res_exampleY1_high_power <- res_exampleY1 %>% filter(p <= .05)
+# res_exampleY1_low_power <- res_exampleY1 %>% filter(p > .05)
 # ## Only a few test stats seem to work
-# table(res_dppR01_high_power$num_stats,exclude=c())
-# table(res_dppR01_low_power$num_stats,exclude=c())
-# res_dppR01_low_power
-# res_dppR01_high_power %>% filter(num_stats>=3)
-# res_dppR01_high_power %>% arrange(desc(num_stats),p)
-# quantile(res_dppR01_high_power$p,seq(0,1,.1))
+# table(res_exampleY1_high_power$num_stats,exclude=c())
+# table(res_exampleY1_low_power$num_stats,exclude=c())
+# res_exampleY1_low_power
+# res_exampleY1_high_power %>% filter(num_stats>=3)
+# res_exampleY1_high_power %>% arrange(desc(num_stats),p)
+# quantile(res_exampleY1_high_power$p,seq(0,1,.1))
 # ## The p-values are barely less than .05 with the different sets of three  stats (.04..)
 # ## The lower p-values arise with 2 and 1 test stat.
 # ## Only one uses the raw outcome:
-# res_dppR01_high_power %>% filter(!is.na(Y))
-# res_dppR01_high_power %>% filter(!is.na(rankx))
-# res_dppR01_high_power %>% filter(!is.na(mndist))
+# res_exampleY1_high_power %>% filter(!is.na(Y))
+# res_exampleY1_high_power %>% filter(!is.na(rankx))
+# res_exampleY1_high_power %>% filter(!is.na(mndist))
 #
-# dpp02_outcome_names <- c("R02TMCRET",outcome_names[-1])
-# res_dppR02 <- res_dppR02 %>% rowwise() %>%
-# 	mutate(num_stats=num_not_na(c_across(one_of(dpp02_outcome_names)))) %>% ungroup() %>% arrange(desc(num_stats),p)
+# example02_outcome_names <- c("Y2",outcome_names[-1])
+# res_exampleY2 <- res_exampleY2 %>% rowwise() %>%
+# 	mutate(num_stats=num_not_na(c_across(one_of(example02_outcome_names)))) %>% ungroup() %>% arrange(desc(num_stats),p)
 #
 # library(tidyverse)
 #
-# res_dppR01$Y <- ifelse(!is.na(res_dppR01$Y),"R01TMCRET",NA)
-# res_dppR02 <- res_dppR02 %>% rename(Y=R02TMCRET)
+# res_exampleY1$Y <- ifelse(!is.na(res_exampleY1$Y),"Y1",NA)
+# res_exampleY2 <- res_exampleY2 %>% rename(Y=Y2)
 # res_homog <- res_homog %>% rename(Y=Yhomog)
 # res_normb <- res_normb %>% rename(Y=Ynormb)
 #
-# res <- bind_rows(list(dppR01=res_dppR01,
-# 		      dppR02=res_dppR02,
+# res <- bind_rows(list(exampleY1=res_exampleY1,
+# 		      exampleY2=res_exampleY2,
 # 		      cancel=res_cancel,
 # 		      homog=res_homog,
 # 		      normb=res_normb),.id="Outcome")
@@ -477,15 +492,15 @@ table(dpp_dat$R02TMCRET, exclude = c())
 #
 # ##    Outcome Y         mndist mndistRank0 maddist maddistRank0 maxdist maxdistRank0 mhdist rankx mnsqrtdist hubmn tanhx       p num_stats
 # ##    <chr>   <chr>     <chr>  <chr>       <chr>   <chr>        <chr>   <chr>        <chr>  <chr> <chr>      <chr> <chr>   <dbl>     <int>
-# ##  1 dppR01  R01TMCRET NA     NA          NA      NA           maxdist NA           mhdist rankx NA         NA    tanhx 0.0134          5
-# ##  2 dppR02  R02TMCRET mndist mndistRank0 NA      NA           maxdist NA           NA     NA    mnsqrtdist NA    NA    0.00254         5
+# ##  1 exampleY1  Y1 NA     NA          NA      NA           maxdist NA           mhdist rankx NA         NA    tanhx 0.0134          5
+# ##  2 exampleY2  Y2 mndist mndistRank0 NA      NA           maxdist NA           NA     NA    mnsqrtdist NA    NA    0.00254         5
 #
-# resdppR01a <- res %>% filter(Outcome=="dppR01") %>% filter(num_stats>=5) %>% filter(p < .03)
-# resdppR01long <- pivot_longer(resdppR01a,cols=all_of(outcome_names))
-# sort(table(resdppR01long$value,exclude=c()))
-# nrow(resdppR01long)
-# nrow(resdppR01a)
-# resdppR01a %>% summarize(across(one_of(outcome_names),num_not_na))
+# resexampleY1a <- res %>% filter(Outcome=="exampleY1") %>% filter(num_stats>=5) %>% filter(p < .03)
+# resexampleY1long <- pivot_longer(resexampleY1a,cols=all_of(outcome_names))
+# sort(table(resexampleY1long$value,exclude=c()))
+# nrow(resexampleY1long)
+# nrow(resexampleY1a)
+# resexampleY1a %>% summarize(across(one_of(outcome_names),num_not_na))
 # #      Y mndist mndistRank0 maddist maddistRank0 maxdist maxdistRank0 mhdist rankx mnsqrtdist hubmn tanhx
 # #  <int>  <int>       <int>   <int>        <int>   <int>        <int>  <int> <int>      <int> <int> <int>
 # #1    67     22          43      10           13      56           15     21    32         21    15    67
@@ -493,11 +508,11 @@ table(dpp_dat$R02TMCRET, exclude = c())
 # ## Next best maxdist,rankx,mndistRank0(worst are maddist and maddistRank0 and maxdistRank0 and hubmn)
 # ## Intermediate mhdist, mnsqrtdist
 #
-# resdppR01a %>% filter(!is.na(maxdist) & !is.na(rankx) &  !is.na(mndistRank0))
+# resexampleY1a %>% filter(!is.na(maxdist) & !is.na(rankx) &  !is.na(mndistRank0))
 #
 # good_stats_nms <- c("Y","tanhx","mndist","mndistRank0","maxdist","rankx")
 #
-# resdppR01long %>% filter(value %in% good_stats_nms)
+# resexampleY1long %>% filter(value %in% good_stats_nms)
 #
 # res2 <- res %>% rowwise() %>% mutate(good_stats = num_not_na(c_across(one_of(good_stats_nms)))) %>% ungroup()
 # res2 %>% filter(good_stats == length(good_stats_nms) & num_stats==length(good_stats_nms))
@@ -514,14 +529,13 @@ table(dpp_dat$R02TMCRET, exclude = c())
 # ## cands %>% group_by(Outcome) %>% summarize(across(one_of(outcome_names),num_not_na),n=n())
 # ##
 # ##
-# ## dat[,R01md:= (R01TMCRET - mean(R01TMCRET)),by=blockF]
+# ## dat[,Y1md:= (Y1 - mean(Y1)),by=blockF]
 # ##
-# ## wilcox_test(R01md~trtF,data=dat)
-# ## wilcox_test(R01md~trtF|blockF,data=dat)
+# ## wilcox_test(Y1md~trtF,data=dat)
+# ## wilcox_test(Y1md~trtF|blockF,data=dat)
 # ##
 # ## ## Not sure that it matters if we have some blocks with constant outcomes.
-# ## dppb1 <- dat[,.(avgR01mdsd=sd(R01md),avgR01sd=sd(R01TMCRET)),by=blockF]
-# ## dppb1[avgR01sd==0,]
+# ## exampleb1 <- dat[,.(avgY1mdsd=sd(Y1md),avgY1sd=sd(Y1)),by=blockF]
+# ## exampleb1[avgY1sd==0,]
 # ##
-# ## dist_lst <- lapply(split(dat,dat$blockF),function(dat){ vecdist(dat$R01TMCRET) })
-
+# ## dist_lst <- lapply(split(dat,dat$blockF),function(dat){ vecdist(dat$Y1) })

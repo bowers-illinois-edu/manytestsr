@@ -62,7 +62,7 @@ reveal_po_and_test_siup(
 
 \item{thealpha}{Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)}
 
-\item{stop_splitby_constant}{TRUE is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.}
+\item{stop_splitby_constant}{TRUE is the algorithm should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.}
 
 \item{ncores}{The number of cores or threads to use for the test statistic creation and possible permutation testing}
 
@@ -78,5 +78,5 @@ False positive proportion out of the tests across the blocks, The false discover
 Repeat experiment, reveal treatment effects from the potential outcomes, test within partitions, summarize
 }
 \details{
-The function does hypothesis tests within partitions of blocks (including individual blocks depending on the splitting algorithmn) and then summarizes the results  of this testing across the blocks. It very much depends  on padj_test_fn.
+The function does hypothesis tests within partitions of blocks (including individual blocks depending on the splitting algorithm) and then summarizes the results  of this testing across the blocks. It very much depends  on padj_test_fn.
 }

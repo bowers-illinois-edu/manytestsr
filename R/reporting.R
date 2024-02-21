@@ -34,7 +34,8 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
     # (where node numbers are separated by a dot)
     res[, maxdepth := stri_count_fixed(biggrp, ".") + 1]
     if (all(res$maxdepth == 1)) {
-      # When the algorithm stops at the first level there are no parents. There is just the root node. This is an attempt at a work around
+      # When the algorithm stops at the first level there are no parents.
+      # There is just the root node. This is an attempt at a work around
       res[, fin_parent_p := p1]
       res[, parent_alpha := alpha1]
     } else {
@@ -42,21 +43,23 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
       res[, parent_alpha := get(paste0("alpha", maxdepth - 1)), by = seq_len(nrow(res))]
     }
     # If the block is a terminal node and p<alpha then this is a hit or detected effect
-    # If the block is a terminal node and p>alpha for both it and the other of the two terminal nodes then we have a hit or detected effect for *both* nodes but cannot distinguish between them.
-    # I think max_p should be p at maxdepth for the FDR algorithmn and maximum p overall (or pfinalb) for the FWER algo.
+    # If the block is a terminal node and p>alpha for both it and all other terminal nodes
+    #  then we have a hit or detected effect for *all* terminal nodes but cannot distinguish between them.
+    # I think max_p should be p at maxdepth for the FDR algorithm and maximum p overall (or pfinalb) for the FWER algo.
     # could have done this first     res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
     # But I think the following is faster
-    if ( fwer  | all(res$parent_alpha==alpha) ) {
+    if (fwer | all(res$parent_alpha == alpha)) {
       res[, max_p := pfinalb]
       res[, max_alpha := alpha]
     } else {
       res[, max_p := get(paste0("p", maxdepth)), by = seq_len(nrow(res))]
       res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
     }
-    # A detection is scored if p < alpha for a node containing a single block (i.e. a leaf)
+    # A detection on a single block is scored if the final p < alpha for a node containing a single block (i.e. a leaf)
     res[, single_hit := max_p < max_alpha & blocksbygroup == 1]
-    # A detection is also scored if the two leaves have p > alpha but the parent has p < alpha: this is a grouped detection with two blocks.
-    res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & fin_parent_p < parent_alpha & length(unique(fin_nodenum)) == 2), TRUE, FALSE), by = fin_parent]
+    # A detection is also scored if all leaves have p > alpha but the parent has p < alpha: this is a grouped detection with two blocks.
+    # res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & fin_parent_p < parent_alpha & length(unique(fin_nodenum)) == 2), TRUE, FALSE), by = fin_parent]
+    res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & (fin_parent_p < parent_alpha)), TRUE, FALSE), by = fin_parent]
     # Also a group hit can be scored (an effect detected within a group of blocks) if there are multiple blocks in a final node and that test is p<a
     res[, group_hit2 := fifelse(blocksbygroup > 1 & all(max_p < max_alpha), TRUE, FALSE), by = fin_nodenum]
     res[, hit := single_hit | group_hit | group_hit2]
@@ -148,7 +151,7 @@ make_tree <- function(orig_res, blockid = "bF") {
   res_graph <- res_graph %>%
     activate(nodes) %>%
     mutate(parent_of_ns = node_is_adjacent(to = both_ns, include_to = FALSE, mode = "in"))
-  # first way to detect is leaf with p<alpha and second way as parent of two non-sig leaves
+  # first way to detect is leaf with p<alpha and second way as parent of all non-sig leaves
   res_graph <- res_graph %>%
     activate(nodes) %>%
     mutate(hit = (out_degree == 0 & p <= a) | parent_of_ns)

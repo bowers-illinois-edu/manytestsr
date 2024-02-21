@@ -24,7 +24,7 @@ tau_norm_covariate_levels(ybase, tau_sds, covariate)
 \arguments{
 \item{ybase}{Is a vector of potential outcome to control}
 
-\item{tau_sds}{is the number of sds of ybase to shift the distrbution}
+\item{tau_sds}{is the number of sds of ybase to shift the distribution}
 
 \item{covariate}{Contains information about covariates currently a character name of a column in idat. It is NULL if not used. Mostly it is a vector the same length as ybase.}
 }

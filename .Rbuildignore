@@ -17,6 +17,8 @@ tests/testthat/res3nodes.pdf
 tests/profiling_code.R
 tests/profile_distfns.R
 tests/profile_plots.R
+tests/dpp_junk.R
+tests/dpp_test.R
 tests/*.Rout.save
 ^.*\.Rproj$
 ^\.Rproj\.user$
@@ -24,3 +26,4 @@ tests/*.Rout.save
 src/README.md
 tests/testthat/JUNK
 README.md
+.vscode

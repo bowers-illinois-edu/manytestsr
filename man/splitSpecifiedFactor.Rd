@@ -12,5 +12,5 @@ splitSpecifiedFactor(bid, x)
 \item{x}{Is a a factor with levels like "state.district.school". The splits will occur from left to right depending on whether there is existing variation at that level}
 }
 \description{
-A set of pre-specified splits
+This function does binary splits using a factor variable with dots separating the names of the subgroups. If there are more than two subgroups at any level, it makes one group from the largest subgroup and another group from the rest. If there are multiple subgroups the same size, it chooses the first subgroup by order of the levels of the factor.
 }

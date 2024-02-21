@@ -9,10 +9,10 @@ adjust_block_tests(
   bdat,
   blockid = "block",
   pfn,
-  p_adj_method,
+  p_adj_method = "fdr",
   simthresh = 20,
   sims = 1000,
-  fmla = YContNorm ~ trtF | blockF,
+  fmla = YContNorm ~ trtF,
   parallel = "multicore",
   ncores = 4,
   copydts = FALSE
@@ -27,7 +27,7 @@ adjust_block_tests(
 
 \item{pfn}{A function to produce pvalues --- using idat.}
 
-\item{p_adj_method}{A string indicating which method \code{p.adjust} should use.}
+\item{p_adj_method}{A string indicating which method \code{p.adjust} should use. Default is "fdr".}
 
 \item{simthresh}{Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations}
 
@@ -42,7 +42,7 @@ adjust_block_tests(
 \item{copydts}{TRUE or FALSE. TRUE if using standalone. Could be FALSE if copied objects are being sent to this function from other functions. Basically the question is whether we want this function to change the block or individual level datasets in the main environment or return a new object.}
 }
 \value{
-A data.table containing information about the sequence tests
+A data.table containing information about the sequence tests. The column \code{max_p} is the adjusted p-value and the column \code{p} is the unadjusted p-value.
 }
 \description{
 This function tests a hypothesis (of no effects currently) within each and

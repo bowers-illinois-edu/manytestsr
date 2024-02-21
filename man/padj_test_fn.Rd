@@ -67,7 +67,7 @@ padj_test_fn(
 
 \item{thealpha}{Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)}
 
-\item{stop_splitby_constant}{TRUE is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.}
+\item{stop_splitby_constant}{TRUE is the algorithm should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.}
 
 \item{return_details}{TRUE means that the function should return a list of
 the original data ("detobj"), a summary of the results ("detresults"), and a

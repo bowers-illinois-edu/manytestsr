@@ -4,6 +4,7 @@
 #'
 #' This function returns a function that carries with it the environment containing the arguments.
 #' The idea is to make parallelization easier.
+#'
 #' @param idat Individual level data
 #' @param bdat Data at the block level.
 #' @param blockid A character name of the column in idat and bdat indicating the block.
@@ -23,7 +24,7 @@
 #' @param covariate is the name of a covariate to be used in created covariate dependent treatment effects. If NULL then the tau_fn should not use a covariate. If "newcov", then create a new covariate with a known (moderate) relationship with the potential outcome under control. This relationship is currently fixed with an R^2 of about .1.
 #' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
-#' @param stop_splitby_constant TRUE is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
+#' @param stop_splitby_constant TRUE is the algorithm should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
 #' @param return_details TRUE means that the function should return a list of
 #' the original data ("detobj"), a summary of the results ("detresults"), and a
 #' node level dataset  ("detnodes"). Default here is FALSE. Only use TRUE when
@@ -31,8 +32,8 @@
 #' @return A pvalue for each block
 #' @export
 padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | blockF, ybase,
-                         prop_blocks_0, tau_fn, tau_size, by_block=TRUE, pfn, afn, p_adj_method, nsims, ncores = 1,
-                         splitfn = NULL, covariate = NULL, splitby = NULL, thealpha = .05, 
+                         prop_blocks_0, tau_fn, tau_size, by_block = TRUE, pfn, afn, p_adj_method, nsims, ncores = 1,
+                         splitfn = NULL, covariate = NULL, splitby = NULL, thealpha = .05,
                          stop_splitby_constant = TRUE, return_details = FALSE) {
   if (!is.null(afn) & is.character(afn)) {
     if (afn == "NULL") {
@@ -54,7 +55,7 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
   ## If covariate="newcov" then make a covariate with a known relationship with
   ## the potential outcome to control (this to avoid problems with some created
   ## covariates perfectly predicting the outcome under control)
-  if ( (!is.null(covariate) && covariate == "newcov") || (!is.null(splitby) && splitby == "newcov")) {
+  if ((!is.null(covariate) && covariate == "newcov") || (!is.null(splitby) && splitby == "newcov")) {
     datnew[, newcov := {
       tmp <- .01 * sd(get(ybase)) * get(ybase) + rnorm(.N, mean = 0, sd = sd(get(ybase)))
       ifelse(tmp < 0, 0, tmp)
@@ -66,7 +67,7 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
   datnew$y1new <- create_effects(
     idat = datnew, ybase = ybase, blockid = blockid,
     tau_fn = tau_fn, tau_size = tau_size,
-    prop_blocks_0 = prop_blocks_0, covariate = covariate, by_block=by_block
+    prop_blocks_0 = prop_blocks_0, covariate = covariate, by_block = by_block
   )
   datnew[, trueblocks := ifelse(abs(y1new - get(ybase)) <= .Machine$double.eps, 0, 1)]
   datnew[, trueate := mean(y1new - get(ybase)), by = blockid]
@@ -86,19 +87,20 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
   }
 
   p_sims_lst <- replicate(nsims, reveal_and_test_fn(
-          idat = datnew, bdat = bdatnew, blockid = blockid, trtid = trtid, y1var = "y1new",
-          fmla = fmla, ybase = ybase, prop_blocks_0 = prop_blocks_0,
-          tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method,
-          splitfn = splitfn, splitby = splitby, thealpha = thealpha,
-          stop_splitby_constant = stop_splitby_constant, ncores = ncores, return_details = return_details), simplify = FALSE)
+    idat = datnew, bdat = bdatnew, blockid = blockid, trtid = trtid, y1var = "y1new",
+    fmla = fmla, ybase = ybase, prop_blocks_0 = prop_blocks_0,
+    tau_fn = tau_fn, tau_size = tau_size, pfn = pfn, afn = afn, p_adj_method = p_adj_method,
+    splitfn = splitfn, splitby = splitby, thealpha = thealpha,
+    stop_splitby_constant = stop_splitby_constant, ncores = ncores, return_details = return_details
+  ), simplify = FALSE)
 
   if (length(p_sims_lst) == 1) {
-      ## If we are using this function to apply to a given dataset, and so want
-      ## details about the blocks, the results are a list of objects from
-      ## calc_errs
-      p_sims <- p_sims_lst[[1]]
+    ## If we are using this function to apply to a given dataset, and so want
+    ## details about the blocks, the results are a list of objects from
+    ## calc_errs
+    p_sims <- p_sims_lst[[1]]
   } else {
-      p_sims <- data.table::rbindlist(p_sims_lst)
+    p_sims <- data.table::rbindlist(p_sims_lst)
   }
 
   return(p_sims)
@@ -124,7 +126,7 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
 #' @param splitby Must be null. Only exists so that we can use the same efffect creation and testing function for both approaches.
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
 #' @param copydts TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.
-#' @param stop_splitby_constant FALSE (not used here because this algorithmn does not split) is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
+#' @param stop_splitby_constant FALSE (not used here because this algorithm does not split) is the algorithm should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
 #' @param ncores The number of cores or threads to use for the test statistic creation and possible permutation testing
 #' @param return_details TRUE means that the function should return a list of
 #' the original data ("detobj"), a summary of the results ("detresults"), and a
@@ -175,7 +177,7 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
 #'
 #' Repeat experiment, reveal treatment effects from the potential outcomes, test within partitions, summarize
 #'
-#' The function does hypothesis tests within partitions of blocks (including individual blocks depending on the splitting algorithmn) and then summarizes the results  of this testing across the blocks. It very much depends  on padj_test_fn.
+#' The function does hypothesis tests within partitions of blocks (including individual blocks depending on the splitting algorithm) and then summarizes the results  of this testing across the blocks. It very much depends  on padj_test_fn.
 #' @param idat Data at the unit level.
 #' @param bdat Data at the block level.
 #' @param blockid A character name of the column in idat and bdat indicating the block.
@@ -193,7 +195,7 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
 #' @param splitfn A function to split the data into two pieces --- using bdat
 #' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
-#' @param stop_splitby_constant TRUE is the algorithmn should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
+#' @param stop_splitby_constant TRUE is the algorithm should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
 #' @param ncores The number of cores or threads to use for the test statistic creation and possible permutation testing
 #' @param return_details TRUE means that the function should return a list of
 #' the original data ("detobj"), a summary of the results ("detresults"), and a
@@ -203,7 +205,7 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
 #' @export
 reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF | blockF, ybase, y1var,
                                     prop_blocks_0, tau_fn, tau_size, pfn, afn, p_adj_method = "split",
-                                    copydts = FALSE, splitfn, splitby, thealpha = .05, stop_splitby_constant = TRUE, ncores = 1, return_details=FALSE) {
+                                    copydts = FALSE, splitfn, splitby, thealpha = .05, stop_splitby_constant = TRUE, ncores = 1, return_details = FALSE) {
   if (!is.null(afn) & is.character(afn)) {
     if (afn == "NULL") {
       afn <- NULL
@@ -371,9 +373,9 @@ calc_errs <- function(testobj,
   # One row of results
   detresults <- cbind(deterrs, detates)
   if (!return_details) {
-      return(detresults)
+    return(detresults)
   } else {
-      res <- list(detresults = detresults, detobj = detobj, detnodes = detnodes)
-      return(res)
+    res <- list(detresults = detresults, detobj = detobj, detnodes = detnodes)
+    return(res)
   }
 }

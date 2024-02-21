@@ -8,7 +8,7 @@
 #' @param blockid A character name of the column in idat and bdat indicating the block.
 #' @param splitfn A function to split the data into two pieces --- using bdat
 #' @param pfn A function to produce pvalues --- using idat.
-#' @param alphafn A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator.
+#' @param alphafn A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator. Currently alpha_investing, alpha_saffron, alpha_addis are accepted. All of them wrap the corresponding functions from the `onlineFDR` package.
 #' @param simthresh Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations
 #' @param sims Number of permutations for permutation-based testing
 #' @param maxtest Maximum splits or tests to do. Should probably not be smaller than the number of experimental blocks.
@@ -17,6 +17,7 @@
 #' @param stop_splitby_constant TRUE if the splitting should stop when splitby is constant within a given branch of the tree. FALSE if splitting should continue even when splitby is constant. Default is TRUE. Different combinations of splitby, splitfn, and stop_splitby_constant make more or less sense as described below.
 #' @param blocksize A string with the name of the column in bdat contains information about the size of the block (or other determinant of the power of tests within that block, such as harmonic mean weight of the block or variance of the outcome within the block.)
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
+#' @param thew0 Is the starting "wealth" of the alpha investing procedure (this is only relevant when alphafn is not null).
 #' @param fmla A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors.
 #' @param parallel Should the pfn use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following `approximate` in the coin package.
 #' @param ncores The number of cores used for parallel processing
@@ -78,6 +79,7 @@ findBlocks <-
            sims = 1000,
            maxtest = 2000,
            thealpha = 0.05,
+           thew0 = .05 - .001,
            fmla = YContNorm ~ trtF | blockF,
            parallel = "multicore",
            ncores = 4,
@@ -147,7 +149,9 @@ findBlocks <-
         alphafn(
           pval = unique(p1),
           batch = unique(g1),
-          nodesize = sum(get(blocksize))
+          nodesize = sum(get(blocksize)),
+          thealpha = thealpha,
+          thew0 = thew0
         ),
         thealpha
       )]
@@ -172,23 +176,19 @@ findBlocks <-
     if (!all(bdat$testable)) {
       return(bdat)
     }
-    ## if(all(bdat$testable)){ browser() }
     # Step 2: Iterate through the tree
     # Keep testing until no testing possible: criteria all blocks all size 1 and or
     # all p_i > alpha_i  OR simulation
     # limits reached (for testing of the algorithm).
-    ### We might want at least 2 testable blocks.
-    ## while (any(bdat$testable, na.rm = TRUE) & i < maxtest) {
+    # We might want at least 2 testable blocks.
     while (sum(bdat$testable, na.rm = TRUE) > 1 & i < maxtest) {
-      # if(i==9){ browser() }
+      # if(i==9){ browser() } ## for debugging
       i <- i + 1L
       if (trace) {
         message("Split number: ", i)
       }
-      gnm <-
-        paste0("g", i) # name of the grouping variable for the current split
-      pnm <-
-        paste0("p", i) # name of the p-value variable for the current split
+      gnm <- paste0("g", i) # name of the grouping variable for the current split
+      pnm <- paste0("p", i) # name of the p-value variable for the current split
       alphanm <- paste0("alpha", i)
       # Set Group to NA for blocks where we have to stop testing
       bdat[(testable), (gnm) := splitfn(bid = get(blockid), x = get(splitby)), by = biggrp]
@@ -196,18 +196,13 @@ findBlocks <-
       # https://stackoverflow.com/questions/33689098/interactions-between-factors-in-data-table
       if (i == 2) {
         bdat[(testable), nodenum_prev := nodenum_current]
-        # bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev * 2L , ( nodenum_prev * 2L )  + 1L)]
-        bdat[(testable), nodenum_current := fifelse(
-          get(gnm) == "0", nodeidfn(paste0(nodenum_prev, "0")),
-          nodeidfn(paste0(nodenum_prev, "1"))
-        )]
+        bdat[(testable), nodenum_current := nodeidfn(get(gnm))]
       } else {
         bdat[(testable), nodenum_prev := nodenum_current]
         # bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev * 2L , ( nodenum_prev * 2L )  + 1L), by = biggrp]
-        bdat[(testable), nodenum_current := fifelse(
-          get(gnm) == "0", nodeidfn(paste0(nodenum_prev, "0")),
-          nodeidfn(paste0(nodenum_prev, "1"))
-        ), by = biggrp]
+        # bdat[(testable), nodenum_current := fifelse( get(gnm) == "0", nodeidfn(paste0(nodenum_prev, "0")), nodeidfn(paste0(nodenum_prev, "1"))), by = biggrp]
+        bdat[(testable), nodenum_current := nodeidfn(paste0(nodenum_prev, get(gnm))), by = biggrp]
+        # bdat[(testable), nodenum_current := nodeidfn(get(gnm)), by = biggrp]
         # How to test/efficiently or periodically for duplicated nodenums?
       }
       bdat[(testable), biggrp := interaction(biggrp, nodenum_current, drop = TRUE)]
@@ -256,7 +251,9 @@ findBlocks <-
           pbtracker[, (alphanm) := alphafn(
             pval = p,
             batch = batch,
-            nodesize = nodesize
+            nodesize = nodesize,
+            thealpha = thealpha,
+            thew0 = thew0
           )]
         } else {
           ## Find the nodes that are ancestors and descedents of each other since the alpha adjusting depends on this order
@@ -286,7 +283,9 @@ findBlocks <-
             pbtracker[J(thepaths[[j]]), (alphanm) := alphafn(
               pval = p,
               batch = depth,
-              nodesize = nodesize
+              nodesize = nodesize,
+              thealpha = thealpha,
+              thew0 = thew0
             )]
           }
         }

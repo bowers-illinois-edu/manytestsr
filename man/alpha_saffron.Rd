@@ -4,7 +4,7 @@
 \alias{alpha_saffron}
 \title{Alpha adjustment function: SAFFRON}
 \usage{
-alpha_saffron(pval, batch, nodesize)
+alpha_saffron(pval, batch, nodesize, thealpha = 0.05, thew0 = 0.05 - 0.001)
 }
 \arguments{
 \item{pval}{Is a numeric vector of p-values}
@@ -14,6 +14,10 @@ and the order of the p-values. The first element pval and first element of batch
 produced in the tree and the subsequent p-values should be produced on the children of that root (or children of the children of the root, etc.)}
 
 \item{nodesize}{Is vector indicating the information used to create each p-value. For example, it could be the number of observations, or a weighted version.}
+
+\item{thealpha}{Is the overall error rate for a given test}
+
+\item{thew0}{Is the starting "wealth" of the alpha investing procedure}
 }
 \value{
 A vector of alpha values

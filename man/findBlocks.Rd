@@ -15,6 +15,7 @@ findBlocks(
   sims = 1000,
   maxtest = 2000,
   thealpha = 0.05,
+  thew0 = 0.05 - 0.001,
   fmla = YContNorm ~ trtF | blockF,
   parallel = "multicore",
   ncores = 4,
@@ -36,7 +37,7 @@ findBlocks(
 
 \item{pfn}{A function to produce pvalues --- using idat.}
 
-\item{alphafn}{A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator.}
+\item{alphafn}{A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator. Currently alpha_investing, alpha_saffron, alpha_addis are accepted. All of them wrap the corresponding functions from the \code{onlineFDR} package.}
 
 \item{simthresh}{Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations}
 
@@ -45,6 +46,8 @@ findBlocks(
 \item{maxtest}{Maximum splits or tests to do. Should probably not be smaller than the number of experimental blocks.}
 
 \item{thealpha}{Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)}
+
+\item{thew0}{Is the starting "wealth" of the alpha investing procedure (this is only relevant when alphafn is not null).}
 
 \item{fmla}{A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors.}
 
