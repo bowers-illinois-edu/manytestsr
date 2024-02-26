@@ -87,11 +87,12 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 #' Make a node level binary tree object
 #'
 #' Given the results of the splitting and testing algorithm, make a node level data set for use in reporting results in terms of a binary tree graph.
+#'
 #' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
 #' @param blockid is Is a character name for the variable containing the block id information
 #' @return A tbl_graph and igraph object with nodes and edges
 #' @importFrom stringi stri_split_fixed stri_sub
-# @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent activate
+#' @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent activate
 #' @import tidygraph
 #' @importFrom data.table melt
 #' @export
@@ -126,8 +127,12 @@ make_tree <- function(orig_res, blockid = "bF") {
 
   # Make an edge data.frame
   res_edges_lst <- list()
-  for (i in 1:(ncol(res_nodeids) - 1)) {
-    res_edges_lst[[i]] <- data.table(from = res_nodeids[, i], to = res_nodeids[, i + 1])
+  if (nrow(res_nodes_df) == 1) {
+    res_edges_lst[[1]] <- data.table(from = "1", to = "1")
+  } else {
+    for (i in 1:(ncol(res_nodeids) - 1)) {
+      res_edges_lst[[i]] <- data.table(from = res_nodeids[, i], to = res_nodeids[, i + 1])
+    }
   }
   res_edges_df <- unique(na.omit(rbindlist(res_edges_lst)))
   res_nodes_df <- merge(res_nodes_df, res_edges_df,
