@@ -159,7 +159,6 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
     pfn = pfn, fmla = fmla,
     copydts = copydts, ncores = ncores, parallel = parallel
   )
-  # doing FDR==.05 for now. All that really matters is some fixed number.
   res[, hit := max_p < thealpha]
 
   errs <- calc_errs(
@@ -251,26 +250,77 @@ reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF
 
 #' Calculate the error and success proportions of tests for a single iteration
 #'
+#' @description
 #' This function takes output from [findBlocks] or an equivalent bottom-up testing function such as `adjust_block_tests`
-#' and returns the proportions of errors made. This means that the input to findBlocks includes a column containing a true block-level effect.
+#' and returns the proportions of errors made. To use this function the input to findBlocks must include a column containing a true block-level effect.
 #' Repeated uses of this function allow us to assess false discovery rates and family wise error rates among other metrics of testing success.
+#'
 #' @param testobj Is an object arising from \code{\link{findBlocks}} or \code{\link{adjust_block_tests}}. It will contain block-level results.
 #' @param truevar_name Is a string indicating the name of the variable containing the true underlying causal effect (at the block level).
 #' @param trueeffect_tol Is the smallest effect size below which we consider the effect to be zero (by default is it floating point zero).
 #' @param blockid A character name of the column in idat and bdat indicating the block.
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
 #' @param fwer Indicates that we are trying to control FWER. Right now, we do this by default in report_detections but this indicates when we should be looking at FDR
-#' @param return_details TRUE means that the function should return a list of
-#' the original data ("detobj"), a summary of the results ("detresults"), and a
-#' node level dataset  ("detnodes"). Default here is FALSE. Only use TRUE when
+#' @param return_details TRUE means that the function should return a list of the original data ("detobj"), a summary of the results ("detresults"),  a
+#' node level dataset  ("detnodes"), and a copy of the original object that was provided as input. Default here is FALSE. Only use TRUE when
 #' not using simulations.
-#' @return False positive proportion out of the tests across the blocks, The
-#' false discovery rate (proportion rejected of false nulls out of all
-#' rejections), the power of the adjusted tests across blocks (the proportion
-#' of correctly rejected hypotheses out of all correct hypotheses --- in this
-#' case correct means non-null), and power of the unadjusted test (proportion
-#' correctly rejected out of  all correct hypothesis, but using unadjusted
-#' p-values).
+#'
+#' @returns
+#' If `hit` means that $p \le \alpha$ for a given block or group of blocks where testing has stopped, `allnull` means that all of the effects in the group of blocks (or the single block) are zero, `anynotnull` means that at least one block has a non-zero effect, then this is the code that returns the different basic descriptions of errors.
+#' \preformatted{
+#' deterrs <- detnodes[, .(
+#'  nreject = sum(hit),
+#'  naccept = sum(1 - hit),
+#'  prop_reject = mean(hit),
+#'  prop_accept = mean(1 - hit), # or 1-prop_reject
+#'  # rejections of false null /detections of true non-null
+#'  # (if any of the blocks have an effect, then we count this as a correct rejection or correct detection)
+#'  true_pos_prop = mean(hit * anynotnull),
+#'  # If we reject but *all* of the blocks have no effects, this is a false positive error
+#'  # If we reject but only one of them has no effects but the other has effects,
+#'  # then this is not an error --- but a correct detection
+#'  false_pos_prop = mean(hit * allnull),
+#'  # If we do not reject and all blocks are truly null, then we have no error.
+#'  true_neg_prop = mean((1 - hit) * allnull),
+#'  # If we do not reject/detect and at least one of the blocks actually has an effect, we have
+#'  # a false negative error --- a failure to detect the truth
+#'  false_neg_prop = mean((1 - hit) * anynotnull),
+#'  # Now look at false and true discoveries: false rejections as a proportion of rejections
+#'  false_disc_prop = sum(hit * allnull) / max(1, sum(hit)),
+#'  true_disc_prop = sum(hit * anynotnull) / max(1, sum(hit)),
+#'  true_nondisc_prop = sum((1 - hit) * allnull) / max(1, sum(1 - hit)),
+#'  false_nondisc_prop = sum((1 - hit) * anynotnull) / max(1, sum(1 - hit)),
+#'  meangrpsize = mean(grpsize),
+#'  medgrpsize = median(grpsize)
+#' )]
+#' }
+#' We also summarize the average treatment effects in the blocks (or groups of blocks) among blocks where the null hypothesis of no effects has been rejected and where it has not been rejected.
+#' \itemize{
+#' \item "nreject" Number of tests with $p \le \alpha$
+#'  \item "naccept" Number of tests with $p > \alpha$
+#'  \item "prop_reject" Proportion of tests with $p \le \alpha$ out of all tests completed
+#'  \item "prop_accept" Proportion of tests with $p > \alpha$ out of all tests completed
+#'  \item "true_pos_prop" Proportion of tests with $p \le \alpha$ out of all tests of true null hypotheses (rejections of false null hypotheses)
+#'  \item "false_pos_prop" Proportion of tests with $p \le \alpha$ out of all tests of false null hypotheses (rejections of true null hypotheses)
+#'  \item "true_neg_prop"
+#'  \item "false_neg_prop"
+#'  \item "false_disc_prop"
+#'  \item "true_disc_prop"
+#'  \item "true_nondisc_prop"
+#'  \item "false_nondisc_prop"
+#'  \item "meangrpsize"
+#'  \item "medgrpsize"
+#'  \item "hit1"
+#'  \item "minate1"
+#'  \item "meanate1"
+#'  \item "medate1"
+#'  \item "maxate1"
+#'  \item "hit0"
+#'  \item "minate0"
+#'  \item "meanate0"
+#'  \item "medate0"
+#'  \item "maxate0"
+#' }
 #' @export
 calc_errs <- function(testobj,
                       truevar_name,
@@ -287,7 +337,7 @@ calc_errs <- function(testobj,
 
   if (length(grep("biggrp", names(testobj))) > 0) {
     # this is for the top-down/split and test method
-    detobj <- report_detections(testobj, fwer = fwer, only_hits = FALSE)
+    detobj <- report_detections(testobj, fwer = fwer, alpha = thealpha, only_hits = FALSE)
     detobj[, hit := as.numeric(detobj$hit)]
 
     detnodes <- detobj[, .(
@@ -308,6 +358,8 @@ calc_errs <- function(testobj,
     # This is for the bottom-up/test every block method
     detobj <- testobj[, .(
       blockid = get(blockid),
+      p,
+      max_p,
       hit = max_p < thealpha,
       hit_grp = get(blockid),
       truevar_name = get(truevar_name)
@@ -375,7 +427,7 @@ calc_errs <- function(testobj,
   if (!return_details) {
     return(detresults)
   } else {
-    res <- list(detresults = detresults, detobj = detobj, detnodes = detnodes)
+    res <- list(detresults = detresults, detobj = detobj, detnodes = detnodes, testobj = testobj)
     return(res)
   }
 }
