@@ -36,7 +36,7 @@ reveal_po_and_test_siup(
 
 \item{trtid}{Is the name of the treatment numeric, (0,1), variable}
 
-\item{fmla}{A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors.}
+\item{fmla}{A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors. (NOT USED HERE)}
 
 \item{ybase}{Is the potential outcome to control upon which the treatment effect will be built}
 

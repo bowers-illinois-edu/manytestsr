@@ -57,7 +57,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
     }
     # A detection on a single block is scored if the final p < alpha for a node containing a single block (i.e. a leaf)
     res[, single_hit := max_p < max_alpha & blocksbygroup == 1]
-    # A detection is also scored if all leaves have p > alpha but the parent has p < alpha: this is a grouped detection with two blocks.
+    # A detection is also scored if all leaves have p > alpha but the parent has p < alpha: this is a grouped detection with multiple blocks.
     # res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & fin_parent_p < parent_alpha & length(unique(fin_nodenum)) == 2), TRUE, FALSE), by = fin_parent]
     res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & (fin_parent_p < parent_alpha)), TRUE, FALSE), by = fin_parent]
     # Also a group hit can be scored (an effect detected within a group of blocks) if there are multiple blocks in a final node and that test is p<a
@@ -119,11 +119,13 @@ make_tree <- function(orig_res, blockid = "bF") {
   reslong <- droplevels(reslong[!is.na(nodenum) & !is.na(p), ])
 
   res_nodes_df <- reslong[, .(
-    p = unique(p), a = unique(a),
+    p = unique(p),
+    a = unique(a),
     bF = paste(as.character(unlist(sort(get(blockid)))), collapse = ","),
     depth = unique(depth)
   ), by = nodenum]
   res_nodes_df$name <- res_nodes_df$nodenum
+  res_nodes_df$num_blocks <- stri_count_fixed(res_nodes_df$bF, ",") + 1
 
   # Make an edge data.frame
   res_edges_lst <- list()
@@ -151,15 +153,15 @@ make_tree <- function(orig_res, blockid = "bF") {
   res_graph <- res_graph %>%
     activate(nodes) %>%
     group_by(parent_name) %>%
-    mutate(both_ns = all(p > a)) %>%
+    mutate(both_notsig = all(p > a)) %>%
     ungroup()
   res_graph <- res_graph %>%
     activate(nodes) %>%
-    mutate(parent_of_ns = node_is_adjacent(to = both_ns, include_to = FALSE, mode = "in"))
+    mutate(parent_of_notsig = node_is_adjacent(to = both_notsig, include_to = FALSE, mode = "in"))
   # first way to detect is leaf with p<alpha and second way as parent of all non-sig leaves
   res_graph <- res_graph %>%
     activate(nodes) %>%
-    mutate(hit = (out_degree == 0 & p <= a) | parent_of_ns)
+    mutate(hit = (out_degree == 0 & p <= a) | parent_of_notsig)
   res_graph <- res_graph %>%
     activate(nodes) %>%
     mutate(shortbf = ifelse(nchar(bF) > 6, paste0(stri_sub(bF, 1, 5), "..."), bF))

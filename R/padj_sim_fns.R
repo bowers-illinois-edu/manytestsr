@@ -181,7 +181,7 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
 #' @param bdat Data at the block level.
 #' @param blockid A character name of the column in idat and bdat indicating the block.
 #' @param trtid Is the name of the treatment numeric, (0,1), variable
-#' @param fmla A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors.
+#' @param fmla A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors. (NOT USED HERE)
 #' @param ybase Is the potential outcome to control upon which the treatment effect will be built
 #' @param y1var Is the name of the potential outcome to treatment
 #' @param prop_blocks_0 Is the proportion of blocks with no effects at all
@@ -350,6 +350,11 @@ calc_errs <- function(testobj,
     setkey(detnodes, hit_grp)
     # prop_hits <- mean(detobj$hit)
 
+    ## Accessing the nodes another way
+    thetree <- make_tree(testobj, blockid = blockid) %>%
+      select(-label) %>%
+      as.data.frame()
+
     detnodes_effects <- detobj[, simp_summary(get(truevar_name)), by = list(hit, hit_grp)]
     setnames(detnodes_effects, c("hit", "hit_grp", "minate", "meanate", "medianate", "maxate"))
     setkey(detnodes_effects, hit_grp)
@@ -427,7 +432,7 @@ calc_errs <- function(testobj,
   if (!return_details) {
     return(detresults)
   } else {
-    res <- list(detresults = detresults, detobj = detobj, detnodes = detnodes, testobj = testobj)
+    res <- list(detresults = detresults, detobj = detobj, detnodes = detnodes, testobj = testobj, tree = thetree)
     return(res)
   }
 }
