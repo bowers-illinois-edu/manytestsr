@@ -194,7 +194,7 @@ test_that("passing a block factor to a p-value function with one block gives the
 ## Now using more discrete type data typical of policy applications.
 ## Here we have a lot of zeros which creates ties and/or makes measures of spread degenerate --- no variance within certain blocks for example.
 ## Find the actual test stats
-data(example_dat,package="manytestsr")
+data(example_dat, package = "manytestsr")
 example_dat$blockF <- factor(example_dat$blockF)
 test_that("Test using data with lots of zeros and ties", {
   example_Y1 <- pIndepDist(dat = example_dat, fmla = Y1 ~ trtF | blockF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")

@@ -75,8 +75,7 @@ err_testing_fn <-
   function(afn,
            sfn,
            sby,
-           fmla = Ytauv2 ~ ZF |
-             bF,
+           fmla = Ytauv2 ~ ZF | bF,
            idat = idat3,
            bdat = bdat4,
            truevar_name) {
@@ -102,7 +101,7 @@ err_testing_fn <-
       splitby = sby
     )
     detects <-
-      report_detections(theres, only_hits = FALSE, fwer = is.null(afn))
+      report_detections(theres, only_hits = FALSE, fwer = is.null(afn), blockid = "bF")
     nodes <- detects[, .(
       hit = as.numeric(unique(hit)),
       numnull = sum(get(truevar_name) == 0),
@@ -193,7 +192,10 @@ err_testing_fn2 <-
     expect_equal(errs$false_nondisc_prop, err_tab["0", "0"] / max(1, sum(err_tab["0", ])))
   }
 
-# err_testing_fn2(fmla = Ytauv2 ~ ZF, idat = idat3, bdat = bdat4, truevar_name="ate_tauv2")
+
+err_testing_fn(fmla = Ynull ~ ZF | bF, idat = idat3, bdat = bdat4, truevar_name = "ate_null", afn = "NULL", sfn = splitCluster, sby = "hwt")
+
+err_testing_fn2(fmla = Ytauv2 ~ ZF, idat = idat3, bdat = bdat4, truevar_name = "ate_tauv2")
 
 resnms <- apply(alpha_and_splits, 1, function(x) {
   paste(x, collapse = "_", sep = "")

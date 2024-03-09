@@ -19,7 +19,7 @@ if (interactive) {
 library(dplyr)
 library(dtplyr)
 
-data(example_dat,package="manytestsr")
+data(example_dat, package = "manytestsr")
 example_dat$blockF <- factor(example_dat$blockF)
 example_dat <- droplevels(example_dat)
 ## nrow(example_dat)

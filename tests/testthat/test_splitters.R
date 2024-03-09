@@ -85,7 +85,7 @@ with(bdat4, table(lvs, gf10, exclude = c()))
 ## This should have five splits
 with(droplevels(bdat4[lv1 != "l1_1" & lv2 != "l2_2", ]), table(lvs, gf10, exclude = c()))
 
-data(example_dat,package="manytestsr")
+data(example_dat, package = "manytestsr")
 example_dat$blockF <- factor(example_dat$blockF)
 
 ## Make the block-level dataset

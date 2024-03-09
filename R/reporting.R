@@ -21,7 +21,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
   if (length(grep("biggrp", names(res))) == 0) {
     # This is for the bottom-up/test every block method
     # max_p are the adjusted p-values so we can use alpha=.05 for error rate control (hoping it is fdr and not fwer)
-    res[, hit := max_p < alpha]
+    res[, hit := max_p <= alpha]
     res[, hit_grp := nodenum_current]
     if (all(!res$hit)) {
       res[, hit_grp := NA]
@@ -42,7 +42,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
       res[, fin_parent_p := get(paste0("p", maxdepth - 1)), by = seq_len(nrow(res))]
       res[, parent_alpha := get(paste0("alpha", maxdepth - 1)), by = seq_len(nrow(res))]
     }
-    # If the block is a terminal node and p<alpha then this is a hit or detected effect
+    # If the block is a terminal node and p<=alpha then this is a hit or detected effect
     # If the block is a terminal node and p>alpha for both it and all other terminal nodes
     #  then we have a hit or detected effect for *all* terminal nodes but cannot distinguish between them.
     # I think max_p should be p at maxdepth for the FDR algorithm and maximum p overall (or pfinalb) for the FWER algo.
@@ -55,13 +55,13 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
       res[, max_p := get(paste0("p", maxdepth)), by = seq_len(nrow(res))]
       res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
     }
-    # A detection on a single block is scored if the final p < alpha for a node containing a single block (i.e. a leaf)
-    res[, single_hit := max_p < max_alpha & blocksbygroup == 1]
-    # A detection is also scored if all leaves have p > alpha but the parent has p < alpha: this is a grouped detection with multiple blocks.
-    # res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & fin_parent_p < parent_alpha & length(unique(fin_nodenum)) == 2), TRUE, FALSE), by = fin_parent]
-    res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & (fin_parent_p < parent_alpha)), TRUE, FALSE), by = fin_parent]
+    # A detection on a single block is scored if the final p <= alpha for a node containing a single block (i.e. a leaf)
+    res[, single_hit := max_p <= max_alpha & blocksbygroup == 1]
+    # A detection is also scored if all leaves have p > alpha but the parent has p <= alpha: this is a grouped detection with multiple blocks.
+    # res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & fin_parent_p <= parent_alpha & length(unique(fin_nodenum)) == 2), TRUE, FALSE), by = fin_parent]
+    res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & (fin_parent_p <= parent_alpha)), TRUE, FALSE), by = fin_parent]
     # Also a group hit can be scored (an effect detected within a group of blocks) if there are multiple blocks in a final node and that test is p<a
-    res[, group_hit2 := fifelse(blocksbygroup > 1 & all(max_p < max_alpha), TRUE, FALSE), by = fin_nodenum]
+    res[, group_hit2 := fifelse(blocksbygroup > 1 & all(max_p <= max_alpha), TRUE, FALSE), by = fin_nodenum]
     res[, hit := single_hit | group_hit | group_hit2]
     if (any(res$hit)) {
       res[(hit), fin_grp := fifelse(single_hit | group_hit2, fin_nodenum, fin_parent)]
@@ -158,7 +158,7 @@ make_tree <- function(orig_res, blockid = "bF") {
   res_graph <- res_graph %>%
     activate(nodes) %>%
     mutate(parent_of_notsig = node_is_adjacent(to = both_notsig, include_to = FALSE, mode = "in"))
-  # first way to detect is leaf with p<alpha and second way as parent of all non-sig leaves
+  # first way to detect is leaf with p=<alpha and second way as parent of all non-sig leaves
   res_graph <- res_graph %>%
     activate(nodes) %>%
     mutate(hit = (out_degree == 0 & p <= a) | parent_of_notsig)

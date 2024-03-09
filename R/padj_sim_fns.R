@@ -339,100 +339,119 @@ calc_errs <- function(testobj,
     # this is for the top-down/split and test method
     detobj <- report_detections(testobj, fwer = fwer, alpha = thealpha, only_hits = FALSE)
     detobj[, hit := as.numeric(detobj$hit)]
+    detobj[, hitb := as.numeric(max_p <= thealpha)]
+    detobj[, hitb2 := as.numeric(single_hit)]
+    stopifnot(all.equal(detobj$hitb, detobj$hitb2))
 
-    detnodes <- detobj[, .(
-      hit = unique(hit),
-      anynull = as.numeric(any(abs(get(truevar_name)) <= trueeffect_tol)),
-      allnull = as.numeric(all(abs(get(truevar_name)) <= trueeffect_tol)),
-      anynotnull = as.numeric(any(abs(get(truevar_name)) > trueeffect_tol)),
-      grpsize = .N
-    ), by = hit_grp]
-    setkey(detnodes, hit_grp)
-    # prop_hits <- mean(detobj$hit)
+    ## Coding whether the true effect is zero or not by block.
+    detobj[, true0 := as.numeric(abs(get(truevar_name)) <= trueeffect_tol)]
+    detobj[, truenot0 := as.numeric(abs(get(truevar_name)) > trueeffect_tol)]
 
-    ## Accessing the nodes another way
+    ## Accessing the results another way
     thetree <- make_tree(testobj, blockid = blockid) %>%
       select(-label) %>%
       as.data.frame()
+    sigleaves <- thetree %>% filter(out_degree == 0 & hit == 1)
+    ##  detobj[blockF %in% sigleaves$bF,.(blockF,max_p,single_hit,hitb,hitb2,fin_grp)]
+    stopifnot(all.equal(sort(sigleaves$bF), sort(as.character(detobj[hitb == 1, get(blockid)]))))
 
-    detnodes_effects <- detobj[, simp_summary(get(truevar_name)), by = list(hit, hit_grp)]
-    setnames(detnodes_effects, c("hit", "hit_grp", "minate", "meanate", "medianate", "maxate"))
-    setkey(detnodes_effects, hit_grp)
-    detnodes <- detnodes[detnodes_effects, ]
+    ## detnodes_effects <- detobj[, simp_summary(get(truevar_name)), by = list(hit, hit_grp)]
+    ## setnames(detnodes_effects, c("hit", "hit_grp", "minate", "meanate", "medianate", "maxate"))
+    ## setkey(detnodes_effects, hit_grp)
+    ## detnodes <- detnodes[detnodes_effects, ]
   } else {
     # This is for the bottom-up/test every block method
+    thetree <- NA
+
     detobj <- testobj[, .(
       blockid = get(blockid),
       p,
       max_p,
       hit = max_p < thealpha,
       hit_grp = get(blockid),
-      truevar_name = get(truevar_name)
+      truevar_name = get(truevar_name),
+      hit = as.numeric(hit),
+      hitb = as.numeric(hitb),
+      true0 = as.numeric(abs(get(truevar_name)) <= trueeffect_tol),
+      truenot0 = as.numeric(abs(get(truevar_name)) > trueeffect_tol),
+      trueeffect = get(truevar_name),
+      grpsize = 1
     )]
     setnames(detobj, "truevar_name", truevar_name)
 
-    detnodes <- detobj[, .(
-      hit = as.numeric(hit),
-      anynull = as.numeric(abs(get(truevar_name)) <= trueeffect_tol),
-      allnull = as.numeric(abs(get(truevar_name)) <= trueeffect_tol),
-      anynotnull = as.numeric(abs(get(truevar_name)) > trueeffect_tol),
-      trueeffect = get(truevar_name),
-      grpsize = 1,
-      blockid = blockid
-    )]
-    setkey(detnodes, blockid)
-    detnodes_effects <- detobj[, as.list(simp_summary(get(truevar_name))), by = list(hit, hit_grp)]
-    setnames(detnodes_effects, c("hit", "hit_grp", "minate", "meanate", "medianate", "maxate"))
-    setkey(detnodes_effects, hit_grp)
-    detnodes <- detnodes[detnodes_effects, ]
+    # detnodes <- detobj[, .(
+    #  hit = as.numeric(hit),
+    #  anynull = as.numeric(abs(get(truevar_name)) <= trueeffect_tol),
+    #  allnull = as.numeric(abs(get(truevar_name)) <= trueeffect_tol),
+    #  anynotnull = as.numeric(abs(get(truevar_name)) > trueeffect_tol),
+    #  trueeffect = get(truevar_name),
+    #  grpsize = 1,
+    #  blockid = blockid
+    # )]
+    # setkey(detnodes, blockid)
+    # detnodes_effects <- detobj[, as.list(simp_summary(get(truevar_name))), by = list(hit, hit_grp)]
+    # setnames(detnodes_effects, c("hit", "hit_grp", "minate", "meanate", "medianate", "maxate"))
+    # setkey(detnodes_effects, hit_grp)
+    # detnodes <- detnodes[detnodes_effects, ]
   }
-  detates1 <- detnodes[, .(
-    minate = min(minate),
-    meanate = mean(meanate),
-    medate = median(medianate),
-    maxate = max(maxate)
-  ), by = hit]
-  if (nrow(detates1) == 1) {
-    detates2 <- rbind(detates1, list(1 - detates1$hit, NA, NA, NA, NA))
-  }
+  ## detates1 <- detnodes[, .(
+  ##   minate = min(minate),
+  ##   meanate = mean(meanate),
+  ##   medate = median(medianate),
+  ##   maxate = max(maxate)
+  ## ), by = hit]
+  ## if (nrow(detates1) == 1) {
+  ##   detates2 <- rbind(detates1, list(1 - detates1$hit, NA, NA, NA, NA))
+  ## }
 
-  detates <- do.call("cbind", lapply(c(1, 0), function(i) {
-    obj <- detates1[hit == i, ]
-    setnames(obj, paste0(names(obj), i))
-    return(obj)
-  }))
+  ## detates <- do.call("cbind", lapply(c(1, 0), function(i) {
+  ##   obj <- detates1[hit == i, ]
+  ##   setnames(obj, paste0(names(obj), i))
+  ##   return(obj)
+  ## }))
 
-  deterrs <- detnodes[, .(
-    nreject = sum(hit),
-    naccept = sum(1 - hit),
-    prop_reject = mean(hit),
-    prop_accept = mean(1 - hit), # or 1-prop_reject
-    # rejections of false null /detections of true non-null
-    # (if any of the blocks have an effect, then we count this as a correct rejection or correct detection)
-    true_pos_prop = mean(hit * anynotnull),
-    # If we reject but *all* of the blocks have no effects, this is a false positive error
-    # If we reject but only one of them has no effects but the other has effects,
-    # then this is not an error --- but a correct detection
-    false_pos_prop = mean(hit * allnull),
+  ## detobj[, .(blockF, trueate, hitb, true0, truenot0, single_hit, max_p)]
+
+  # I think this should be at level of blocks.
+  deterrs <- detobj[, .(
+    nreject = sum(hitb),
+    naccept = sum(1 - hitb),
+    prop_reject = mean(hitb),
+    prop_accept = mean(1 - hitb),
+    tot_true0 = sum(true0),
+    tot_truenot0 = sum(truenot0),
+    # or 1-prop_reject
+    # Proportion of the total blocks that have an effect where we detect that effect:
+    true_pos_prop = sum(hitb * truenot0) / sum(truenot0),
+    ## Proportion of rejections of a true null out of the total number of tests
+    false_pos_prop = mean(hitb * true0),
     # If we do not reject and all blocks are truly null, then we have no error.
-    true_neg_prop = mean((1 - hit) * allnull),
+    prop_accept_true0 = mean((1 - hitb) * true0),
     # If we do not reject/detect and at least one of the blocks actually has an effect, we have
-    # a false negative error --- a failure to detect the truth
-    false_neg_prop = mean((1 - hit) * anynotnull),
+    # a false negative error --- a failure to detect the truth: proportion accept when true is not 0
+    false_neg_prop = mean((1 - hitb) * truenot0),
     # Now look at false and true discoveries: false rejections as a proportion of rejections
-    false_disc_prop = sum(hit * allnull) / max(1, sum(hit)),
-    true_disc_prop = sum(hit * anynotnull) / max(1, sum(hit)),
-    true_nondisc_prop = sum((1 - hit) * allnull) / max(1, sum(1 - hit)),
-    false_nondisc_prop = sum((1 - hit) * anynotnull) / max(1, sum(1 - hit)),
-    meangrpsize = mean(grpsize),
-    medgrpsize = median(grpsize)
+    false_disc_prop = sum(hitb * true0) / max(1, sum(hitb)),
+    true_disc_prop = sum(hitb * truenot0) / max(1, sum(hitb)),
+    # Failure to reject when the null is not 0 out of the total failures to reject
+    false_nondisc_prop = sum((1 - hitb) * truenot0) / max(1, sum(1 - hitb)),
+    ## Failure to reject when the null is true (we want this) out of total accepts/failures to reject
+    true_nondisc_prop = sum((1 - hitb) * true0) / max(1, sum(1 - hitb))
+    # meangrpsize = mean(grpsize),
+    # medgrpsize = median(grpsize)
   )]
   # One row of results
-  detresults <- cbind(deterrs, detates)
+  #  detresults <- cbind(deterrs, detates)
   if (!return_details) {
-    return(detresults)
+    return(deterrs)
   } else {
-    res <- list(detresults = detresults, detobj = detobj, detnodes = detnodes, testobj = testobj, tree = thetree)
+    res <- list(
+      detresults = deterrs,
+      detobj = detobj,
+      # detnodes = detnodes,
+      testobj = testobj,
+      tree = thetree
+    )
     return(res)
   }
 }

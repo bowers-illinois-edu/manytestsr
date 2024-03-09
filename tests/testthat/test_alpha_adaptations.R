@@ -25,10 +25,10 @@ bdat4[, lvs := interaction(lv1, lv2, lv3, lex.order = TRUE, drop = TRUE)]
 
 ## Setting up to test the alpha adjusting methods versus FWER methods on different splitters
 alpha_and_splits <- expand.grid(
-  afn = c("alpha_investing", "alpha_saffron","alpha_addis","NULL"),
+  afn = c("alpha_investing", "alpha_saffron", "alpha_addis", "NULL"),
   sfn = c(
     "splitCluster", "splitEqualApprox", "splitLOO",
-    "splitSpecifiedFactor","splitSpecifiedFactorMulti"
+    "splitSpecifiedFactor", "splitSpecifiedFactorMulti"
   ),
   stringsAsFactors = FALSE
 )
@@ -44,11 +44,11 @@ testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3, bda
   ## afn and sfn and sby are character names
   theres <- findBlocks(
     idat = idat, bdat = bdat, blockid = "bF", splitfn = get(sfn),
-    pfn = pIndepDist, alphafn = theafn, thealpha = 0.05,thew0=.05-.001,
+    pfn = pIndepDist, alphafn = theafn, thealpha = 0.05, thew0 = .05 - .001,
     fmla = fmla,
     copydts = TRUE, splitby = sby, stop_splitby_constant = TRUE, parallel = "multicore", ncores = 2
   )
-  setkey(theres,bF)
+  setkey(theres, bF)
   return(theres)[order(biggrp)]
   # theps <- grep("^p[0-9]", names(theres), value = TRUE)
   # theas <- grep("^alpha", names(theres), value = TRUE)
@@ -60,7 +60,7 @@ testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3, bda
 }
 
 ##  Maybe make w0 more like .05.
-alpha_and_splits[c(1,2,4), ]
+alpha_and_splits[c(1, 2, 4), ]
 ## debug(findBlocks)
 res_ai <- testing_fn(
   afn = alpha_and_splits[1, "afn"],
@@ -81,22 +81,24 @@ res_fwer <- testing_fn(
   idat = idat3, bdat = bdat4
 )
 
-grep("^p[0-9]",names(res_ai),value=TRUE)
-grep("^p[0-9]",names(res_saffron),value=TRUE)
-grep("^p[0-9]",names(res_fwer),value=TRUE)
+grep("^p[0-9]", names(res_ai), value = TRUE)
+grep("^p[0-9]", names(res_saffron), value = TRUE)
+grep("^p[0-9]", names(res_fwer), value = TRUE)
 options(digits = 3, scipen = 4)
-res_ai[order(p1, p2, p3, p4, p5,p6,p7, decreasing = TRUE),.(p1,p2,p3,p4,p5,p6,p7)]
-res_saffron[order(p1, p2, p3, p4, p5,p6, decreasing = TRUE),.(p1,p2,p3,p4,p5,p6)]
-res_fwer[order(p1, p2, p3, p4, p5,p6, decreasing = TRUE),.(p1,p2,p3,p4,p5,p6)]
+res_ai[order(p1, p2, p3, p4, p5, p6, p7, decreasing = TRUE), .(p1, p2, p3, p4, p5, p6, p7)]
+res_saffron[order(p1, p2, p3, p4, p5, p6, decreasing = TRUE), .(p1, p2, p3, p4, p5, p6)]
+res_fwer[order(p1, p2, p3, p4, p5, p6, decreasing = TRUE), .(p1, p2, p3, p4, p5, p6)]
 ## Early in the splitting. No change
-all.equal(res_ai$p2,res_saffron$p2)
-all.equal(res_ai$p2,res_fwer$p2)
+all.equal(res_ai$p2, res_saffron$p2)
+all.equal(res_ai$p2, res_fwer$p2)
 ## But then some blocks stop testing
-all.equal(res_ai$p5,res_saffron$p5)
-all.equal(res_ai$p5,res_fwer$p5)
-cbind(res_ai[,.(bF,p5,p6)],
-      res_saffron[,.(bF,p5,p6)],
-      res_fwer[,.(bF,p5,p6)])
+all.equal(res_ai$p5, res_saffron$p5)
+all.equal(res_ai$p5, res_fwer$p5)
+cbind(
+  res_ai[, .(bF, p5, p6)],
+  res_saffron[, .(bF, p5, p6)],
+  res_fwer[, .(bF, p5, p6)]
+)
 
 ## Which blocks were identified?
 ##
@@ -108,9 +110,9 @@ cbind(res_ai[,.(bF,p5,p6)],
 
 ## Change one result from res_fwer to enable us to check this:
 
-res_ai[bF %in% c("10", "9"), .(bF,ate_tauv2,pfinalb,nodenum_current,nodenum_prev,nodesize,p4,p5)]
-res_saffron[bF %in% c("10", "9"),.(bF,ate_tauv2,pfinalb,nodenum_current,nodenum_prev,nodesize,p4,p5) ]
-res_fwer[bF %in% c("10", "9"),.(bF,ate_tauv2,pfinalb,nodenum_current,nodenum_prev,nodesize,p4,p5) ]
+res_ai[bF %in% c("10", "9"), .(bF, ate_tauv2, pfinalb, nodenum_current, nodenum_prev, nodesize, p4, p5)]
+res_saffron[bF %in% c("10", "9"), .(bF, ate_tauv2, pfinalb, nodenum_current, nodenum_prev, nodesize, p4, p5)]
+res_fwer[bF %in% c("10", "9"), .(bF, ate_tauv2, pfinalb, nodenum_current, nodenum_prev, nodesize, p4, p5)]
 
 res_ai[bF == "10", p5 := .5]
 res_ai[bF == "10", pfinalb := .5]
@@ -119,9 +121,9 @@ res_saffron[bF == "10", pfinalb := .5]
 res_fwer[bF == "10", p5 := .5]
 res_fwer[bF == "10", pfinalb := .5]
 
-res_ai[bF %in% c("10", "9"), .(bF,ate_tauv2,pfinalb,nodenum_current,nodenum_prev,nodesize,p4,p5)]
-res_saffron[bF %in% c("10", "9"),.(bF,ate_tauv2,pfinalb,nodenum_current,nodenum_prev,nodesize,p4,p5) ]
-res_fwer[bF %in% c("10", "9"),.(bF,ate_tauv2,pfinalb,nodenum_current,nodenum_prev,nodesize,p4,p5) ]
+res_ai[bF %in% c("10", "9"), .(bF, ate_tauv2, pfinalb, nodenum_current, nodenum_prev, nodesize, p4, p5)]
+res_saffron[bF %in% c("10", "9"), .(bF, ate_tauv2, pfinalb, nodenum_current, nodenum_prev, nodesize, p4, p5)]
+res_fwer[bF %in% c("10", "9"), .(bF, ate_tauv2, pfinalb, nodenum_current, nodenum_prev, nodesize, p4, p5)]
 
 
 res_fwer_det <- report_detections(res_fwer)
@@ -181,12 +183,11 @@ eval_maxp <- function(detection_obj) {
   })
   ## Adding tolerance of .01 here but could be more depending on whether we do any simulation
   ## FWER should be smaller than at least one of the alpha adjusters
-  expect_lte(maxp[[4]], max(maxp[1:3])+.01)
-  expect_lte(maxp[[8]], max(maxp[5:7])+.01)
-  expect_lte(maxp[[12]], max(maxp[9:11])+.01)
-  expect_lte(maxp[[16]], max(maxp[13:15])+.01)
-  expect_lte(maxp[[20]], max(maxp[17:19])+.01)
-
+  expect_lte(maxp[[4]], max(maxp[1:3]) + .01)
+  expect_lte(maxp[[8]], max(maxp[5:7]) + .01)
+  expect_lte(maxp[[12]], max(maxp[9:11]) + .01)
+  expect_lte(maxp[[16]], max(maxp[13:15]) + .01)
+  expect_lte(maxp[[20]], max(maxp[17:19]) + .01)
 }
 
 eval_single_blocks_found <- function(detection_obj) {
@@ -227,7 +228,7 @@ eval_minate <- function(detection_obj, atenm) {
 
 resnms <- apply(alpha_and_splits, 1, function(x) {
   tmp <- paste0(x, collapse = "_", sep = "")
-  gsub("NULL","fwer_fwer",tmp)
+  gsub("NULL", "fwer_fwer", tmp)
 })
 
 
@@ -284,7 +285,7 @@ test_that("alphafns work across splitters for large and homogenous effects", {
   table(block1detected)
   ## So basically all blocks or at least all but the smallest block should be detected
   numblks_homog <- sapply(tau_homog_det, nrow)
-  expect_equal(all(numblks_homog>=19), TRUE)
+  expect_equal(all(numblks_homog >= 19), TRUE)
   ## Each block should be detected  --- they should not be grouped together ---
   ##  so the number of groups should be 19 as well
   numgrps_homog <- sapply(tau_homog_det, function(dat) {
@@ -402,7 +403,7 @@ test_that("alphafns work across splitters for individually heteogeneous effects 
   ## eval_maxp(tau_norm_dec_det)
   eval_minate(tau_norm_dec_det, atenm = "ate_norm_dec")
   eval_numgrps(tau_norm_dec_det)
-  ##eval_single_blocks_found(tau_norm_dec_det)
+  ## eval_single_blocks_found(tau_norm_dec_det)
   eval_treedepth(tau_norm_dec_det)
 })
 
