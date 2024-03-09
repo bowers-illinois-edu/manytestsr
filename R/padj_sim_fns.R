@@ -338,11 +338,10 @@ calc_errs <- function(testobj,
   if (length(grep("biggrp", names(testobj))) > 0) {
     # this is for the top-down/split and test method
     detobj <- report_detections(testobj, fwer = fwer, alpha = thealpha, only_hits = FALSE)
-    detobj[, hit := as.numeric(detobj$hit)]
-    detobj[, hitb := as.numeric(max_p <= thealpha)]
+    detobj[, hit := as.numeric(hit)]
+    detobj[, hitb := as.numeric(max_p <= max_alpha & blocksbygroup == 1)]
     detobj[, hitb2 := as.numeric(single_hit)]
     stopifnot(all.equal(detobj$hitb, detobj$hitb2))
-
     ## Coding whether the true effect is zero or not by block.
     detobj[, true0 := as.numeric(abs(get(truevar_name)) <= trueeffect_tol)]
     detobj[, truenot0 := as.numeric(abs(get(truevar_name)) > trueeffect_tol)]
@@ -367,50 +366,18 @@ calc_errs <- function(testobj,
       blockid = get(blockid),
       p,
       max_p,
-      hit = max_p < thealpha,
+      hit = max_p <= thealpha,
       hit_grp = get(blockid),
       truevar_name = get(truevar_name),
       hit = as.numeric(hit),
-      hitb = as.numeric(hitb),
+      hitb = as.numeric(hit),
       true0 = as.numeric(abs(get(truevar_name)) <= trueeffect_tol),
       truenot0 = as.numeric(abs(get(truevar_name)) > trueeffect_tol),
       trueeffect = get(truevar_name),
       grpsize = 1
     )]
     setnames(detobj, "truevar_name", truevar_name)
-
-    # detnodes <- detobj[, .(
-    #  hit = as.numeric(hit),
-    #  anynull = as.numeric(abs(get(truevar_name)) <= trueeffect_tol),
-    #  allnull = as.numeric(abs(get(truevar_name)) <= trueeffect_tol),
-    #  anynotnull = as.numeric(abs(get(truevar_name)) > trueeffect_tol),
-    #  trueeffect = get(truevar_name),
-    #  grpsize = 1,
-    #  blockid = blockid
-    # )]
-    # setkey(detnodes, blockid)
-    # detnodes_effects <- detobj[, as.list(simp_summary(get(truevar_name))), by = list(hit, hit_grp)]
-    # setnames(detnodes_effects, c("hit", "hit_grp", "minate", "meanate", "medianate", "maxate"))
-    # setkey(detnodes_effects, hit_grp)
-    # detnodes <- detnodes[detnodes_effects, ]
   }
-  ## detates1 <- detnodes[, .(
-  ##   minate = min(minate),
-  ##   meanate = mean(meanate),
-  ##   medate = median(medianate),
-  ##   maxate = max(maxate)
-  ## ), by = hit]
-  ## if (nrow(detates1) == 1) {
-  ##   detates2 <- rbind(detates1, list(1 - detates1$hit, NA, NA, NA, NA))
-  ## }
-
-  ## detates <- do.call("cbind", lapply(c(1, 0), function(i) {
-  ##   obj <- detates1[hit == i, ]
-  ##   setnames(obj, paste0(names(obj), i))
-  ##   return(obj)
-  ## }))
-
-  ## detobj[, .(blockF, trueate, hitb, true0, truenot0, single_hit, max_p)]
 
   # I think this should be at level of blocks.
   deterrs <- detobj[, .(
@@ -420,13 +387,19 @@ calc_errs <- function(testobj,
     prop_accept = mean(1 - hitb),
     tot_true0 = sum(true0),
     tot_truenot0 = sum(truenot0),
+    tot_reject_true0 = sum(hitb * true0),
+    tot_not_reject_true0 = sum((1 - hitb) * true0),
+    tot_reject_truenot0 = sum(hitb * truenot0),
+    tot_not_reject_truenot0 = sum((1 - hitb) * truenot0),
     # or 1-prop_reject
     # Proportion of the total blocks that have an effect where we detect that effect:
-    true_pos_prop = sum(hitb * truenot0) / sum(truenot0),
+    correct_pos_effect_prop = sum(hitb * truenot0) / max(1, sum(truenot0)),
+    correct_pos_nulls_prop = sum(hitb * true0) / max(1, sum(true0)),
+    true_pos_prop = mean(hitb * truenot0),
     ## Proportion of rejections of a true null out of the total number of tests
     false_pos_prop = mean(hitb * true0),
     # If we do not reject and all blocks are truly null, then we have no error.
-    prop_accept_true0 = mean((1 - hitb) * true0),
+    prop_not_reject_true0 = mean((1 - hitb) * true0),
     # If we do not reject/detect and at least one of the blocks actually has an effect, we have
     # a false negative error --- a failure to detect the truth: proportion accept when true is not 0
     false_neg_prop = mean((1 - hitb) * truenot0),

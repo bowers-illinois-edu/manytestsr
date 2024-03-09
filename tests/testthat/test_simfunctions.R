@@ -9,6 +9,10 @@ interactive <- FALSE
 if (interactive) {
   library(here)
   library(data.table)
+  library(dtplyr)
+  library(dplyr)
+  library(conflicted)
+  conflicts_prefer(dplyr::filter)
   library(devtools)
   source(here("tests/testthat", "make_test_data.R"))
   load_all() ## use  this during debugging
@@ -84,6 +88,10 @@ err_testing_fn <-
     } else {
       theafn <- get(afn)
     }
+
+    thealpha <- .05
+    trueeffect_tol <- .Machine$double.eps
+
     ## afn and sfn and sby are character names
     theres <- findBlocks(
       idat = idat,
@@ -92,26 +100,45 @@ err_testing_fn <-
       splitfn = get(sfn),
       pfn = pIndepDist,
       alphafn = theafn,
-      thealpha = 0.05,
+      thealpha = thealpha,
       fmla = fmla,
-      # Ynorm_inc ~ ZF | bF,
       parallel = "multicore",
       ncores = 2,
       copydts = TRUE,
       splitby = sby
     )
-    detects <-
-      report_detections(theres, only_hits = FALSE, fwer = is.null(afn), blockid = "bF")
-    nodes <- detects[, .(
-      hit = as.numeric(unique(hit)),
-      numnull = sum(get(truevar_name) == 0),
-      anynull = as.numeric(any(get(truevar_name) == 0)),
-      allnull = as.numeric(all(get(truevar_name) == 0)),
-      numnotnull = sum(get(truevar_name) != 0),
-      anynotnull = as.numeric(any(get(truevar_name) != 0))
-    ), by = hit_grp]
+    detobj <-
+      report_detections(theres, only_hits = FALSE, fwer = afn == "NULL", blockid = "bF")
+
+    detobj[, hit := as.numeric(hit)]
+    detobj[, hitb := as.numeric(max_p <= max_alpha & blocksbygroup == 1)]
+    detobj[, hitb2 := as.numeric(single_hit)]
+    stopifnot(all.equal(detobj$hitb, detobj$hitb2))
+    ## Coding whether the true effect is zero or not by block.
+    detobj[, true0 := as.numeric(abs(get(truevar_name)) <= trueeffect_tol)]
+    detobj[, truenot0 := as.numeric(abs(get(truevar_name)) > trueeffect_tol)]
+    ## Accessing the results another way
+    thetree <- make_tree(theres, blockid = "bF") %>%
+      select(-label) %>%
+      as.data.frame()
+    sigleaves <- thetree %>% filter(out_degree == 0 & hit == 1)
+    ##  detobj[blockF %in% sigleaves$bF,.(blockF,max_p,single_hit,hitb,hitb2,fin_grp)]
+    stopifnot(all.equal(sort(sigleaves$bF), sort(as.character(detobj[hitb == 1, bF]))))
+
+    ## nodes <- detects[, .(
+    ##   hit = as.numeric(unique(hit)),
+    ##   numnull = sum(get(truevar_name) == 0),
+    ##   anynull = as.numeric(any(get(truevar_name) == 0)),
+    ##   allnull = as.numeric(all(get(truevar_name) == 0)),
+    ##   numnotnull = sum(get(truevar_name) != 0),
+    ##   anynotnull = as.numeric(any(get(truevar_name) != 0))
+    ## ), by = hit_grp]
     # err_tab1 <- with(nodes1 , table(hit, anynotnull, exclude = c()))
-    err_tab0 <- with(nodes, table(hit, allnull, exclude = c()))
+    err_tab0 <- with(detobj, table(hitb, true0, exclude = c()))
+    ## Make a table of rejections by hypotheses
+    ##                      True 0            |  Not True 0 (actual effect)
+    ## Not Reject   True Reject (not error)   |    False reject (low power error)
+    ## Rejected        False positive (Error) |    Correct rejection (detection of the truth)
     if (!identical(dim(err_tab0), as.integer(c(2, 2)))) {
       blank_mat <-
         matrix(0, 2, 2, dimnames = list(c("0", "1"), c("0", "1")))
@@ -122,12 +149,15 @@ err_testing_fn <-
     }
     errs <- calc_errs(theres,
       truevar_name = truevar_name,
-      trueeffect_tol = .Machine$double.eps
+      trueeffect_tol = .Machine$double.eps, fwer = afn == "NULL"
     )
-    expect_equal(errs$true_pos_prop, err_tab["1", "0"] / sum(err_tab))
-    expect_equal(errs$true_neg_prop, err_tab["0", "1"] / sum(err_tab))
-    expect_equal(errs$false_pos_prop, err_tab["1", "1"] / sum(err_tab))
-    expect_equal(errs$false_neg_prop, err_tab["0", "0"] / sum(err_tab))
+    tottests <- sum(err_tab)
+    tottests2 <- errs$nreject + errs$naccept
+    expect_equal(tottests, tottests2)
+    expect_equal(errs$true_pos_prop, err_tab["1", "0"] / tottests)
+    expect_equal(errs$prop_not_reject_true0, err_tab["0", "1"] / tottests)
+    expect_equal(errs$false_pos_prop, err_tab["1", "1"] / tottests)
+    expect_equal(errs$false_neg_prop, err_tab["0", "0"] / tottests)
     expect_equal(errs$true_disc_prop, err_tab["1", "0"] / max(1, sum(err_tab["1", ])))
     expect_equal(errs$false_disc_prop, err_tab["1", "1"] / max(1, sum(err_tab["1", ])))
     expect_equal(errs$true_nondisc_prop, err_tab["0", "1"] / max(1, sum(err_tab["0", ])))
@@ -135,7 +165,7 @@ err_testing_fn <-
   }
 
 
-err_testing_fn2 <-
+err_testing_bottom_up <-
   function(fmla = Ytauv2 ~ ZF,
            idat = idat3,
            bdat = bdat4,
@@ -146,7 +176,7 @@ err_testing_fn2 <-
       idat = idat,
       bdat = bdat,
       blockid = "bF",
-      p_adj_method = "BH",
+      p_adj_method = "BH", ## FDR adjustment
       pfn = pIndepDist,
       fmla = fmla,
       copydts = TRUE,
@@ -156,17 +186,19 @@ err_testing_fn2 <-
 
     theres[, hit := max_p < .05] ## doing FDR==.05 for now. All that really matters is some fixed number.
 
-    nodes <- theres[, .(
+    blocks <- theres[, .(
       bF = bF,
       hit = as.numeric(hit),
-      anynull = as.numeric(get(truevar_name) == 0),
-      allnull = as.numeric(get(truevar_name) == 0),
+      true0 = as.numeric(get(truevar_name) == 0),
+      truenot0 = as.numeric(get(truevar_name) == 0),
       anynotnull = as.numeric(get(truevar_name) != 0)
     )]
 
-    # err_tab1 <- with(nodes1 , table(hit, anynotnull, exclude = c()))
-    err_tab0 <- with(nodes, table(hit, allnull, exclude = c()))
-
+    err_tab0 <- with(blocks, table(rejected = hit, true0 = true0, exclude = c()))
+    ## Make a table of rejections by hypotheses
+    ##                      True 0            |  Not True 0 (actual effect)
+    ## Not Reject   True Reject (not error)   |    False reject (low power error)
+    ## Rejected        False positive (Error) |    Correct rejection (detection of the truth)
     if (!identical(dim(err_tab0), as.integer(c(2, 2)))) {
       blank_mat <-
         matrix(0, 2, 2, dimnames = list(c("0", "1"), c("0", "1")))
@@ -179,13 +211,17 @@ err_testing_fn2 <-
     errs <- calc_errs(
       testobj = theres,
       truevar_name = truevar_name,
-      trueeffect_tol = .Machine$double.eps
+      trueeffect_tol = .Machine$double.eps, fwer = FALSE
     )
 
-    expect_equal(errs$true_pos_prop, err_tab["1", "0"] / sum(err_tab))
-    expect_equal(errs$true_neg_prop, err_tab["0", "1"] / sum(err_tab))
-    expect_equal(errs$false_pos_prop, err_tab["1", "1"] / sum(err_tab))
-    expect_equal(errs$false_neg_prop, err_tab["0", "0"] / sum(err_tab))
+    tottests <- sum(err_tab)
+    tottests_from_calc_errs <- errs$nreject + errs$naccept
+    expect_equal(tottests, tottests_from_calc_errs)
+
+    expect_equal(errs$true_pos_prop, err_tab["1", "0"] / tottests)
+    expect_equal(errs$tot_not_reject_true0 / tottests, err_tab["0", "1"] / tottests)
+    expect_equal(errs$false_pos_prop, err_tab["1", "1"] / tottests)
+    expect_equal(errs$false_neg_prop, err_tab["0", "0"] / tottests)
     expect_equal(errs$true_disc_prop, err_tab["1", "0"] / max(1, sum(err_tab["1", ])))
     expect_equal(errs$false_disc_prop, err_tab["1", "1"] / max(1, sum(err_tab["1", ])))
     expect_equal(errs$true_nondisc_prop, err_tab["0", "1"] / max(1, sum(err_tab["0", ])))
@@ -193,9 +229,23 @@ err_testing_fn2 <-
   }
 
 
-err_testing_fn(fmla = Ynull ~ ZF | bF, idat = idat3, bdat = bdat4, truevar_name = "ate_null", afn = "NULL", sfn = splitCluster, sby = "hwt")
+err_testing_fn(
+  fmla = Ynull ~ ZF | bF, idat = idat3,
+  bdat = bdat4, truevar_name = "ate_null", afn = "NULL", sfn = splitCluster, sby = "hwt"
+)
 
-err_testing_fn2(fmla = Ytauv2 ~ ZF, idat = idat3, bdat = bdat4, truevar_name = "ate_tauv2")
+
+err_testing_fn(
+  afn = "alpha_saffron",
+  sfn = "splitEqualApprox",
+  sby = "hwt",
+  idat = idat3,
+  bdat = bdat4,
+  fmla = Ynorm_dec ~ ZF | bF,
+  truevar_name = "ate_norm_dec"
+)
+
+err_testing_bottom_up(fmla = Ytauv2 ~ ZF, idat = idat3, bdat = bdat4, truevar_name = "ate_tauv2")
 
 resnms <- apply(alpha_and_splits, 1, function(x) {
   paste(x, collapse = "_", sep = "")
@@ -279,8 +329,6 @@ test_that(
     )
   }
 )
-
-
 test_that(
   "Error calculations for a given set of tests work:individually heteogeneous effects and decrease with block size. Also some completely null blocks.",
   {
@@ -374,7 +422,7 @@ test_that(
       FUN = function(truevar_name, outcome_name) {
         fmla <- reformulate("ZF", response = outcome_name)
         message(paste(truevar_name, collapse = ","))
-        err_testing_fn2(
+        err_testing_bottom_up(
           idat = idat3,
           bdat = bdat4,
           fmla = fmla,
@@ -436,7 +484,7 @@ p_sims_obj <- rbindlist(p_sims_res, idcol = TRUE)
 err_rates <- p_sims_obj[, lapply(.SD, mean), .SDcols = c(
   "true_pos_prop",
   "false_pos_prop",
-  "true_neg_prop",
+  "correct_pos_effect_prop",
   "false_neg_prop",
   "true_disc_prop",
   "false_disc_prop",
@@ -444,12 +492,16 @@ err_rates <- p_sims_obj[, lapply(.SD, mean), .SDcols = c(
   "false_nondisc_prop"
 ), by = .id]
 
+## This is just one run --- so these are not really error rates but error proportions
 err_rates
 
 test_that(
   "Clustering-based Splitters control FWER.",
   {
-    simparms2 <- data.table(expand.grid(splitby = c("hwt", "v4", "newcov"), covariate = c("v4", "newcov"), stringsAsFactors = FALSE))
+    simparms2 <- data.table(expand.grid(
+      splitby = c("hwt", "v4", "newcov"),
+      covariate = c("v4", "newcov"), stringsAsFactors = FALSE
+    ))
     simparms2[, afn := "NULL"]
     simparms2[, sfn := "splitCluster"]
     simparms2[, p_adj_method := "split"]
@@ -487,7 +539,7 @@ test_that(
     err_rates2 <- p_sims_obj2[, lapply(.SD, mean), .SDcols = c(
       "true_pos_prop",
       "false_pos_prop",
-      "true_neg_prop",
+      "prop_not_reject_true0",
       "false_neg_prop",
       "true_disc_prop",
       "false_disc_prop",
