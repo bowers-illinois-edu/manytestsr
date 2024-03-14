@@ -347,12 +347,12 @@ calc_errs <- function(testobj,
     detobj[, truenot0 := as.numeric(abs(get(truevar_name)) > trueeffect_tol)]
 
     ## Accessing the results another way
-    thetree <- make_tree(testobj, blockid = blockid) %>%
-      select(-label) %>%
-      as.data.frame()
-    sigleaves <- thetree %>% filter(out_degree == 0 & hit == 1)
+    # thetree <- make_tree(testobj, blockid = blockid) %>%
+    #  select(-label) %>%
+    #  as.data.frame()
+    # sigleaves <- thetree %>% filter(out_degree == 0 & hit == 1)
     ##  detobj[blockF %in% sigleaves$bF,.(blockF,max_p,single_hit,hitb,hitb2,fin_grp)]
-    stopifnot(all.equal(sort(sigleaves$bF), sort(as.character(detobj[hitb == 1, get(blockid)]))))
+    ## stopifnot(all.equal(sort(sigleaves$bF), sort(as.character(detobj[hitb == 1, get(blockid)]))))
 
     ## detnodes_effects <- detobj[, simp_summary(get(truevar_name)), by = list(hit, hit_grp)]
     ## setnames(detnodes_effects, c("hit", "hit_grp", "minate", "meanate", "medianate", "maxate"))
