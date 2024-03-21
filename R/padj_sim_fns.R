@@ -379,7 +379,7 @@ calc_errs <- function(testobj,
     setnames(detobj, "truevar_name", truevar_name)
   }
 
-  # I think this should be at level of blocks.
+  # This is calculated at the level of blocks not nodes.
   deterrs <- detobj[, .(
     nreject = sum(hitb),
     naccept = sum(1 - hitb),
