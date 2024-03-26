@@ -88,8 +88,10 @@ findBlocks <-
            stop_splitby_constant = TRUE,
            blocksize = "hwt",
            trace = FALSE) {
-    # Some checks
-    if (stop_splitby_constant) {
+    # Some checks: We can split on a constant variable if we are collecting the blocks into groups of equal size
+    split_fn_name0 <- grep("%%2",deparse(splitfn))
+    split_fn_equal_approx <- length(split_fn_name0)>0
+    if (stop_splitby_constant & !split_fn_equal_approx ) {
       stopifnot(
         "The splitby variable must have at least two values if stop_splitby_constant is TRUE" = uniqueN(bdat[[splitby]]) >= 2
       )
