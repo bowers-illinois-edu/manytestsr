@@ -231,7 +231,7 @@ err_testing_bottom_up <-
 
 err_testing_fn(
   fmla = Ynull ~ ZF | bF, idat = idat3,
-  bdat = bdat4, truevar_name = "ate_null", afn = "NULL", sfn = splitCluster, sby = "hwt"
+  bdat = bdat4, truevar_name = "ate_null", afn = "NULL", sfn = "splitCluster", sby = "hwt"
 )
 
 

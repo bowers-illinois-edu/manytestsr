@@ -56,15 +56,29 @@
 #' return random splits into roughly two equal sized groups of blocks if
 #' stop_splitby_constant=FALSE. If stop_splitby_constant=TRUE then
 #' [findBlocks()] will stop and return groups of blocks as detected or not.
-#'  * [splitSpecifiedFactor()] will split the blocks following prespecified
-#'  pattern encoded into the labels for the levels of the factor. For example,
-#'  if we imagine three nested levels of splitting (like states, districts,
-#'  neighborhoods), the factor would have labels like
+#'  * [splitSpecifiedFactor()] will split the blocks into two groups following
+#'  prespecified pattern encoded into the labels for the levels of the factor.
+#'  For example, if we imagine three nested levels of splitting (like states,
+#'  districts, neighborhoods), the factor would have labels like
 #'  `category1_level1.category2_level1.category3_level1` and where splits will
 #'  occur from left to right depending on whether there is existing variation
 #'  at that level. When the factor is constant and stop_splitby_constant=TRUE
-#'  splitting stops. When stop_splitby_constant=FALSE, then it uses random
-#'  splits.
+#'  splitting stops. For this reason we recommend that the right-most label of
+#'  this factor be the individual blocks themselves---to ensure that testing
+#'  descends to the block level if it can. When stop_splitby_constant=FALSE,
+#'  then it uses random splits.
+#'  * [splitSpecifiedFactorMulti()] will split the blocks into two or more
+#'  groups following prespecified pattern encoded into the labels for the
+#'  levels of the factor. For example, if we imagine three nested levels of
+#'  splitting (like states, districts, neighborhoods), the factor would have
+#'  labels like `category1_level1.category2_level1.category3_level1` and where
+#'  splits will occur from left to right depending on whether there is existing
+#'  variation at that level. For this reason we recommend that the right-most
+#'  label of this factor be the individual blocks themselves---to ensure that
+#'  testing descends to the block level if it can. When the factor is constant
+#'  and stop_splitby_constant=TRUE splitting stops. When
+#'  stop_splitby_constant=FALSE, then it uses random splits.
+#'
 #' @importFrom stringi stri_count_fixed stri_split_fixed stri_split stri_sub stri_replace_all stri_extract_last
 #' @importFrom digest digest getVDigest
 #' @export
@@ -89,8 +103,9 @@ findBlocks <-
            blocksize = "hwt",
            trace = FALSE) {
     # Some checks: We can split on a constant variable if we are collecting the blocks into groups of equal size
-    split_fn_name0 <- grep("%%2",deparse(splitfn))
-    split_fn_equal_approx <- length(split_fn_name0)>0
+     splitfn_text <- deparse(splitfn)
+    split_fn_equal_approx <- length(grep("%%2",splitfn_text)) > 0
+    split_fn_cluster <- length(grep("Ckmeans",splitfn_text) > 0 )
     if (stop_splitby_constant & !split_fn_equal_approx ) {
       stopifnot(
         "The splitby variable must have at least two values if stop_splitby_constant is TRUE" = uniqueN(bdat[[splitby]]) >= 2
@@ -300,8 +315,8 @@ findBlocks <-
           (blocksbygroup > 1), TRUE, FALSE)]
         # Also stop testing for groups within which we cannot split any more for certain splitters. Currently set by hand.
       }
-      if (stop_splitby_constant |
-        deparse(substitute(splitfn)) == "splitCluster") {
+      if (stop_splitby_constant | split_fn_cluster) {
+      ## Here there is no sense in spliting by differences in covariate value (creating clusters using k-means) if covariate values do not differ
         bdat[, testable := fifelse(uniqueN(get(splitby)) == 1, FALSE, unique(testable)), by = biggrp]
         ##      bdat[, testable := fifelse( (fastVar(get(ybase)) < .Machine$double.eps), FALSE, unique(testable)), by = biggrp]
       }

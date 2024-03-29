@@ -105,14 +105,27 @@ with factor variables. When the splitting criteria is constant, it will
 return random splits into roughly two equal sized groups of blocks if
 stop_splitby_constant=FALSE. If stop_splitby_constant=TRUE then
 \code{\link[=findBlocks]{findBlocks()}} will stop and return groups of blocks as detected or not.
-\item \code{\link[=splitSpecifiedFactor]{splitSpecifiedFactor()}} will split the blocks following prespecified
-pattern encoded into the labels for the levels of the factor. For example,
-if we imagine three nested levels of splitting (like states, districts,
-neighborhoods), the factor would have labels like
+\item \code{\link[=splitSpecifiedFactor]{splitSpecifiedFactor()}} will split the blocks into two groups following
+prespecified pattern encoded into the labels for the levels of the factor.
+For example, if we imagine three nested levels of splitting (like states,
+districts, neighborhoods), the factor would have labels like
 \code{category1_level1.category2_level1.category3_level1} and where splits will
 occur from left to right depending on whether there is existing variation
 at that level. When the factor is constant and stop_splitby_constant=TRUE
-splitting stops. When stop_splitby_constant=FALSE, then it uses random
-splits.
+splitting stops. For this reason we recommend that the right-most label of
+this factor be the individual blocks themselves---to ensure that testing
+descends to the block level if it can. When stop_splitby_constant=FALSE,
+then it uses random splits.
+\item \code{\link[=splitSpecifiedFactorMulti]{splitSpecifiedFactorMulti()}} will split the blocks into two or more
+groups following prespecified pattern encoded into the labels for the
+levels of the factor. For example, if we imagine three nested levels of
+splitting (like states, districts, neighborhoods), the factor would have
+labels like \code{category1_level1.category2_level1.category3_level1} and where
+splits will occur from left to right depending on whether there is existing
+variation at that level. For this reason we recommend that the right-most
+label of this factor be the individual blocks themselves---to ensure that
+testing descends to the block level if it can. When the factor is constant
+and stop_splitby_constant=TRUE splitting stops. When
+stop_splitby_constant=FALSE, then it uses random splits.
 }
 }

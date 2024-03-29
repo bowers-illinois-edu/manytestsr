@@ -15,9 +15,6 @@ if (interactive) {
   source(here("tests/testthat", "make_test_data.R"))
   load_all() ## use  this during debugging
 }
-library(here)
-library(dtplyr)
-library(dplyr)
 
 ## Shuffle order  of the blocks so that the first set and the second set don't  automatically go together
 set.seed(12345)
@@ -340,8 +337,8 @@ test_that("Splitters work as expected given splitby variables
   with(res[["splitEqualApprox_lvs2_TRUE"]], table(fin_grp, lvs2, exclude = c()))
 
   ## 13:     splitEqualApprox     constv          TRUE
-  ## Not allowed by findBlocks.
-  expect_equal(res[["splitEqualApprox_constv_TRUE"]], NA)
+  ## allowed by findBlocks.
+  expect_equal(nrow(res[["splitEqualApprox_constv_TRUE"]]), 20)
 
   ## 16:     splitEqualApprox  twosplits         FALSE
   ## Random splits basically  (after first split then random)
@@ -380,7 +377,7 @@ test_that("Splitters work as expected given splitby variables
   expect_equal(res[["splitCluster_constv_TRUE"]], NA)
 
   ## 17:         splitCluster  twosplits         FALSE
-  ### the splitting becomes random so results should differ between runs
+  ### with splitCluster we always stop splitting when the covariate is constant
   tabres1 <- with(res[["splitCluster_twosplits_FALSE"]], table(fin_grp, twosplits, exclude = c()))
 
   blah <- test_splitters_fn(
@@ -390,7 +387,7 @@ test_that("Splitters work as expected given splitby variables
   blah_det <- report_detections(blah, blockid = "bF")
   tabres2 <- with(blah_det, table(fin_grp, twosplits, exclude = c()))
 
-  expect_false(isTRUE(all.equal(tabres1, tabres2)))
+  expect_true(isTRUE(all.equal(tabres1, tabres2)))
   ## 20:         splitCluster twosplitsF         FALSE
   ### Factors not allowed with splitCluster
   expect_equal(res[["splitCluster_twosplitsF_FALSE"]], NA)
