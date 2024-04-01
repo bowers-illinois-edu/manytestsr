@@ -1,6 +1,5 @@
 # Functions for organizing and graphing results
 
-
 #' Return detected blocks plus info
 #'
 #' Given the results of the splitting and testing algorithm, report on the blocks
@@ -61,7 +60,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
     # A detection is also scored if all leaves have p > alpha but the parent
     # has p <= alpha: this is a grouped detection with multiple blocks.
 
-    res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & (fin_parent_p <= parent_alpha) & blocksbygroup == 1), TRUE, FALSE), by = fin_parent]
+    res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & (fin_parent_p <= parent_alpha) & blocksbygroup >= 1), TRUE, FALSE), by = fin_parent]
 
     # Also a group hit can be scored (an effect detected within a group of
     # blocks) if there are multiple blocks in a final node and that test is p<a

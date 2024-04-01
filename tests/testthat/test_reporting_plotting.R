@@ -15,9 +15,6 @@ if (interactive) {
   setDTthreads(1)
   load_all() ## use  this during debugging
 }
-# library(here)
-# library(dplyr)
-# library(dtplyr)
 
 data(example_dat, package = "manytestsr")
 example_dat$blockF <- factor(example_dat$blockF)
@@ -81,11 +78,13 @@ example_nodes_spec_fwer <- example_tree_spec_fwer %>%
 ## That is, we learn (1) that we can reject the null of no effects overall
 ## (and that we have 5 splits from this first test)
 example_nodes_spec_fwer %>%
-  select(nodenum, name, parent_name, p, a, depth, out_degree, leaf_hit, group_hit, hit)
+  select(nodenum, name, parent_name, p, a, depth, out_degree, num_blocks, leaf_hit, group_hit, hit)
 ## See just two nodes where we can reject the null: (node 1 --- the overall node, and node 6)
 example_tree_spec_fwer %>%
   activate(edges) %>%
   as.data.frame()
+
+example_hits_spec_fwer[, .(hit, hit_grp, fin_grp, fin_nodenum, fin_parent, fin_parent_p, max_p)]
 
 ## Now, in this case we have one other test that rejects the null ---
 ## this time for the null of no effects among the units in the blocks under node 03c36456.
