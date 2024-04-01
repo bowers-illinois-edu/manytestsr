@@ -164,10 +164,11 @@ make_results_tree <- function(orig_res, blockid = "bF") {
     activate(nodes) %>%
     mutate(
       out_degree = centrality_degree(mode = "out"),
+      is_leaf = node_is_leaf(),
       is_leaf_single_block = (out_degree == 0 & depth > 1 & num_blocks == 1)
     ) %>%
     group_by(parent_name) %>%
-    mutate(leaf_child_all_not_sig = all(p > a & is_leaf_single_block)) %>%
+    mutate(leaf_child_all_not_sig = all(p > a & is_leaf)) %>%
     ungroup()
 
   res_graph <- res_graph %>%
@@ -238,11 +239,11 @@ make_results_tree <- function(orig_res, blockid = "bF") {
   if (length(unique(res_nodes_df$a)) > 1) {
     res_graph <- res_graph %>%
       activate(nodes) %>%
-      mutate(label = paste("Node:", stri_sub(name, 1, 4), "\n Blocks:", shortbf, "\n # Blocks=", num_blocks, "\n p=", round(p, 3), ",a=", round(a, 3), sep = ""))
+      mutate(label = paste("Node:", stri_sub(name, 1, 4), "\n Name:", shortbf, "\n # Blocks=", num_blocks, "\n p=", round(p, 3), ",a=", round(a, 3), sep = ""))
   } else {
     res_graph <- res_graph %>%
       activate(nodes) %>%
-      mutate(label = paste("Node:", stri_sub(name, 1, 4), "\n Blocks:", shortbf, "\n # Blocks=", num_blocks, "\n p=", round(p, 3), sep = ""))
+      mutate(label = paste("Node:", stri_sub(name, 1, 4), "\n Name:", shortbf, "\n # Blocks=", num_blocks, "\n p=", round(p, 3), sep = ""))
   }
 
   return(res_graph)
