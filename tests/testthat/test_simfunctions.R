@@ -118,7 +118,7 @@ err_testing_fn <-
     detobj[, true0 := as.numeric(abs(get(truevar_name)) <= trueeffect_tol)]
     detobj[, truenot0 := as.numeric(abs(get(truevar_name)) > trueeffect_tol)]
     ## Accessing the results another way
-    thetree <- make_tree(theres, blockid = "bF") %>%
+    thetree <- make_results_tree(theres, blockid = "bF") %>%
       select(-label) %>%
       as.data.frame()
     sigleaves <- thetree %>% filter(out_degree == 0 & hit == 1)

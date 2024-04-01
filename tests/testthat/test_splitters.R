@@ -275,7 +275,7 @@ test_that("Splitters work as expected given splitby variables
   blah2a <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplits", stopsplitting = FALSE)
   blah2a_det <- report_detections(blah2a, blockid = "bF")
   with(blah2a_det, table(fin_grp, twosplits, exclude = c()))
-  blah2_tree <- make_graph(make_tree(blah2))
+  blah2_tree <- make_results_ggraph(make_results_tree(blah2))
 
 
   ## 18:             splitLOO twosplitsF         FALSE

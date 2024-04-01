@@ -338,7 +338,9 @@ calc_errs <- function(testobj,
   if (length(grep("biggrp", names(testobj))) > 0) {
     # this is for the top-down/split and test method
     detobj <- report_detections(testobj, fwer = fwer, alpha = thealpha, only_hits = FALSE)
+    ## This records both group hits and hits in individual blocks
     detobj[, hit := as.numeric(hit)]
+    ## But from the perspective of error rates, we only care about rejections or non-rejections at the individual block level
     detobj[, hitb := as.numeric(max_p <= max_alpha & blocksbygroup == 1)]
     detobj[, hitb2 := as.numeric(single_hit)]
     stopifnot(all.equal(detobj$hitb, detobj$hitb2))
@@ -347,7 +349,7 @@ calc_errs <- function(testobj,
     detobj[, truenot0 := as.numeric(abs(get(truevar_name)) > trueeffect_tol)]
 
     ## Accessing the results another way
-    # thetree <- make_tree(testobj, blockid = blockid) %>%
+    # thetree <- make_results_tree(testobj, blockid = blockid) %>%
     #  select(-label) %>%
     #  as.data.frame()
     # sigleaves <- thetree %>% filter(out_degree == 0 & hit == 1)

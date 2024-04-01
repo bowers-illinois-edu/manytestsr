@@ -57,10 +57,15 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
     }
     # A detection on a single block is scored if the final p <= alpha for a node containing a single block (i.e. a leaf)
     res[, single_hit := max_p <= max_alpha & blocksbygroup == 1]
-    # A detection is also scored if all leaves have p > alpha but the parent has p <= alpha: this is a grouped detection with multiple blocks.
-    # res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & fin_parent_p <= parent_alpha & length(unique(fin_nodenum)) == 2), TRUE, FALSE), by = fin_parent]
-    res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & (fin_parent_p <= parent_alpha)), TRUE, FALSE), by = fin_parent]
-    # Also a group hit can be scored (an effect detected within a group of blocks) if there are multiple blocks in a final node and that test is p<a
+
+    # A detection is also scored if all leaves have p > alpha but the parent
+    # has p <= alpha: this is a grouped detection with multiple blocks.
+
+    res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & (fin_parent_p <= parent_alpha) & blocksbygroup == 1), TRUE, FALSE), by = fin_parent]
+
+    # Also a group hit can be scored (an effect detected within a group of
+    # blocks) if there are multiple blocks in a final node and that test is p<a
+
     res[, group_hit2 := fifelse(blocksbygroup > 1 & all(max_p <= max_alpha), TRUE, FALSE), by = fin_nodenum]
     res[, hit := single_hit | group_hit | group_hit2]
     if (any(res$hit)) {
@@ -84,9 +89,11 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 }
 
 
-#' Make a node level binary tree object
+#' Make a node level tree object of the results of nested testing
 #'
-#' Given the results of the splitting and testing algorithm, make a node level data set for use in reporting results in terms of a binary tree graph.
+#' Given the results of the splitting and testing algorithm, make a node level
+#' data set for use in reporting results and as input to ggraph for
+#' visualization in terms of a tree graph.
 #'
 #' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
 #' @param blockid is Is a character name for the variable containing the block id information
@@ -96,9 +103,12 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 #' @import tidygraph
 #' @importFrom data.table melt
 #' @export
-make_tree <- function(orig_res, blockid = "bF") {
+make_results_tree <- function(orig_res, blockid = "bF") {
   # We have to make a node level data set and an edge level data set in order to define the graph
   res <- copy(orig_res)
+  ## for testins
+  # res <- res_fwer
+  # blockid <- "bF"
   res_nodeids <- stri_split_fixed(as.character(res$biggrp), pattern = ".", simplify = TRUE)
   res_nodeids[res_nodeids == ""] <- NA
   # class(res_nodeids) <- "integer"
@@ -142,51 +152,112 @@ make_tree <- function(orig_res, blockid = "bF") {
     sort = FALSE, all.x = TRUE
   )
   setnames(res_nodes_df, "from", "parent_name")
+
   # Now define the graph using the node data set and the edges dataset.
   res_graph <- tbl_graph(nodes = res_nodes_df, edges = res_edges_df)
-  res_graph <- res_graph %>%
-    activate(nodes) %>%
-    mutate(out_degree = centrality_degree(mode = "out"))
 
-  # blah <- igraph::dominator_tree(res_graph,root="1",mode="out")
-  # blah$dom #might be parents
-  res_graph <- res_graph %>%
-    activate(nodes) %>%
-    group_by(parent_name) %>%
-    mutate(both_notsig = all(p > a)) %>%
-    ungroup()
-  res_graph <- res_graph %>%
-    activate(nodes) %>%
-    mutate(parent_of_notsig = node_is_adjacent(to = both_notsig, include_to = FALSE, mode = "in"))
   # first way to detect is leaf with p=<alpha and second way as parent of all non-sig leaves
+  # leaf is a single experimental block here at the end of the tree. A node
+  # that consists of a single block.
+
   res_graph <- res_graph %>%
     activate(nodes) %>%
-    mutate(hit = (out_degree == 0 & p <= a) | parent_of_notsig)
+    mutate(
+      out_degree = centrality_degree(mode = "out"),
+      is_leaf_single_block = (out_degree == 0 & depth > 1 & num_blocks == 1)
+    ) %>%
+    group_by(parent_name) %>%
+    mutate(leaf_child_all_not_sig = all(p > a & is_leaf_single_block)) %>%
+    ungroup()
+
+  res_graph <- res_graph %>%
+    activate(nodes) %>%
+    mutate(
+      leaf_hit = (p <= a & is_leaf_single_block),
+      is_leaf_parent = node_is_adjacent(to = is_leaf_single_block, mode = "in", include_to = FALSE),
+      is_leaf_parent2 = name %in% unique(parent_name[is_leaf_single_block]),
+      num_desc = local_size(order = graph_order(), mode = "out", mindist = 1),
+      is_cut = node_is_cut(),
+      parent_of_all_notsig_leaves = node_is_adjacent(to = leaf_child_all_not_sig, mode = "in", include_to = FALSE)
+    )
+  stopifnot(all.equal(res_graph$is_leaf_parent, res_graph$is_leaf_parent2))
+
+  ## single_block_leaf_names <- res_graph %>%
+  ##   activate(nodes) %>%
+  ##   filter(is_leaf_single_block) %>%
+  ##   pull(nodenum)
+
+  ## distances(graph = as.igraph(res_graph), v = res_graph %>% activate(nodes) %>% filter(is_leaf_single_block), to = res_graph %>% activate(nodes) %>% filter(!is_leaf_single_block))
+
+  ## all_dists <- distances(as.igraph(res_graph), mode = "out")
+  ## tmp <- all_dists[!(row.names(all_dists) %in% single_block_leaf_names), single_block_leaves_names]
+  ## tmp_max_dist <- apply(tmp, 1, function(x) {
+  ##   newx <- x[!is.infinite(x)]
+  ##   max(newx, na.rm = TRUE)
+  ## })
+
+  ## ## From https://stackoverflow.com/questions/69496134/how-to-get-all-leaf-nodes-from-a-directed-subtree-using-igraph-in-r
+  ## library(igraph)
+  ## f <- function(g, r) {
+  ##   names(V(g))[is.finite(distances(g, r, mode = "out")) & degree(g) == 1]
+  ## }
+
+  ## fun <- function(graph, node) {
+  ##   path <- ego(graph, order = length(V(graph)), nodes = node, mode = "out")
+  ##   nms <- names(path[[1]])
+  ##   ## nms[ego_size(graph, order=1, nodes=nms, mode="out", mindist=1) == 0]
+  ##   nms[degree(graph, v = nms, mode = "out") == 0]
+  ## }
+
+  ## res_igraph <- as.igraph(res_graph)
+  ## fun(res_graph, node = single_block_leaf_names[1])
+  ## f(res_graph, single_block_leaves_names[1])
+
+  ## distances(g = res_igraph, v = V(single_block_leaf_names), to = V(res_igraph))
+
+  ## ## the is_cut nodes are those at the base of the tree --- no further splitting
+  ## ## some of them are leaves (individual blocks) and others are groups of blocks (not leaves)
+
+  ## res_graph %>%
+  ##   filter(!is_leaf_single_block) %>%
+  ##   select(nodenum, depth, num_blocks, parent_name, out_degree, is_leaf, is_leaf_parent, is_leaf_parent2, p, num_desc, dist_to_leaf, is_cut) %>%
+  ##   as_tibble() %>%
+  ##   print(n = 100)
+
+  ## We use group_hit for indirect discovery (i.e. we can reject the null of no effects in any of these blocks, but not in one or the other block
+  res_graph <- res_graph %>%
+    activate(nodes) %>%
+    mutate(
+      group_hit = (p <= a & parent_of_all_notsig_leaves),
+      hit = group_hit | leaf_hit
+    )
+
   res_graph <- res_graph %>%
     activate(nodes) %>%
     mutate(shortbf = ifelse(nchar(bF) > 6, paste0(stri_sub(bF, 1, 5), "..."), bF))
   if (length(unique(res_nodes_df$a)) > 1) {
     res_graph <- res_graph %>%
       activate(nodes) %>%
-      mutate(label = paste("Node:", stri_sub(name, 1, 4), "\n Blocks:", shortbf, "\n p=", round(p, 3), ",a=", round(a, 3), sep = ""))
+      mutate(label = paste("Node:", stri_sub(name, 1, 4), "\n Blocks:", shortbf, "\n # Blocks=", num_blocks, "\n p=", round(p, 3), ",a=", round(a, 3), sep = ""))
   } else {
     res_graph <- res_graph %>%
       activate(nodes) %>%
-      mutate(label = paste("Node:", stri_sub(name, 1, 4), "\n Blocks:", shortbf, "\n p=", round(p, 3), sep = ""))
+      mutate(label = paste("Node:", stri_sub(name, 1, 4), "\n Blocks:", shortbf, "\n # Blocks=", num_blocks, "\n p=", round(p, 3), sep = ""))
   }
+
   return(res_graph)
 }
 
 #' Make a plot of the nodes
 #'
 #' Given the results of the splitting and testing algorithm in the form of a
-#' graph from [make_tree], make a node level data set for use in reporting results in terms of a binary tree graph. This does not print or plot the graph. You'll need to do that with the resulting object.
-#' @param res_graph A tidygraph object produced from make_tree
+#' graph from [make_results_tree], make a node level data set for use in reporting results in terms of a binary tree graph. This does not print or plot the graph. You'll need to do that with the resulting object.
+#' @param res_graph A tidygraph object produced from make_results_tree
 #' @return A ggraph object
 #' @import ggraph
 #' @import ggplot2
 #' @export
-make_graph <- function(res_graph) {
+make_results_ggraph <- function(res_graph) {
   # require(ggraph)
   # require(tidygraph)
   res_g <- ggraph(res_graph, layout = "tree") +

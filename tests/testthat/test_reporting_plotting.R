@@ -16,8 +16,8 @@ if (interactive) {
   load_all() ## use  this during debugging
 }
 # library(here)
-library(dplyr)
-library(dtplyr)
+# library(dplyr)
+# library(dtplyr)
 
 data(example_dat, package = "manytestsr")
 example_dat$blockF <- factor(example_dat$blockF)
@@ -66,9 +66,14 @@ example_blocks_spec_fwer <- findBlocks(
   blocksize = "hwt",
   copydts = TRUE, ncores = 1, parallel = "no", trace = FALSE
 )
+
+## Compare hits/discoveries from report_detections (which operates on blocks)
+## and make_results_tree (which operates on a tree or graph object with nodes
+## and leaves)
+
 example_hits_spec_fwer <- report_detections(example_blocks_spec_fwer, fwer = TRUE, only_hits = FALSE, blockid = "blockF")
-example_tree_spec_fwer <- make_tree(example_blocks_spec_fwer, blockid = "blockF")
-make_graph(example_tree_spec_fwer)
+example_tree_spec_fwer <- make_results_tree(example_blocks_spec_fwer, blockid = "blockF")
+make_results_ggraph(example_tree_spec_fwer)
 example_nodes_spec_fwer <- example_tree_spec_fwer %>%
   activate(nodes) %>%
   as.data.frame()
@@ -76,7 +81,7 @@ example_nodes_spec_fwer <- example_tree_spec_fwer %>%
 ## That is, we learn (1) that we can reject the null of no effects overall
 ## (and that we have 5 splits from this first test)
 example_nodes_spec_fwer %>%
-  select(nodenum, name, parent_name, p, a, depth, out_degree)
+  select(nodenum, name, parent_name, p, a, depth, out_degree, leaf_hit, group_hit, hit)
 ## See just two nodes where we can reject the null: (node 1 --- the overall node, and node 6)
 example_tree_spec_fwer %>%
   activate(edges) %>%
@@ -121,8 +126,8 @@ example_blocks_spec_fdr <- findBlocks(
 )
 example_hits_spec_fdr <- report_detections(example_blocks_spec_fdr, fwer = FALSE, alpha = .1, only_hits = FALSE, blockid = "blockF")
 
-example_tree_spec_fdr <- make_tree(example_blocks_spec_fdr, blockid = "blockF")
-make_graph(example_tree_spec_fdr)
+example_tree_spec_fdr <- make_results_tree(example_blocks_spec_fdr, blockid = "blockF")
+make_results_ggraph(example_tree_spec_fdr)
 example_nodes_spec_fdr <- example_tree_spec_fdr %>%
   activate(nodes) %>%
   as.data.frame()
@@ -136,8 +141,14 @@ example_tree_spec_fdr %>%
   activate(edges) %>%
   as.data.frame()
 
-node_info_leaves <- example_hits_spec_fdr[, .(nodesize = sum(unique(nodesize)), sites = paste(unique(site), collapse = ",")), by = .("nodenum" = nodenum_prev)]
-node_info_parent <- example_hits_spec_fdr[, .(nodesize = sum(unique(nodesize)), sites = paste(unique(site), collapse = ",")), by = .("nodenum" = nodenum_current)]
+node_info_leaves <- example_hits_spec_fdr[, .(
+  nodesize = sum(unique(nodesize)),
+  sites = paste(unique(site), collapse = ",")
+), by = .("nodenum" = nodenum_prev)]
+node_info_parent <- example_hits_spec_fdr[, .(
+  nodesize = sum(unique(nodesize)),
+  sites = paste(unique(site), collapse = ",")
+), by = .("nodenum" = nodenum_current)]
 node_info <- rbind(node_info_parent, node_info_leaves)
 stopifnot(length(unique(node_info$nodenum)) == nrow(node_info))
 
@@ -148,7 +159,10 @@ example_nodes_spec_fdr2 %>%
   arrange(depth)
 
 
-with(example_nodes_spec_fdr2, alpha_saffron(pval = p, batch = depth, nodesize = nodesize, thealpha = .1, thew0 = .1 - .001))
+with(
+  example_nodes_spec_fdr2,
+  alpha_saffron(pval = p, batch = depth, nodesize = nodesize, thealpha = .1, thew0 = .1 - .001)
+)
 
 
 ggraph(example_tree_spec_fdr) +
