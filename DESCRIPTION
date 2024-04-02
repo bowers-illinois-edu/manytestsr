@@ -1,12 +1,12 @@
 Package: manytestsr
 Title: Testing to detect heterogeneous effects in block-randomized experiments
-Version: 0.0.2.4000
+Version: 0.0.2.5000
 Authors@R:
     person(given = "Jake",
            family = "Bowers",
            role = c("aut", "cre"),
            email = "jake@jakebowers.org",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           comment = c(ORCID = "0000-0002-4048-1166"))
 Description: Implements the nesting or top-down procedures detailed in Bowers and Chen 2020.
 License: `use_mit_license()`
 Encoding: UTF-8

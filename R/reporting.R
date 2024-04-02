@@ -47,7 +47,8 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
     # I think max_p should be p at maxdepth for the FDR algorithm and maximum p overall (or pfinalb) for the FWER algo.
     # could have done this first     res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
     # But I think the following is faster
-    if (fwer | all(res$parent_alpha == alpha)) {
+    # if (fwer | all(res$parent_alpha == alpha)) {
+    if (fwer) {
       res[, max_p := pfinalb]
       res[, max_alpha := alpha]
     } else {
@@ -55,20 +56,27 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
       res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
     }
     # A detection on a single block is scored if the final p <= alpha for a node containing a single block (i.e. a leaf)
-    res[, single_hit := max_p <= max_alpha & blocksbygroup == 1]
+    res[, single_hit := (max_p <= max_alpha & blocksbygroup == 1)]
 
-    # A detection is also scored if all leaves have p > alpha but the parent
+    # A detection is also scored if all descendents have p > alpha but the parent
     # has p <= alpha: this is a grouped detection with multiple blocks.
 
-    res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & (fin_parent_p <= parent_alpha) & blocksbygroup >= 1), TRUE, FALSE), by = fin_parent]
+    ## So, record the minimum p for all descendents of the parents where the splitting has ended
+    if (all(res$biggrp == "1")) {
+      ## when there is a single group then fin_parent==0 and so doesn't show up in biggrp
+      res[, desc_min_p := max_p]
+    } else {
+      res[, desc_min_p := {
+        which_desc <- grep(unique(fin_parent), res$biggrp)
+        min(res$max_p[which_desc])
+      }, by = fin_parent]
+    }
+    res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & (fin_parent_p <= parent_alpha) & desc_min_p > max_alpha), TRUE, FALSE), by = fin_parent]
+    ## res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) & (fin_parent_p <= parent_alpha) & blocksbygroup >= 1), TRUE, FALSE), by = fin_parent]
 
-    # Also a group hit can be scored (an effect detected within a group of
-    # blocks) if there are multiple blocks in a final node and that test is p<a
-
-    res[, group_hit2 := fifelse(blocksbygroup > 1 & all(max_p <= max_alpha), TRUE, FALSE), by = fin_nodenum]
-    res[, hit := single_hit | group_hit | group_hit2]
+    res[, hit := single_hit | group_hit]
     if (any(res$hit)) {
-      res[(hit), fin_grp := fifelse(single_hit | group_hit2, fin_nodenum, fin_parent)]
+      res[(hit), fin_grp := fifelse(single_hit, fin_nodenum, fin_parent)]
       res[(hit), hit_grp := fin_grp]
       res[!(hit), hit_grp := fin_nodenum]
       # Make sure that no  hit_grp includes *both* detections and misses/skips/acceptances
