@@ -127,17 +127,17 @@ res_fwer[bF %in% c("10", "9"), .(bF, ate_tauv2, pfinalb, nodenum_current, nodenu
 ## With alpha fixed
 res_fwer_det <- report_detections(res_fwer)
 ## So we can say that we discovered hits in the following blocks or groups of blocks
-res_fwer_det[(hit), .(biggrp, bF, hit_grp, max_p, fin_parent_p, max_alpha, parent_alpha, single_hit, group_hit, group_hit2)][order(hit_grp)]
+res_fwer_det[(hit), .(biggrp, bF, hit_grp, max_p, fin_parent_p, max_alpha, parent_alpha, single_hit, group_hit)][order(hit_grp)]
 
 ## With alpha varying according to the alpha investing
 res_ai_det <- report_detections(res_ai, fwer = FALSE)
 ## So we can say that we discovered hits in the following blocks or groups of blocks
-res_ai_det[(hit), .(biggrp, bF, hit_grp, max_p, fin_parent_p, max_alpha, parent_alpha, single_hit, group_hit, group_hit2)][order(hit_grp)]
+res_ai_det[(hit), .(biggrp, bF, hit_grp, max_p, fin_parent_p, max_alpha, parent_alpha, single_hit, group_hit)][order(hit_grp)]
 
 ## And with the saffron procedure
 res_saffron_det <- report_detections(res_saffron, fwer = FALSE)
 ## So we can say that we discovered hits in the following blocks or groups of blocks
-res_saffron_det[(hit), .(biggrp, bF, hit_grp, max_p, fin_parent_p, max_alpha, parent_alpha, single_hit, group_hit, group_hit2)][order(hit_grp)]
+res_saffron_det[(hit), .(biggrp, bF, hit_grp, max_p, fin_parent_p, max_alpha, parent_alpha, single_hit, group_hit)][order(hit_grp)]
 
 res_fwer_tree <- make_results_tree(res_fwer, blockid = "bF")
 res_saffron_tree <- make_results_tree(res_saffron, blockid = "bF")

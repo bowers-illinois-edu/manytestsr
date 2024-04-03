@@ -39,7 +39,6 @@ with(bdat4, table(g_x1, x1, exclude = c()))
 with(bdat4, table(g_x2, x2, exclude = c()))
 with(bdat4, table(g_x3, x3, exclude = c()))
 
-
 test_that("Clustering based splitting makes the splits more homogeneous and distant in mean", {
   bdat4[, g1 := splitCluster(bid = as.character(bF), x = hwt)]
   bdat4[, g2 := splitEqualApprox(bid = as.character(bF), x = hwt)]
@@ -49,7 +48,6 @@ test_that("Clustering based splitting makes the splits more homogeneous and dist
   expect_lt(max(g1summary$sd), min(g2summary$sd))
   expect_gt(abs(diff(g1summary$mn)), abs(diff(g2summary$mn)))
 })
-
 
 ## Setting up  a test of pre-specified splits
 bdat4[, lv1 := cut(v1, 2, labels = c("l1_1", "l1_2"))]
@@ -141,6 +139,14 @@ bdat4[, twosplitsF := factor(twosplits)] ## should only have 2 splits
 bdat4[, lvs2 := interaction(lv1, lv2)] ## should only have 4 spits
 bdat4[, constv := rep(10, .N)] ## a constant
 
+## Notice that basically not hitting within individual blocks with Ytauv2 despite large mean diffs in half of the blocks
+blah <- idat3[, .(pIndepDist(Ytauv2 ~ ZF), pOneway(Ytauv2 ~ ZF), pWilcox(Ytauv2 ~ ZF), coef(lm(Ytauv2 ~ ZF)), mean(tauv2), sd(y0), .N), by = bF]
+head(blah)
+tail(blah)
+# library(ggplot2)
+# g <- ggplot(data=idat3,aes(x=bF,y=Ytauv2,fill=ZF))+geom_boxplot()
+# g
+
 test_that("splitCluster follows the values of discrete splitby variables", {
   theres1 <- findBlocks(
     idat = idat3, bdat = bdat4, blockid = "bF", pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
@@ -148,16 +154,30 @@ test_that("splitCluster follows the values of discrete splitby variables", {
     parallel = "no", copydts = TRUE,
     splitfn = splitCluster, splitby = "twosplits", stop_splitby_constant = TRUE
   )
-  theres1_det <- report_detections(theres1, blockid = "bF")
+
+  ## Report detections calculates rejections / acceptances using blocks
+  theres1_det <- report_detections(theres1, blockid = "bF", only_hits = FALSE, fwer = TRUE, alpha = .05)
+
+  ## make_results_tree calculates rejections /acceptances after converting the
+  ## block level data into a graph/tree format (of nodes and edges)
+  theres1_tree <- make_results_tree(theres1, blockid = "bF")
+  theres1_nodes <- theres1_tree %>%
+    activate(nodes) %>%
+    as_tibble()
+  theres1_tree_blocks <- theres1_nodes %>%
+    filter(nodenum != "1") %>%
+    select(bF)
+
+  expect_equal(theres1_tree_blocks$bF[2], paste(sort(bdat4$bF[bdat4$twosplits == "0"]), collapse = ","))
+  expect_equal(theres1_tree_blocks$bF[1], paste(sort(bdat4$bF[bdat4$twosplits == "1"]), collapse = ","))
+
   expect_equal(uniqueN(theres1$biggrp), uniqueN(bdat4$twosplits))
-  ## This next because I know that we should reject in both groups.
-  expect_equal(uniqueN(theres1_det$fin_grp), uniqueN(bdat4$twosplits))
+
   thetab <- table(theres1$twosplitsF, theres1$biggrp)
   expect_equal(c(thetab[1, 2], thetab[2, 1]), c(0, 0))
 })
 
 
-## This next doesn't have explicit expectations and so is a skipped or empty test upon R check. Comment out for now.
 test_that("splitCluster stops appropriately (i.e. doesn't just keep randomly splitting) with continuous splitting criteria.", {
   theres1 <- findBlocks(
     idat = idat3, bdat = bdat4, blockid = "bF", pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
@@ -173,11 +193,8 @@ test_that("splitCluster stops appropriately (i.e. doesn't just keep randomly spl
     splitfn = splitCluster, splitby = "hwt", stop_splitby_constant = FALSE
   )
   theres2_det <- report_detections(theres1, blockid = "bF")
-  ##   ## Not sure what else to expect here
   expect_equal(theres1_det, theres2_det)
 })
-
-
 
 ## Not testing "splitSpecified" because splitSpecifiedFactor and splitSpecifiedFactorMulti do better jobs.
 ## depreciate splitSpecified
@@ -251,18 +268,19 @@ test_that("Splitters work as expected given splitby variables
   with(res[[resobj]], table(biggrp, twosplits, exclude = c()))
   with(res[[resobj]], table(fin_grp, twosplits, exclude = c()))
   ## All of the group with the smallest value on twosplits will be put in one split
-  expect_equal(sum(res[[resobj]]$twosplits == 0), max(table(res[[resobj]]$fin_grp)))
+  expect_equal(sum(res[[resobj]]$twosplits == 0), max(table(res[[resobj]]$fin_nodenum)))
   ##  4:             splitLOO twosplitsF          TRUE
   ### This should be the same as above. Factor is the same as numeric here.
   resobj <- which(names(res) == "splitLOO_twosplits_TRUE")
   with(res[[resobj]], table(biggrp, twosplits, exclude = c()))
-  with(res[[resobj]], table(fin_grp, twosplits, exclude = c()))
-  expect_equal(sum(res[[resobj]]$twosplitsF == 0), max(table(res[[resobj]]$fin_grp)))
+  with(res[[resobj]], table(fin_nodenum, twosplits, exclude = c()))
+  expect_equal(sum(res[[resobj]]$twosplitsF == 0), max(table(res[[resobj]]$fin_nodenum)))
 
   ## 15:             splitLOO  twosplits         FALSE
   ### This should be like random splits: Yes. See below how blah2 and blah2a differ.
   ## So, splitLOO really should be used with a splitby that is more continuous and random splits will
   ## happen when the systematic variation in splitby is used up.
+    ## Not putting in an explicit test here but allowing code to run to catch errors
   resobj <- which(names(res) == "splitLOO_twosplits_FALSE")
   with(res[[resobj]], table(biggrp, twosplits, exclude = c()))
   with(res[[resobj]], table(fin_grp, twosplits, exclude = c()))
@@ -276,7 +294,6 @@ test_that("Splitters work as expected given splitby variables
   blah2a_det <- report_detections(blah2a, blockid = "bF")
   with(blah2a_det, table(fin_grp, twosplits, exclude = c()))
   blah2_tree <- make_results_ggraph(make_results_tree(blah2))
-
 
   ## 18:             splitLOO twosplitsF         FALSE
 
@@ -359,7 +376,7 @@ test_that("Splitters work as expected given splitby variables
 
   ##########################
   ##  3:         splitCluster  twosplits          TRUE
-  tabres3 <- with(res[["splitCluster_twosplits_TRUE"]], table(fin_grp, twosplits, exclude = c()))
+  tabres3 <- with(res[["splitCluster_twosplits_TRUE"]], table(fin_nodenum, twosplits, exclude = c()))
   expect_equal(tabres3[1, 2], 0)
   expect_equal(tabres3[2, 1], 0)
   expect_equal(dim(tabres3), c(2, 2))
