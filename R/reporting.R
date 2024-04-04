@@ -102,15 +102,16 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 #' data set for use in reporting results and as input to ggraph for
 #' visualization in terms of a tree graph.
 #'
-#' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
-#' @param blockid is Is a character name for the variable containing the block id information
+#' @param orig_res a results data.table output from the \code{\link{findBlocks}} function.
+#' @param blockid is a character name for the variable containing the block id information
+#' @param node_label is a character name for a variable containing a descriptive label for the blocks.
 #' @return A tbl_graph and igraph object with nodes and edges
 #' @importFrom stringi stri_split_fixed stri_sub
 #' @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent activate
 #' @import tidygraph
 #' @importFrom data.table melt
 #' @export
-make_results_tree <- function(orig_res, blockid = "bF") {
+make_results_tree <- function(orig_res, blockid = "bF", node_label = NULL) {
   # We have to make a node level data set and an edge level data set in order to define the graph
   res <- copy(orig_res)
   ## for testins
@@ -125,21 +126,31 @@ make_results_tree <- function(orig_res, blockid = "bF") {
   pnms <- sort(grep("^p[0-9]", names(res), value = TRUE))
   anms <- sort(grep("^alpha[0-9]", names(res), value = TRUE))
   nodenums <- sort(grep("^nodenum[0-9]", names(res), value = TRUE))
-  # Right now we go from wide to long to node. It would be nicer to go directly from wide to node.
+  # TODO Right now we go from wide to long to node. It would be nicer to go directly from wide to node.
+  if (is.null(node_label)) {
+    # node_label <- "node_label"
+    # longnms <- c("biggrp", blockid, "nodenum_current", "nodenum_prev", "node_label")
+    res[, node_label := "NULL"]
+  } else {
+    res[, node_label := get(node_label)]
+    # longnms <- c("biggrp", blockid, "nodenum_current", "nodenum_prev", node_label)
+  }
+  longnms <- c("biggrp", blockid, "nodenum_current", "nodenum_prev", "node_label")
   reslong <- melt(res,
-    id = c("biggrp", blockid, "nodenum_current", "nodenum_prev"),
+    id = longnms,
     measure.vars = list(p = pnms, a = anms, nodenum = nodenums),
     variable.name = "depth"
   )
   reslong$depth <- as.numeric(as.character(reslong$depth))
   reslong$bFC <- as.character(reslong[[blockid]])
   reslong <- droplevels(reslong[!is.na(nodenum) & !is.na(p), ])
-
+  ## Now collapse down to the node level
   res_nodes_df <- reslong[, .(
     p = unique(p),
     a = unique(a),
     bF = paste(as.character(unlist(sort(get(blockid)))), collapse = ","),
-    depth = unique(depth)
+    depth = unique(depth),
+    node_label = paste(as.character(unlist(sort(node_label))), collapse = ",")
   ), by = nodenum]
   res_nodes_df$name <- res_nodes_df$nodenum
   res_nodes_df$num_blocks <- stri_count_fixed(res_nodes_df$bF, ",") + 1
@@ -162,6 +173,8 @@ make_results_tree <- function(orig_res, blockid = "bF") {
 
   # Now define the graph using the node data set and the edges dataset.
   res_graph <- tbl_graph(nodes = res_nodes_df, edges = res_edges_df)
+
+  # And use the graph relations to calculate whether a test at a given place in the tree is a discovery or not
 
   # first way to detect is leaf with p=<alpha and second way as parent of all non-sig leaves
   # leaf is a single experimental block here at the end of the tree. A node
@@ -189,39 +202,6 @@ make_results_tree <- function(orig_res, blockid = "bF") {
       parent_of_all_notsig_leaves = node_is_adjacent(to = leaf_child_all_not_sig, mode = "in", include_to = FALSE)
     )
   stopifnot(all.equal(res_graph$is_leaf_parent, res_graph$is_leaf_parent2))
-
-  ## single_block_leaf_names <- res_graph %>%
-  ##   activate(nodes) %>%
-  ##   filter(is_leaf_single_block) %>%
-  ##   pull(nodenum)
-
-  ## distances(graph = as.igraph(res_graph), v = res_graph %>% activate(nodes) %>% filter(is_leaf_single_block), to = res_graph %>% activate(nodes) %>% filter(!is_leaf_single_block))
-
-  ## all_dists <- distances(as.igraph(res_graph), mode = "out")
-  ## tmp <- all_dists[!(row.names(all_dists) %in% single_block_leaf_names), single_block_leaves_names]
-  ## tmp_max_dist <- apply(tmp, 1, function(x) {
-  ##   newx <- x[!is.infinite(x)]
-  ##   max(newx, na.rm = TRUE)
-  ## })
-
-  ## ## From https://stackoverflow.com/questions/69496134/how-to-get-all-leaf-nodes-from-a-directed-subtree-using-igraph-in-r
-  ## library(igraph)
-  ## f <- function(g, r) {
-  ##   names(V(g))[is.finite(distances(g, r, mode = "out")) & degree(g) == 1]
-  ## }
-
-  ## fun <- function(graph, node) {
-  ##   path <- ego(graph, order = length(V(graph)), nodes = node, mode = "out")
-  ##   nms <- names(path[[1]])
-  ##   ## nms[ego_size(graph, order=1, nodes=nms, mode="out", mindist=1) == 0]
-  ##   nms[degree(graph, v = nms, mode = "out") == 0]
-  ## }
-
-  ## res_igraph <- as.igraph(res_graph)
-  ## fun(res_graph, node = single_block_leaf_names[1])
-  ## f(res_graph, single_block_leaves_names[1])
-
-  ## distances(g = res_igraph, v = V(single_block_leaf_names), to = V(res_igraph))
 
   ## ## the is_cut nodes are those at the base of the tree --- no further splitting
   ## ## some of them are leaves (individual blocks) and others are groups of blocks (not leaves)

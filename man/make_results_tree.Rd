@@ -4,12 +4,14 @@
 \alias{make_results_tree}
 \title{Make a node level tree object of the results of nested testing}
 \usage{
-make_results_tree(orig_res, blockid = "bF")
+make_results_tree(orig_res, blockid = "bF", node_label = NULL)
 }
 \arguments{
-\item{orig_res}{results data.table output from the \code{\link{findBlocks}} function.}
+\item{orig_res}{a results data.table output from the \code{\link{findBlocks}} function.}
 
-\item{blockid}{is Is a character name for the variable containing the block id information}
+\item{blockid}{is a character name for the variable containing the block id information}
+
+\item{node_label}{is a character name for a variable containing a descriptive label for the blocks.}
 }
 \value{
 A tbl_graph and igraph object with nodes and edges
