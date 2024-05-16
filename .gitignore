@@ -8,3 +8,4 @@ revdep/checks.rds
 .Rhistory
 tests/testthat/res1nodes.pdf
 tests/testthat/res3nodes.pdf
+docs
