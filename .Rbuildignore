@@ -27,3 +27,4 @@ src/README.md
 tests/testthat/JUNK
 README.md
 .vscode
+^\.github$
