@@ -142,7 +142,10 @@ tau_norm_outliers <- function(ybase, tau_sds, covariate) {
     rnorm(n, mean = tau_sds * sd(ybase), sd = sd(ybase) / 2)
   } else {
     # 2 large outliers
-    c(rnorm(n - num_outliers, mean = sd(ybase) * tau_sds, sd = sd(ybase) / 2), rnorm(num_outliers, mean = sd(ybase) * tau_sds * 4, sd = sd(ybase) * 4))
+    c(
+      rnorm(n - num_outliers, mean = sd(ybase) * tau_sds, sd = sd(ybase) / 2),
+      rnorm(num_outliers, mean = sd(ybase) * tau_sds * 4, sd = sd(ybase) * 4)
+    )
   }
 }
 

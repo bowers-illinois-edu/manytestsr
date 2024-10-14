@@ -64,6 +64,7 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
     bdatnew <- bdatnew[newcovb]
   }
 
+  ## Create potential outcome to treatment using a tau_fn and tau_size etc.
   datnew$y1new <- create_effects(
     idat = datnew, ybase = ybase, blockid = blockid,
     tau_fn = tau_fn, tau_size = tau_size,
@@ -136,7 +137,8 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
 #' @export
 reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y1var,
                                prop_blocks_0, tau_fn, tau_size, pfn, p_adj_method = "fdr",
-                               afn = NULL, splitfn = NULL, splitby = NULL, thealpha = .05, copydts = FALSE, stop_splitby_constant = FALSE, ncores = 1, return_details = FALSE) {
+                               afn = NULL, splitfn = NULL, splitby = NULL, thealpha = .05, copydts = FALSE,
+                               stop_splitby_constant = FALSE, ncores = 1, return_details = FALSE) {
   stopifnot(is.null(splitfn) | splitfn == "NULL")
   # make no effects within block by shuffling treatment, this is the engine of variability in the sim
   idat[, newZ := sample(get(trtid)), by = blockid]
@@ -383,11 +385,11 @@ calc_errs <- function(testobj,
 
   # This is calculated at the level of blocks not nodes.
   deterrs <- detobj[, .(
-    nreject = sum(hitb),
+    nreject = sum(hitb), # number of rejected blocks
     naccept = sum(1 - hitb),
     prop_reject = mean(hitb),
     prop_accept = mean(1 - hitb),
-    tot_true0 = sum(true0),
+    tot_true0 = sum(true0), # number of true 0 blocks.
     tot_truenot0 = sum(truenot0),
     tot_reject_true0 = sum(hitb * true0),
     tot_not_reject_true0 = sum((1 - hitb) * true0),
@@ -397,9 +399,12 @@ calc_errs <- function(testobj,
     # Proportion of the total blocks that have an effect where we detect that effect:
     correct_pos_effect_prop = sum(hitb * truenot0) / max(1, sum(truenot0)),
     correct_pos_nulls_prop = sum(hitb * true0) / max(1, sum(true0)),
+    ## if hitb=1 (reject) and truenot0=1 then this is a correct rejection. Use in power calculations.
     true_pos_prop = mean(hitb * truenot0),
     ## Proportion of rejections of a true null out of the total number of tests
-    false_pos_prop = mean(hitb * true0),
+    ##   if hitb=1 (meaning rejection) and true0=1 (meaning no true effect, true effect = 0) then a false positive
+    false_pos_prop = mean(hitb * true0), # number blocks rejected when truly 0 / total number of blocks.
+    # also sum(hitb*true0)/nrow(detobj)
     # If we do not reject and all blocks are truly null, then we have no error.
     prop_not_reject_true0 = mean((1 - hitb) * true0),
     # If we do not reject/detect and at least one of the blocks actually has an effect, we have
