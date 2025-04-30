@@ -15,7 +15,7 @@ splitCluster <- function(bid, x) {
   stopifnot("x must be numeric or integer" = is.numeric(x))
 
   if (length(unique(x)) == 1) {
-    # Random splits used with stop_splitby_constant=FALSE otherwise findBlocks should stop before this
+    # Random splits used with stop_splitby_constant=FALSE otherwise find_blocks should stop before this
     group <- factor(sample(rep_len(c(0, 1), length.out = length(x))))
     return(group)
   }
@@ -86,7 +86,7 @@ splitLOO <- function(bid, x) {
   }
   # require(data.table)
   # We only want to return one block and a time. So need to avoid ties.
-  # Using random choice among equal ranks --- so this amounts to random splits when findBlocks doesn't stop the splitting because of stop_splitby_constant=TRUE
+  # Using random choice among equal ranks --- so this amounts to random splits when find_blocks doesn't stop the splitting because of stop_splitby_constant=TRUE
   frankx <- frank(x, ties.method = "random") # frank from data.table
   group <- factor(as.numeric(frankx < max(frankx)))
   # names(x) <- bid
@@ -106,7 +106,7 @@ splitSpecifiedFactor <- function(bid, x) {
   stopifnot("x must be a factor" = is.factor(x))
   stopifnot("The factor must have categories separately by dots '.' and have at least one such separation." = stri_count_fixed(x, ".") > 0)
   if (length(unique(x)) == 1) {
-    # Random splits used with stop_splitby_constant=FALSE otherwise findBlocks should stop before this
+    # Random splits used with stop_splitby_constant=FALSE otherwise find_blocks should stop before this
     group <- factor(sample(rep_len(c(0, 1), length.out = length(x))))
     return(group)
   }
@@ -150,7 +150,7 @@ splitSpecifiedFactorMulti <- function(bid, x) {
   stopifnot(is.factor(x))
   stopifnot("The factor must have categories separately by dots '.' and have at least one such separation." = stri_count_fixed(x, ".") > 0)
   if (length(unique(x)) == 1) {
-    # Random splits used with stop_splitby_constant=FALSE otherwise findBlocks should stop before this
+    # Random splits used with stop_splitby_constant=FALSE otherwise find_blocks should stop before this
     group <- factor(sample(rep_len(c(0, 1), length.out = length(x))))
     return(group)
   }

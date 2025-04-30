@@ -12,7 +12,7 @@
 #' @param simthresh Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations
 #' @param sims Number of permutations for permutation-based testing
 #' @param maxtest Maximum splits or tests to do. Should probably not be smaller than the number of experimental blocks.
-#' @param copydts TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.
+#' @param copydts TRUE or FALSE. TRUE if using find_blocks standalone. FALSE if copied objects are being sent to find_blocks from other functions.
 #' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates) or a column with a factor with levels separated by "." that indicates a pre-specified series of splits (see splitSpecifiedFactor))
 #' @param stop_splitby_constant TRUE if the splitting should stop when splitby is constant within a given branch of the tree. FALSE if splitting should continue even when splitby is constant. Default is TRUE. Different combinations of splitby, splitfn, and stop_splitby_constant make more or less sense as described below.
 #' @param blocksize A string with the name of the column in bdat contains information about the size of the block (or other determinant of the power of tests within that block, such as harmonic mean weight of the block or variance of the outcome within the block.)
@@ -55,7 +55,7 @@
 #' with factor variables. When the splitting criteria is constant, it will
 #' return random splits into roughly two equal sized groups of blocks if
 #' stop_splitby_constant=FALSE. If stop_splitby_constant=TRUE then
-#' [findBlocks()] will stop and return groups of blocks as detected or not.
+#' [find_blocks()] will stop and return groups of blocks as detected or not.
 #'  * [splitSpecifiedFactor()] will split the blocks into two groups following
 #'  prespecified pattern encoded into the labels for the levels of the factor.
 #'  For example, if we imagine three nested levels of splitting (like states,
@@ -82,7 +82,7 @@
 #' @importFrom stringi stri_count_fixed stri_split_fixed stri_split stri_sub stri_replace_all stri_extract_last
 #' @importFrom digest digest getVDigest
 #' @export
-findBlocks <-
+find_blocks <-
   function(idat,
            bdat,
            blockid = "block",
@@ -332,7 +332,7 @@ findBlocks <-
 
 #' Use hashing to make a node id
 #'
-#' This is an internal function used by findBlocks.
+#' This is an internal function used by find_blocks.
 #' @param d A vector
 #' @return a vector of hashes
 #' @importFrom digest digest getVDigest

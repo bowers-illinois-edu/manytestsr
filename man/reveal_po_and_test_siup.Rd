@@ -54,7 +54,7 @@ reveal_po_and_test_siup(
 
 \item{p_adj_method}{Must be "split" here.}
 
-\item{copydts}{TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.}
+\item{copydts}{TRUE or FALSE. TRUE if using find_blocks standalone. FALSE if copied objects are being sent to find_blocks from other functions.}
 
 \item{splitfn}{A function to split the data into two pieces --- using bdat}
 

@@ -148,7 +148,7 @@ tail(blah)
 # g
 
 test_that("splitCluster follows the values of discrete splitby variables", {
-  theres1 <- findBlocks(
+  theres1 <- find_blocks(
     idat = idat3, bdat = bdat4, blockid = "bF", pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
     fmla = Ytauv2 ~ ZF | bF,
     parallel = "no", copydts = TRUE,
@@ -179,14 +179,14 @@ test_that("splitCluster follows the values of discrete splitby variables", {
 
 
 test_that("splitCluster stops appropriately (i.e. doesn't just keep randomly splitting) with continuous splitting criteria.", {
-  theres1 <- findBlocks(
+  theres1 <- find_blocks(
     idat = idat3, bdat = bdat4, blockid = "bF", pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
     fmla = Ytauv2 ~ ZF | bF,
     parallel = "no", copydts = TRUE,
     splitfn = splitCluster, splitby = "hwt", stop_splitby_constant = TRUE
   )
   theres1_det <- report_detections(theres1, blockid = "bF")
-  theres2 <- findBlocks(
+  theres2 <- find_blocks(
     idat = idat3, bdat = bdat4, blockid = "bF", pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
     fmla = Ytauv2 ~ ZF | bF,
     parallel = "no", copydts = TRUE,
@@ -212,7 +212,7 @@ split_test_params <- split_test_params[sfn != "splitSpecifiedFactorMulti" |
   (sfn == "splitSpecifiedFactorMulti" & !(splitby %in% c("twosplits", "constv"))), ]
 
 test_splitters_fn <- function(sfn, splitby, stopsplitting) {
-  theres <- findBlocks(
+  theres <- find_blocks(
     idat = idat3, bdat = bdat4, blockid = "bF",
     pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
     fmla = Ytauv2 ~ ZF | bF,
@@ -354,7 +354,7 @@ test_that("Splitters work as expected given splitby variables
   with(res[["splitEqualApprox_lvs2_TRUE"]], table(fin_grp, lvs2, exclude = c()))
 
   ## 13:     splitEqualApprox     constv          TRUE
-  ## allowed by findBlocks.
+  ## allowed by find_blocks.
   expect_equal(nrow(res[["splitEqualApprox_constv_TRUE"]]), 20)
 
   ## 16:     splitEqualApprox  twosplits         FALSE
@@ -437,7 +437,7 @@ test_that("Splitters work as expected given splitby variables
   ### Starts within factor be then splits randomly
   tabres25 <- with(res[["splitSpecifiedFactor_lvs2_FALSE"]], table(fin_grp, lvs2, exclude = c()))
 
-  theres2 <- findBlocks(
+  theres2 <- find_blocks(
     idat = idat3, bdat = bdat4, blockid = "bF",
     pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
     fmla = Ytauv2 ~ ZF | bF,

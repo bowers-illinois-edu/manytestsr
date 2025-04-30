@@ -41,7 +41,7 @@ testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3, bda
     theafn <- getFromNamespace(afn, ns = "manytestsr")
   }
   ## afn and sfn and sby are character names
-  theres <- findBlocks(
+  theres <- find_blocks(
     idat = idat, bdat = bdat, blockid = "bF", splitfn = get(sfn),
     pfn = pIndepDist, alphafn = theafn, thealpha = 0.05, thew0 = .05 - .001,
     fmla = fmla,
@@ -60,7 +60,7 @@ testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3, bda
 
 ##  Maybe make w0 more like .05.
 alpha_and_splits[c(1, 2, 4), ]
-## debug(findBlocks)
+## debug(find_blocks)
 res_ai <- testing_fn(
   afn = alpha_and_splits[1, "afn"],
   sfn = alpha_and_splits[1, "sfn"],

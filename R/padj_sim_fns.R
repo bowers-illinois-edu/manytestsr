@@ -17,7 +17,7 @@
 #' @param by_block Is an argument to [create_effects] to create true effects by block or across the whole dataset
 #' @param pfn A function to produce pvalues --- using idat.
 #' @param afn A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator.
-#' @param p_adj_method Is "split" to use [findBlocks] for top-down testing and "fdr" or "holm" etc to use [stats::p.adjust] and do the test in every block.
+#' @param p_adj_method Is "split" to use [find_blocks] for top-down testing and "fdr" or "holm" etc to use [stats::p.adjust] and do the test in every block.
 #' @param nsims Is the number of simulations to run --- each simulation uses the same treatment effects be re-assigns treatment (re-shuffles treatment and re-reveals the observed outcomes as a function of the potential outcomes)
 #' @param ncores Tells p-value functions how many cores to use. Mostly ignored in use of this function because we are tending to parallelize at higher loops.
 #' @param splitfn A function to split the data into two pieces --- using bdat
@@ -126,7 +126,7 @@ padj_test_fn <- function(idat, bdat, blockid, trtid = "trt", fmla = Y ~ trtF | b
 #' @param splitfn Must be null. Only exists so that we can use the same efffect creation and testing function for both approaches.
 #' @param splitby Must be null. Only exists so that we can use the same efffect creation and testing function for both approaches.
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
-#' @param copydts TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.
+#' @param copydts TRUE or FALSE. TRUE if using find_blocks standalone. FALSE if copied objects are being sent to find_blocks from other functions.
 #' @param stop_splitby_constant FALSE (not used here because this algorithm does not split) is the algorithm should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.
 #' @param ncores The number of cores or threads to use for the test statistic creation and possible permutation testing
 #' @param return_details TRUE means that the function should return a list of
@@ -192,7 +192,7 @@ reveal_po_and_test <- function(idat, bdat, blockid, trtid, fmla = NULL, ybase, y
 #' @param pfn A function to produce pvalues --- using idat.
 #' @param afn A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator.
 #' @param p_adj_method Must be "split" here.
-#' @param copydts TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.
+#' @param copydts TRUE or FALSE. TRUE if using find_blocks standalone. FALSE if copied objects are being sent to find_blocks from other functions.
 #' @param splitfn A function to split the data into two pieces --- using bdat
 #' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates))
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
@@ -225,13 +225,13 @@ reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF
   idat[, newZ := sample(get(trtid)), by = blockid]
   # Then reveal an observed outcome that contains a treatment effect from y1var as a function of newZ. So the treatment effect is known.
   idat[, Y := get(y1var) * newZ + get(ybase) * (1 - newZ)]
-  # bdat in findBlocks doesn't really  carry important information other than block id
+  # bdat in find_blocks doesn't really  carry important information other than block id
   # setkeyv(bdat, blockid)
   idat[, newZF := factor(newZ)]
   fmla <- as.formula(paste("Y~newZF|", blockid, sep = ""))
   # idat[, Y := get(y1var) * get(trtid) + get(ybase) * (1 - get(trtid))] # reveal relevant potential outcomes with possible known effect
 
-  res <- findBlocks(
+  res <- find_blocks(
     idat = idat, bdat = bdat, blockid = blockid, splitfn = splitfn,
     pfn = pfn, alphafn = afn, thealpha = thealpha,
     fmla = fmla,
@@ -253,11 +253,11 @@ reveal_po_and_test_siup <- function(idat, bdat, blockid, trtid, fmla = Y ~ newZF
 #' Calculate the error and success proportions of tests for a single iteration
 #'
 #' @description
-#' This function takes output from [findBlocks] or an equivalent bottom-up testing function such as `adjust_block_tests`
-#' and returns the proportions of errors made. To use this function the input to findBlocks must include a column containing a true block-level effect.
+#' This function takes output from [find_blocks] or an equivalent bottom-up testing function such as `adjust_block_tests`
+#' and returns the proportions of errors made. To use this function the input to find_blocks must include a column containing a true block-level effect.
 #' Repeated uses of this function allow us to assess false discovery rates and family wise error rates among other metrics of testing success.
 #'
-#' @param testobj Is an object arising from \code{\link{findBlocks}} or \code{\link{adjust_block_tests}}. It will contain block-level results.
+#' @param testobj Is an object arising from \code{\link{find_blocks}} or \code{\link{adjust_block_tests}}. It will contain block-level results.
 #' @param truevar_name Is a string indicating the name of the variable containing the true underlying causal effect (at the block level).
 #' @param trueeffect_tol Is the smallest effect size below which we consider the effect to be zero (by default is it floating point zero).
 #' @param blockid A character name of the column in idat and bdat indicating the block.

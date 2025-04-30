@@ -59,7 +59,7 @@ rm(mtbdat)
 rm(mtwrkdat)
 
 Rprof(line.profiling = TRUE)
-siu_cluster <- findBlocks(
+siu_cluster <- find_blocks(
   idat = idatB1000, bdat = bdatB1000, pfn = pIndepDist, splitfn = splitCluster, thealpha = .05,
   fmla = Y ~ trtF | blockF, parallel = "no", trace = TRUE, splitby = "covscluster", stop_splitby_constant = TRUE
 )

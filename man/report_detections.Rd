@@ -13,7 +13,7 @@ report_detections(
 )
 }
 \arguments{
-\item{orig_res}{results data.table output from the \code{\link{findBlocks}} function.}
+\item{orig_res}{results data.table output from the \code{\link{find_blocks}} function.}
 
 \item{fwer}{(default is TRUE) means that a block is detected (or not) using the maximum p-value associated with the
 block (or the groups containing that block). fwer=FALSE to detect blocks (or groups of blocks) using FDR control.}

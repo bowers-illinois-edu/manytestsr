@@ -60,7 +60,7 @@ reveal_po_and_test(
 
 \item{thealpha}{Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)}
 
-\item{copydts}{TRUE or FALSE. TRUE if using findBlocks standalone. FALSE if copied objects are being sent to findBlocks from other functions.}
+\item{copydts}{TRUE or FALSE. TRUE if using find_blocks standalone. FALSE if copied objects are being sent to find_blocks from other functions.}
 
 \item{stop_splitby_constant}{FALSE (not used here because this algorithm does not split) is the algorithm should stop splitting when the splitting criteria is constant within set/parent or whether it should continue but split randomly.}
 

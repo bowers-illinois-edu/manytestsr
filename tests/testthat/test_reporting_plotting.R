@@ -52,9 +52,9 @@ pOneway(dat = example_dat, fmla = Y2 ~ trtF | blockF)
 splitSpecifiedFactorMulti(example_bdat$blockF, example_bdat$site_year_block)
 splitSpecified(example_bdat$blockF, example_bdat[, .(site, year, blockF)])
 
-## findBlocks returns a data.table/data.frame with each row describing a block.
+## find_blocks returns a data.table/data.frame with each row describing a block.
 
-example_blocks_spec_fwer <- findBlocks(
+example_blocks_spec_fwer <- find_blocks(
   idat = example_dat, bdat = example_bdat, blockid = "blockF",
   pfn = pIndepDist, fmla = Y1 ~ trtF | blockF,
   splitfn = splitSpecifiedFactorMulti,
@@ -114,7 +114,7 @@ example_blocks_fdr %>%
   arrange(p) %>%
   head()
 
-example_blocks_spec_fdr <- findBlocks(
+example_blocks_spec_fdr <- find_blocks(
   idat = example_dat, bdat = example_bdat, blockid = "blockF",
   pfn = pIndepDist, fmla = Y1 ~ trtF | blockF,
   splitfn = splitSpecifiedFactorMulti,

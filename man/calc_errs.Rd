@@ -15,7 +15,7 @@ calc_errs(
 )
 }
 \arguments{
-\item{testobj}{Is an object arising from \code{\link{findBlocks}} or \code{\link{adjust_block_tests}}. It will contain block-level results.}
+\item{testobj}{Is an object arising from \code{\link{find_blocks}} or \code{\link{adjust_block_tests}}. It will contain block-level results.}
 
 \item{truevar_name}{Is a string indicating the name of the variable containing the true underlying causal effect (at the block level).}
 
@@ -89,7 +89,7 @@ We also summarize the average treatment effects in the blocks (or groups of bloc
 }
 }
 \description{
-This function takes output from \link{findBlocks} or an equivalent bottom-up testing function such as \code{adjust_block_tests}
-and returns the proportions of errors made. To use this function the input to findBlocks must include a column containing a true block-level effect.
+This function takes output from \link{find_blocks} or an equivalent bottom-up testing function such as \code{adjust_block_tests}
+and returns the proportions of errors made. To use this function the input to find_blocks must include a column containing a true block-level effect.
 Repeated uses of this function allow us to assess false discovery rates and family wise error rates among other metrics of testing success.
 }

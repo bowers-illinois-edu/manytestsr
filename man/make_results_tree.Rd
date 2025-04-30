@@ -7,7 +7,7 @@
 make_results_tree(orig_res, blockid = "bF", node_label = NULL)
 }
 \arguments{
-\item{orig_res}{a results data.table output from the \code{\link{findBlocks}} function.}
+\item{orig_res}{a results data.table output from the \code{\link{find_blocks}} function.}
 
 \item{blockid}{is a character name for the variable containing the block id information}
 

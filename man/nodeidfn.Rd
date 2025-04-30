@@ -13,5 +13,5 @@ nodeidfn(d)
 a vector of hashes
 }
 \description{
-This is an internal function used by findBlocks.
+This is an internal function used by find_blocks.
 }

@@ -4,7 +4,7 @@
 #'
 #' Given the results of the splitting and testing algorithm, report on the blocks
 #'  where the null of no effects could be rejected at level alpha. Currently calculates rejections using an FWER style criteria (p of a node = max of all previous nodes) if the final alphas are all the same as the scalar alpha OR if fwer=TRUE.
-#' @param orig_res results data.table output from the \code{\link{findBlocks}} function.
+#' @param orig_res results data.table output from the \code{\link{find_blocks}} function.
 #' @param fwer (default is TRUE) means that a block is detected (or not) using the maximum p-value associated with the
 #' block (or the groups containing that block). fwer=FALSE to detect blocks (or groups of blocks) using FDR control.
 #' @param alpha Is the false positive rate used for detecting an effect if it is constant (i.e. not an FDR-style approach).
@@ -26,7 +26,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
       res[, hit_grp := NA]
     }
   } else {
-    # For the splitting based methods (output  from findBlocks)
+    # For the splitting based methods (output  from find_blocks)
     res[, fin_nodenum := nodenum_current]
     res[, fin_parent := nodenum_prev]
     # Maximum tree depth for a node encoded in the biggrp string: basically number of dots+1 or number of node numbers
@@ -102,7 +102,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 #' data set for use in reporting results and as input to ggraph for
 #' visualization in terms of a tree graph.
 #'
-#' @param orig_res a results data.table output from the \code{\link{findBlocks}} function.
+#' @param orig_res a results data.table output from the \code{\link{find_blocks}} function.
 #' @param blockid is a character name for the variable containing the block id information
 #' @param node_label is a character name for a variable containing a descriptive label for the blocks.
 #' @return A tbl_graph and igraph object with nodes and edges
