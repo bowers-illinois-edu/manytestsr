@@ -1,6 +1,6 @@
 Package: manytestsr
 Title: Testing to detect heterogeneous effects in block-randomized experiments
-Version: 0.0.2.7000
+Version: 0.0.3.0000
 Authors@R:
     person(given = "Jake",
            family = "Bowers",
