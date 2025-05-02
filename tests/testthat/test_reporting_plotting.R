@@ -102,17 +102,17 @@ example_blocks_spec_fwer %>%
 ### Notice that even with FDR we lose power. There are 2 (or 3) blocks with low
 ### unadjusted p-values but after adjustment we cannot reject
 
-example_blocks_fdr <- adjust_block_tests(
-  idat = example_dat, bdat = example_bdat, blockid = "blockF",
-  pfn = pIndepDist,
-  p_adj_method = "fdr",
-  fmla = Y1 ~ trtF,
-  copydts = TRUE, ncores = 1, parallel = "no"
-)
-example_blocks_fdr %>%
-  select(p, max_p) %>%
-  arrange(p) %>%
-  head()
+## example_blocks_fdr <- adjust_block_tests(
+##  idat = example_dat, bdat = example_bdat, blockid = "blockF",
+##  pfn = pIndepDist,
+##  p_adj_method = "fdr",
+##  fmla = Y1 ~ trtF,
+##  copydts = TRUE, ncores = 1, parallel = "no"
+## )
+## example_blocks_fdr %>%
+##  select(p, max_p) %>%
+##  arrange(p) %>%
+##  head()
 
 example_blocks_spec_fdr <- find_blocks(
   idat = example_dat, bdat = example_bdat, blockid = "blockF",

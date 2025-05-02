@@ -34,7 +34,8 @@ Imports:
     Ckmeans.1d.dp (>= 4.3.3),
     randomizr (>= 0.20.0),
     onlineFDR (>= 1.5.0),
-    dataPreparation (>= 1.1.0)
+    dataPreparation (>= 1.1.0),
+    hommel (>= 1.8.0),
 Remotes:
     dsrobertson/onlineFDR
 LinkingTo: Rcpp, RcppArmadillo, RcppDist, Rfast
