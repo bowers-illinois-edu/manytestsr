@@ -23,4 +23,4 @@ vignettes/*.R
 renv.lock
 .vscode
 renv/*
-
+.DS_Store
