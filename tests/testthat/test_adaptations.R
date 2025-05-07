@@ -1,18 +1,140 @@
-## Test and develop functions to adapt alpha levels as the tree grows
-context("Alpha Adjusting Performance")
+## Test and develop functions to adapt p-values and alpha levels as the tree grows
+testthat::context("Alpha and P Adjusting Performance")
 
 ## The next lines are for use when creating the tests. We want interactive<-FALSE for production
 interactive <- FALSE
 if (interactive) {
   library(here)
   library(data.table)
+  library(dtplyr)
+  # remotes::install_github("bowers-illinois-edu/TreeTestSim")
+  library(TreeTestsSim)
   source(here("tests/testthat", "make_test_data.R"))
   library(devtools)
+  ## This next is a copy from the package TreeTestsSim
+  ## source(here("tests/testthat", "generate_tree.R"))
   load_all() ## use  this during debugging
 }
-
 setDTthreads(1)
 options(digits = 4)
+
+## For now, create some data within this file.
+## Move it elsewhere soon.
+
+## A tree where 50% of the leaves are non-null
+## the tree is defined at the level of the block
+bdt <- generate_tree_DT(max_level = 3, k = 4, t = .5)
+bdt[, leaf := as.numeric(level == max(level))]
+table(bdt$leaf)
+# 1. build a named vector so parent_lookup["22"] == 6, etc.
+parent_lookup <- setNames(bdt$parent, bdt$node)
+## Compare to the mathematical way to calculate the parent
+expect_equal(parent_lookup[22][[1]], floor((22 - 2) / 4) + 1)
+
+# 2. for a given node, return the vector of its ancestors+itself,
+#    *excluding* the NA‐parent root.
+get_path <- function(node) {
+  path <- integer(0)
+  current <- node
+
+  # walk up until you hit an NA parent
+  while (!is.na(parent_lookup[as.character(current)])) {
+    path <- c(path, current) # record this node
+    current <- parent_lookup[as.character(current)] # jump to parent
+  }
+
+  # reverse so it reads root→…→node
+  rev(path)
+}
+
+
+
+# 3. apply to every node, paste with ".", and coerce to factor
+bdt[, lvls_fac := factor(sapply(node, function(n) {
+  paste(get_path(n), collapse = ".")
+}))]
+
+## We are going to focus on the leaves which are the individual blocks.
+
+bdt1 <- droplevels(bdt[leaf == 1, ])
+
+## The splitSpecifiedFactorMulti function should recreate this tree.
+bdt1[, split1 := splitSpecifiedFactorMulti(bid = node, x = lvls_fac)]
+bdt1[, split2 := splitSpecifiedFactorMulti(node, lvls_fac), by = split1]
+bdt1[, split3 := splitSpecifiedFactorMulti(node, lvls_fac), by = interaction(split1, split2)]
+
+with(bdt1, ftable(split1 = split1, split2 = split2, split3 = split3))
+
+## Everybody within the same parent is in the same first level split
+test_split_1 <- bdt1 %>%
+  group_by(parent) %>%
+  summarize(val = length(unique(split1)))
+stopifnot(all(test_split_1$val == 1))
+
+test_split_2 <- bdt1 %>%
+  group_by(split1) %>%
+  summarize(val = length(unique(split2)))
+stopifnot(all(test_split_2$val == 4))
+stopifnot(nrow(test_split_2) == 4)
+
+bdt1 %>% filter(split1 == 1)
+
+## This next returns all 0s when splitting is no longer possible. So, consider watching out for this in the find_blocks code
+bdt1[, split4 := splitSpecifiedFactorMulti(node, lvls_fac), by = interaction(split1, split2, split3)]
+bdt1[, split5 := splitSpecifiedFactorMulti(node, lvls_fac), by = interaction(split1, split2, split3, split4)]
+
+
+# 3. Make individual level data
+bdt1[, nb := 100]
+bdt1[, bary0 := 0]
+
+idt <- data.table(b = rep(bdt1$node, bdt1$nb))
+idt[, bF := factor(b)]
+idt[, id := 1:nrow(idt)]
+idt[, bary0 := rep(bdt1$bary0, bdt1$nb)]
+## this next is not necessary since it is the same y0 for all blocks. But it will not be that case in other situations
+idt[, y0 := rnorm(.N, bary0, sd = 1), by = b]
+
+
+tau_null <- function(ybase, tau_sds, covariate) {
+  return(ybase)
+}
+idt[, y1 := create_effects(idat = idt, ybase = "y0", blockid = "bF", tau_fn = tau_null, tau_size = 0, prop_blocks_0 = 1)]
+
+
+
+
+
+idt <- data.table(b = rep(c(1:20), length = 1000))
+
+## 20 blocks, each with 50 obs
+idt <- data.table(i = 1:1000, b = rep(c(1:20), length = 1000))
+bdt <- data.table(b = 1:20)
+setkey(bdt, b)
+setkey(idt, b)
+bdt[, vb1 := rep(c(1, 2, 3, 4), length.out = .N)]
+## 2 levels within each state
+bdt[, vb2 := rep(c(1, 2, 3), length.out = .N), by = vb1]
+bdt[, vb3 := rep(seq(1, .N), length.out = .N), by = vb2]
+bdt[, vbnest := interaction(vb1, vb2, vb3, lex.order = TRUE, drop = TRUE)]
+ftable(lv1 = bdt$vb1, lv2 = bdt$vb2, bdt$vb3, exclude = c())
+table(bdt$vbnest, exclude = c())
+## Now merge the block data onto the individual level data
+idt <- bdt[idt]
+set.seed(12345)
+idt[, vi1 := round(runif(.N, min = 0, max = 10)), by = b]
+idt[, y0 := vi1 + vb1 + rnorm(100), by = b]
+
+# 4 nodes at level 1
+bdt[, lv1 := rep(c(1, 2, 3, 4), length.out = .N)]
+bdt[, lv2 := rep(1:.N, length.out = .N), by = lv1]
+with(bdt, table(lv1, lv2, exclude = c()))
+bdt[, lvls := interaction(lv1, lv2, lex.order = TRUE, drop = TRUE)]
+table(bdt$lvls, exclude = c())
+
+
+
+
 ## Shuffle order  of the blocks so that the first set and the second set don't  automatically go together
 set.seed(12345)
 bdat4 <- bdat3[sample(.N), ]
@@ -22,28 +144,43 @@ bdat4[, lv2 := cut(v2, 2, labels = c("l2_1", "l2_2")), by = lv1]
 bdat4[, lv3 := seq(1, .N), by = interaction(lv1, lv2, lex.order = TRUE, drop = TRUE)]
 bdat4[, lvs := interaction(lv1, lv2, lv3, lex.order = TRUE, drop = TRUE)]
 
-## Setting up to test the alpha adjusting methods versus FWER methods on different splitters
+## Setting up to test the local p and alpha adjusting methods versus FWER
+## methods on different splitters
+
+
+local_adj_methods <- c(
+  "local_hommel_all_ps", "local_bh_all_ps",
+  "local_simes", "local_unadj_all_ps"
+)
+
 alpha_and_splits <- expand.grid(
   afn = c("alpha_investing", "alpha_saffron", "alpha_addis", "NULL"),
   sfn = c(
     "splitCluster", "splitEqualApprox", "splitLOO",
     "splitSpecifiedFactor", "splitSpecifiedFactorMulti"
   ),
+  local_adj_fn = local_adj_methods,
   stringsAsFactors = FALSE
 )
 alpha_and_splits$splitby <- "hwt"
 alpha_and_splits$splitby[grep("Specified", alpha_and_splits$sfn)] <- "lvs"
 
-testing_fn <- function(afn, sfn, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3, bdat = bdat4) {
+testing_fn <- function(afn, sfn, local_adj, sby, fmla = Ytauv2 ~ ZF | bF, idat = idat3, bdat = bdat4) {
   if (afn == "NULL") {
     theafn <- NULL
   } else {
     theafn <- getFromNamespace(afn, ns = "manytestsr")
   }
+
+  if (local_adj == "NULL") {
+    local_adj <- NULL
+  } else {
+    local_adj <- getFromNamespace(local_adj, ns = "manytestsr")
+  }
   ## afn and sfn and sby are character names
   theres <- find_blocks(
     idat = idat, bdat = bdat, blockid = "bF", splitfn = get(sfn),
-    pfn = pIndepDist, alphafn = theafn, thealpha = 0.05, thew0 = .05 - .001,
+    pfn = pIndepDist, alphafn = theafn, local_adj_p_fn = local_adj, thealpha = 0.05, thew0 = .05 - .001,
     fmla = fmla,
     copydts = TRUE, splitby = sby, stop_splitby_constant = TRUE, parallel = "multicore", ncores = 2
   )
@@ -64,6 +201,7 @@ alpha_and_splits[c(1, 2, 4), ]
 res_ai <- testing_fn(
   afn = alpha_and_splits[1, "afn"],
   sfn = alpha_and_splits[1, "sfn"],
+  local_adj = alpha_and_splits[1, "local_adj_fn"],
   sby = alpha_and_splits[1, "splitby"],
   idat = idat3, bdat = bdat4
 )
@@ -71,12 +209,14 @@ res_saffron <- testing_fn(
   afn = alpha_and_splits[2, "afn"],
   sfn = alpha_and_splits[2, "sfn"],
   sby = alpha_and_splits[2, "splitby"],
+  local_adj = alpha_and_splits[2, "local_adj_fn"],
   idat = idat3, bdat = bdat4
 )
 res_fwer <- testing_fn(
   afn = alpha_and_splits[4, "afn"],
   sfn = alpha_and_splits[4, "sfn"],
   sby = alpha_and_splits[4, "splitby"],
+  local_adj = alpha_and_splits[4, "local_adj_fn"],
   idat = idat3, bdat = bdat4
 )
 

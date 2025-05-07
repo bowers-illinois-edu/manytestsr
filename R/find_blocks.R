@@ -9,6 +9,7 @@
 #' @param splitfn A function to split the data into two pieces --- using bdat
 #' @param pfn A function to produce pvalues --- using idat.
 #' @param alphafn A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator. Currently alpha_investing, alpha_saffron, alpha_addis are accepted. All of them wrap the corresponding functions from the `onlineFDR` package.
+#' @param local_adj_p_fn Function. A function that adjusts p-values at a node (e.g. \code{local_simes}).
 #' @param simthresh Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations
 #' @param sims Number of permutations for permutation-based testing
 #' @param maxtest Maximum splits or tests to do. Should probably not be smaller than the number of experimental blocks.
@@ -19,6 +20,8 @@
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
 #' @param thew0 Is the starting "wealth" of the alpha investing procedure (this is only relevant when alphafn is not null).
 #' @param fmla A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors.
+#' @param return_details Logical. Whether to return the full simulated data.table.
+#' @param final_global_adj Character. One of \code{"none"}, \code{"fdr"}, \code{"fwer"}.
 #' @param parallel Should the pfn use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following `approximate` in the coin package.
 #' @param ncores The number of cores used for parallel processing
 #' @param trace Logical, FALSE (default) to not print split number. TRUE prints the split number.
@@ -89,6 +92,7 @@ find_blocks <-
            splitfn,
            pfn,
            alphafn = NULL,
+           local_adj_p_fn = NULL,
            simthresh = 20,
            sims = 1000,
            maxtest = 2000,
@@ -103,10 +107,10 @@ find_blocks <-
            blocksize = "hwt",
            trace = FALSE) {
     # Some checks: We can split on a constant variable if we are collecting the blocks into groups of equal size
-     splitfn_text <- deparse(splitfn)
-    split_fn_equal_approx <- length(grep("%%2",splitfn_text)) > 0
-    split_fn_cluster <- length(grep("Ckmeans",splitfn_text) > 0 )
-    if (stop_splitby_constant & !split_fn_equal_approx ) {
+    splitfn_text <- deparse(splitfn)
+    split_fn_equal_approx <- length(grep("%%2", splitfn_text)) > 0
+    split_fn_cluster <- length(grep("Ckmeans", splitfn_text) > 0)
+    if (stop_splitby_constant & !split_fn_equal_approx) {
       stopifnot(
         "The splitby variable must have at least two values if stop_splitby_constant is TRUE" = uniqueN(bdat[[splitby]]) >= 2
       )
@@ -139,7 +143,7 @@ find_blocks <-
       }
     }
 
-    # Step 1: Root of tree. One test. We are numbering simply following literature on complete or perfect binary trees
+    # Step 1: Root of tree. One test. We are numbering simply following literature on k-ary trees where the root node is node 1
     i <- 1L
     bdat[, p1 := pfn(
       fmla = fmla,
@@ -194,8 +198,8 @@ find_blocks <-
       return(bdat)
     }
     # Step 2: Iterate through the tree
-    # Keep testing until no testing possible: criteria all blocks all size 1 and or
-    # all p_i > alpha_i  OR simulation
+    # Keep testing until no testing possible: criteria are (1) all blocks all size 1 and/or (2)
+    # all p_i > alpha_i  OR (3) simulation
     # limits reached (for testing of the algorithm).
     # We might want at least 2 testable blocks.
     while (sum(bdat$testable, na.rm = TRUE) > 1 & i < maxtest) {
@@ -216,11 +220,7 @@ find_blocks <-
         bdat[(testable), nodenum_current := nodeidfn(get(gnm))]
       } else {
         bdat[(testable), nodenum_prev := nodenum_current]
-        # bdat[(testable), nodenum_current := fifelse(get(gnm) == "0", nodenum_prev * 2L , ( nodenum_prev * 2L )  + 1L), by = biggrp]
-        # bdat[(testable), nodenum_current := fifelse( get(gnm) == "0", nodeidfn(paste0(nodenum_prev, "0")), nodeidfn(paste0(nodenum_prev, "1"))), by = biggrp]
         bdat[(testable), nodenum_current := nodeidfn(paste0(nodenum_prev, get(gnm))), by = biggrp]
-        # bdat[(testable), nodenum_current := nodeidfn(get(gnm)), by = biggrp]
-        # How to test/efficiently or periodically for duplicated nodenums?
       }
       bdat[(testable), biggrp := interaction(biggrp, nodenum_current, drop = TRUE)]
       bdat[, biggrp := droplevels(biggrp)] # annoying to need this extra step given drop=TRUE
@@ -255,8 +255,12 @@ find_blocks <-
       bdat[(testable), pfinalb := get(pnm)] # get(paste0("p", i - 1)))]
       # Now decide which blocks (units) can be tested again.
       # If a split contains only one block. We cannot test further.
-      ## bdat[, blocksbygroup := uniqueN(get(blockid)), by = biggrp]
       bdat[, blocksbygroup := .N, by = biggrp]
+      # Now apply the local p-value adjustment
+      if (!is.null(local_adj_p_fn)) {
+        pbtracker[, padj := local_adj_p_fn(p)]
+        bdat[(testable), pfinalb := local_adj_p_fn(pfinalb)]
+      }
       # Now update alpha if we are trying to control FDR or mFDR rather than FWER
       if (is.null(alphafn)) {
         bdat[, (alphanm) := thealpha]
@@ -316,7 +320,7 @@ find_blocks <-
         # Also stop testing for groups within which we cannot split any more for certain splitters. Currently set by hand.
       }
       if (stop_splitby_constant | split_fn_cluster) {
-      ## Here there is no sense in spliting by differences in covariate value (creating clusters using k-means) if covariate values do not differ
+        ## Here there is no sense in spliting by differences in covariate value (creating clusters using k-means) if covariate values do not differ
         bdat[, testable := fifelse(uniqueN(get(splitby)) == 1, FALSE, unique(testable)), by = biggrp]
         ##      bdat[, testable := fifelse( (fastVar(get(ybase)) < .Machine$double.eps), FALSE, unique(testable)), by = biggrp]
       }

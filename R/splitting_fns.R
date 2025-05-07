@@ -169,7 +169,7 @@ splitSpecifiedFactorMulti <- function(bid, x) {
   # if (is.na(split_on)) {
   #  group <- factor(rep_len(0, length.out = length(x)))
   # } else {
-  # as.numeric of factors creates a vector that starts a 1
+  # as.numeric of factors creates a vector that starts at 1
   group <- factor(as.numeric(factor(x_split[, split_on])) - 1)
   # }
   return(group)
