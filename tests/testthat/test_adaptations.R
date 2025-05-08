@@ -2,7 +2,7 @@
 testthat::context("Alpha and P Adjusting Performance")
 
 ## The next lines are for use when creating the tests. We want interactive<-FALSE for production
-interactive <- FALSE
+interactive <- TRUE
 if (interactive) {
   library(here)
   library(data.table)
@@ -48,7 +48,6 @@ get_path <- function(node) {
 }
 
 
-
 # 3. apply to every node, paste with ".", and coerce to factor
 bdt[, lvls_fac := factor(sapply(node, function(n) {
   paste(get_path(n), collapse = ".")
@@ -87,6 +86,7 @@ bdt1[, split5 := splitSpecifiedFactorMulti(node, lvls_fac), by = interaction(spl
 # 3. Make individual level data
 bdt1[, nb := 100]
 bdt1[, bary0 := 0]
+bdt1[, bF := factor(node)]
 
 idt <- data.table(b = rep(bdt1$node, bdt1$nb))
 idt[, bF := factor(b)]
@@ -95,13 +95,88 @@ idt[, bary0 := rep(bdt1$bary0, bdt1$nb)]
 ## this next is not necessary since it is the same y0 for all blocks. But it will not be that case in other situations
 idt[, y0 := rnorm(.N, bary0, sd = 1), by = b]
 
+idt[, y1 := create_effects(idat = idt, ybase = "y0", blockid = "bF", tau_fn = tau_null, tau_size = 0, prop_blocks_0 = 1, non_null_blocks = NULL)]
+idt[, trt := sample(rep(c(0, 1), .N / 2)), by = bF]
+idt[, trtF := factor(trt)]
+idt[, Y := trt * y1 + (1 - trt) * y0]
 
-tau_null <- function(ybase, tau_sds, covariate) {
-  return(ybase)
-}
-idt[, y1 := create_effects(idat = idt, ybase = "y0", blockid = "bF", tau_fn = tau_null, tau_size = 0, prop_blocks_0 = 1)]
+idt <- merge(idt, bdt1, by = "bF")
+
+idt <- merge(idt, bdt1[, .(bF, nonnull, lvls_fac)], by = "bF")
+
+## Assess weak control of the FWER
+set.seed(12345)
+res_null <- find_blocks(
+  idat = idt, bdat = bdt1, blockid = "bF",
+  splitfn = splitSpecifiedFactorMulti, pfn = pOneway, alphafn = NULL, local_adj_p_fn = NULL, fmla = Y ~ trtF | bF,
+  splitby = "lvls_fac", blocksize = "nb", trace = TRUE, copydts = TRUE
+)
+
+nsims <- 1000
+sim_err <- 2 * sqrt((.05 * (1 - .05)) / nsims)
+set.seed(12345)
+p_null_res <- padj_test_fn(
+  idat = idt,
+  bdat = bdt1,
+  blockid = "bF",
+  trtid = "trt", ## needs to be a 0 or a 1 for the simulation
+  fmla = Y ~ trtF | bF,
+  ybase = "y0",
+  prop_blocks_0 = 1,
+  tau_fn = tau_null,
+  tau_size = 0,
+  covariate = NULL,
+  pfn = pOneway,
+  nsims = nsims,
+  ncores = 8,
+  afn = NULL,
+  splitfn = splitSpecifiedFactorMulti,
+  splitby = "lvls_fac",
+  p_adj_method = "split",
+  blocksize = "nb",
+  by_block = TRUE,
+  stop_splitby_constant = TRUE
+)
+## Since these simulations take a long time. Save them to disc as we go.
+res_null_rates <- p_null_res[, lapply(.SD, mean, na.rm = TRUE)]
+## This is assessing weak control so the following two are equal.
+expect_lt(res_null_rates$prop_reject, .05 + sim_err)
+expect_lt(res_null_rates$false_pos_prop, .05 + sim_err)
 
 
+
+## This should produce very high power for each block a 1 sd difference
+# power.t.test(power=.8,sd=1,delta=1,sig.level=.05)
+power.t.test(n = 50, sd = 1, delta = 1, sig.level = .05)
+set.seed(12345)
+p_half_res <- padj_test_fn(
+  idat = idt,
+  bdat = bdt1,
+  blockid = "bF",
+  trtid = "trt", ## needs to be a 0 or a 1 for the simulation
+  fmla = Y ~ trtF | bF,
+  ybase = "y0",
+  prop_blocks_0 = .5,
+  tau_fn = tau_norm,
+  tau_size = 1,
+  covariate = NULL,
+  pfn = pOneway,
+  nsims = nsims,
+  ncores = 8,
+  afn = NULL,
+  splitfn = splitSpecifiedFactorMulti,
+  splitby = "lvls_fac",
+  p_adj_method = "split",
+  blocksize = "nb",
+  by_block = TRUE,
+  stop_splitby_constant = TRUE
+)
+
+## Since these simulations take a long time. Save them to disc as we go.
+res_half_rates <- p_half_res[, lapply(.SD, mean, na.rm = TRUE)]
+## This is showing control of FWER in the strong sense.
+expect_lt(res_rates$false_pos_prop, .05 + sim_err)
+## Power:
 
 
 
