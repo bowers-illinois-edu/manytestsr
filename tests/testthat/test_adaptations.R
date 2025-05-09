@@ -23,9 +23,15 @@ options(digits = 4)
 
 ## A tree where 50% of the leaves are non-null
 ## the tree is defined at the level of the block
+## We are not going to pass this vector below when we assess weak FWER control
 bdt <- generate_tree_DT(max_level = 3, k = 4, t = .5)
 bdt[, leaf := as.numeric(level == max(level))]
 table(bdt$leaf)
+
+### This next converts the node level data into a block level dataset with a
+### factor variable with "." indicating relationships between nodes (each "."
+### is a level in the tree)
+
 # 1. build a named vector so parent_lookup["22"] == 6, etc.
 parent_lookup <- setNames(bdt$parent, bdt$node)
 ## Compare to the mathematical way to calculate the parent
@@ -36,17 +42,14 @@ expect_equal(parent_lookup[22][[1]], floor((22 - 2) / 4) + 1)
 get_path <- function(node) {
   path <- integer(0)
   current <- node
-
   # walk up until you hit an NA parent
   while (!is.na(parent_lookup[as.character(current)])) {
     path <- c(path, current) # record this node
     current <- parent_lookup[as.character(current)] # jump to parent
   }
-
   # reverse so it reads root→…→node
   rev(path)
 }
-
 
 # 3. apply to every node, paste with ".", and coerce to factor
 bdt[, lvls_fac := factor(sapply(node, function(n) {
@@ -54,9 +57,10 @@ bdt[, lvls_fac := factor(sapply(node, function(n) {
 }))]
 
 ## We are going to focus on the leaves which are the individual blocks.
-
+## That is the leaf nodes are the block-level dataset
 bdt1 <- droplevels(bdt[leaf == 1, ])
 
+## Assess the splitSpecifiedFactorMulti splitting function
 ## The splitSpecifiedFactorMulti function should recreate this tree.
 bdt1[, split1 := splitSpecifiedFactorMulti(bid = node, x = lvls_fac)]
 bdt1[, split2 := splitSpecifiedFactorMulti(node, lvls_fac), by = split1]
@@ -82,9 +86,8 @@ bdt1 %>% filter(split1 == 1)
 bdt1[, split4 := splitSpecifiedFactorMulti(node, lvls_fac), by = interaction(split1, split2, split3)]
 bdt1[, split5 := splitSpecifiedFactorMulti(node, lvls_fac), by = interaction(split1, split2, split3, split4)]
 
-
-# 3. Make individual level data
-bdt1[, nb := 100]
+## Make individual level data
+bdt1[, nb := 50]
 bdt1[, bary0 := 0]
 bdt1[, bF := factor(node)]
 
@@ -94,21 +97,39 @@ idt[, id := 1:nrow(idt)]
 idt[, bary0 := rep(bdt1$bary0, bdt1$nb)]
 ## this next is not necessary since it is the same y0 for all blocks. But it will not be that case in other situations
 idt[, y0 := rnorm(.N, bary0, sd = 1), by = b]
-
-idt[, y1 := create_effects(idat = idt, ybase = "y0", blockid = "bF", tau_fn = tau_null, tau_size = 0, prop_blocks_0 = 1, non_null_blocks = NULL)]
-idt[, trt := sample(rep(c(0, 1), .N / 2)), by = bF]
-idt[, trtF := factor(trt)]
-idt[, Y := trt * y1 + (1 - trt) * y0]
-
 idt <- merge(idt, bdt1[, .(bF, nonnull, lvls_fac)], by = "bF")
 
-## Assess weak control of the FWER
+## Here we ignore the nonnull variable on bdt1 for the sake of creating a
+## situation where there are no effects in any block or for any person.
+
+idt[, y1 := create_effects(idat = idt, ybase = "y0", blockid = "bF", tau_fn = tau_null, tau_size = 0, prop_blocks_0 = 1, non_null_blocks = NULL)]
+
+## Treatment is just completely randomized in each block
+idt[, trt := sample(rep(c(0, 1), .N / 2)), by = bF]
+## Reveal the observed Y as a function of the potential outcomes
+idt[, Y := trt * y1 + (1 - trt) * y0]
+
+## Some procedures need treatment to be a factor (esp those using the coin
+## package)
+idt[, trtF := factor(trt)]
+
+
+## Assess weak control of the FWER with no local adjustment or extra global
+## adjustment
+#### First just see if find_blocks itself operates
 set.seed(12345)
+
 res_null <- find_blocks(
   idat = idt, bdat = bdt1, blockid = "bF",
-  splitfn = splitSpecifiedFactorMulti, pfn = pOneway, alphafn = NULL, local_adj_p_fn = NULL, fmla = Y ~ trtF | bF,
-  splitby = "lvls_fac", blocksize = "nb", trace = TRUE, copydts = TRUE
+  splitfn = splitSpecifiedFactorMulti, pfn = pOneway, alphafn = NULL, local_adj_p_fn = NULL,
+  fmla = Y ~ trtF | bF, splitby = "lvls_fac",
+  blocksize = "nb", trace = TRUE, copydts = TRUE
 )
+
+res_null_tree <- make_results_tree(res_null)
+res_null_nodes <- res_null_tree %>%
+  activate(nodes) %>%
+  as_tibble()
 
 nsims <- 1000
 sim_err <- 2 * sqrt((.05 * (1 - .05)) / nsims)
@@ -136,17 +157,15 @@ p_null_res <- padj_test_fn(
   by_block = TRUE,
   stop_splitby_constant = TRUE
 )
-## Since these simulations take a long time. Save them to disc as we go.
 res_null_rates <- p_null_res[, lapply(.SD, mean, na.rm = TRUE)]
 ## This is assessing weak control so the following two are equal.
 expect_lt(res_null_rates$prop_reject, .05 + sim_err)
 expect_lt(res_null_rates$false_pos_prop, .05 + sim_err)
 
-
-
+## TODO: enable padj_test_fn to be parallel over the replicate function
 ## This should produce very high power for each block a 1 sd difference
 # power.t.test(power=.8,sd=1,delta=1,sig.level=.05)
-power.t.test(n = 50, sd = 1, delta = 1, sig.level = .05)
+power.t.test(n = 25, sd = 1, delta = 1, sig.level = .05)
 set.seed(12345)
 p_half_res <- padj_test_fn(
   idat = idt,
@@ -161,7 +180,7 @@ p_half_res <- padj_test_fn(
   covariate = NULL,
   pfn = pOneway,
   nsims = nsims,
-  ncores = 8,
+  ncores = 1,
   afn = NULL,
   splitfn = splitSpecifiedFactorMulti,
   splitby = "lvls_fac",
@@ -171,14 +190,14 @@ p_half_res <- padj_test_fn(
   stop_splitby_constant = TRUE
 )
 
-## Since these simulations take a long time. Save them to disc as we go.
 res_half_rates <- p_half_res[, lapply(.SD, mean, na.rm = TRUE)]
 ## This is showing control of FWER in the strong sense.
-expect_lt(res_rates$false_pos_prop, .05 + sim_err)
-## Power:
+expect_lt(res_half_rates$false_pos_prop, .05 + sim_err)
+## Power to detect effects at the individual block level.
 res_half_rates$true_pos_prop
+expect_gt(res_half_rates$true_pos_prop, .05)
 
-
+## Now assess whether find_blocks and helpers works as expected with this setup
 idt[, y1_half_tau1 := create_effects(
   idat = idt, ybase = "y0", blockid = "bF", tau_fn = tau_norm, tau_size = 1, prop_blocks_0 = .5,
   non_null_blocks = "nonnull"
@@ -194,14 +213,16 @@ res_half <- find_blocks(
   splitby = "lvls_fac", blocksize = "nb", trace = TRUE, copydts = TRUE
 )
 
-blah <- make_results_tree(res_half)
-gg <- make_results_ggraph(blah)
+res_half_tree <- make_results_tree(res_half)
+res_half_graph <- make_results_ggraph(res_half_tree)
 
-blah %>%
+res_half_nodes <- res_half_tree %>%
   activate(nodes) %>%
   as_tibble() %>%
-  select(nodenum, p, num_blocks) %>%
+  # select(nodenum, depth, p, num_blocks) %>%
   mutate(p = zapsmall(p))
+
+## TODO: Start here. Check the results with the nonnull vector.
 
 
 idt <- data.table(b = rep(c(1:20), length = 1000))

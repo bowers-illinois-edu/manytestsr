@@ -152,6 +152,7 @@ make_results_tree <- function(orig_res, blockid = "bF", node_label = NULL) {
     a = unique(a),
     bF = paste(as.character(unlist(sort(get(blockid)))), collapse = ","),
     depth = unique(depth),
+    nonnull = unique(nonnull),
     node_label = paste(as.character(unlist(sort(node_label))), collapse = ",")
   ), by = nodenum]
   res_nodes_df$name <- res_nodes_df$nodenum
@@ -222,9 +223,11 @@ make_results_tree <- function(orig_res, blockid = "bF", node_label = NULL) {
       hit = group_hit | leaf_hit
     )
 
+  ## Abbreviate the block name string variable
   res_graph <- res_graph %>%
     activate(nodes) %>%
     mutate(shortbf = ifelse(nchar(bF) > 6, paste0(stri_sub(bF, 1, 5), "..."), bF))
+  ## Make names etc for ease in graphing later
   if (length(unique(res_nodes_df$a)) > 1) {
     res_graph <- res_graph %>%
       activate(nodes) %>%
