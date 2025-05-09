@@ -44,6 +44,7 @@
 <span>  <span class="va">splitfn</span>,</span>
 <span>  <span class="va">pfn</span>,</span>
 <span>  alphafn <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  local_adj_p_fn <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  simthresh <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  sims <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  maxtest <span class="op">=</span> <span class="fl">2000</span>,</span>
@@ -86,6 +87,10 @@
 
 <dt id="arg-alphafn">alphafn<a class="anchor" aria-label="anchor" href="#arg-alphafn"></a></dt>
 <dd><p>A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator. Currently alpha_investing, alpha_saffron, alpha_addis are accepted. All of them wrap the corresponding functions from the <code>onlineFDR</code> package.</p></dd>
+
+
+<dt id="arg-local-adj-p-fn">local_adj_p_fn<a class="anchor" aria-label="anchor" href="#arg-local-adj-p-fn"></a></dt>
+<dd><p>Function. A function that adjusts p-values at a node (e.g. <code>local_simes</code>).</p></dd>
 
 
 <dt id="arg-simthresh">simthresh<a class="anchor" aria-label="anchor" href="#arg-simthresh"></a></dt>
@@ -138,6 +143,14 @@
 
 <dt id="arg-trace">trace<a class="anchor" aria-label="anchor" href="#arg-trace"></a></dt>
 <dd><p>Logical, FALSE (default) to not print split number. TRUE prints the split number.</p></dd>
+
+
+<dt id="arg-return-details">return_details<a class="anchor" aria-label="anchor" href="#arg-return-details"></a></dt>
+<dd><p>Logical. Whether to return the full simulated data.table.</p></dd>
+
+
+<dt id="arg-final-global-adj">final_global_adj<a class="anchor" aria-label="anchor" href="#arg-final-global-adj"></a></dt>
+<dd><p>Character. One of <code>"none"</code>, <code>"fdr"</code>, <code>"fwer"</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
