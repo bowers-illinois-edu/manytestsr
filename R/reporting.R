@@ -127,15 +127,17 @@ make_results_tree <- function(orig_res, blockid = "bF", node_label = NULL) {
   anms <- sort(grep("^alpha[0-9]", names(res), value = TRUE))
   nodenums <- sort(grep("^nodenum[0-9]", names(res), value = TRUE))
   # TODO Right now we go from wide to long to node. It would be nicer to go directly from wide to node.
+
+  ## Not all results will have either a node_label defined or a nonnull vector, so we create them with NULL if needed
   if (is.null(node_label)) {
-    # node_label <- "node_label"
-    # longnms <- c("biggrp", blockid, "nodenum_current", "nodenum_prev", "node_label")
     res[, node_label := "NULL"]
   } else {
     res[, node_label := get(node_label)]
-    # longnms <- c("biggrp", blockid, "nodenum_current", "nodenum_prev", node_label)
   }
-  longnms <- c("biggrp", blockid, "nodenum_current", "nodenum_prev", "node_label")
+  if (!any(names(res) == "nonnull")) {
+    res[, nonnull := NULL]
+  }
+  longnms <- c("biggrp", blockid, "nodenum_current", "nodenum_prev", "node_label", "nonnull")
   reslong <- melt(res,
     id = longnms,
     measure.vars = list(p = pnms, a = anms, nodenum = nodenums),

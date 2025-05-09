@@ -11,6 +11,7 @@ find_blocks(
   splitfn,
   pfn,
   alphafn = NULL,
+  local_adj_p_fn = NULL,
   simthresh = 20,
   sims = 1000,
   maxtest = 2000,
@@ -39,6 +40,8 @@ find_blocks(
 
 \item{alphafn}{A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator. Currently alpha_investing, alpha_saffron, alpha_addis are accepted. All of them wrap the corresponding functions from the \code{onlineFDR} package.}
 
+\item{local_adj_p_fn}{Function. A function that adjusts p-values at a node (e.g. \code{local_simes}).}
+
 \item{simthresh}{Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations}
 
 \item{sims}{Number of permutations for permutation-based testing}
@@ -64,6 +67,10 @@ find_blocks(
 \item{blocksize}{A string with the name of the column in bdat contains information about the size of the block (or other determinant of the power of tests within that block, such as harmonic mean weight of the block or variance of the outcome within the block.)}
 
 \item{trace}{Logical, FALSE (default) to not print split number. TRUE prints the split number.}
+
+\item{return_details}{Logical. Whether to return the full simulated data.table.}
+
+\item{final_global_adj}{Character. One of \code{"none"}, \code{"fdr"}, \code{"fwer"}.}
 }
 \value{
 A data.table containing information about the sequence of splitting and testing

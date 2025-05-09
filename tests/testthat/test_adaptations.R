@@ -100,8 +100,6 @@ idt[, trt := sample(rep(c(0, 1), .N / 2)), by = bF]
 idt[, trtF := factor(trt)]
 idt[, Y := trt * y1 + (1 - trt) * y0]
 
-idt <- merge(idt, bdt1, by = "bF")
-
 idt <- merge(idt, bdt1[, .(bF, nonnull, lvls_fac)], by = "bF")
 
 ## Assess weak control of the FWER
@@ -114,6 +112,7 @@ res_null <- find_blocks(
 
 nsims <- 1000
 sim_err <- 2 * sqrt((.05 * (1 - .05)) / nsims)
+
 set.seed(12345)
 p_null_res <- padj_test_fn(
   idat = idt,
@@ -177,7 +176,32 @@ res_half_rates <- p_half_res[, lapply(.SD, mean, na.rm = TRUE)]
 ## This is showing control of FWER in the strong sense.
 expect_lt(res_rates$false_pos_prop, .05 + sim_err)
 ## Power:
+res_half_rates$true_pos_prop
 
+
+idt[, y1_half_tau1 := create_effects(
+  idat = idt, ybase = "y0", blockid = "bF", tau_fn = tau_norm, tau_size = 1, prop_blocks_0 = .5,
+  non_null_blocks = "nonnull"
+)]
+test_non_null <- idt[nonnull == FALSE, .(sum(y1_half_tau1 - y0))]
+expect_equal(unique(test_non_null)[[1]], 0)
+
+idt[, Y_half_tau1 := trt * y1_half_tau1 + (1 - trt) * y0]
+
+res_half <- find_blocks(
+  idat = idt, bdat = bdt1, blockid = "bF",
+  splitfn = splitSpecifiedFactorMulti, pfn = pOneway, alphafn = NULL, local_adj_p_fn = NULL, fmla = Y_half_tau1 ~ trtF | bF,
+  splitby = "lvls_fac", blocksize = "nb", trace = TRUE, copydts = TRUE
+)
+
+blah <- make_results_tree(res_half)
+gg <- make_results_ggraph(blah)
+
+blah %>%
+  activate(nodes) %>%
+  as_tibble() %>%
+  select(nodenum, p, num_blocks) %>%
+  mutate(p = zapsmall(p))
 
 
 idt <- data.table(b = rep(c(1:20), length = 1000))
