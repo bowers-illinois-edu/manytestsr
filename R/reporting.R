@@ -152,7 +152,8 @@ make_results_tree <- function(orig_res, blockid = "bF", node_label = NULL) {
     a = unique(a),
     bF = paste(as.character(unlist(sort(get(blockid)))), collapse = ","),
     depth = unique(depth),
-    nonnull = unique(nonnull),
+    # carry through any signal from leaves
+    node_nonnull = any(nonnull, na.rm = TRUE),
     node_label = paste(as.character(unlist(sort(node_label))), collapse = ",")
   ), by = nodenum]
   res_nodes_df$name <- res_nodes_df$nodenum
@@ -269,4 +270,204 @@ make_results_ggraph <- function(res_graph) {
       legend.box.background = element_rect(fill = "transparent") # get rid of legend panel bg
     )
   return(res_g)
+}
+
+#' Make a node-level tree directly, using a temp leaf_id
+#'
+#' Like make_results_tree(), but:
+#'  - does NOT require any pre-existing leaf identifier,
+#'  - injects a unique leaf_id per row,
+#'  - appends it as the final depth so all rows survive,
+#'  - auto-detects the final pfinal* column.
+#'
+#' @param orig_res data.table from find_blocks(); must include
+#'   - biggrp    (dot-sep lineage, may be truncated),
+#'   - p1,p2,… and a pfinal*,
+#'   - alpha1, alpha2, …
+#' @param blockid   name of your block ID column (e.g. "bF"), or NULL
+#' @param node_label optional name of a descriptive label column
+#' @param return_what a character vector containing "all", "graph" (a tbl_graph object with nodes and edges), "nodes" (a data.table with node level information), "test_summary" (a data.table object with one row indicating false and true discoveries, etc.)
+#' @return list(nodes_dt = data.table of all nodes, graph = tbl_graph)
+#' @import data.table stringi tidygraph
+#' @export
+make_results_tree_direct <- function(orig_res, block_id = NULL, node_label = NULL, return_what = "all") {
+  dt <- copy(orig_res)
+
+  # 1) assign a guaranteed-unique leaf ID per input row
+  if (is.null(block_id)) {
+    dt[, leaf_id := nodeidfn(as.character(.I))]
+  } else {
+    dt[, leaf_id := as.character(get(block_id))]
+  }
+
+  # 2) split your biggrp chains
+  ancestry <- stri_split_fixed(dt$biggrp, ".", simplify = TRUE)
+  ancestry[ancestry == ""] <- NA_character_
+  max_depth <- ncol(ancestry)
+  node_lvls <- paste0("node", seq_len(max_depth))
+  dt[, (node_lvls) := as.data.table(ancestry)]
+  ## For any missing leaves, fill in with the leaf_id for the leaf level
+  dt[, (node_lvls[max_depth]) := ifelse(is.na(get(node_lvls[max_depth])), leaf_id, get(node_lvls[max_depth]))]
+
+  stopifnot(all.equal(length(unique(dt[[node_lvls[max_depth]]])), nrow(dt)))
+
+  # 4) detect p-columns: p1,p2,… then your pfinal* as the last one
+  p_normals <- grep("^p[0-9]+$", names(dt), value = TRUE)
+  p_final <- grep("^pfinal", names(dt), value = TRUE)
+  if (length(p_final) == 0) stop("No pfinal* column found.")
+  pcols <- c(p_normals, p_final[1])
+  if (length(p_normals) < max_depth) {
+    stop("Not enough p-columns to cover all levels in the tree (need ", num_leaves, ").")
+  }
+
+  # 5) detect alpha-columns similarly (reuse last alpha if you like)
+  a_cols <- grep("^alpha[0-9]+$", names(dt), value = TRUE)
+  if (length(a_cols) < max_depth) {
+    stop("Not enough alpha-columns to cover all levels in the tree (need ", num_leaves, ").")
+  }
+
+  # 6) ensure nonnull & node_label exist
+  if (!"nonnull" %in% names(dt)) {
+    dt[, nonnull := NA]
+  }
+  if (is.null(node_label)) {
+    dt[, node_label := NA_character_]
+  } else {
+    dt[, node_label := get(node_label)]
+  }
+
+  # 7) roll up each depth directly
+  node_list <- vector("list", max_depth)
+
+  for (d in seq_len(max_depth)) {
+    this_pcol <- pcols[d]
+    this_acol <- a_cols[d]
+    ids <- dt[[node_lvls[d]]]
+
+    node_list[[d]] <- dt[, .(
+      depth = d,
+      p = unique(get(this_pcol)),
+      a = unique(get(this_acol)),
+      ## Remember that any ancester of a non-null leaf is non-null
+      nonnull = any(nonnull, na.rm = TRUE),
+      blocks = unique(paste(unique(leaf_id), collapse = ",")),
+      node_label = unique(paste(unique(node_label), collapse = ",")),
+      num_leaves = .N
+    ),
+    by = .(name = ids)
+    ]
+  }
+  nodes_dt <- rbindlist(node_list, use.names = TRUE)
+
+  # Record testing results
+  num_leaves <- sum(nodes_dt$depth == max_depth)
+  num_nodes_tested <- sum(!is.na(nodes_dt$p))
+  num_nonnull_nodes_tested <- sum(!is.na(nodes_dt$p) & nodes_dt$nonnull)
+  node_any_false_error <- any(nodes_dt[nonnull == FALSE & !is.na(p), p <= a])
+  node_num_false_discoveries <- sum(nodes_dt[nonnull == FALSE & !is.na(p), p <= a])
+  node_true_discoveries <- sum(nodes_dt[nonnull == TRUE & !is.na(p), p <= a])
+  node_power <- mean(nodes_dt[nonnull == TRUE & !is.na(p), p <= a])
+  num_leaves_tested <- sum(nodes_dt[depth == max_depth, !is.na(p)])
+  if (num_leaves_tested > 0) {
+    leaf_power <- nodes_dt[depth == max_depth & nonnull == TRUE & !is.na(p), mean(p <= a, na.rm = TRUE)]
+    leaf_disc <- nodes_dt[depth == max_depth & nonnull == TRUE & !is.na(p), sum(p <= a, na.rm = TRUE)]
+  } else {
+    leaf_power <- NA
+    leaf_disc <- NA
+  }
+
+  test_summary <- data.table(
+    num_nodes_tested = num_nodes_tested,
+    num_nonnull_nodes_tested = num_nonnull_nodes_tested,
+    node_any_false_error = node_any_false_error,
+    node_num_false_discoveries = node_num_false_discoveries,
+    node_true_discoveries = node_true_discoveries,
+    node_power = node_power,
+    num_leaves_tested = num_leaves_tested,
+    leaf_power = leaf_power,
+    leaf_disc = leaf_disc,
+    num_leaves = num_leaves
+  )
+
+  # 8) build edges between depth d → d+1
+  eds <- vector("list", max_depth - 1)
+  for (d in seq_len(max_depth - 1)) {
+    fr <- ancestry[, d]
+    to <- ancestry[, d + 1]
+    eds[[d]] <- data.table(from = fr, to = to)[!is.na(from) & !is.na(to)]
+  }
+  edges_dt <- unique(rbindlist(eds))
+
+  # 9) attach parent_name
+  nodes_dt <- merge(
+    nodes_dt, edges_dt,
+    by.x = "name", by.y = "to",
+    all.x = TRUE, sort = FALSE
+  )
+  setnames(nodes_dt, "from", "parent_name")
+
+  # 10) make the tbl_graph
+  res_graph <- tbl_graph(nodes = nodes_dt, edges = edges_dt)
+
+  # And use the graph relations to calculate whether a test at a given place in the tree is a discovery or not
+
+  # first way to detect is leaf with p=<alpha and second way as parent of all non-sig leaves
+  # leaf is a single experimental block here at the end of the tree. A node
+  # that consists of a single block.
+
+  res_graph <- res_graph %>%
+    activate(nodes) %>%
+    mutate(
+      out_degree = centrality_degree(mode = "out"),
+      is_leaf = node_is_leaf(),
+      is_leaf_single_block = (out_degree == 0 & depth > 1 & num_leaves == 1)
+    ) %>%
+    group_by(parent_name) %>%
+    mutate(leaf_child_all_not_sig = all(p > a & is_leaf)) %>%
+    ungroup()
+
+  res_graph <- res_graph %>%
+    activate(nodes) %>%
+    mutate(
+      leaf_hit = (p <= a & is_leaf_single_block),
+      is_leaf_parent = node_is_adjacent(to = is_leaf_single_block, mode = "in", include_to = FALSE),
+      is_leaf_parent2 = name %in% unique(parent_name[is_leaf_single_block]),
+      num_desc = local_size(order = graph_order(), mode = "out", mindist = 1),
+      is_cut = node_is_cut(),
+      parent_of_all_notsig_leaves = node_is_adjacent(to = leaf_child_all_not_sig, mode = "in", include_to = FALSE)
+    )
+  stopifnot(all.equal(res_graph$is_leaf_parent, res_graph$is_leaf_parent2))
+
+  ## ## the is_cut nodes are those at the base of the tree --- no further splitting
+  ## ## some of them are leaves (individual blocks) and others are groups of blocks (not leaves)
+
+
+  ## We use group_hit for indirect discovery (i.e. we can reject the null of no effects in any of these blocks, but not in one or the other block
+  res_graph <- res_graph %>%
+    activate(nodes) %>%
+    mutate(
+      group_hit = (p <= a & parent_of_all_notsig_leaves),
+      hit = group_hit | leaf_hit
+    )
+
+  ## Abbreviate the block name string variable
+  res_graph <- res_graph %>%
+    activate(nodes) %>%
+    mutate(shortbf = ifelse(nchar(blocks) > 6, paste0(stri_sub(blocks, 1, 5), "..."), blocks))
+  ## Make names etc for ease in graphing later
+  if (length(unique(nodes_dt$a)) > 1) {
+    res_graph <- res_graph %>%
+      activate(nodes) %>%
+      mutate(label = paste("Node:", stri_sub(name, 1, 4), "\n Name:", shortbf, "\n # Blocks=", num_leaves, "\n p=", round(p, 3), ",a=", round(a, 3), sep = ""))
+  } else {
+    res_graph <- res_graph %>%
+      activate(nodes) %>%
+      mutate(label = paste("Node:", stri_sub(name, 1, 4), "\n Name:", shortbf, "\n # Blocks=", num_leaves, "\n p=", round(p, 3), sep = ""))
+  }
+
+  results <- list(nodes = nodes_dt, graph = res_graph, test_summary = test_summary)
+  if (return_what == "all") {
+    return_what <- c("nodes", "graph", "test_summary")
+  }
+  return(results[return_what])
 }
