@@ -192,3 +192,51 @@ bdat4[, lv2 := cut(v2, 2, labels = c("l2_1", "l2_2")), by = lv1]
 bdat4[, lv3 := seq(1, .N), by = interaction(lv1, lv2, lex.order = TRUE, drop = TRUE)]
 ## This next for the splitSpecifiedFactor
 bdat4[, lvs := interaction(lv1, lv2, lv3, lex.order = TRUE, drop = TRUE)]
+
+
+### Test error and discovery reporting
+
+
+# And use the graph relations to calculate whether a test at a given place in the tree is a discovery or not
+## This maybe slow and so we might skip it. We are leaving this is as a test in place for now
+
+# first way to detect is leaf with p=<alpha and second way as parent of all non-sig leaves
+# leaf is a single experimental block here at the end of the tree. A node
+# that consists of a single block.
+
+res_graph <- res_graph %>%
+  activate(nodes) %>%
+  mutate(
+    out_degree = centrality_degree(mode = "out"),
+    is_leaf = node_is_leaf(),
+    is_leaf_single_block = (out_degree == 0 & depth > 1 & num_leaves == 1),
+    is_not_sig = p > a,
+  ) %>%
+  group_by(parent_name) %>%
+  mutate(leaf_child_all_not_sig = all((is_not_sig | is.na(p)) & is_leaf)) %>%
+  ungroup()
+
+res_graph <- res_graph %>%
+  activate(nodes) %>%
+  mutate(
+    leaf_hit = (p <= a & is_leaf_single_block),
+    is_leaf_parent = node_is_adjacent(to = is_leaf_single_block, mode = "in", include_to = FALSE),
+    is_leaf_parent2 = name %in% unique(parent_name[is_leaf_single_block]),
+    num_desc = local_size(order = graph_order(), mode = "out", mindist = 1),
+    is_cut = node_is_cut(),
+    parent_of_all_notsig_leaves = node_is_adjacent(to = leaf_child_all_not_sig, mode = "in", include_to = FALSE)
+  )
+stopifnot(all.equal(res_graph$is_leaf_parent, res_graph$is_leaf_parent2))
+
+## the is_cut nodes are those at the base of the tree --- no further splitting
+## some of them are leaves (individual blocks) and others are groups of blocks (not leaves)
+
+## We use group_hit for indirect discovery (i.e. we can reject the null of no
+## effects in any of these blocks, but not in one or the other block
+
+res_graph <- res_graph %>%
+  activate(nodes) %>%
+  mutate(
+    group_hit = (p <= a & parent_of_all_notsig_leaves),
+    hit = (p <= a) # group_hit | leaf_hit
+  )

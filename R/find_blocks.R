@@ -180,6 +180,7 @@ find_blocks <-
     # If p1 > alpha1 then stop testing and return the data.
     bdat[, testable := (pfinalb < alpha1)]
     pbtracker <- data.table(
+      parent = NA_character_,
       p = unique(bdat$p1),
       biggrp = factor("1"),
       alpha1 = unique(bdat$alpha1),
@@ -202,7 +203,7 @@ find_blocks <-
     # all p_i > alpha_i  OR (3) simulation
     # limits reached (for testing of the algorithm).
     # We might want at least 2 testable blocks.
-    while (sum(bdat$testable, na.rm = TRUE) > 1 & i < maxtest) {
+    while (sum(bdat$testable, na.rm = TRUE) > 1 && i < maxtest) {
       # if(i==9){ browser() } ## for debugging
       i <- i + 1L
       if (trace) {
@@ -239,12 +240,17 @@ find_blocks <-
         )
       ), by = biggrp]
       pb[, depth := i]
-      # This next could be made more efficient without string splitting
+      # This next could be made more efficient without string splitting but not sure what to do
       pb[, nodenum := stri_split_fixed(biggrp, ".", simplify = TRUE)[, i]]
+      pb[, parent := stri_split_fixed(biggrp, ".", simplify = TRUE)[, i - 1]]
       # call "blocksize" the sum of the block sizes within group
       pb[bdat, nodesize := i.nodesize, on = "biggrp"]
+      ## Adjust the p-values for a given node
+      if (!is.null(local_adj_p_fn)) {
+        pb[, p := local_adj_p_fn(p), by = parent]
+      }
       pbtracker <-
-        rbind(pbtracker[, .(p, biggrp, batch, testable, nodenum, depth, nodesize)],
+        rbind(pbtracker[, .(parent, p, biggrp, batch, testable, nodenum, depth, nodesize)],
           pb[, batch := pnm],
           fill = TRUE
         )
@@ -256,12 +262,6 @@ find_blocks <-
       # Now decide which blocks (units) can be tested again.
       # If a split contains only one block. We cannot test further.
       bdat[, blocksbygroup := .N, by = biggrp]
-      # Now apply the local p-value adjustment
-      if (!is.null(local_adj_p_fn)) {
-        pbtracker[, padj := local_adj_p_fn(p)]
-        bdat[(testable), pfinalb := local_adj_p_fn(pfinalb)]
-      }
-      # Now update alpha if we are trying to control FDR or mFDR rather than FWER
       if (is.null(alphafn)) {
         bdat[, (alphanm) := thealpha]
         # Recall that `:=` **updates** values. So, it doesn't overwrite (testable==FALSE) values
@@ -300,7 +300,7 @@ find_blocks <-
           setkey(pbtracker, nodenum)
           thepaths <- find_paths()
           ## Do alpha adjustment for each path through the binary tree
-          for (j in 1:length(thepaths)) {
+          for (j in seq_along(length(thepaths))) {
             pbtracker[J(thepaths[[j]]), (alphanm) := alphafn(
               pval = p,
               batch = depth,
@@ -312,15 +312,21 @@ find_blocks <-
         }
         setkey(pbtracker, biggrp)
         bdat[pbtracker, (alphanm) := get(paste0("i.", alphanm)), on = "biggrp"]
-        # In deciding which blocks can be included in more testing we use current p rather than max of previous p.
-        # A block is testable if current p <= the alpha level AND the number of blocks in the group containing the block is more than 1
-        # We stop testing when we have only a single block within a group (or branch) because the block is the unit.
+
+        # In deciding which blocks can be included in more testing we use
+        # current p rather than max of previous p. A block is testable if current
+        # p <= the alpha level AND the number of blocks in the group containing
+        # the block is more than 1 We stop testing when we have only a single
+        # block within a group (or branch) because the block is the unit.
+
         bdat[, testable := fifelse((get(pnm) <= get(alphanm)) &
           (blocksbygroup > 1), TRUE, FALSE)]
         # Also stop testing for groups within which we cannot split any more for certain splitters. Currently set by hand.
       }
       if (stop_splitby_constant | split_fn_cluster) {
-        ## Here there is no sense in spliting by differences in covariate value (creating clusters using k-means) if covariate values do not differ
+        ## Here there is no sense in spliting by differences in covariate value
+        ## (creating clusters using k-means) if covariate values do not differ
+
         bdat[, testable := fifelse(uniqueN(get(splitby)) == 1, FALSE, unique(testable)), by = biggrp]
         ##      bdat[, testable := fifelse( (fastVar(get(ybase)) < .Machine$double.eps), FALSE, unique(testable)), by = biggrp]
       }

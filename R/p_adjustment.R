@@ -86,4 +86,3 @@ local_unadj_all_ps <- function(pvals_children, alpha = .05) {
 local_bh_all_ps <- function(pvals_children, alpha = .05) {
   p.adjust(pvals_children, method = "BH")
 }
-

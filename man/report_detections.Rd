@@ -25,9 +25,13 @@ block (or the groups containing that block). fwer=FALSE to detect blocks (or gro
 \item{blockid}{Name of block variable (the blocking variable is a factor)}
 }
 \value{
-A data.table adding a column \code{hit} to the \code{res} data.table indicating a "hit" or detection for that block (or group of blocks)
+A data.table adding a column \code{hit} to the \code{res} data.table
+indicating a "hit" or detection for that block (or group of blocks)
 }
 \description{
-Given the results of the splitting and testing algorithm, report on the blocks
-where the null of no effects could be rejected at level alpha. Currently calculates rejections using an FWER style criteria (p of a node = max of all previous nodes) if the final alphas are all the same as the scalar alpha OR if fwer=TRUE.
+Given the results of the splitting and testing algorithm, report on the
+blocks where the null of no effects could be rejected at level alpha.
+Currently calculates rejections using an FWER style criteria (p of a node =
+max of all previous nodes) if the final alphas are all the same as the
+scalar alpha OR if fwer=TRUE.
 }

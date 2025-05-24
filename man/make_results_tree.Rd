@@ -2,19 +2,34 @@
 % Please edit documentation in R/reporting.R
 \name{make_results_tree}
 \alias{make_results_tree}
-\title{Make a node level tree object of the results of nested testing}
+\title{Make a node-level dataset from a block-level dataset}
 \usage{
-make_results_tree(orig_res, blockid = "bF", node_label = NULL)
+make_results_tree(
+  orig_res,
+  block_id = NULL,
+  node_label = NULL,
+  return_what = "all"
+)
 }
 \arguments{
-\item{orig_res}{a results data.table output from the \code{\link{find_blocks}} function.}
+\item{orig_res}{data.table from find_blocks(); must include elements such as
+\itemize{
+\item biggrp    (dot-sep lineage, may be truncated),
+\item p1,p2,… and a pfinal*,
+\item alpha1, alpha2, …
+}}
 
-\item{blockid}{is a character name for the variable containing the block id information}
+\item{block_id}{optional name of your block ID column (e.g. "bF"), or NULL}
 
-\item{node_label}{is a character name for a variable containing a descriptive label for the blocks.}
+\item{node_label}{optional name of a descriptive label column}
+
+\item{return_what}{a character vector containing "all", "graph" (a tbl_graph
+object with nodes and edges), "nodes" (a data.table with node level
+information), "test_summary" (a data.table object with one row indicating
+false and true discoveries, etc.)}
 }
 \value{
-A tbl_graph and igraph object with nodes and edges
+a list that can contain nodes, a tbl_graph object, and/or a test_summary
 }
 \description{
 Given the results of the splitting and testing algorithm, make a node level

@@ -14,5 +14,7 @@ A ggraph object
 }
 \description{
 Given the results of the splitting and testing algorithm in the form of a
-graph from \link{make_results_tree}, make a node level data set for use in reporting results in terms of a binary tree graph. This does not print or plot the graph. You'll need to do that with the resulting object.
+graph from \link{make_results_tree}, make a node level data set for use in
+reporting results in terms of a binary tree graph. This does not print or
+plot the graph. You'll need to do that with the resulting object.
 }
