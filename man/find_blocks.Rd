@@ -24,6 +24,7 @@ find_blocks(
   splitby = "hwt",
   stop_splitby_constant = TRUE,
   blocksize = "hwt",
+  return_what = c("blocks", "nodes"),
   trace = FALSE
 )
 }
@@ -38,11 +39,15 @@ find_blocks(
 
 \item{pfn}{A function to produce pvalues --- using idat.}
 
-\item{alphafn}{A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator. Currently alpha_investing, alpha_saffron, alpha_addis are accepted. All of them wrap the corresponding functions from the \code{onlineFDR} package.}
+\item{alphafn}{A function to adjust alpha at each step. Takes one or more
+p-values plus a stratum or batch indicator. Currently alpha_investing,
+alpha_saffron, alpha_addis are accepted. All of them wrap the corresponding
+functions from the \code{onlineFDR} package.}
 
 \item{local_adj_p_fn}{Function. A function that adjusts p-values at a node (e.g. \code{local_simes}).}
 
-\item{simthresh}{Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations}
+\item{simthresh}{Below which number of total observations should the p-value
+functions use permutations rather than asymptotic approximations}
 
 \item{sims}{Number of permutations for permutation-based testing}
 
@@ -50,25 +55,42 @@ find_blocks(
 
 \item{thealpha}{Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)}
 
-\item{thew0}{Is the starting "wealth" of the alpha investing procedure (this is only relevant when alphafn is not null).}
+\item{thew0}{Is the starting "wealth" of the alpha investing procedure (this
+is only relevant when alphafn is not null).}
 
-\item{fmla}{A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors.}
+\item{fmla}{A formula with outcome~treatment assignment  | block where
+treatment assignment and block must be factors.}
 
-\item{parallel}{Should the pfn use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following \code{approximate} in the coin package.}
+\item{parallel}{Should the pfn use multicore processing for permutation
+based testing. Default is no. But could be "snow" or "multicore" following
+\code{approximate} in the coin package.}
 
 \item{ncores}{The number of cores used for parallel processing}
 
-\item{copydts}{TRUE or FALSE. TRUE if using find_blocks standalone. FALSE if copied objects are being sent to find_blocks from other functions.}
+\item{copydts}{TRUE or FALSE. TRUE if using find_blocks standalone. FALSE if
+copied objects are being sent to find_blocks from other functions.}
 
-\item{splitby}{A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates) or a column with a factor with levels separated by "." that indicates a pre-specified series of splits (see splitSpecifiedFactor))}
+\item{splitby}{A string indicating which column in bdat contains a variable
+to guide splitting (for example, a column with block sizes or block harmonic
+mean weights or a column with a covariate (or a function of covariates) or a
+column with a factor with levels separated by "." that indicates a
+pre-specified series of splits (see splitSpecifiedFactor))}
 
-\item{stop_splitby_constant}{TRUE if the splitting should stop when splitby is constant within a given branch of the tree. FALSE if splitting should continue even when splitby is constant. Default is TRUE. Different combinations of splitby, splitfn, and stop_splitby_constant make more or less sense as described below.}
+\item{stop_splitby_constant}{TRUE if the splitting should stop when splitby
+is constant within a given branch of the tree. FALSE if splitting should
+continue even when splitby is constant. Default is TRUE. Different
+combinations of splitby, splitfn, and stop_splitby_constant make more or
+less sense as described below.}
 
-\item{blocksize}{A string with the name of the column in bdat contains information about the size of the block (or other determinant of the power of tests within that block, such as harmonic mean weight of the block or variance of the outcome within the block.)}
+\item{blocksize}{A string with the name of the column in bdat contains
+information about the size of the block (or other determinant of the power
+of tests within that block, such as harmonic mean weight of the block or
+variance of the outcome within the block.)}
+
+\item{return_what}{Character. Return a data.table of blocks "blocks", a
+data.table of nodes "nodes", or default both c("blocks","nodes").}
 
 \item{trace}{Logical, FALSE (default) to not print split number. TRUE prints the split number.}
-
-\item{return_details}{Logical. Whether to return the full simulated data.table.}
 
 \item{final_global_adj}{Character. One of \code{"none"}, \code{"fdr"}, \code{"fwer"}.}
 }
@@ -79,7 +101,8 @@ A data.table containing information about the sequence of splitting and testing
 Split and test.
 }
 \details{
-Some notes about the splitting functions and how they relate to splitting criteria (splitby) and stopping criteria (stop_splitby_constant).
+Some notes about the splitting functions and how they relate to
+splitting criteria (splitby) and stopping criteria (stop_splitby_constant).
 \itemize{
 \item \code{\link[=splitLOO]{splitLOO()}} chooses the blocks largest on the splitby vector one at a
 time so that we have two tests, one focusing on the highest ranked block and

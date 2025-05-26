@@ -8,25 +8,64 @@
 #' @param blockid A character name of the column in idat and bdat indicating the block.
 #' @param splitfn A function to split the data into two pieces --- using bdat
 #' @param pfn A function to produce pvalues --- using idat.
-#' @param alphafn A function to adjust alpha at each step. Takes one or more p-values plus a stratum or batch indicator. Currently alpha_investing, alpha_saffron, alpha_addis are accepted. All of them wrap the corresponding functions from the `onlineFDR` package.
+
+#' @param alphafn A function to adjust alpha at each step. Takes one or more
+#' p-values plus a stratum or batch indicator. Currently alpha_investing,
+#' alpha_saffron, alpha_addis are accepted. All of them wrap the corresponding
+#' functions from the `onlineFDR` package.
+
 #' @param local_adj_p_fn Function. A function that adjusts p-values at a node (e.g. \code{local_simes}).
-#' @param simthresh Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations
+
+#' @param simthresh Below which number of total observations should the p-value
+#' functions use permutations rather than asymptotic approximations
+
 #' @param sims Number of permutations for permutation-based testing
 #' @param maxtest Maximum splits or tests to do. Should probably not be smaller than the number of experimental blocks.
-#' @param copydts TRUE or FALSE. TRUE if using find_blocks standalone. FALSE if copied objects are being sent to find_blocks from other functions.
-#' @param splitby A string indicating which column in bdat contains a variable to guide splitting (for example, a column with block sizes or block harmonic mean weights or a column with a covariate (or a function of covariates) or a column with a factor with levels separated by "." that indicates a pre-specified series of splits (see splitSpecifiedFactor))
-#' @param stop_splitby_constant TRUE if the splitting should stop when splitby is constant within a given branch of the tree. FALSE if splitting should continue even when splitby is constant. Default is TRUE. Different combinations of splitby, splitfn, and stop_splitby_constant make more or less sense as described below.
-#' @param blocksize A string with the name of the column in bdat contains information about the size of the block (or other determinant of the power of tests within that block, such as harmonic mean weight of the block or variance of the outcome within the block.)
+
+#' @param copydts TRUE or FALSE. TRUE if using find_blocks standalone. FALSE if
+#' copied objects are being sent to find_blocks from other functions.
+
+#' @param splitby A string indicating which column in bdat contains a variable
+#' to guide splitting (for example, a column with block sizes or block harmonic
+#' mean weights or a column with a covariate (or a function of covariates) or a
+#' column with a factor with levels separated by "." that indicates a
+#' pre-specified series of splits (see splitSpecifiedFactor))
+
+#' @param stop_splitby_constant TRUE if the splitting should stop when splitby
+#' is constant within a given branch of the tree. FALSE if splitting should
+#' continue even when splitby is constant. Default is TRUE. Different
+#' combinations of splitby, splitfn, and stop_splitby_constant make more or
+#' less sense as described below.
+
+#' @param blocksize A string with the name of the column in bdat contains
+#' information about the size of the block (or other determinant of the power
+#' of tests within that block, such as harmonic mean weight of the block or
+#' variance of the outcome within the block.)
+
 #' @param thealpha Is the error rate for a given test (for cases where alphafn is NULL, or the starting alpha for alphafn not null)
-#' @param thew0 Is the starting "wealth" of the alpha investing procedure (this is only relevant when alphafn is not null).
-#' @param fmla A formula with outcome~treatment assignment  | block where treatment assignment and block must be factors.
-#' @param return_details Logical. Whether to return the full simulated data.table.
+
+#' @param thew0 Is the starting "wealth" of the alpha investing procedure (this
+#' is only relevant when alphafn is not null).
+
+#' @param fmla A formula with outcome~treatment assignment  | block where
+#' treatment assignment and block must be factors.
+
+#' @param return_what Character. Return a data.table of blocks "blocks", a
+#' data.table of nodes "nodes", or default both c("blocks","nodes").
+
 #' @param final_global_adj Character. One of \code{"none"}, \code{"fdr"}, \code{"fwer"}.
-#' @param parallel Should the pfn use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following `approximate` in the coin package.
+
+#' @param parallel Should the pfn use multicore processing for permutation
+#' based testing. Default is no. But could be "snow" or "multicore" following
+#' `approximate` in the coin package.
+
 #' @param ncores The number of cores used for parallel processing
 #' @param trace Logical, FALSE (default) to not print split number. TRUE prints the split number.
 #' @return A data.table containing information about the sequence of splitting and testing
-#' @details Some notes about the splitting functions and how they relate to splitting criteria (splitby) and stopping criteria (stop_splitby_constant).
+
+#' @details Some notes about the splitting functions and how they relate to
+#' splitting criteria (splitby) and stopping criteria (stop_splitby_constant).
+
 #'
 #'  * [splitLOO()] chooses the blocks largest on the splitby vector one at a
 #' time so that we have two tests, one focusing on the highest ranked block and
@@ -105,8 +144,11 @@ find_blocks <-
            splitby = "hwt",
            stop_splitby_constant = TRUE,
            blocksize = "hwt",
+           return_what = c("blocks", "nodes"),
            trace = FALSE) {
-    # Some checks: We can split on a constant variable if we are collecting the blocks into groups of equal size
+    # Some checks: We can split on a constant variable if we are collecting the
+    # blocks into groups of equal size
+
     splitfn_text <- deparse(splitfn)
     split_fn_equal_approx <- length(grep("%%2", splitfn_text)) > 0
     split_fn_cluster <- length(grep("Ckmeans", splitfn_text) > 0)
@@ -179,11 +221,12 @@ find_blocks <-
     }
     # If p1 > alpha1 then stop testing and return the data.
     bdat[, testable := (pfinalb < alpha1)]
-    pbtracker <- data.table(
+    # node_dat is a node level dataset
+    node_dat <- data.table(
       parent = NA_character_,
       p = unique(bdat$p1),
       biggrp = factor("1"),
-      alpha1 = unique(bdat$alpha1),
+      a = unique(bdat$alpha1),
       batch = "p1",
       testable = unique(bdat$testable),
       nodenum = "1",
@@ -196,7 +239,16 @@ find_blocks <-
     setkeyv(bdat, "testable")
     bdat[, blocksbygroup := length(unique(get(blockid))), by = biggrp]
     if (!all(bdat$testable)) {
-      return(bdat)
+      ## Return the objects
+      if (all(return_what == "blocks")) {
+        return(bdat)
+      }
+      if (all(return_what == "nodes")) {
+        return(node_dat)
+      }
+      if (all(return_what %in% c("blocks", "nodes"))) {
+        return(list(bdat = bdat, node_dat = node_dat))
+      }
     }
     # Step 2: Iterate through the tree
     # Keep testing until no testing possible: criteria are (1) all blocks all size 1 and/or (2)
@@ -249,8 +301,8 @@ find_blocks <-
       if (!is.null(local_adj_p_fn)) {
         pb[, p := local_adj_p_fn(p), by = parent]
       }
-      pbtracker <-
-        rbind(pbtracker[, .(parent, p, biggrp, batch, testable, nodenum, depth, nodesize)],
+      node_dat <-
+        rbind(node_dat[, .(parent, p, a, biggrp, batch, testable, nodenum, depth, nodesize)],
           pb[, batch := pnm],
           fill = TRUE
         )
@@ -258,18 +310,18 @@ find_blocks <-
       setkeyv(pb, "biggrp")
       bdat[pb, (pnm) := get(paste0("i.", pnm)), on = "biggrp"]
       # bdat[(testable), pfinalb := pmax(get(pnm), pfinalb)]
-      bdat[(testable), pfinalb := get(pnm)] # get(paste0("p", i - 1)))]
+      bdat[(testable), pfinalb := get(pnm)]
       # Now decide which blocks (units) can be tested again.
       # If a split contains only one block. We cannot test further.
       bdat[, blocksbygroup := .N, by = biggrp]
       if (is.null(alphafn)) {
         bdat[, (alphanm) := thealpha]
         # Recall that `:=` **updates** values. So, it doesn't overwrite (testable==FALSE) values
-        bdat[, testable := fifelse((pfinalb <= get(alphanm)) &
-          (blocksbygroup > 1), TRUE, FALSE)]
+        bdat[, testable := fifelse((pfinalb <= get(alphanm)) & (blocksbygroup > 1), TRUE, FALSE)]
+        node_dat[, (alphanm) := thealpha]
       } else {
         if (i == 2) {
-          pbtracker[, (alphanm) := alphafn(
+          node_dat[, (alphanm) := alphafn(
             pval = p,
             batch = batch,
             nodesize = nodesize,
@@ -277,11 +329,12 @@ find_blocks <-
             thew0 = thew0
           )]
         } else {
-          ## Find the nodes that are ancestors and descedents of each other since the alpha adjusting depends on this order
-          mid_roots <-
-            pbtracker[depth == (i - 1) & (testable), nodenum]
+          ## Find the nodes that are ancestors and descedents of each other since
+          ## the alpha adjusting depends on this order
+
+          mid_roots <- node_dat[depth == (i - 1) & (testable), nodenum]
           find_paths <- function() {
-            tmp <- pbtracker[depth == i, ]
+            tmp <- node_dat[depth == i, ]
             tmp[, leaves := stri_extract_last(as.character(biggrp), regex = "\\.[:alnum:]*$")]
             tmp[, paths := stri_replace_all(as.character(biggrp),
               replacement = "",
@@ -294,14 +347,14 @@ find_blocks <-
                 sep = ""
               )), by = paths]
             path_vec <- stri_split_fixed(path_dat$thepath, ".")
-            # stopifnot(all(path_vec %in% pbtracker$nodenum))
+            # stopifnot(all(path_vec %in% node_dat$nodenum))
             return(path_vec)
           }
-          setkey(pbtracker, nodenum)
+          setkey(node_dat, nodenum)
           thepaths <- find_paths()
           ## Do alpha adjustment for each path through the binary tree
           for (j in seq_along(length(thepaths))) {
-            pbtracker[J(thepaths[[j]]), (alphanm) := alphafn(
+            node_dat[J(thepaths[[j]]), (alphanm) := alphafn(
               pval = p,
               batch = depth,
               nodesize = nodesize,
@@ -310,9 +363,9 @@ find_blocks <-
             )]
           }
         }
-        setkey(pbtracker, biggrp)
-        bdat[pbtracker, (alphanm) := get(paste0("i.", alphanm)), on = "biggrp"]
-
+        setkey(node_dat, biggrp)
+        bdat[node_dat, (alphanm) := get(paste0("i.", alphanm)), on = "biggrp"]
+        node_dat[, a := fifelse(is.na(a), get(alphanm), a)]
         # In deciding which blocks can be included in more testing we use
         # current p rather than max of previous p. A block is testable if current
         # p <= the alpha level AND the number of blocks in the group containing
@@ -321,28 +374,42 @@ find_blocks <-
 
         bdat[, testable := fifelse((get(pnm) <= get(alphanm)) &
           (blocksbygroup > 1), TRUE, FALSE)]
-        # Also stop testing for groups within which we cannot split any more for certain splitters. Currently set by hand.
+
+        # Also stop testing for groups within which we cannot split any more for
+        # certain splitters. Currently set by hand.
       }
+
       if (stop_splitby_constant | split_fn_cluster) {
         ## Here there is no sense in spliting by differences in covariate value
         ## (creating clusters using k-means) if covariate values do not differ
 
         bdat[, testable := fifelse(uniqueN(get(splitby)) == 1, FALSE, unique(testable)), by = biggrp]
-        ##      bdat[, testable := fifelse( (fastVar(get(ybase)) < .Machine$double.eps), FALSE, unique(testable)), by = biggrp]
       }
       ## bdat[(testable),biggrp:=droplevels(biggrp)]
       setkeyv(bdat, "testable") # for binary search speed
       # message(paste(unique(signif(bdat$pfinalb,4)),collapse=' '),appendLF = TRUE)
       # message('Number of blocks left to test: ', sum(bdat$testable))
     }
-    return(bdat)
-    # }
+    ## Return the objects
+    if (all(return_what == "blocks")) {
+      return(bdat)
+    }
+    if (all(return_what == "nodes")) {
+      return(node_dat)
+    }
+    if (all(return_what %in% c("blocks", "nodes"))) {
+      return(list(bdat = bdat, node_dat = node_dat))
+    }
   }
 
 
 #' Use hashing to make a node id
+
 #'
-#' This is an internal function used by find_blocks.
+#' This is an internal function used by find_blocks. Some (rare) designs can produce
+#' so many nodes that we have problems with integers. So, using hashes by default.
+#'
+
 #' @param d A vector
 #' @return a vector of hashes
 #' @importFrom digest digest getVDigest

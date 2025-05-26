@@ -13,5 +13,6 @@ nodeidfn(d)
 a vector of hashes
 }
 \description{
-This is an internal function used by find_blocks.
+This is an internal function used by find_blocks. Some (rare) designs can produce
+so many nodes that we have problems with integers. So, using hashes by default.
 }

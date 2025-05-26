@@ -285,3 +285,18 @@ idt[, Y := trt * y1 + (1 - trt) * y0]
 ## Some procedures need treatment to be a factor (esp those using the coin
 ## package)
 idt[, trtF := factor(trt)]
+
+## test using some non-null effect blocks so that the algorithm descends more into the tree
+## This creates effects block-by-block.
+idt[, y1_half_tau1 := create_effects(
+  idat = idt, ybase = "y0", blockid = "bF", tau_fn = tau_norm, tau_size = 1, prop_blocks_0 = .5,
+  non_null_blocks = "nonnull"
+)]
+## Check that the blocks with no effects actually have no effects
+test_null_effects <- idt[nonnull == FALSE, sum(y1_half_tau1 - y0)]
+expect_equal(unique(test_null_effects), 0)
+
+test_not_null <- idt[nonnull == TRUE, sum(y1_half_tau1 - y0)]
+expect_gt(abs(unique(test_not_null)), 0)
+## Make an observed outcome
+idt[, Y_half_tau1 := trt * y1_half_tau1 + (1 - trt) * y0]
