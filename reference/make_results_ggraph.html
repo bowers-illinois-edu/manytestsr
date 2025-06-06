@@ -46,7 +46,7 @@ plot the graph. You'll need to do that with the resulting object.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">make_results_ggraph</span><span class="op">(</span><span class="va">res_graph</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">make_results_ggraph</span><span class="op">(</span><span class="va">res_graph</span>, remove_na_p <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -55,6 +55,15 @@ plot the graph. You'll need to do that with the resulting object.</p>
 
 <dl><dt id="arg-res-graph">res_graph<a class="anchor" aria-label="anchor" href="#arg-res-graph"></a></dt>
 <dd><p>A tidygraph object produced from make_results_tree</p></dd>
+
+
+<dt id="arg-remove-na-p">remove_na_p<a class="anchor" aria-label="anchor" href="#arg-remove-na-p"></a></dt>
+<dd><p>A logical indicating whether the graph should include
+nodes/leaves that were not tested. Default (TRUE) is to remove them. When
+remove_na_p is FALSE, the graph might look strange since some blocks will
+not have a known position in the graph  (the graph is fixed, but not
+specified by the find_blocks function when a node or block is not visited
+for testing.)</p></dd>
 
 </dl></div>
     <div class="section level2">
