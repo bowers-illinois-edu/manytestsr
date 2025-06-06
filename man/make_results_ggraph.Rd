@@ -4,10 +4,17 @@
 \alias{make_results_ggraph}
 \title{Make a plot of the nodes}
 \usage{
-make_results_ggraph(res_graph)
+make_results_ggraph(res_graph, remove_na_p = TRUE)
 }
 \arguments{
 \item{res_graph}{A tidygraph object produced from make_results_tree}
+
+\item{remove_na_p}{A logical indicating whether the graph should include
+nodes/leaves that were not tested. Default (TRUE) is to remove them. When
+remove_na_p is FALSE, the graph might look strange since some blocks will
+not have a known position in the graph  (the graph is fixed, but not
+specified by the find_blocks function when a node or block is not visited
+for testing.)}
 }
 \value{
 A ggraph object

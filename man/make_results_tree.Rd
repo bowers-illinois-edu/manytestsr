@@ -6,9 +6,10 @@
 \usage{
 make_results_tree(
   orig_res,
-  block_id = NULL,
+  block_id,
   node_label = NULL,
-  return_what = "all"
+  return_what = "all",
+  truevar_name = NULL
 )
 }
 \arguments{
@@ -19,7 +20,7 @@ make_results_tree(
 \item alpha1, alpha2, …
 }}
 
-\item{block_id}{optional name of your block ID column (e.g. "bF"), or NULL}
+\item{block_id}{name of your block ID column (e.g. "bF")}
 
 \item{node_label}{optional name of a descriptive label column}
 
@@ -27,6 +28,12 @@ make_results_tree(
 object with nodes and edges), "nodes" (a data.table with node level
 information), "test_summary" (a data.table object with one row indicating
 false and true discoveries, etc.)}
+
+\item{truevar_name}{the optional name of a column recording the true
+treatment effect (used here to find blocks where the true effect is 0 or
+not). In some simulations we have a column called nonnull which is TRUE if
+that block or node has a non-zero effect and FALSE if the block or node has
+a truly zero effect. So, truevar_name can be "nonnull"}
 }
 \value{
 a list that can contain nodes, a tbl_graph object, and/or a test_summary

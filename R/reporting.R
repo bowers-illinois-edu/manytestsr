@@ -116,11 +116,24 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 #' plot the graph. You'll need to do that with the resulting object.
 #'
 #' @param res_graph A tidygraph object produced from make_results_tree
+
+#' @param remove_na_p A logical indicating whether the graph should include
+#' nodes/leaves that were not tested. Default (TRUE) is to remove them. When
+#' remove_na_p is FALSE, the graph might look strange since some blocks will
+#' not have a known position in the graph  (the graph is fixed, but not
+#' specified by the find_blocks function when a node or block is not visited
+#' for testing.)
+
 #' @return A ggraph object
 #' @import ggraph
 #' @import ggplot2
 #' @export
-make_results_ggraph <- function(res_graph) {
+make_results_ggraph <- function(res_graph, remove_na_p = TRUE) {
+  if (remove_na_p) {
+    res_graph <- res_graph %>%
+      activate(nodes) %>%
+      filter(!is.na(p))
+  }
   res_g <- ggraph(res_graph, layout = "tree") +
     geom_edge_diagonal(colour = "black") +
     geom_node_label(aes(label = label, colour = hit),
@@ -149,27 +162,32 @@ make_results_ggraph <- function(res_graph) {
 #'   - biggrp    (dot-sep lineage, may be truncated),
 #'   - p1,p2,… and a pfinal*,
 #'   - alpha1, alpha2, …
-#' @param block_id   optional name of your block ID column (e.g. "bF"), or NULL
+#' @param block_id   name of your block ID column (e.g. "bF")
 #' @param node_label optional name of a descriptive label column
 #' @param return_what a character vector containing "all", "graph" (a tbl_graph
 #' object with nodes and edges), "nodes" (a data.table with node level
 #' information), "test_summary" (a data.table object with one row indicating
 #' false and true discoveries, etc.)
+
+#' @param truevar_name the optional name of a column recording the true
+#' treatment effect (used here to find blocks where the true effect is 0 or
+#' not). In some simulations we have a column called nonnull which is TRUE if
+#' that block or node has a non-zero effect and FALSE if the block or node has
+#' a truly zero effect. So, truevar_name can be "nonnull"
+
 #' @return a list that can contain nodes, a tbl_graph object, and/or a test_summary
 #' @importFrom stringi stri_split_fixed stri_sub
 #' @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent activate
 #' @import tidygraph data.table
 #' @export
-make_results_tree <- function(orig_res, block_id = NULL, node_label = NULL, return_what = "all") {
+make_results_tree <- function(orig_res, block_id, node_label = NULL, return_what = "all", truevar_name = NULL) {
   dt <- copy(orig_res)
 
   # assign a unique leaf ID per input row
-  if (is.null(block_id)) {
-    dt[, leaf_id := nodeidfn(as.character(.I))]
-  } else {
-    dt[, leaf_id := as.character(get(block_id))]
-    stopifnot(all.equal(length(unique(dt[[block_id]])), nrow(dt)))
-  }
+  stopifnot(all.equal(length(unique(dt[[block_id]])), nrow(dt)))
+  dt[, leaf_id := as.character(get(block_id))]
+  ## hashing because some block_ids use numbers like "1" which is also the number of the root node
+  dt[leaf_id == "1", leaf_id := nodeidfn(leaf_id)]
 
   # split the biggrp chains
   ancestry <- stri_split_fixed(dt$biggrp, ".", simplify = TRUE)
@@ -181,7 +199,7 @@ make_results_tree <- function(orig_res, block_id = NULL, node_label = NULL, retu
   ## For any missing leaves, fill in with the leaf_id for the leaf level
   dt[, (node_lvls[max_depth]) := ifelse(is.na(get(node_lvls[max_depth])), leaf_id, get(node_lvls[max_depth]))]
 
-  stopifnot(all.equal(length(unique(dt[[node_lvls[max_depth]]])), nrow(dt)))
+  # stopifnot(all.equal(length(unique(dt[[node_lvls[max_depth]]])), nrow(dt)))
 
   # detect p-columns: p1,p2,… then your pfinal* as the last one
   p_normals <- grep("^p[0-9]+$", names(dt), value = TRUE)
@@ -192,10 +210,12 @@ make_results_tree <- function(orig_res, block_id = NULL, node_label = NULL, retu
   # detect alpha-columns similarly
   a_cols <- grep("^alpha[0-9]+$", names(dt), value = TRUE)
 
-  # ensure nonnull & node_label exist
-  if (!"nonnull" %in% names(dt)) {
+  if (!is.null(truevar_name)) {
+    dt[, nonnull := get(truevar_name) != 0]
+  } else {
     dt[, nonnull := NA]
   }
+
   if (is.null(node_label)) {
     dt[, node_label := NA_character_]
   } else {
@@ -209,6 +229,10 @@ make_results_tree <- function(orig_res, block_id = NULL, node_label = NULL, retu
     this_pcol <- pcols[d]
     this_acol <- a_cols[d]
     ids <- dt[[node_lvls[d]]]
+    if (any(is.na(ids))) {
+      ## If this pasting becomes unwieldy we can use nodeidfn() to replace it with a hash
+      dt[is.na(get(node_lvls[d])), (node_lvls[d]) := paste(unique(leaf_id), collapse = ","), by = eval(node_lvls[d - 1])]
+    }
 
     res <- dt[, .(
       depth = d,
@@ -240,52 +264,78 @@ make_results_tree <- function(orig_res, block_id = NULL, node_label = NULL, retu
   }
   nodes_dt <- rbindlist(node_list, use.names = TRUE)
 
-  # Record testing results
-  num_nodes <- nrow(nodes_dt)
-  num_leaves <- sum(nodes_dt$depth == max_depth)
-  num_nodes_tested <- sum(!is.na(nodes_dt$p))
-  num_nonnull_nodes_tested <- sum(!is.na(nodes_dt$p) & nodes_dt$nonnull)
-  ## A discovery is a rejection
-  node_discoveries <- nodes_dt[!is.na(p), sum(p <= a, na.rm = TRUE)]
-  ## Record errors and correct discoveries
-  node_any_false_error <- any(nodes_dt[nonnull == FALSE & !is.na(p), p <= a])
-  node_num_false_discoveries <- sum(nodes_dt[nonnull == FALSE & !is.na(p), p <= a])
-  node_true_discoveries <- sum(nodes_dt[nonnull == TRUE & !is.na(p), p <= a])
-  ## Proportion of nodes (including leaves) where p should be less than or equal to a
-  ## Proportion of true discoveries among the possible true discoveries
-  node_power <- mean(nodes_dt[nonnull == TRUE & !is.na(p), p <= a])
+  ## Can't calculate errors and discoveries without knowing the truth aka
+  ## having a variable that records whether a node/block is not null or not.
 
-  num_leaves_tested <- sum(nodes_dt[depth == max_depth, !is.na(p)])
-  if (num_leaves_tested > 0) {
-    leaf_power <- nodes_dt[depth == max_depth & nonnull == TRUE & !is.na(p), mean(p <= a, na.rm = TRUE)]
-    leaf_discoveries <- nodes_dt[depth == max_depth & !is.na(p), sum(p <= a, na.rm = TRUE)]
-    leaf_true_discoveries <- nodes_dt[depth == max_depth & nonnull == TRUE & !is.na(p), sum(p <= a, na.rm = TRUE)]
-    leaf_any_false_error <- nodes_dt[depth == max_depth & nonnull == FALSE & !is.na(p), any(p <= a)]
+  if (any(!is.na(nodes_dt$nonnull))) {
+    # Record testing results
+    num_nodes <- nrow(nodes_dt)
+    # the block level dataset has one row for each leaf or block
+    num_leaves <- nrow(dt)
+    num_nodes_tested <- sum(!is.na(nodes_dt$p))
+    num_nonnull_nodes_tested <- sum(!is.na(nodes_dt$p) & nodes_dt$nonnull)
+    ## A discovery is a rejection
+    node_rejections <- nodes_dt[!is.na(p), sum(p <= a, na.rm = TRUE)]
+    ## Record rejections info
+    node_any_false_rejection <- nodes_dt[nonnull == FALSE & !is.na(p), any(p <= a)]
+    node_false_rejection_prop <- nodes_dt[nonnull == FALSE & !is.na(p), mean(p <= a)]
+    node_num_false_rejections <- nodes_dt[nonnull == FALSE & !is.na(p), sum(p <= a)]
+    ## Now false discovery prop (element in FDR calc). Denominator is rejections.
+    node_false_discovery_prop <- nodes_dt[nonnull == FALSE & !is.na(p), sum(p <= a) / max(1, node_rejections)]
+
+    ## prop of nodes (including leaves) where p should be less than or equal to a
+    ## prop of true discoveries among the possible true discoveries
+    node_true_discoveries <- nodes_dt[nonnull == TRUE & !is.na(p), sum(p <= a)]
+    node_power <- nodes_dt[nonnull == TRUE & !is.na(p), mean(p <= a)]
+
+    ## If max_depth=1, then we are only testing the root node
+    ## And we are excluding for now the idea that the root is the leaf --- that is just the case of a single test.
+    num_leaves_tested <- (max_depth > 1) * sum(nodes_dt[num_leaves == 1, !is.na(p)])
+    num_nonnull_leaves_tested <- (max_depth > 1) * sum(nodes_dt[num_leaves == 1 & nonnull == TRUE, !is.na(p)])
+    if (num_leaves_tested > 0) {
+      leaf_power <- nodes_dt[num_leaves == 1 & nonnull == TRUE & !is.na(p), mean(p <= a, na.rm = TRUE)]
+      leaf_rejections <- nodes_dt[num_leaves == 1 & !is.na(p), sum(p <= a, na.rm = TRUE)]
+      leaf_true_discoveries <- nodes_dt[num_leaves == 1 & nonnull == TRUE & !is.na(p), sum(p <= a, na.rm = TRUE)]
+      leaf_any_false_rejection <- nodes_dt[num_leaves == 1 & nonnull == FALSE & !is.na(p), any(p <= a)]
+      leaf_false_rejection_prop <- nodes_dt[num_leaves == 1 & nonnull == FALSE & !is.na(p), mean(p <= a)]
+      leaf_false_discovery_prop <- nodes_dt[num_leaves == 1 & nonnull == FALSE & !is.na(p), sum(p <= a) / max(1, leaf_rejections)]
+    } else {
+      leaf_power <- NA
+      leaf_rejections <- NA
+      leaf_true_discoveries <- NA
+      leaf_any_false_rejection <- NA
+      leaf_false_rejection_prop <- NA
+      leaf_false_discovery_prop <- NA
+    }
+
+    test_summary <- data.table(
+      num_nodes = num_nodes,
+      num_leaves = num_leaves,
+      num_nodes_tested = num_nodes_tested,
+      num_nonnull_nodes_tested = num_nonnull_nodes_tested,
+      node_rejections = node_rejections,
+      node_any_false_rejection = node_any_false_rejection,
+      node_false_rejection_prop = node_false_rejection_prop,
+      node_num_false_rejections = node_num_false_rejections,
+      node_false_discovery_prop = node_false_discovery_prop,
+      node_true_discoveries = node_true_discoveries,
+      node_power = node_power,
+      num_leaves_tested = num_leaves_tested,
+      num_nonnull_leaves_tested = num_nonnull_leaves_tested,
+      leaf_power = leaf_power,
+      leaf_rejections = leaf_rejections,
+      leaf_true_discoveries = leaf_true_discoveries,
+      leaf_any_false_rejection = leaf_any_false_rejection,
+      leaf_false_rejection_prop = leaf_false_rejection_prop,
+      leaf_false_discovery_prop = leaf_false_discovery_prop
+    )
   } else {
-    leaf_power <- NA
-    leaf_discoveries <- NA
-    leaf_true_discoveries <- NA
-    leaf_any_false_error <- NA
+    test_summary <- NA
   }
 
-  test_summary <- data.table(
-    num_nodes = num_nodes,
-    num_leaves = num_leaves,
-    num_nodes_tested = num_nodes_tested,
-    num_leaves_tested = num_leaves_tested,
-    num_nonnull_nodes_tested = num_nonnull_nodes_tested,
-    node_discoveries = node_discoveries,
-    node_any_false_error = node_any_false_error,
-    node_num_false_discoveries = node_num_false_discoveries,
-    node_true_discoveries = node_true_discoveries,
-    node_power = node_power,
-    leaf_power = leaf_power,
-    leaf_discoveries = leaf_discoveries,
-    leaf_true_discoveries = leaf_true_discoveries,
-    leaf_any_false_error = leaf_any_false_error
-  )
+  nodes_dt[, hit := p <= a]
 
-  if (return_what %in% "graph") {
+  if (any(c("all", "graph") %in% return_what)) {
     ### set up the tidygraph style object
     edges_dt <- nodes_dt[!is.na(parent_name), .(name, parent_name)]
     setnames(edges_dt, c("parent_name", "name"), c("from", "to"))
@@ -316,7 +366,7 @@ make_results_tree <- function(orig_res, block_id = NULL, node_label = NULL, retu
   }
 
   results <- list(nodes = nodes_dt, graph = res_graph, test_summary = test_summary)
-  if (return_what == "all") {
+  if ("all" %in% return_what) {
     return_what <- c("nodes", "graph", "test_summary")
   }
   return(results[return_what])

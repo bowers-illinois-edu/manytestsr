@@ -184,7 +184,7 @@ find_blocks <-
         idat[, (cols_to_del_i) := NULL]
       }
     }
-
+    # Some of the testing below needs the block id to be a factor
     # Step 1: Root of tree. One test. We are numbering simply following literature on k-ary trees where the root node is node 1
     i <- 1L
     bdat[, p1 := pfn(
@@ -328,13 +328,15 @@ find_blocks <-
             thealpha = thealpha,
             thew0 = thew0
           )]
+          node_dat[is.na(a), a := get(alphanm)]
         } else {
           ## Find the nodes that are ancestors and descedents of each other since
           ## the alpha adjusting depends on this order
 
-          mid_roots <- node_dat[depth == (i - 1) & (testable), nodenum]
-          find_paths <- function() {
-            tmp <- node_dat[depth == i, ]
+          ## mid_roots <- node_dat[depth == (i - 1) & (testable), nodenum]
+
+          find_paths <- function(j) {
+            tmp <- node_dat[depth == j, ]
             tmp[, leaves := stri_extract_last(as.character(biggrp), regex = "\\.[:alnum:]*$")]
             tmp[, paths := stri_replace_all(as.character(biggrp),
               replacement = "",
@@ -350,10 +352,11 @@ find_blocks <-
             # stopifnot(all(path_vec %in% node_dat$nodenum))
             return(path_vec)
           }
+
           setkey(node_dat, nodenum)
-          thepaths <- find_paths()
+          thepaths <- find_paths(j = i)
           ## Do alpha adjustment for each path through the binary tree
-          for (j in seq_along(length(thepaths))) {
+          for (j in seq_along(thepaths)) {
             node_dat[J(thepaths[[j]]), (alphanm) := alphafn(
               pval = p,
               batch = depth,
@@ -363,9 +366,10 @@ find_blocks <-
             )]
           }
         }
+
+        node_dat[is.na(a), a := get(alphanm)]
         setkey(node_dat, biggrp)
         bdat[node_dat, (alphanm) := get(paste0("i.", alphanm)), on = "biggrp"]
-        node_dat[, a := fifelse(is.na(a), get(alphanm), a)]
         # In deciding which blocks can be included in more testing we use
         # current p rather than max of previous p. A block is testable if current
         # p <= the alpha level AND the number of blocks in the group containing
@@ -385,7 +389,7 @@ find_blocks <-
 
         bdat[, testable := fifelse(uniqueN(get(splitby)) == 1, FALSE, unique(testable)), by = biggrp]
       }
-      ## bdat[(testable),biggrp:=droplevels(biggrp)]
+      node_dat[is.na(a), a := get(alphanm)]
       setkeyv(bdat, "testable") # for binary search speed
       # message(paste(unique(signif(bdat$pfinalb,4)),collapse=' '),appendLF = TRUE)
       # message('Number of blocks left to test: ', sum(bdat$testable))
