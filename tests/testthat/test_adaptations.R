@@ -209,10 +209,9 @@ c(
 )
 
 ## Now check intuitions about the adjustments when it comes to false positive rates.
-## STart here with the calc_errs issues: return checks across both nodes and blocks.
-
-nsims <- 1000
+sims <- 1000
 sim_err <- 2 * sqrt((.05 * (1 - .05)) / nsims)
+## First, in completely null situation.
 
 set.seed(12345)
 p_null_res <- padj_test_fn(
@@ -229,21 +228,24 @@ p_null_res <- padj_test_fn(
   pfn = pOneway,
   nsims = nsims,
   ncores = 1,
-  ncores_sim = 8,
+  ncores_sim = 1,
   afn = NULL,
   splitfn = splitSpecifiedFactorMulti,
   splitby = "lvls_fac",
   p_adj_method = "split",
   blocksize = "nb",
   by_block = TRUE,
-  stop_splitby_constant = TRUE
+  stop_splitby_constant = TRUE,
+  local_adj_p_fn = local_unadj_all_ps,
+  bottom_up_adj = "hommel",
 )
-res_null_rates <- p_null_res[, lapply(.SD, mean, na.rm = TRUE)]
-## This is assessing weak control so the following two are equal.
-expect_lt(res_null_rates$prop_reject, .05 + sim_err)
-expect_lt(res_null_rates$false_pos_prop, .05 + sim_err)
 
-## TODO: It would be nice to calculate power over both nodes and blocks.
+res_null_rates <- p_null_res[, lapply(.SD, mean, na.rm = TRUE)]
+t(res_null_rates)
+
+## This is assessing weak control so the following two are equal.
+expect_lt(res_null_rates$node_false_rejection_prop, .05 + sim_err)
+expect_lt(res_null_rates$bot_leaf_false_rejection_prop, .05 + sim_err)
 
 ## The tau_size and prop_blocks_0 and block size below should produce very high
 ## power for each block a 1 sd difference
@@ -273,10 +275,14 @@ p_half_res <- padj_test_fn(
   p_adj_method = "split",
   blocksize = "nb",
   by_block = TRUE,
-  stop_splitby_constant = TRUE
+  stop_splitby_constant = TRUE,
+  local_adj_p_fn = local_unadj_all_ps,
+  bottom_up_adj = "hommel",
 )
 
 res_half_rates <- p_half_res[, lapply(.SD, mean, na.rm = TRUE)]
+t(res_half_rates)
+
 ## This is showing control of FWER in the strong sense.
 expect_lt(res_half_rates$false_pos_prop, .05 + sim_err)
 ## Power to detect effects at the individual block level.

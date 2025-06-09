@@ -297,15 +297,15 @@ make_results_tree <- function(orig_res, block_id, node_label = NULL, return_what
       leaf_rejections <- nodes_dt[num_leaves == 1 & !is.na(p), sum(p <= a, na.rm = TRUE)]
       leaf_true_discoveries <- nodes_dt[num_leaves == 1 & nonnull == TRUE & !is.na(p), sum(p <= a, na.rm = TRUE)]
       leaf_any_false_rejection <- nodes_dt[num_leaves == 1 & nonnull == FALSE & !is.na(p), any(p <= a)]
-      leaf_false_rejection_prop <- nodes_dt[num_leaves == 1 & nonnull == FALSE & !is.na(p), mean(p <= a)]
-      leaf_false_discovery_prop <- nodes_dt[num_leaves == 1 & nonnull == FALSE & !is.na(p), sum(p <= a) / max(1, leaf_rejections)]
+      leaf_false_rejection_prop <- nodes_dt[num_leaves == 1 & nonnull == FALSE & !is.na(p), mean(p <= a, na.rm = TRUE)]
+      leaf_false_discovery_prop <- nodes_dt[num_leaves == 1 & nonnull == FALSE & !is.na(p), sum(p <= a, na.rm = TRUE) / max(1, leaf_rejections)]
     } else {
-      leaf_power <- NA
-      leaf_rejections <- NA
-      leaf_true_discoveries <- NA
-      leaf_any_false_rejection <- NA
-      leaf_false_rejection_prop <- NA
-      leaf_false_discovery_prop <- NA
+      leaf_power <- 0
+      leaf_rejections <- 0
+      leaf_true_discoveries <- 0
+      leaf_any_false_rejection <- 0
+      leaf_false_rejection_prop <- 0
+      leaf_false_discovery_prop <- 0
     }
 
     test_summary <- data.table(
