@@ -283,7 +283,7 @@ pTestTwice <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
   if (is.null(simthresh) | nrow(thedat) > simthresh) {
     suppressWarnings(
       # thep <- pvalue(independence_test(newfmla, data = thedat, teststat = "maximum", alternative="greater"))[[1]]
-      thep <- pvalue(independence_test(newfmla, data = thedat, teststat = "quadratic"))[[1]]
+      thep <- pvalue(independence_test(newfmla, data = thedat, teststat = "maximum"))[[1]]
     )
   } else {
     if (parallel == "no") {
@@ -292,7 +292,7 @@ pTestTwice <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
     suppressWarnings(
       thep <- pvalue(independence_test(newfmla,
         data = thedat,
-        teststat = "quadratic",
+        teststat = "maximum",
         ## 	alternative= "greater",
         distribution = approximate(
           nresample = sims,
