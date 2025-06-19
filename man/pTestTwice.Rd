@@ -25,24 +25,29 @@ pTestTwice(
 number (meaning sampling from the randomization distribution implied by the
 formula)}
 
-\item{parallel}{is "no" then parallelization is not required, otherwise it is "multicore" or "snow" in the call to \code{coin::independence_test()} (see  help for coin::approximate()). Also, if parallel is not "no" and \code{adaptive_dist_function} is TRUE, then an openmp version of the distance creation function is called using \code{ncpu} threads (or \code{parallel::detectCores(logical=FALSE)} cores).}
+\item{parallel}{is "no" then parallelization is not required, otherwise it
+is "multicore" or "snow" in the call to \code{coin::independence_test()} (see
+help for coin::approximate()). Also, if parallel is not "no" and
+\code{adaptive_dist_function} is TRUE, then an openmp version of the distance
+creation function is called using \code{ncpu} threads (or
+\code{parallel::detectCores(logical=FALSE)} cores).}
 
 \item{ncpu}{is number of cpus  to be used for parallel operation.}
 
 \item{groups}{is a vector defining the groups within which the inter-unit  distances are calculated. Not used here.}
 
-\item{distfn}{is  a function that produces one or more vectors (a data frame or matrix) of the  same number of  rows as the dat}
-
-\item{adaptive_dist_function}{is TRUE if the distance calculation function should be chosen using previous benchmarks. See the code.}
+\item{distfn}{is  a function that produces one or more vectors (a data frame
+or matrix) of the  same number of  rows as the dat}
 }
 \value{
 A p-value
 }
 \description{
-These functions accept a data frame and perhaps test specific arguments
-(like whether or not the test will be asymptotic or simulation based). It
-produces a p-value.
+These functions accept a data frame and perhaps test specific
+arguments (like whether or not the test will be asymptotic or simulation
+based). It produces a p-value.
 }
 \details{
-For now, this  function  does an omnibus-style max-T test using (1) the raw outcome and (2) a rank transformed raw outcome.
+For now, this  function  does an omnibus-style max-T test using (1)
+the raw outcome and (2) a rank transformed raw outcome. Inspired by Rosenbaum (2008) on Testing Twicee
 }

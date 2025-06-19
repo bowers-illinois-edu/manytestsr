@@ -18,13 +18,16 @@ pWilcox(
 
 \item{fmla}{outcome~treatment factor | block factor (following \code{coin} API).}
 
-\item{simthresh}{Below which number of total observations should the p-value functions use permutations rather than asymptotic approximations}
+\item{simthresh}{Below which number of total observations should the p-value
+functions use permutations rather than asymptotic approximations}
 
 \item{sims}{Either NULL (meaning use an asymptotic reference dist) or a
 number (meaning sampling from the randomization distribution implied by the
 formula)}
 
-\item{parallel}{Should the function use multicore processing for permutation based testing. Default is no. But could be "snow" or "multicore" following \code{approximate} in the coin package.}
+\item{parallel}{Should the function use multicore processing for permutation
+based testing. Default is no. But could be "snow" or "multicore" following
+\code{approximate} in the coin package.}
 
 \item{ncpu}{is the number of workers (for "snow") or cores (for "multicore").}
 }

@@ -287,24 +287,55 @@ Rcpp::NumericMatrix vecdist2(const Rcpp::NumericVector &x) {
 }
 
 
+/*  Average (mid-) ranks like R's rank(..., ties.method = "average").
+ *  Returns a double vector of length n, 1-based.
+ *
+ *  No special NA handling: if x contains NaN you will get NaN ranks.
+ */
 // [[Rcpp::export]]
 arma::vec avg_rank_arma(const arma::vec &x) {
-  R_xlen_t sz = x.n_elem;
-  arma::vec w = arma::linspace(0, sz - 1, sz);
-  std::sort(w.begin(), w.end(),
-            [&x](std::size_t i, std::size_t j) { return x[i] < x[j]; });
 
-  arma::vec r(sz);
-  for (R_xlen_t n, i = 0; i < sz; i += n) {
-    n = 1;
-    while (i + n < sz && x[w[i]] == x[w[i + n]])
-      ++n;
-    for (R_xlen_t k = 0; k < n; k++) {
-      r[w[i + k]] = i + (n + 1) / 2.;
-    }
+  const arma::uword n = x.n_elem;
+  if (n == 0) return arma::vec();          // nothing to do
+
+  // order vector: positions 0..n-1 sorted by ascending x
+  arma::uvec ord = sort_index(x, "ascend");
+
+  arma::vec rankv(n);
+
+  for (arma::uword i = 0; i < n; ) {
+    // find end of tie block
+    arma::uword j = i + 1;
+    while (j < n && x[ord[i]] == x[ord[j]]) ++j;
+
+    double mid = (i + j - 1) / 2.0 + 1.0;   // average rank, 1-based
+    for (arma::uword k = i; k < j; ++k)
+      rankv[ord[k]] = mid;
+
+    i = j;
   }
-  return r;
+  return rankv;
 }
+
+
+
+//arma::vec avg_rank_arma(const arma::vec &x) {
+//  R_xlen_t sz = x.n_elem;
+//  arma::vec w = arma::linspace(0, sz - 1, sz);
+//  std::sort(w.begin(), w.end(),
+//            [&x](std::size_t i, std::size_t j) { return x[i] < x[j]; });
+//
+//  arma::vec r(sz);
+//  for (R_xlen_t n, i = 0; i < sz; i += n) {
+//    n = 1;
+//    while (i + n < sz && x[w[i]] == x[w[i + n]])
+//      ++n;
+//    for (R_xlen_t k = 0; k < n; k++) {
+//      r[w[i + k]] = i + (n + 1) / 2.;
+//    }
+//  }
+//  return r;
+//}
 
 // see http://arma.sourceforge.net/docs.html#conv_to
 typedef std::vector<double> stdvec;

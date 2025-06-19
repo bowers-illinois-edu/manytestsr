@@ -12,51 +12,81 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // fast_dists_and_trans
-Rcpp::List fast_dists_and_trans(const arma::vec& x, const arma::vec& Z);
-RcppExport SEXP _manytestsr_fast_dists_and_trans(SEXP xSEXP, SEXP ZSEXP) {
+Rcpp::List fast_dists_and_trans(const arma::vec& x);
+RcppExport SEXP _manytestsr_fast_dists_and_trans(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type Z(ZSEXP);
-    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans(x, Z));
+    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans(x));
     return rcpp_result_gen;
 END_RCPP
 }
 // fast_dists_and_trans_by_unit_arma
-Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec& x, const arma::vec& Z);
-RcppExport SEXP _manytestsr_fast_dists_and_trans_by_unit_arma(SEXP xSEXP, SEXP ZSEXP) {
+Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec& x);
+RcppExport SEXP _manytestsr_fast_dists_and_trans_by_unit_arma(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type Z(ZSEXP);
-    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_by_unit_arma(x, Z));
+    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_by_unit_arma(x));
     return rcpp_result_gen;
 END_RCPP
 }
 // fast_dists_and_trans_by_unit_arma2_par
-Rcpp::List fast_dists_and_trans_by_unit_arma2_par(const arma::vec& x, const arma::vec& Z, const int threads);
-RcppExport SEXP _manytestsr_fast_dists_and_trans_by_unit_arma2_par(SEXP xSEXP, SEXP ZSEXP, SEXP threadsSEXP) {
+Rcpp::List fast_dists_and_trans_by_unit_arma2_par(const arma::vec& x, const int threads);
+RcppExport SEXP _manytestsr_fast_dists_and_trans_by_unit_arma2_par(SEXP xSEXP, SEXP threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type Z(ZSEXP);
     Rcpp::traits::input_parameter< const int >::type threads(threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_by_unit_arma2_par(x, Z, threads));
+    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_by_unit_arma2_par(x, threads));
     return rcpp_result_gen;
 END_RCPP
 }
 // fast_dists_and_trans_by_unit_arma2
-Rcpp::List fast_dists_and_trans_by_unit_arma2(const arma::vec& x, const arma::vec& Z);
-RcppExport SEXP _manytestsr_fast_dists_and_trans_by_unit_arma2(SEXP xSEXP, SEXP ZSEXP) {
+Rcpp::List fast_dists_and_trans_by_unit_arma2(const arma::vec& x);
+RcppExport SEXP _manytestsr_fast_dists_and_trans_by_unit_arma2(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type Z(ZSEXP);
-    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_by_unit_arma2(x, Z));
+    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_by_unit_arma2(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fast_dists_and_trans_new
+Rcpp::List fast_dists_and_trans_new(const arma::vec& x);
+RcppExport SEXP _manytestsr_fast_dists_and_trans_new(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_new(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fast_dists_and_trans_new_omp
+Rcpp::List fast_dists_and_trans_new_omp(const arma::vec& x, int threads);
+RcppExport SEXP _manytestsr_fast_dists_and_trans_new_omp(SEXP xSEXP, SEXP threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_new_omp(x, threads));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mean_dist_raw_rank
+Rcpp::List mean_dist_raw_rank(const arma::vec& y);
+RcppExport SEXP _manytestsr_mean_dist_raw_rank(SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(mean_dist_raw_rank(y));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -401,10 +431,13 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_manytestsr_fast_dists_and_trans", (DL_FUNC) &_manytestsr_fast_dists_and_trans, 2},
-    {"_manytestsr_fast_dists_and_trans_by_unit_arma", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit_arma, 2},
-    {"_manytestsr_fast_dists_and_trans_by_unit_arma2_par", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit_arma2_par, 3},
-    {"_manytestsr_fast_dists_and_trans_by_unit_arma2", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit_arma2, 2},
+    {"_manytestsr_fast_dists_and_trans", (DL_FUNC) &_manytestsr_fast_dists_and_trans, 1},
+    {"_manytestsr_fast_dists_and_trans_by_unit_arma", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit_arma, 1},
+    {"_manytestsr_fast_dists_and_trans_by_unit_arma2_par", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit_arma2_par, 2},
+    {"_manytestsr_fast_dists_and_trans_by_unit_arma2", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit_arma2, 1},
+    {"_manytestsr_fast_dists_and_trans_new", (DL_FUNC) &_manytestsr_fast_dists_and_trans_new, 1},
+    {"_manytestsr_fast_dists_and_trans_new_omp", (DL_FUNC) &_manytestsr_fast_dists_and_trans_new_omp, 2},
+    {"_manytestsr_mean_dist_raw_rank", (DL_FUNC) &_manytestsr_mean_dist_raw_rank, 1},
     {"_manytestsr_fastMean", (DL_FUNC) &_manytestsr_fastMean, 1},
     {"_manytestsr_fastMedian", (DL_FUNC) &_manytestsr_fastMedian, 1},
     {"_manytestsr_fastVar", (DL_FUNC) &_manytestsr_fastVar, 1},

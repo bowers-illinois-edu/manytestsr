@@ -12,7 +12,7 @@
 #include "fastfns.h"
 
 //[[Rcpp::export]]
-Rcpp::List fast_dists_and_trans(const arma::vec &x, const arma::vec &Z) {
+Rcpp::List fast_dists_and_trans(const arma::vec &x) {
   // https://stackoverflow.com/questions/24997510/how-to-speed-up-this-rcpp-function
   //  Z is not used
   int n = x.n_elem;
@@ -44,8 +44,7 @@ Rcpp::List fast_dists_and_trans(const arma::vec &x, const arma::vec &Z) {
 }
 
 //[[Rcpp::export]]
-Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec &x,
-                                             const arma::vec &Z) {
+Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec &x) {
   // https://hydroecology.net/using-r-and-cpp-together/
   // In the end, Rcpp stuff is as efficient as using pointers etc
   arma::uword n = x.n_elem, i = 0, j = 0;
@@ -99,7 +98,6 @@ Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec &x,
 
 //[[Rcpp::export]]
 Rcpp::List fast_dists_and_trans_by_unit_arma2_par(const arma::vec &x,
-                                                  const arma::vec &Z,
                                                   const int threads = 4) {
 #ifdef _OPENMP
   if (threads > 0)
@@ -156,8 +154,7 @@ Rcpp::List fast_dists_and_trans_by_unit_arma2_par(const arma::vec &x,
 }
 
 //[[Rcpp::export]]
-Rcpp::List fast_dists_and_trans_by_unit_arma2(const arma::vec &x,
-                                              const arma::vec &Z) {
+Rcpp::List fast_dists_and_trans_by_unit_arma2(const arma::vec &x) {
   // this version avoids the inner loop using vectors.
   arma::uword n = x.n_elem, i;
 
@@ -205,4 +202,186 @@ Rcpp::List fast_dists_and_trans_by_unit_arma2(const arma::vec &x,
   // "tanhx")
   Rcpp::List res = List::create(mndx, mndrx, maxdx, rankx, tanhx);
   return (res);
+}
+
+
+/*  Compute, for every unit i:
+ *    – mean |x_i − x_j|               (col 1)
+ *    – mean |rank_i − rank_j|         (col 2)
+ *    – max  |x_i − x_j|               (col 3)
+ *    – raw rank (average-rank)        (col 4)
+ *    – tanh(x_i)                      (col 5)
+ *
+ *  All distances are taken across *all other* units j ≠ i.
+ *
+ *  @param x Numeric vector of outcomes.
+ *  @param Z Unused at the moment (reserved for future stratification).
+ *  @return R list with named components.
+ */
+// [[Rcpp::export]]
+Rcpp::List fast_dists_and_trans_new(const arma::vec &x) {
+
+  const arma::uword n = x.n_elem;
+  if (n < 2) stop("x must have length >= 2");
+
+  arma::vec rankx = avg_rank_arma(x);      // mid-ranks, ties OK
+  arma::vec tanhx = arma::tanh(x);
+
+  arma::vec mean_raw(n,  arma::fill::zeros);
+  arma::vec mean_rank(n, arma::fill::zeros);
+  arma::vec max_raw(n,   arma::fill::zeros);
+  arma::vec max_rank(n,  arma::fill::zeros);
+
+  for (arma::uword i = 0; i < n; ++i) {
+    double xi = x[i], ri = rankx[i];
+    double sum_raw  = 0.0, sum_rank = 0.0;
+    double mx_raw   = 0.0, mx_rank  = 0.0;
+
+    for (arma::uword j = 0; j < n; ++j) {
+      if (i == j) continue;
+      double d  = std::abs(xi - x[j]);
+      double dr = std::abs(ri - rankx[j]);
+
+      sum_raw  += d;
+      sum_rank += dr;
+      if (d  > mx_raw)  mx_raw  = d;
+      if (dr > mx_rank) mx_rank = dr;
+    }
+    mean_raw[i]  = sum_raw  / (n - 1);
+    mean_rank[i] = sum_rank / (n - 1);
+    max_raw[i]   = mx_raw;
+    max_rank[i]  = mx_rank;
+  }
+
+  return List::create(
+    _["mean_dist"]        = mean_raw,
+    _["mean_rank_dist"]   = mean_rank,
+    _["max_dist"]         = max_raw,
+    _["max_rank_dist"]    = max_rank,
+    _["rankY"]             = rankx,
+    _["tanhY"]             = tanhx
+  );
+}
+
+
+
+/*  Compute, for every unit i, using parallelism:
+ *    – mean |x_i − x_j|               (col 1)
+ *    – mean |rank_i − rank_j|         (col 2)
+ *    – max  |x_i − x_j|               (col 3)
+ *    – raw rank (average-rank)        (col 4)
+ *    – tanh(x_i)                      (col 5)
+ *
+ *  All distances are taken across *all other* units j ≠ i.
+ *
+ *  @param x Numeric vector of outcomes.
+ *  @param Z Unused at the moment (reserved for future stratification).
+ *  @return R list with named components.
+ */
+// [[Rcpp::export]]
+Rcpp::List fast_dists_and_trans_new_omp(const arma::vec &x, int threads=0) {
+
+  #ifdef _OPENMP
+  // turn off OpenMP’s own dynamic adjustment (optional but predictable)
+  omp_set_dynamic(0);
+
+  if (threads > 0)
+    omp_set_num_threads(threads);            // user-supplied
+  /* else              */
+  /*   keep whatever OMP_NUM_THREADS or omp_set_num_threads()  */
+  /*   has already established for this R session              */
+#endif
+
+  const arma::uword n = x.n_elem;
+  if (n < 2) stop("x must have length >= 2");
+
+  arma::vec rankx = avg_rank_arma(x);      // mid-ranks, ties OK
+  arma::vec tanhx = arma::tanh(x);
+
+  arma::vec mean_raw(n,  arma::fill::zeros);
+  arma::vec mean_rank(n, arma::fill::zeros);
+  arma::vec max_raw(n,   arma::fill::zeros);
+  arma::vec max_rank(n,  arma::fill::zeros);
+
+  #ifdef _OPENMP
+#pragma omp parallel for default(none) shared(n,x,rankx,mean_raw,mean_rank,max_raw,max_rank)
+#endif
+
+  for (arma::uword i = 0; i < n; ++i) {
+    double xi = x[i], ri = rankx[i];
+    double sum_raw  = 0.0, sum_rank = 0.0;
+    double mx_raw   = 0.0, mx_rank  = 0.0;
+
+    for (arma::uword j = 0; j < n; ++j) {
+      if (i == j) continue;
+      double d  = std::abs(xi - x[j]);
+      double dr = std::abs(ri - rankx[j]);
+
+      sum_raw  += d;
+      sum_rank += dr;
+      if (d  > mx_raw)  mx_raw  = d;
+      if (dr > mx_rank) mx_rank = dr;
+    }
+    mean_raw[i]  = sum_raw  / (n - 1);
+    mean_rank[i] = sum_rank / (n - 1);
+    max_raw[i]   = mx_raw;
+    max_rank[i]  = mx_rank;
+  }
+
+  return List::create(
+    _["mean_dist"]        = mean_raw,
+    _["mean_rank_dist"]   = mean_rank,
+    _["max_dist"]         = max_raw,
+    _["max_rank_dist"]    = max_rank,
+    _["rankY"]             = rankx,
+    _["tanhY"]             = tanhx
+  );
+}
+
+//’ Compute mean pairwise distances on raw and ranked scales 
+//’
+//’ Given a numeric vector y of length n (n ≥ 2), returns an n × 2 matrix
+//’ where:
+//’   - col 1: mean absolute difference |y[i] − y[j]| over all j ≠ i
+//’   - col 2: same calculation on the average (mid‐)ranks of y
+//’
+//’ @param y Numeric vector of length ≥ 2.
+//’ @return List with two vectors: raw distances, rank distances.
+//’ @example
+//’ y <- c(1.2, 3.4, 2.2, 3.4)
+//’ mean_dist_raw_rank(y)
+//’ @export
+// [[Rcpp::export]]
+Rcpp::List mean_dist_raw_rank(const arma::vec& y) {
+  const int n = y.n_elem;
+  if (n < 2) {
+    Rcpp::stop("mean_dist_raw_rank(): input vector must have length ≥ 2.");
+  }
+
+  // 1. Compute mid‐ranks exactly as R’s rank(..., ties.method="average")
+  arma::vec rankv = avg_rank_arma(y);
+
+  // 2. Allocate output: column 0 = raw, column 1 = rank‐based
+  arma::mat out(n, 2, arma::fill::zeros);
+
+  // 3. O(n²) loop—tight and no extra allocation
+  for (int a = 0; a < n; ++a) {
+    double sum_raw  = 0.0;
+    double sum_rank = 0.0;
+    double ya = y[a];
+    double ra = rankv[a];
+    for (int b = 0; b < n; ++b) {
+      if (a == b) continue;
+      sum_raw  += std::abs(ya - y[b]);
+      sum_rank += std::abs(ra - rankv[b]);
+    }
+    out(a, 0) = sum_raw  / (n - 1);
+    out(a, 1) = sum_rank / (n - 1);
+  }
+
+  return Rcpp::List::create(
+    Rcpp::Named("mndx")  = Rcpp::wrap(out.col(0)),
+    Rcpp::Named("mndrx") = Rcpp::wrap(out.col(1))
+  );
+//  return out;
 }

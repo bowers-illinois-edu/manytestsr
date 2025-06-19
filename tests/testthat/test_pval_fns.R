@@ -3,7 +3,7 @@
 # And on outcomes that people would treat as continuous but which have lots of ties and zeros and skew
 context("Performance of  P-value Functions")
 
-interactive <- FALSE
+interactive <- TRUE
 if (interactive) {
   library(here)
   library(data.table)
@@ -32,6 +32,24 @@ setDTthreads(1)
 
 # b1 is block level
 # idat is individual level
+
+test_that("Each pvalue function works with no errors using the canceling out effects outcome.", {
+  res_oneway <- pOneway(
+    dat = idat, fmla = Y ~ ZF | bF, ncpu = 4, parallel = "multicore"
+  )
+  res_wilcox <- pWilcox(
+    dat = idat, fmla = Y ~ ZF | bF, ncpu = 4, parallel = "multicore"
+  )
+  res_twice <- pTestTwice(
+    dat = idat, fmla = Y ~ ZF | bF, ncpu = 4, parallel = "multicore"
+  )
+  res_indep <- pIndepDist(
+    dat = idat, fmla = Y ~ ZF | bF, ncpu = 4, parallel = "multicore"
+  )
+  res_4way <- pCombCauchyDist(
+    dat = idat, fmla = Y ~ ZF | bF, ncpu = 4, parallel = "multicore"
+  )
+})
 
 test_that("Basics of the omnibus test works as expected in regards False Positive Rate for single tests", {
   ### Ensuring no effects
@@ -184,6 +202,9 @@ test_that("passing a block factor to a p-value function with one block gives the
   res_null_b1_noblock <- pIndepDist(dat = b1, fmla = Ynull ~ ZF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
   expect_equal(res_null_b1_block, res_null_b1_block)
 })
+
+
+
 
 
 ## Below is the search for a better set of test statistics:

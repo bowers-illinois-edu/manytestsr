@@ -19,20 +19,18 @@ Rcpp::NumericVector zscore_vec(const arma::vec &X);
 arma::mat vecdist_arma(const arma::vec &x);
 arma::mat vecdist_squared(const arma::vec &A);
 arma::mat vecdist3_arma(const arma::vec &A);
-Rcpp::List fast_dists_and_trans(const arma::vec &x, const arma::vec &Z);
+Rcpp::List fast_dists_and_trans(const arma::vec &x);
 Rcpp::NumericMatrix vecdist2(const Rcpp::NumericVector &x);
 void minus_c(double f[], double &x, double *y, int offset, int &len);
 Rcpp::NumericVector avg_rank(const Rcpp::NumericVector &x);
 arma::vec avg_rank_arma(const arma::vec &x);
-Rcpp::List fast_dists_and_trans_by_unit(const Rcpp::NumericVector &x,
-                                        const Rcpp::NumericVector &Z);
+Rcpp::List fast_dists_and_trans_by_unit(const Rcpp::NumericVector &x);
 double fastmad(const Rcpp::NumericVector &x, double center = -99.0);
 void inner_dist(double f[], double &x, double *y, int offset, int &len);
-Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec &x,
-                                             const arma::vec &Z);
-Rcpp::List fast_dists_and_trans_by_unit_arma2(const arma::vec &x,
-                                              const arma::vec &Z);
+Rcpp::List fast_dists_and_trans_by_unit_arma(const arma::vec &x);
+Rcpp::List fast_dists_and_trans_by_unit_arma2(const arma::vec &x);
 double fastmad_arma(const arma::vec &x);
-Rcpp::List fast_dists_and_trans_by_unit_arma2_par(const arma::vec &x,
-                                                  const arma::vec &Z,
-                                                  const int threads);
+Rcpp::List fast_dists_and_trans_by_unit_arma2_par(const arma::vec &x, const int threads);
+Rcpp::List mean_dist_raw_rank(const arma::vec& y);
+Rcpp::List fast_dists_and_trans_new(const arma::vec &x);
+Rcpp::List fast_dists_and_trans_new_omp(const arma::vec &x, int threads);
