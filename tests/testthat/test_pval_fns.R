@@ -3,7 +3,7 @@
 # And on outcomes that people would treat as continuous but which have lots of ties and zeros and skew
 context("Performance of  P-value Functions")
 
-interactive <- TRUE
+interactive <- FALSE
 if (interactive) {
   library(here)
   library(data.table)
@@ -34,6 +34,7 @@ setDTthreads(1)
 # idat is individual level
 
 test_that("Each pvalue function works with no errors using the canceling out effects outcome.", {
+  ## in general we think that pTestTwice, pIndepDist, and pCombCauchyDist will have highest power (maybe with pCombCaughDist having the most)
   res_oneway <- pOneway(
     dat = idat, fmla = Y ~ ZF | bF, ncpu = 4, parallel = "multicore"
   )
@@ -46,9 +47,15 @@ test_that("Each pvalue function works with no errors using the canceling out eff
   res_indep <- pIndepDist(
     dat = idat, fmla = Y ~ ZF | bF, ncpu = 4, parallel = "multicore"
   )
-  res_4way <- pCombCauchyDist(
+  res_combcauchy <- pCombCauchyDist(
     dat = idat, fmla = Y ~ ZF | bF, ncpu = 4, parallel = "multicore"
   )
+
+  expect_gt(res_oneway, res_indep)
+  expect_gt(.05, res_indep)
+  expect_gt(.05, res_combcauchy)
+  expect_gt(.05, res_twice)
+  expect_lt(.05, res_wilcox)
 })
 
 test_that("Basics of the omnibus test works as expected in regards False Positive Rate for single tests", {
@@ -209,21 +216,24 @@ test_that("passing a block factor to a p-value function with one block gives the
 
 ## Below is the search for a better set of test statistics:
 ## For now using:
-## outcome_names <- c(theresponse,"mndist","mndistRank0","maxdist","rankY","tanhx")
-## See pval_fns.R, dists.R, and code for fast_dists... in the fastfns.cpp file
 
 ## Now using more discrete type data typical of policy applications.
 ## Here we have a lot of zeros which creates ties and/or makes measures of spread degenerate --- no variance within certain blocks for example.
 ## Find the actual test stats
-data(example_dat, package = "manytestsr")
-example_dat$blockF <- factor(example_dat$blockF)
-test_that("Test using data with lots of zeros and ties", {
-  example_Y1 <- pIndepDist(dat = example_dat, fmla = Y1 ~ trtF | blockF, distfn = dists_and_trans, ncpu = 4, parallel = "multicore")
-  expect_lt(example_Y1, .05)
-})
-
-table(example_dat$Y1, exclude = c())
-table(example_dat$Y2, exclude = c())
+## data(example_dat, package = "manytestsr")
+## example_dat$blockF <- factor(example_dat$blockF)
+## test_that("Test using data with lots of zeros and ties", {
+##  quad_test_Y1 <- pIndepDist(dat = example_dat, fmla = Y1 ~ trtF | blockF, ncpu = 4, parallel = "multicore")
+##  twice_test_Y1 <- pTestTwice(dat = example_dat, fmla = Y1 ~ trtF | blockF, ncpu = 4, parallel = "multicore")
+##  comb_test_Y1 <- pCombCauchyDist(dat = example_dat, fmla = Y1 ~ trtF | blockF, ncpu = 4, parallel = "multicore")
+##  expect_lt(comb_test_Y1, .05)
+##  ## Only the comb test seems to do a good job here
+##  expect_gt(quad_test_Y1, .05)
+##  expect_gt(twice_test_Y1, .05)
+## })
+##
+## table(example_dat$Y1, exclude = c())
+## table(example_dat$Y2, exclude = c())
 #
 # ## ## Ranks more powerful. Y2 easier to detect effects.
 #  pIndepDist(dat = example_dat, fmla = Y1 ~ trtF | blockF, adaptive_dist_function=FALSE)

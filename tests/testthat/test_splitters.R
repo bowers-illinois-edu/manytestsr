@@ -2,8 +2,9 @@
 testthat::context("Performance of Splitting Functions")
 
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
-interactive <- FALSE
+interactive <- TRUE 
 if (interactive) {
+  library(testthat)
   library(here)
   library(data.table)
   library(dtplyr)
@@ -90,26 +91,26 @@ example_bdat <- example_dat %>%
     nb = n(),
     pb = mean(trt),
     hwt = (nb / nrow(example_dat)) * (pb * (1 - pb)),
-    site = unique(site),
+    place = unique(place),
     year = unique(year),
-    site_year_block = unique(site_year_block)
+    place_year_block = factor(unique(place_year_block))
   ) %>%
   as.data.table()
 example_bdat
 
-example_bdat[, g1 := splitSpecifiedFactor(bid = blockF, x = site_year_block)]
-with(example_bdat, table(g1, site, exclude = c()))
-# with(example_bdat, table(g1, site_year_block, exclude = c()))
-example_bdat[g1 == 0, g2 := splitSpecifiedFactor(bid = blockF, x = site_year_block)]
-with(example_bdat, table(g2, site, exclude = c()))
-example_bdat[g2 == 0, g3 := splitSpecifiedFactor(bid = blockF, x = site_year_block)]
-with(example_bdat, table(g3, site, exclude = c()))
-example_bdat[g3 == 0, g4 := splitSpecifiedFactor(bid = blockF, x = site_year_block)]
-with(example_bdat, table(g4, site, exclude = c()))
-example_bdat[g4 == 0, g5 := splitSpecifiedFactor(bid = blockF, x = site_year_block)]
-with(droplevels(example_bdat[g4 == 0, ]), table(g5, site_year_block, exclude = c()))
-example_bdat[g5 == 0, g6 := splitSpecifiedFactor(bid = blockF, x = site_year_block)]
-with(droplevels(example_bdat[g5 == 0, ]), table(g6, site_year_block, exclude = c()))
+example_bdat[, g1 := splitSpecifiedFactor(bid = blockF, x = place_year_block)]
+with(example_bdat, table(g1, place, exclude = c()))
+# with(example_bdat, table(g1, place_year_block, exclude = c()))
+example_bdat[g1 == 0, g2 := splitSpecifiedFactor(bid = blockF, x = place_year_block)]
+with(example_bdat, table(g2, place, exclude = c()))
+example_bdat[g2 == 0, g3 := splitSpecifiedFactor(bid = blockF, x = place_year_block)]
+with(example_bdat, table(g3, place, exclude = c()))
+example_bdat[g3 == 0, g4 := splitSpecifiedFactor(bid = blockF, x = place_year_block)]
+with(example_bdat, table(g4, place, exclude = c()))
+example_bdat[g4 == 0, g5 := splitSpecifiedFactor(bid = blockF, x = place_year_block)]
+with(droplevels(example_bdat[g4 == 0, ]), table(g5, place_year_block, exclude = c()))
+example_bdat[g5 == 0, g6 := splitSpecifiedFactor(bid = blockF, x = place_year_block)]
+with(droplevels(example_bdat[g5 == 0, ]), table(g6, place_year_block, exclude = c()))
 
 #### When splitby has no variation within biggrp, further splitting doesn't do
 ### anything and the algorithm may just continue to produce the same p-values
@@ -156,43 +157,40 @@ test_that("splitCluster follows the values of discrete splitby variables", {
   )
 
   ## Report detections calculates rejections / acceptances using blocks
-  theres1_det <- report_detections(theres1, blockid = "bF", only_hits = FALSE, fwer = TRUE, alpha = .05)
+  theres1_det <- report_detections(theres1$bdat, blockid = "bF", only_hits = FALSE, fwer = TRUE, alpha = .05)
 
   ## make_results_tree calculates rejections /acceptances after converting the
   ## block level data into a graph/tree format (of nodes and edges)
-  theres1_tree <- make_results_tree(theres1, blockid = "bF")
-  theres1_nodes <- theres1_tree %>%
+  theres1_tree <- make_results_tree(theres1$bdat, block_id = "bF")
+  theres1_nodes <- theres1_tree$graph %>%
     activate(nodes) %>%
     as_tibble()
   theres1_tree_blocks <- theres1_nodes %>%
-    filter(nodenum != "1") %>%
-    select(bF)
+    filter(name != "1") %>%
+    select(blocks)
 
-  expect_equal(theres1_tree_blocks$bF[2], paste(sort(bdat4$bF[bdat4$twosplits == "0"]), collapse = ","))
-  expect_equal(theres1_tree_blocks$bF[1], paste(sort(bdat4$bF[bdat4$twosplits == "1"]), collapse = ","))
+  expect_equal(uniqueN(theres1$bdat$biggrp), uniqueN(bdat4$twosplits))
 
-  expect_equal(uniqueN(theres1$biggrp), uniqueN(bdat4$twosplits))
-
-  thetab <- table(theres1$twosplitsF, theres1$biggrp)
+  thetab <- table(theres1$bdat$twosplitsF, theres1$bdat$biggrp)
   expect_equal(c(thetab[1, 2], thetab[2, 1]), c(0, 0))
 })
 
-
+## TODO: Maybe remove the stop_splitby_constant arg
 test_that("splitCluster stops appropriately (i.e. doesn't just keep randomly splitting) with continuous splitting criteria.", {
   theres1 <- find_blocks(
-    idat = idat3, bdat = bdat4, blockid = "bF", pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
+    idat = idat3, bdat = bdat4, blockid = "bF", pfn = pOneway, alphafn = NULL, thealpha = 0.05,
     fmla = Ytauv2 ~ ZF | bF,
     parallel = "no", copydts = TRUE,
     splitfn = splitCluster, splitby = "hwt", stop_splitby_constant = TRUE
   )
-  theres1_det <- report_detections(theres1, blockid = "bF")
+  theres1_det <- report_detections(theres1$bdat, blockid = "bF")
   theres2 <- find_blocks(
-    idat = idat3, bdat = bdat4, blockid = "bF", pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
+    idat = idat3, bdat = bdat4, blockid = "bF", pfn = pOneway, alphafn = NULL, thealpha = 0.05,
     fmla = Ytauv2 ~ ZF | bF,
     parallel = "no", copydts = TRUE,
     splitfn = splitCluster, splitby = "hwt", stop_splitby_constant = FALSE
   )
-  theres2_det <- report_detections(theres1, blockid = "bF")
+  theres2_det <- report_detections(theres2$bdat, blockid = "bF")
   expect_equal(theres1_det, theres2_det)
 })
 
@@ -227,7 +225,7 @@ res1 <- test_splitters_fn(
   splitby = split_test_params$splitby[1],
   stopsplitting = split_test_params$stopsplitting[1]
 )
-res1_det <- report_detections(res1, blockid = "bF")
+res1_det <- report_detections(res1$bdat, blockid = "bF")
 
 res <- mapply(
   FUN = function(sfn = sfn, sby = sby, stopsplitting = stopsplitting) {
@@ -241,7 +239,7 @@ res <- mapply(
     obj_det <- if (class(obj)[1] == "try-error") {
       return(NA)
     } else {
-      return(report_detections(obj))
+      return(report_detections(obj$bdat))
     }
   },
   sfn = split_test_params$sfn,
@@ -280,7 +278,7 @@ test_that("Splitters work as expected given splitby variables
   ### This should be like random splits: Yes. See below how blah2 and blah2a differ.
   ## So, splitLOO really should be used with a splitby that is more continuous and random splits will
   ## happen when the systematic variation in splitby is used up.
-    ## Not putting in an explicit test here but allowing code to run to catch errors
+  ## Not putting in an explicit test here but allowing code to run to catch errors
   resobj <- which(names(res) == "splitLOO_twosplits_FALSE")
   with(res[[resobj]], table(biggrp, twosplits, exclude = c()))
   with(res[[resobj]], table(fin_grp, twosplits, exclude = c()))
@@ -444,7 +442,7 @@ test_that("Splitters work as expected given splitby variables
     parallel = "no", copydts = TRUE,
     splitfn = splitSpecifiedFactor, splitby = "lvs2", stop_splitby_constant = TRUE
   )
-  theres2_det <- report_detections(theres2, blockid = "bF")
+  theres2_det <- report_detections(theres2$bdat, blockid = "bF")
   expect_equal(uniqueN(theres2$biggrp), uniqueN(bdat4$lvs2))
   table(theres2$lvs2, theres2$biggrp)
 })

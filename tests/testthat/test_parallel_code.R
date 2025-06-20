@@ -37,10 +37,10 @@ numcores <- 4 # floor(cores/2)
 test_that("All algorithms give the same answers", {
   y <- rnorm(10)
   tmp1 <- dists_and_trans(y)
-  tmp2 <- fast_dists_and_trans(y, Z = 1)
-  tmp3 <- fast_dists_and_trans_by_unit_arma(y, Z = 1)
-  tmp4 <- fast_dists_and_trans_by_unit_arma2(y, Z = 1)
-  tmp5 <- fast_dists_and_trans_by_unit_arma2_par(y, Z = 1, threads = numcores)
+  tmp2 <- fast_dists_and_trans(y)
+  tmp3 <- fast_dists_and_trans_by_unit_arma(y)
+  tmp4 <- fast_dists_and_trans_by_unit_arma2(y)
+  tmp5 <- fast_dists_and_trans_by_unit_arma2_par(y, threads = numcores)
   #
   test_length_fn(tmp1, tmp2)
   test_length_fn(tmp1, tmp3)
@@ -54,10 +54,10 @@ test_that("All algorithms give the same answers", {
   #
   y <- rchisq(1000, df = 1)
   tmp1 <- dists_and_trans(y)
-  tmp2 <- fast_dists_and_trans(y, Z = 1)
-  tmp3 <- fast_dists_and_trans_by_unit_arma(y, Z = 1)
-  tmp4 <- fast_dists_and_trans_by_unit_arma2(y, Z = 1)
-  tmp5 <- fast_dists_and_trans_by_unit_arma2_par(y, Z = 1, threads = numcores)
+  tmp2 <- fast_dists_and_trans(y)
+  tmp3 <- fast_dists_and_trans_by_unit_arma(y)
+  tmp4 <- fast_dists_and_trans_by_unit_arma2(y)
+  tmp5 <- fast_dists_and_trans_by_unit_arma2_par(y, threads = numcores)
   #
   test_length_fn(tmp1, tmp2)
   test_length_fn(tmp1, tmp3)
@@ -77,10 +77,10 @@ test_that("All algorithms give the same answers", {
 ##
 ## res1 <- bench::mark(
 ##   main = dists_and_trans(y),
-##   fastdandtrans = fast_dists_and_trans(y, Z = 1),
-##   byunit_arma = fast_dists_and_trans_by_unit_arma(y, Z = 1),
-##   byunit_arma2 = fast_dists_and_trans_by_unit_arma2(y, Z = 1),
-##   byunit_par = fast_dists_and_trans_by_unit_arma2_par(y, Z = 1, threads = 7),
+##   fastdandtrans = fast_dists_and_trans(y),
+##   byunit_arma = fast_dists_and_trans_by_unit_arma(y),
+##   byunit_arma2 = fast_dists_and_trans_by_unit_arma2(y),
+##   byunit_par = fast_dists_and_trans_by_unit_arma2_par(y, threads = 7),
 ##   min_iterations = 100, max_iterations = 1000, check = FALSE, filter_gc = FALSE ## max_iterations to 1000 for below n=1000
 ## )
 ## ## Seems like dists_and_trans is much faster with n=5000 (and also with n=100, n=1000, etc..)
@@ -114,10 +114,10 @@ test_that("All algorithms give the same answers", {
 
 ## bench1 <- microbenchmark::microbenchmark(
 ##   main = dists_and_trans(y),
-##   fastdandtrans = fast_dists_and_trans(y, Z = 1),
-##   byunit_arma = fast_dists_and_trans_by_unit_arma(y, Z = 1),
-##   byunit_arma2 = fast_dists_and_trans_by_unit_arma2(y, Z = 1),
-##   byunit_par = fast_dists_and_trans_by_unit_arma2_par(y, Z = 1, threads = 7),
+##   fastdandtrans = fast_dists_and_trans(y),
+##   byunit_arma = fast_dists_and_trans_by_unit_arma(y),
+##   byunit_arma2 = fast_dists_and_trans_by_unit_arma2(y),
+##   byunit_par = fast_dists_and_trans_by_unit_arma2_par(y, threads = 7),
 ##   times = 100
 ## )
 ## bench1

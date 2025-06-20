@@ -85,17 +85,29 @@ dist2 <- sqrt(outer(xblah, xblah, FUN = function(x, y) {
 testdist <- Dist(xblah)
 stopifnot(all.equal(dist2, testdist))
 
-fn0 <- function() { Rfast::vecdist(xblah) } ## abs dist
-fn1 <- function() { Dist(xblah,square=TRUE) }
-fn8 <- function() { Dist(xblah,method="manhattan") }
-fn4 <- function() { vecdist2(xblah) }
-fn5 <- function() { vecdist_arma(xblah) }
+fn0 <- function() {
+  Rfast::vecdist(xblah)
+} ## abs dist
+fn1 <- function() {
+  Dist(xblah, square = TRUE)
+}
+fn8 <- function() {
+  Dist(xblah, method = "manhattan")
+}
+fn4 <- function() {
+  vecdist2(xblah)
+}
+fn5 <- function() {
+  vecdist_arma(xblah)
+}
 fn6 <- function() {
   mat <- as.matrix(dist(xblah, diag = TRUE, upper = TRUE))
   dimnames(mat) <- NULL
   return(mat)
 }
-fn7 <- function() { vecdist_squared(xblah) }
+fn7 <- function() {
+  vecdist_squared(xblah)
+}
 
 all.equal(fn0(), fn1()) ## fn1 is squared, fn0 is sqrt
 all.equal(fn6(), fn0())
@@ -107,7 +119,7 @@ all.equal(fn6(), fn7()) ## one is squared
 all.equal(fn6(), fn8()) ## one is squared
 ## microbenchmark(vecdist=fn0(),Dist=fn1(),eigendist=fn2(),fastDist=fn3(),vecdist2=fn4(),vecdist_arma=fn5(),base=fn6(),times=1000)
 
-bench1 <- microbenchmark::microbenchmark(vecdist = fn0(), DistSq = fn1(), vecdist2 = fn4(), vecdist_squared = fn7(), vecdist_arma = fn5(), base = fn6(), DistAbs=fn8(), times = 100)
+bench1 <- microbenchmark::microbenchmark(vecdist = fn0(), DistSq = fn1(), vecdist2 = fn4(), vecdist_squared = fn7(), vecdist_arma = fn5(), base = fn6(), DistAbs = fn8(), times = 100)
 
 bench1
 
@@ -120,7 +132,7 @@ tmpfn <- function(x) {
   two <- sweep(one, 1, An, "+")
   sqrt(two)
 }
-all.equal(fn1(),tmpfn(xblah))
+all.equal(fn1(), tmpfn(xblah))
 
 fn5mat <- vecdist_arma(x)
 fn1mat <- Dist(x)
@@ -219,7 +231,7 @@ tmp4 <- avg_rank_arma(y)
 tmp6 <- avg_rank(y)
 ## tmp5 <- Rank_mean2(y)
 all.equal(tmp1, tmp2)
-all.equal(tmp1,tmp6)
+all.equal(tmp1, tmp6)
 all.equal(tmp1, as.vector(tmp4))
 
 y <- rnorm(2000)
@@ -228,7 +240,7 @@ microbenchmark::microbenchmark(avg_rank_arma(y), avg_rank(y), Rank(y), rank(y, t
 ## avg_rank_arma works. Rank_mean2 is doing something else.
 
 ## Faster dists_and_trans
-y <- as.numeric(seq(1.0,10.0,length=100))
+y <- as.numeric(seq(1.0, 10.0, length = 100))
 
 vecd1 <- Rfast::vecdist(y)
 vecd2 <- vecdist_arma(y)
@@ -267,22 +279,22 @@ all.equal(tmp1[[8]], as.vector(tmp3[[8]]))
 # https://thecoatlessprofessor.com/programming/cpp/unofficial-rcpp-api-documentation/#iterators
 
 ## small y
-y <- as.numeric(seq(1.0,100.0))
+y <- as.numeric(seq(1.0, 100.0))
 microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 100)
 
 ## larger y
-y <- as.numeric(seq(1.0,1000.0))
+y <- as.numeric(seq(1.0, 1000.0))
 microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 100)
 
-y <- as.numeric(seq(1.0,2000.0))
+y <- as.numeric(seq(1.0, 2000.0))
 microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 100)
 
 ## This next the unit by unit approach is better
-y <- as.numeric(seq(1.0,10000.0))
+y <- as.numeric(seq(1.0, 10000.0))
 microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 10)
 
 ## Can't run this next
-y <- as.numeric(seq(1.0,50000.0))
+y <- as.numeric(seq(1.0, 50000.0))
 tmp1 <- dists_and_trans(y)
 tmp2 <- fast_dists_and_trans(y, Z = 1)
 tmp3 <- fast_dists_and_trans_by_unit(y, Z = 1)
@@ -291,39 +303,43 @@ tmp3 <- fast_dists_and_trans_by_unit(y, Z = 1)
 library(bench)
 
 y <- rnorm(1000)
-all.equal(dists_and_trans(y), fast_dists_and_trans(y, Z = 1),check.attributes = FALSE)
-all.equal(dists_and_trans(y), fast_dists_and_trans_by_unit(y, Z = 1),check.attributes = FALSE)
+all.equal(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), check.attributes = FALSE)
+all.equal(dists_and_trans(y), fast_dists_and_trans_by_unit(y, Z = 1), check.attributes = FALSE)
 
 set.seed(123456)
 y <- rnorm(100000)
 ## Try to ensure that the values in N=10 are the same 10 (the first 10) as in the N=100, etc.
-dist_timings <- press(N=c(10,100,500,1000,5000,10000,20000), #,seq(1000,10000,1000)),
-    {set.seed(12345)
-    y <- sample(y,N)
-    bench::mark(main=dists_and_trans(y),
-                arma=fast_dists_and_trans(y, Z = 1),
-               byunit=fast_dists_and_trans_by_unit(y, Z = 1),min_iterations=10, max_iterations=1000,check=FALSE,filter_gc=FALSE)
-    })
-save(dist_timings,file="dist_timings_linuxkeeling.rda")
+dist_timings <- press(
+  N = c(10, 100, 500, 1000, 5000, 10000, 20000), # ,seq(1000,10000,1000)),
+  {
+    set.seed(12345)
+    y <- sample(y, N)
+    bench::mark(
+      main = dists_and_trans(y),
+      arma = fast_dists_and_trans(y, Z = 1),
+      byunit = fast_dists_and_trans_by_unit(y, Z = 1), min_iterations = 10, max_iterations = 1000, check = FALSE, filter_gc = FALSE
+    )
+  }
+)
+save(dist_timings, file = "dist_timings_linuxkeeling.rda")
 
 
 ## Here we cannot use any of the vecdist functions
-ybig <- as.numeric(seq(1.0,10000.0))
+ybig <- as.numeric(seq(1.0, 10000.0))
 ## All these fail with 50000 rows
 vecd1big <- Rfast::vecdist(ybig)
 vecd2big <- vecdist_arma(ybig) ## with latest compiler flag this works but is slow
 vecd3big <- vecdist2(ybig)
 vecd4big <- vecdist_squared(ybig)
 
-microbenchmark::microbenchmark( fast_dists_and_trans_by_unit(ybig, Z = 1),fast_dists_and_trans(y, Z = 1), times = 1)
+microbenchmark::microbenchmark(fast_dists_and_trans_by_unit(ybig, Z = 1), fast_dists_and_trans(y, Z = 1), times = 1)
 
 tmpbig0 <- dists_and_trans(ybig) ## this fails
 
 system.time(
-tmpbig2 <- fast_dists_and_trans_by_unit(ybig, Z = 1)
+  tmpbig2 <- fast_dists_and_trans_by_unit(ybig, Z = 1)
 )
 ## 182.999  39.181 222.864
 system.time(
-tmpbig1 <- fast_dists_and_trans(ybig, Z = 1)
+  tmpbig1 <- fast_dists_and_trans(ybig, Z = 1)
 )
-

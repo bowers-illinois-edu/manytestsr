@@ -286,6 +286,7 @@ Rcpp::List fast_dists_and_trans_new_omp(const arma::vec &x, int threads=0) {
   omp_set_dynamic(0);
 
   if (threads > 0)
+    threads = std::min<int>(threads, omp_get_max_threads());
     omp_set_num_threads(threads);            // user-supplied
   /* else              */
   /*   keep whatever OMP_NUM_THREADS or omp_set_num_threads()  */
