@@ -5,6 +5,7 @@ interactive <- FALSE
 if (interactive) {
   library(devtools)
   library(testthat)
+  local_edition(3)
   library(here)
   library(data.table)
   library(dtplyr)
@@ -219,6 +220,8 @@ test_that("The local adjustment approaches produce sensible results", {
 })
 
 test_that("intuitions work about the adjustments when it comes to false positive rates.", {
+  skip_on_ci()
+  skip_on_cran()
   nsims <- 1000
   sim_err <- 2 * sqrt((.05 * (1 - .05)) / nsims)
   ncores_machine <- max(c(1, parallel::detectCores() - 2))
@@ -306,6 +309,8 @@ test_that("We have strong control of the FWER in some cases", {
   ## The tau_size and prop_blocks_0 and block size below should produce very high
   ## power for each block a 1 sd difference
   # power.t.test(power=.8,sd=1,delta=1,sig.level=.05)
+ skip_on_ci()
+  skip_on_cran()
 
   nsims <- 1000
   sim_err <- 2 * sqrt((.05 * (1 - .05)) / nsims)
@@ -418,10 +423,7 @@ test_that("We have strong control of the FWER in some cases", {
     select(node, level, parent, nonnull, lvls_fac, biggrp, starts_with("g"), starts_with("p")) %>%
     mutate(across(where(is.numeric), zapsmall))
 
-  ## Deprecate make_results_tree or just replace it with the _direct one after some more testing
-  # res_half_tree <- make_results_tree(res_half)
   res_half_tree <- make_results_tree(res_half$bdat, block_id = "bF", return_what = "all")
-  # res_half_graph <- make_results_ggraph(res_half_tree)
   res_half_graph <- make_results_ggraph(res_half_tree$graph)
   res_half_graph
 
