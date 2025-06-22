@@ -104,30 +104,6 @@ Split and test.
 Some notes about the splitting functions and how they relate to
 splitting criteria (splitby) and stopping criteria (stop_splitby_constant).
 \itemize{
-\item \code{\link[=splitLOO]{splitLOO()}} chooses the blocks largest on the splitby vector one at a
-time so that we have two tests, one focusing on the highest ranked block and
-one on all of the rest of the blocks (for example, the block with the most
-units in it versus the rest of the blocks). When the splitby vector has
-ties, it chooses one block at random among those tied for the first or
-largest rank. When the split vector has few values, for example, only two
-values, it will still split assuming that the vector is numeric (so, 1 is
-ranked higher than 0) and then randomly among ties. If
-stop_splitby_constant=TRUE, then the algorithm will stop after exhausting
-the blocks in the higher ranked category (thinking about the binary splitby
-case). For this reason we advise against using splitLOO with a factor
-splitby vector with few categories. \code{\link[=splitLOO]{splitLOO()}} is best used with a splitby
-vector like block-size --- which could be constant and thus just create a
-random choice of a single block or could vary and thus focus the testing on
-the largest/highest ranked blocks.
-\item \code{\link[=splitEqualApprox]{splitEqualApprox()}} splits the sets of blocks into two groups where the
-sum of the splitby vector is approximately the same in each split. For
-example, if splitby is number of units in a block, then this splitting
-function makes two groups of blocks, each group having the same total
-number of units. This splitting function will work with discrete or factors
-but will do: \code{rank_splitby <- rank(splitby)} and then divide the blocks
-into groups based on taking every other rank. So, for factors variables
-with few categories that are ordered, this will allocate every other
-category to one or another group.
 \item \code{\link[=splitCluster]{splitCluster()}} splits the blocks into groups that are as similar as
 possible to each other on splitby using the kmeans clustering algorithm
 (using a combination of \code{\link[=kmeans]{kmeans()}} or \code{\link[=KMeans_rcpp]{KMeans_rcpp()}}). This will not work
@@ -157,5 +133,29 @@ label of this factor be the individual blocks themselves---to ensure that
 testing descends to the block level if it can. When the factor is constant
 and stop_splitby_constant=TRUE splitting stops. When
 stop_splitby_constant=FALSE, then it uses random splits.
+\item \code{\link[=splitEqualApprox]{splitEqualApprox()}} splits the sets of blocks into two groups where the
+sum of the splitby vector is approximately the same in each split. For
+example, if splitby is number of units in a block, then this splitting
+function makes two groups of blocks, each group having the same total
+number of units. This splitting function will work with discrete or factors
+but will do: \code{rank_splitby <- rank(splitby)} and then divide the blocks
+into groups based on taking every other rank. So, for factors variables
+with few categories that are ordered, this will allocate every other
+category to one or another group.
+\item \code{\link[=splitLOO]{splitLOO()}} chooses the blocks largest on the splitby vector one at a
+time so that we have two tests, one focusing on the highest ranked block and
+one on all of the rest of the blocks (for example, the block with the most
+units in it versus the rest of the blocks). When the splitby vector has
+ties, it chooses one block at random among those tied for the first or
+largest rank. When the split vector has few values, for example, only two
+values, it will still split assuming that the vector is numeric (so, 1 is
+ranked higher than 0) and then randomly among ties. If
+stop_splitby_constant=TRUE, then the algorithm will stop after exhausting
+the blocks in the higher ranked category (thinking about the binary splitby
+case). For this reason we advise against using splitLOO with a factor
+splitby vector with few categories. \code{\link[=splitLOO]{splitLOO()}} is best used with a splitby
+vector like block-size --- which could be constant and thus just create a
+random choice of a single block or could vary and thus focus the testing on
+the largest/highest ranked blocks.
 }
 }

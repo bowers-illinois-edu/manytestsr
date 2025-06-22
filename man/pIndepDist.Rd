@@ -11,9 +11,7 @@ pIndepDist(
   sims = 1000,
   parallel = "yes",
   ncpu = NULL,
-  groups = NULL,
-  distfn = dists_and_trans,
-  adaptive_dist_function = TRUE
+  distfn = fast_dists_and_trans_hybrid
 )
 }
 \arguments{
@@ -36,13 +34,8 @@ creation function is called using \code{ncpu} threads (or
 
 \item{ncpu}{is number of cpus  to be used for parallel operation.}
 
-\item{groups}{is a vector defining the groups within which the inter-unit  distances are calculated. Not used here.}
-
 \item{distfn}{is  a function that produces one or more vectors (a data frame
 or matrix) of the  same number of  rows as the dat}
-
-\item{adaptive_dist_function}{is TRUE if the distance calculation function
-should be chosen using previous benchmarks. See the code.}
 }
 \value{
 A p-value

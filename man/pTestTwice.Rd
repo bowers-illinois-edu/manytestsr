@@ -34,8 +34,6 @@ creation function is called using \code{ncpu} threads (or
 
 \item{ncpu}{is number of cpus  to be used for parallel operation.}
 
-\item{groups}{is a vector defining the groups within which the inter-unit  distances are calculated. Not used here.}
-
 \item{distfn}{is  a function that produces one or more vectors (a data frame
 or matrix) of the  same number of  rows as the dat}
 }

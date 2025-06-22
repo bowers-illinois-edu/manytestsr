@@ -68,25 +68,36 @@ BEGIN_RCPP
 END_RCPP
 }
 // fast_dists_and_trans_new_omp
-Rcpp::List fast_dists_and_trans_new_omp(const arma::vec& x, int threads);
+Rcpp::List fast_dists_and_trans_new_omp(const arma::vec& x, const int threads);
 RcppExport SEXP _manytestsr_fast_dists_and_trans_new_omp(SEXP xSEXP, SEXP threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
+    Rcpp::traits::input_parameter< const int >::type threads(threadsSEXP);
     rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_new_omp(x, threads));
     return rcpp_result_gen;
 END_RCPP
 }
-// mean_dist_raw_rank
-Rcpp::List mean_dist_raw_rank(const arma::vec& y);
-RcppExport SEXP _manytestsr_mean_dist_raw_rank(SEXP ySEXP) {
+// fast_dists_and_trans_hybrid
+Rcpp::List fast_dists_and_trans_hybrid(const arma::vec& x);
+RcppExport SEXP _manytestsr_fast_dists_and_trans_hybrid(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
-    rcpp_result_gen = Rcpp::wrap(mean_dist_raw_rank(y));
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_hybrid(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fast_dists_and_trans_nomax_hybrid
+Rcpp::List fast_dists_and_trans_nomax_hybrid(const arma::vec& x);
+RcppExport SEXP _manytestsr_fast_dists_and_trans_nomax_hybrid(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(fast_dists_and_trans_nomax_hybrid(x));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -437,7 +448,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_manytestsr_fast_dists_and_trans_by_unit_arma2", (DL_FUNC) &_manytestsr_fast_dists_and_trans_by_unit_arma2, 1},
     {"_manytestsr_fast_dists_and_trans_new", (DL_FUNC) &_manytestsr_fast_dists_and_trans_new, 1},
     {"_manytestsr_fast_dists_and_trans_new_omp", (DL_FUNC) &_manytestsr_fast_dists_and_trans_new_omp, 2},
-    {"_manytestsr_mean_dist_raw_rank", (DL_FUNC) &_manytestsr_mean_dist_raw_rank, 1},
+    {"_manytestsr_fast_dists_and_trans_hybrid", (DL_FUNC) &_manytestsr_fast_dists_and_trans_hybrid, 1},
+    {"_manytestsr_fast_dists_and_trans_nomax_hybrid", (DL_FUNC) &_manytestsr_fast_dists_and_trans_nomax_hybrid, 1},
     {"_manytestsr_fastMean", (DL_FUNC) &_manytestsr_fastMean, 1},
     {"_manytestsr_fastMedian", (DL_FUNC) &_manytestsr_fastMedian, 1},
     {"_manytestsr_fastVar", (DL_FUNC) &_manytestsr_fastVar, 1},

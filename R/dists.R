@@ -4,33 +4,21 @@
 #' Outcome distances and transformations
 #'
 #' @param x Is a numeric vector (the  outcome variable)
-#' @param Z is just a placeholder and not used but is a part of the api for distance functions
 #' @return A list  for inclusion in a data.table with  distances between each unit and other units as well as some transformations of those distances
 #' @importFrom Rfast Dist rowmeans rowMads rowMaxs Rank vecdist rowmeans
 #' @export
-dists_and_trans <- function(x, Z) {
+dists_and_trans <- function(x) {
+  n <- length(x)
   dx <- Rfast::vecdist(x)
   rankx <- Rfast::Rank(x)
   dxRank0 <- Rfast::vecdist(rankx) # distance among the ranks
-  # mhdist0 <- zscore_vec2(x) ## calling it mhdist but really just zscore
-  # mhdist <- ifelse(is.na(mhdist0) | is.nan(mhdist0), 0, mhdist0)
-
-  ## outcome_names <- c(theresponse,"mndist","mndistRank0","maxdist","rankY","tanhx")
-  ## From fastfns.cpp, fast_dists_and_trans
-  #     List res = List::create(...
   res <- list(
-    mndist = Rfast::colmeans(dx),
-    mndistRank0 = Rfast::colmeans(dxRank0),
-    # maddist = Rfast::colMads(dx),
-    # maddistRank0 = Rfast::colMads(dxRank0),
-    maxdist = Rfast::colMaxs(dx, value = TRUE),
-    # maxdistRank0 = Rfast::colMaxs(dxRank0, value = TRUE),
-    # mhdist = mhdist,
+    ## Don't include the diagonals in the means
+    mean_dist= Rfast::colsums(dx)/(n-1),
+    mean_rank_dist= Rfast::colsums(dxRank0)/(n-1),
+    max_dist = Rfast::colMaxs(dx, value = TRUE),
     rankY = rankx,
-    # mnsqrtdist = Rfast::colmeans(sqrt(dx)),
-    # hubmn = col_huberM(dx),
-    tanhx = tanh(x) # ,
-    # propgt0 = mean(x > 0)
+    tanhY = tanh(x)
   )
   return(res)
 }
@@ -40,12 +28,13 @@ dists_and_trans <- function(x, Z) {
 #' @param threads Is an integer with the number of cores to use.
 #' @return A distance creation function taking x (a numeric vector, usually the outcome) and a variable Z which is not used.
 #' @export
-fast_dists_and_trans_by_unit_arma_parR <- function(threads) {
+fast_dists_and_trans_new_parallel <- function(threads) {
   force(threads)
-  return(function(x, Z) {
-    fast_dists_and_trans_by_unit_arma2_par(x, Z, threads = threads)
+  return(function(x) {
+    fast_dists_and_trans_new_omp(x, threads = threads)
   })
 }
+
 
 
 

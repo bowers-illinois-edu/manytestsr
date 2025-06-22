@@ -1,4 +1,8 @@
-library(testthat)
+## Misc tests of different helper functions
+
+
+
+#### Testing the C++ functions
 
 test_that("avg_rank_arma matches base::rank for random data", {
   set.seed(42)

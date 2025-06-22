@@ -1,4 +1,4 @@
-# Functions for producing p-values / Test-statistics
+## Functions for producing p-values / Test-statistics
 
 #' P-value function: T-test
 #'
@@ -117,7 +117,6 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 #' number (meaning sampling from the randomization distribution implied by the
 #' formula)
 #' @param simthresh is the size of the data below which we use direct permutations for p-values
-#' @param groups is a vector defining the groups within which the inter-unit  distances are calculated. Not used here.
 
 #' @param distfn is  a function that produces one or more vectors (a data frame
 #' or matrix) of the  same number of  rows as the dat
@@ -131,9 +130,6 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 
 #' @param ncpu is number of cpus  to be used for parallel operation.
 
-#' @param adaptive_dist_function is TRUE if the distance calculation function
-#' should be chosen using previous benchmarks. See the code.
-
 #' @return A p-value
 #' @importFrom coin independence_test pvalue approximate exact asymptotic
 #' @importFrom Rfast Rank
@@ -141,8 +137,9 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 #' @importFrom dataPreparation which_are_constant
 #' @export
 pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
-                       parallel = "yes", ncpu = NULL, groups = NULL, distfn = dists_and_trans, adaptive_dist_function = TRUE) {
+                       parallel = "yes", ncpu = NULL, distfn = fast_dists_and_trans_hybrid) {
   force(distfn)
+  stopifnot(inherits(dat,"data.table"))
   fmla_vars <- all.vars(fmla)
   theresponse <- fmla_vars[attr(terms(fmla), "response")]
   thetreat <- fmla_vars[[2]]
@@ -159,32 +156,11 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
     ncpu <- detectCores()
   }
 
-  ## the dists_and_trans function is very fast but very memory intensive. When n is large it can require GB versus KB
-  ## This should be about the sizes of the blocks not the overall size. TODO
-  if (adaptive_dist_function) {
-    if (dat_size <= 100) {
-      distfn <- dists_and_trans
-    }
-    if (parallel != "no" && dat_size > 100) {
-      distfn <- function(x) {
-        fast_dists_and_trans_new_omp(x, threads = ncpu)
-      }
-    }
-    if (parallel == "no" && dat_size > 100) {
-      distfn <- fast_dists_and_trans_new
-    }
-  }
-
   thedat <- copy(dat)
 
-  #  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist",
-  #  "maddistRank0", "maxdist", "maxdistRank0", "mhdist", "rankx",
-  #  "mnsqrtdist", "hubmn", "tanhx")
+  ### These must match the names of the functions used in src/dists_and_trans.cpp
+  outcome_names <- c(theresponse,"mean_dist" ,"mean_rank_dist","max_dist","rankY","tanhY")
 
-  # outcome_names <- c(theresponse, "mndist", "mndistRank0", "maddist",
-  # "maddistRank0", "maxdist", "maxdistRank0", "zscoreY", "rankY")
-
-  outcome_names <- c(theresponse, "mndist", "mndistRank0", "maxdist", "rankY", "tanhx")
   if (length(fmla_vars) == 3) {
     theblock <- fmla_vars[[3]]
     thedat[, outcome_names[-1] := distfn(get(theresponse)), by = get(theblock)]
@@ -241,7 +217,6 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
 #' number (meaning sampling from the randomization distribution implied by the
 #' formula)
 #' @param simthresh is the size of the data below which we use direct permutations for p-values
-#' @param groups is a vector defining the groups within which the inter-unit  distances are calculated. Not used here.
 
 #' @param distfn is  a function that produces one or more vectors (a data frame
 #' or matrix) of the  same number of  rows as the dat
@@ -340,11 +315,10 @@ pTestTwice <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
 #' number (meaning sampling from the randomization distribution implied by the
 #' formula)
 #' @param simthresh is the size of the data below which we use direct permutations for p-values
-#' @param groups is a vector defining the groups within which the inter-unit  distances are calculated. Not used here.
 
 #' @param distfn is  a function that produces one or more vectors (a data frame
 #' or matrix) of the  same number of  rows as the dat.  Here until further
-#' notice users should leave it at `mean_dist_raw_rank` since that function is
+#' notice users should leave it at `mean_dist_raw_rank_tanh` since that function is
 #' purpose built for this function.
 
 #' @param parallel is "no" then parallelization is not required, otherwise it
@@ -355,7 +329,6 @@ pTestTwice <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
 #' `parallel::detectCores(logical=FALSE)` cores).
 
 #' @param ncpu is number of cpus  to be used for parallel operation.
-#' @param adaptive_dist_function is always FALSE here
 #' @return A p-value
 #' @importFrom coin independence_test pvalue approximate exact asymptotic oneway_test wilcox_test
 #' @importFrom Rfast Rank
@@ -363,7 +336,7 @@ pTestTwice <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
 #' @importFrom dataPreparation which_are_constant
 #' @export
 pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
-                            parallel = "no", ncpu = NULL, groups = NULL, distfn = mean_dist_raw_rank, adaptive_dist_function = FALSE) {
+                            parallel = "no", ncpu = NULL, distfn = fast_dists_and_trans_nomax_hybrid) {
   force(distfn)
   fmla_vars <- all.vars(fmla)
   theresponse <- fmla_vars[attr(terms(fmla), "response")]
@@ -374,8 +347,6 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
     return(1)
   }
 
-  dat_size <- nrow(dat)
-
   if (is.null(ncpu) && parallel != "no") {
     ## This is used for both distfn but also for independence_test for it to do
     ## permutation testing in parallel in small blocks/samples
@@ -385,8 +356,7 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
 
   thedat <- copy(dat)
 
-  outcome_names <- c(theresponse, "rankY", "tanhY", "mndist", "mndistrank")
-
+  outcome_names <- c(theresponse,"mean_dist" ,"mean_rank_dist","rankY","tanhY")
 
   ## To enable the use of this function without a `|block` --- basically to
   ## make it easier to compare with the bottom-up approaches where we just test
@@ -394,9 +364,7 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
 
   if (length(fmla_vars) == 3) {
     theblock <- fmla_vars[[3]]
-    thedat[, c("mndist", "mndistrank") := distfn(get(theresponse)), by = get(theblock)]
-    thedat[, rankY := frank(get(theresponse)), by = get(theblock)]
-    thedat[, tanhY := tanh(get(theresponse)), by = get(theblock)]
+    thedat[, outcome_names[-1] := distfn(get(theresponse)), by = get(theblock)]
     # If one of the test statistics is constant, drop it.
     # https://stackoverflow.com/questions/15068981/removal-of-constant-columns-in-r
     anyconstant_cols <- dataPreparation::which_are_constant(thedat[, .SD, .SDcols = outcome_names], verbose = FALSE)
@@ -409,13 +377,10 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
     })
     the_fmlas[[5]] <- paste(paste(outcome_names, collapse = "+"), "~", thetreat, "|", theblock, sep = "")
   } else {
+    theblock <- NULL
     ### If there is no block in the formula and this is a test that will be
     ### done within each block and not aggregated across them
-
-    theblock <- NULL
-    thedat[, c("mndist", "mndistrank") := distfn(get(theresponse))]
-    thedat[, rankY := frank(get(theresponse))]
-    thedat[, tanhY := tanh(get(theresponse))]
+    thedat[, outcome_names[-1] := distfn(get(theresponse))]
     # If one of the test statistics is constant, drop it.
     anyconstant_cols <- dataPreparation::which_are_constant(thedat[, .SD, .SDcols = outcome_names], verbose = FALSE)
     if (length(anyconstant_cols) > 0) {
@@ -445,6 +410,7 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
 
   ## Now we will calculate separate p-values and combine them using the Cauchy combination method (Liu and Xie 2019)
   ## Cauchy Combination Test: A Powerful Test With Analytic p-Value Calculation Under Arbitrary Dependency Structures
+  ## This function goes kind of crazy at 0 and 1 so add or substract a tiny amount from either side if needed
   acat_pvalue <- function(p_values) {
     if (any(p_values == 0 | p_values == 1, na.rm = TRUE)) {
       #      stop("Input p-values must lie strictly inside (0,1).")
@@ -452,8 +418,8 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
       p_values[p_values == 1] <- p_values[p_values == 1] - .Machine$double.eps
     }
     ## pi is pi FYI
-    ## Since this procedure creates weird results when p->1 or p->0, we create
-    ## the two sided p-values using one-sided tests and then double :
+    ## Since this procedure creates weird results when p is very near 1 or p very near 0, we create
+    ## the two sided p-values using one-sided tests and then double the minimum.
     p_1 <- p_values / 2
     t_stat <- mean(tan((0.5 - p_1) * pi)) # equal weights
     upper_p <- 0.5 - atan(t_stat) / pi # final ACAT p-value

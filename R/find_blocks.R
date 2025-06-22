@@ -67,30 +67,6 @@
 #' splitting criteria (splitby) and stopping criteria (stop_splitby_constant).
 
 #'
-#'  * [splitLOO()] chooses the blocks largest on the splitby vector one at a
-#' time so that we have two tests, one focusing on the highest ranked block and
-#' one on all of the rest of the blocks (for example, the block with the most
-#' units in it versus the rest of the blocks). When the splitby vector has
-#' ties, it chooses one block at random among those tied for the first or
-#' largest rank. When the split vector has few values, for example, only two
-#' values, it will still split assuming that the vector is numeric (so, 1 is
-#' ranked higher than 0) and then randomly among ties. If
-#' stop_splitby_constant=TRUE, then the algorithm will stop after exhausting
-#' the blocks in the higher ranked category (thinking about the binary splitby
-#' case). For this reason we advise against using splitLOO with a factor
-#' splitby vector with few categories. [splitLOO()] is best used with a splitby
-#' vector like block-size --- which could be constant and thus just create a
-#' random choice of a single block or could vary and thus focus the testing on
-#' the largest/highest ranked blocks.
-#'  * [splitEqualApprox()] splits the sets of blocks into two groups where the
-#'  sum of the splitby vector is approximately the same in each split. For
-#'  example, if splitby is number of units in a block, then this splitting
-#'  function makes two groups of blocks, each group having the same total
-#'  number of units. This splitting function will work with discrete or factors
-#'  but will do: `rank_splitby <- rank(splitby)` and then divide the blocks
-#'  into groups based on taking every other rank. So, for factors variables
-#'  with few categories that are ordered, this will allocate every other
-#'  category to one or another group.
 #'  * [splitCluster()] splits the blocks into groups that are as similar as
 #' possible to each other on splitby using the kmeans clustering algorithm
 #' (using a combination of [kmeans()] or [KMeans_rcpp()]). This will not work
@@ -120,6 +96,30 @@
 #'  testing descends to the block level if it can. When the factor is constant
 #'  and stop_splitby_constant=TRUE splitting stops. When
 #'  stop_splitby_constant=FALSE, then it uses random splits.
+#'  * [splitEqualApprox()] splits the sets of blocks into two groups where the
+#'  sum of the splitby vector is approximately the same in each split. For
+#'  example, if splitby is number of units in a block, then this splitting
+#'  function makes two groups of blocks, each group having the same total
+#'  number of units. This splitting function will work with discrete or factors
+#'  but will do: `rank_splitby <- rank(splitby)` and then divide the blocks
+#'  into groups based on taking every other rank. So, for factors variables
+#'  with few categories that are ordered, this will allocate every other
+#'  category to one or another group.
+#'  * [splitLOO()] chooses the blocks largest on the splitby vector one at a
+#' time so that we have two tests, one focusing on the highest ranked block and
+#' one on all of the rest of the blocks (for example, the block with the most
+#' units in it versus the rest of the blocks). When the splitby vector has
+#' ties, it chooses one block at random among those tied for the first or
+#' largest rank. When the split vector has few values, for example, only two
+#' values, it will still split assuming that the vector is numeric (so, 1 is
+#' ranked higher than 0) and then randomly among ties. If
+#' stop_splitby_constant=TRUE, then the algorithm will stop after exhausting
+#' the blocks in the higher ranked category (thinking about the binary splitby
+#' case). For this reason we advise against using splitLOO with a factor
+#' splitby vector with few categories. [splitLOO()] is best used with a splitby
+#' vector like block-size --- which could be constant and thus just create a
+#' random choice of a single block or could vary and thus focus the testing on
+#' the largest/highest ranked blocks.
 #'
 #' @importFrom stringi stri_count_fixed stri_split_fixed stri_split stri_sub stri_replace_all stri_extract_last
 #' @importFrom digest digest getVDigest
@@ -383,7 +383,7 @@ find_blocks <-
         # certain splitters. Currently set by hand.
       }
 
-      if (stop_splitby_constant | split_fn_cluster) {
+      if (stop_splitby_constant || split_fn_cluster) {
         ## Here there is no sense in spliting by differences in covariate value
         ## (creating clusters using k-means) if covariate values do not differ
 

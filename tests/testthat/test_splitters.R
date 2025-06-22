@@ -1,10 +1,10 @@
 # Test and develop functions to split the data
-testthat::context("Performance of Splitting Functions")
 
 ## The next lines are for use when creating the tests. Change interactive<-FALSE for production
-interactive <- TRUE 
+interactive <- FALSE
 if (interactive) {
   library(testthat)
+  local_edition(3)
   library(here)
   library(data.table)
   library(dtplyr)
@@ -141,9 +141,10 @@ bdat4[, lvs2 := interaction(lv1, lv2)] ## should only have 4 spits
 bdat4[, constv := rep(10, .N)] ## a constant
 
 ## Notice that basically not hitting within individual blocks with Ytauv2 despite large mean diffs in half of the blocks
-blah <- idat3[, .(pIndepDist(Ytauv2 ~ ZF), pOneway(Ytauv2 ~ ZF), pWilcox(Ytauv2 ~ ZF), coef(lm(Ytauv2 ~ ZF)), mean(tauv2), sd(y0), .N), by = bF]
-head(blah)
-tail(blah)
+#blah <- idat3[, .(pIndepDist(.SD,Ytauv2 ~ ZF,parallel="no"), pOneway(Ytauv2 ~ ZF), pWilcox(Ytauv2 ~ ZF), coef(lm(Ytauv2 ~ ZF)), mean(tauv2), sd(y0), .N), by = bF]
+#
+#head(blah)
+#tail(blah)
 # library(ggplot2)
 # g <- ggplot(data=idat3,aes(x=bF,y=Ytauv2,fill=ZF))+geom_boxplot()
 # g
@@ -156,41 +157,41 @@ test_that("splitCluster follows the values of discrete splitby variables", {
     splitfn = splitCluster, splitby = "twosplits", stop_splitby_constant = TRUE
   )
 
-  ## Report detections calculates rejections / acceptances using blocks
-  theres1_det <- report_detections(theres1$bdat, blockid = "bF", only_hits = FALSE, fwer = TRUE, alpha = .05)
-
-  ## make_results_tree calculates rejections /acceptances after converting the
-  ## block level data into a graph/tree format (of nodes and edges)
-  theres1_tree <- make_results_tree(theres1$bdat, block_id = "bF")
-  theres1_nodes <- theres1_tree$graph %>%
-    activate(nodes) %>%
-    as_tibble()
-  theres1_tree_blocks <- theres1_nodes %>%
-    filter(name != "1") %>%
-    select(blocks)
-
   expect_equal(uniqueN(theres1$bdat$biggrp), uniqueN(bdat4$twosplits))
 
   thetab <- table(theres1$bdat$twosplitsF, theres1$bdat$biggrp)
   expect_equal(c(thetab[1, 2], thetab[2, 1]), c(0, 0))
 })
 
-## TODO: Maybe remove the stop_splitby_constant arg
 test_that("splitCluster stops appropriately (i.e. doesn't just keep randomly splitting) with continuous splitting criteria.", {
+
+  set.seed(12345)
+  bdat4$cov <- runif(nrow(bdat4))
+
+  ## By setting simthresh=1 we are saying to only  use asymptotic
+  ## approximations. Here we don't care about error rates just about how the
+  ## algorithm operates.
+
   theres1 <- find_blocks(
     idat = idat3, bdat = bdat4, blockid = "bF", pfn = pOneway, alphafn = NULL, thealpha = 0.05,
     fmla = Ytauv2 ~ ZF | bF,
-    parallel = "no", copydts = TRUE,
-    splitfn = splitCluster, splitby = "hwt", stop_splitby_constant = TRUE
+    parallel = "no", copydts = TRUE, simthresh=1,
+    splitfn = splitCluster, splitby = "cov", stop_splitby_constant = TRUE
   )
   theres1_det <- report_detections(theres1$bdat, blockid = "bF")
   theres2 <- find_blocks(
     idat = idat3, bdat = bdat4, blockid = "bF", pfn = pOneway, alphafn = NULL, thealpha = 0.05,
     fmla = Ytauv2 ~ ZF | bF,
-    parallel = "no", copydts = TRUE,
-    splitfn = splitCluster, splitby = "hwt", stop_splitby_constant = FALSE
+    parallel = "no", copydts = TRUE, simthresh=1,
+    splitfn = splitCluster, splitby = "cov", stop_splitby_constant = FALSE
   )
   theres2_det <- report_detections(theres2$bdat, blockid = "bF")
+
+  theres1_tree <- make_results_tree(theres1$bdat,block_id="bF",node_label="hwt")
+  theres2_tree <- make_results_tree(theres2$bdat,block_id="bF",node_label="hwt")
+
+  expect_equal(theres1_tree$test_summary,theres2_tree$test_summary)
+  expect_equal(theres1_tree$nodes$p,theres2_tree$nodes$p)
   expect_equal(theres1_det, theres2_det)
 })
 
@@ -209,11 +210,14 @@ split_test_params <- data.table(expand.grid(
 split_test_params <- split_test_params[sfn != "splitSpecifiedFactorMulti" |
   (sfn == "splitSpecifiedFactorMulti" & !(splitby %in% c("twosplits", "constv"))), ]
 
+## Again, force use of asymptotic approximations to not confuse splits
+## and use a t-test to make things simpler
+
 test_splitters_fn <- function(sfn, splitby, stopsplitting) {
   theres <- find_blocks(
     idat = idat3, bdat = bdat4, blockid = "bF",
-    pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
-    fmla = Ytauv2 ~ ZF | bF,
+    pfn = pOneway, alphafn = NULL, thealpha = 0.05,
+    fmla = Ytauv2 ~ ZF | bF,simthresh=1,
     parallel = "no", copydts = TRUE,
     splitfn = get(sfn), splitby = splitby, stop_splitby_constant = stopsplitting
   )
@@ -285,13 +289,15 @@ test_that("Splitters work as expected given splitby variables
   with(res[[resobj]], table(hit, twosplits, exclude = c()))
 
   blah2 <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplits", stopsplitting = FALSE)
-  blah2_det <- report_detections(blah2, blockid = "bF")
+  blah2_det <- report_detections(blah2$bdat, blockid = "bF")
   with(blah2_det, table(fin_grp, twosplits, exclude = c()))
 
   blah2a <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplits", stopsplitting = FALSE)
-  blah2a_det <- report_detections(blah2a, blockid = "bF")
+  blah2a_det <- report_detections(blah2a$bdat, blockid = "bF")
   with(blah2a_det, table(fin_grp, twosplits, exclude = c()))
-  blah2_tree <- make_results_ggraph(make_results_tree(blah2))
+    ## Again, just running code to see if they produce errors.
+    ## The expectation is that there is no error here. But I don't see that in testthat 
+  blah2_tree <- make_results_ggraph(make_results_tree(blah2$bdat,block_id="bF")$graph)
 
   ## 18:             splitLOO twosplitsF         FALSE
 
@@ -301,11 +307,11 @@ test_that("Splitters work as expected given splitby variables
   with(res[[resobj]], table(hit, twosplitsF, exclude = c()))
 
   blah2F <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplitsF", stopsplitting = FALSE)
-  blah2F_det <- report_detections(blah2F, blockid = "bF")
+  blah2F_det <- report_detections(blah2F$bdat, blockid = "bF")
   with(blah2F_det, table(fin_grp, twosplits, exclude = c()))
 
   blah2Fa <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplitsF", stopsplitting = FALSE)
-  blah2Fa_det <- report_detections(blah2Fa, blockid = "bF")
+  blah2Fa_det <- report_detections(blah2Fa$bdat, blockid = "bF")
   with(blah2Fa_det, table(fin_grp, twosplits, exclude = c()))
 
   ##  8:             splitLOO       lvs2          TRUE
@@ -341,7 +347,7 @@ test_that("Splitters work as expected given splitby variables
     sfn = "splitEqualApprox", splitby = "twosplits",
     stopsplitting = TRUE
   )
-  blah2H_det <- report_detections(blah2H, blockid = "bF")
+  blah2H_det <- report_detections(blah2H$bdat, blockid = "bF")
   with(blah2H_det, table(fin_grp, twosplits, exclude = c()))
 
   ##  5:     splitEqualApprox twosplitsF          TRUE
@@ -399,7 +405,7 @@ test_that("Splitters work as expected given splitby variables
     sfn = "splitCluster", splitby = "twosplits",
     stopsplitting = FALSE
   )
-  blah_det <- report_detections(blah, blockid = "bF")
+  blah_det <- report_detections(blah$bdat, blockid = "bF")
   tabres2 <- with(blah_det, table(fin_grp, twosplits, exclude = c()))
 
   expect_true(isTRUE(all.equal(tabres1, tabres2)))
@@ -438,13 +444,13 @@ test_that("Splitters work as expected given splitby variables
   theres2 <- find_blocks(
     idat = idat3, bdat = bdat4, blockid = "bF",
     pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
-    fmla = Ytauv2 ~ ZF | bF,
+    fmla = Ytauv2 ~ ZF | bF,simthresh=1,
     parallel = "no", copydts = TRUE,
     splitfn = splitSpecifiedFactor, splitby = "lvs2", stop_splitby_constant = TRUE
   )
   theres2_det <- report_detections(theres2$bdat, blockid = "bF")
-  expect_equal(uniqueN(theres2$biggrp), uniqueN(bdat4$lvs2))
-  table(theres2$lvs2, theres2$biggrp)
+  expect_equal(uniqueN(theres2$bdat$biggrp), uniqueN(bdat4$lvs2))
+  table(theres2$bdat$lvs2, theres2$bdat$biggrp)
 })
 
 

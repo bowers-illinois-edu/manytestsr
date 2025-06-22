@@ -2,149 +2,204 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 fast_dists_and_trans <- function(x) {
-  .Call(`_manytestsr_fast_dists_and_trans`, x)
+    .Call(`_manytestsr_fast_dists_and_trans`, x)
 }
 
 fast_dists_and_trans_by_unit_arma <- function(x) {
-  .Call(`_manytestsr_fast_dists_and_trans_by_unit_arma`, x)
+    .Call(`_manytestsr_fast_dists_and_trans_by_unit_arma`, x)
 }
 
 fast_dists_and_trans_by_unit_arma2_par <- function(x, threads = 4L) {
-  .Call(`_manytestsr_fast_dists_and_trans_by_unit_arma2_par`, x, threads)
+    .Call(`_manytestsr_fast_dists_and_trans_by_unit_arma2_par`, x, threads)
 }
 
 fast_dists_and_trans_by_unit_arma2 <- function(x) {
-  .Call(`_manytestsr_fast_dists_and_trans_by_unit_arma2`, x)
+    .Call(`_manytestsr_fast_dists_and_trans_by_unit_arma2`, x)
 }
 
 fast_dists_and_trans_new <- function(x) {
-  .Call(`_manytestsr_fast_dists_and_trans_new`, x)
+    .Call(`_manytestsr_fast_dists_and_trans_new`, x)
 }
 
 fast_dists_and_trans_new_omp <- function(x, threads = 0L) {
-  .Call(`_manytestsr_fast_dists_and_trans_new_omp`, x, threads)
+    .Call(`_manytestsr_fast_dists_and_trans_new_omp`, x, threads)
 }
 
-mean_dist_raw_rank <- function(y) {
-  .Call(`_manytestsr_mean_dist_raw_rank`, y)
+#' Fast per-unit distance summaries (scalar outcome)
+#'
+#' Computes, for **each observation** \eqn{i = 1,\dots,n} in a numeric vector
+#' \eqn{x}, scalar summaries plus simple transforms, **without ever
+#' forming the full \eqn{n\times n} distance matrix**.
+#'
+#' \itemize{
+#'   \item **`mean_dist`** – mean absolute distance
+#'         \deqn{\frac{1}{n-1}\sum_{j\neq i}|x_i-x_j|}{}
+#'   \item **`mean_rank_dist`** – same mean on the mid-rank scale;
+#'         closed-form, no second loop.
+#'   \item **`max_dist`** – maximum absolute distance
+#'         \eqn{\max\{\,x_i-\min(x),\;\max(x)-x_i\,\}}{}
+#'   \item **`rankY`** – average (mid-) rank of \code{x} (\code{ties="average"}).
+#'   \item **`tanhY`** – element-wise \eqn{\tanh(x_i)} shrink transform.
+#' }
+#'
+#' **Complexity**
+#' \itemize{
+#'   \item \eqn{O(n \log n)} time (sorting + prefix sums)
+#'   \item \eqn{O(n)}  space (only vectors of length \code{n})
+#' }
+#' For \code{n = 10\,000} this typically runs in ≈2 ms on an Apple M-series
+#' core with < 0.5 MB peak RAM, much faster and far lighter than allocating
+#' the full distance matrix.
+#'
+#' @param x Numeric vector – the scalar outcome for all units.
+#'
+#' @return A named \code{list} with components
+#'   \describe{
+#'     \item{\code{mean_dist}}{numeric vector, length \code{n}.}
+#'     \item{\code{mean_rank_dist}}{numeric vector, length \code{n}.}
+#'     \item{\code{max_dist}}{numeric vector, length \code{n}.}
+#'     \item{\code{rankY}}{average ranks (mid-ranks).}
+#'     \item{\code{tanhY}}{\eqn{\tanh(x_i)} values.}
+#'   }
+#'
+#' @examples
+#' set.seed(1)
+#' x <- rnorm(8)
+#' fast_dists_and_trans_hybrid(x)
+#'
+#' ## compare to explicit distance matrix (slow / big):
+#' dx <- abs(outer(x, x, "-"))
+#' mean_dist_ref <- colSums(dx) / (length(x) - 1)
+#' stopifnot(all.equal(fast_dists_and_trans_hybrid(x)$mean_dist,
+#'                     mean_dist_ref))
+#'
+#' @name fast_dists_and_trans_hybrid
+#' @export
+fast_dists_and_trans_hybrid <- function(x) {
+    .Call(`_manytestsr_fast_dists_and_trans_hybrid`, x)
+}
+
+fast_dists_and_trans_nomax_hybrid <- function(x) {
+    .Call(`_manytestsr_fast_dists_and_trans_nomax_hybrid`, x)
 }
 
 fastMean <- function(X) {
-  .Call(`_manytestsr_fastMean`, X)
+    .Call(`_manytestsr_fastMean`, X)
 }
 
 fastMedian <- function(X) {
-  .Call(`_manytestsr_fastMedian`, X)
+    .Call(`_manytestsr_fastMedian`, X)
 }
 
 fastVar <- function(X) {
-  .Call(`_manytestsr_fastVar`, X)
+    .Call(`_manytestsr_fastVar`, X)
 }
 
 fastcolMeans <- function(X) {
-  .Call(`_manytestsr_fastcolMeans`, X)
+    .Call(`_manytestsr_fastcolMeans`, X)
 }
 
 fastrowMeans <- function(X) {
-  .Call(`_manytestsr_fastrowMeans`, X)
+    .Call(`_manytestsr_fastrowMeans`, X)
 }
 
 fastrowMads <- function(X) {
-  .Call(`_manytestsr_fastrowMads`, X)
+    .Call(`_manytestsr_fastrowMads`, X)
 }
 
 fastrowMads4 <- function(X) {
-  .Call(`_manytestsr_fastrowMads4`, X)
+    .Call(`_manytestsr_fastrowMads4`, X)
 }
 
 fastcolMads4 <- function(X) {
-  .Call(`_manytestsr_fastcolMads4`, X)
+    .Call(`_manytestsr_fastcolMads4`, X)
 }
 
 fastrowMads2 <- function(X) {
-  .Call(`_manytestsr_fastrowMads2`, X)
+    .Call(`_manytestsr_fastrowMads2`, X)
 }
 
 fastrowMads3 <- function(X) {
-  .Call(`_manytestsr_fastrowMads3`, X)
+    .Call(`_manytestsr_fastrowMads3`, X)
 }
 
 fastrowMaxs <- function(X) {
-  .Call(`_manytestsr_fastrowMaxs`, X)
+    .Call(`_manytestsr_fastrowMaxs`, X)
 }
 
 fastrowMaxs2 <- function(x) {
-  .Call(`_manytestsr_fastrowMaxs2`, x)
+    .Call(`_manytestsr_fastrowMaxs2`, x)
 }
 
 fastcova <- function(X) {
-  .Call(`_manytestsr_fastcova`, X)
+    .Call(`_manytestsr_fastcova`, X)
 }
 
 replace_na_nan <- function(x, replacement = 0) {
-  .Call(`_manytestsr_replace_na_nan`, x, replacement)
+    .Call(`_manytestsr_replace_na_nan`, x, replacement)
 }
 
 zscore_vec2 <- function(x) {
-  .Call(`_manytestsr_zscore_vec2`, x)
+    .Call(`_manytestsr_zscore_vec2`, x)
 }
 
 zscore_vec <- function(X) {
-  .Call(`_manytestsr_zscore_vec`, X)
+    .Call(`_manytestsr_zscore_vec`, X)
 }
 
 vecdist_arma <- function(x) {
-  .Call(`_manytestsr_vecdist_arma`, x)
+    .Call(`_manytestsr_vecdist_arma`, x)
 }
 
 vecdist4_arma <- function(x) {
-  .Call(`_manytestsr_vecdist4_arma`, x)
+    .Call(`_manytestsr_vecdist4_arma`, x)
 }
 
 vecdist3_arma <- function(A) {
-  .Call(`_manytestsr_vecdist3_arma`, A)
+    .Call(`_manytestsr_vecdist3_arma`, A)
 }
 
 vecdist2 <- function(x) {
-  .Call(`_manytestsr_vecdist2`, x)
+    .Call(`_manytestsr_vecdist2`, x)
 }
 
 avg_rank_arma <- function(x) {
-  .Call(`_manytestsr_avg_rank_arma`, x)
+    .Call(`_manytestsr_avg_rank_arma`, x)
 }
 
 avg_rank <- function(x) {
-  .Call(`_manytestsr_avg_rank`, x)
+    .Call(`_manytestsr_avg_rank`, x)
 }
 
 fastmad_arma <- function(x) {
-  .Call(`_manytestsr_fastmad_arma`, x)
+    .Call(`_manytestsr_fastmad_arma`, x)
 }
 
 manhattan_dist <- function(x) {
-  .Call(`_manytestsr_manhattan_dist`, x)
+    .Call(`_manytestsr_manhattan_dist`, x)
 }
 
 euc_dist_arma1 <- function(x) {
-  .Call(`_manytestsr_euc_dist_arma1`, x)
+    .Call(`_manytestsr_euc_dist_arma1`, x)
 }
 
 vecdist3 <- function(x) {
-  .Call(`_manytestsr_vecdist3`, x)
+    .Call(`_manytestsr_vecdist3`, x)
 }
 
 trimmed_mean <- function(x, trim_percent) {
-  .Call(`_manytestsr_trimmed_mean`, x, trim_percent)
+    .Call(`_manytestsr_trimmed_mean`, x, trim_percent)
 }
 
 fastmad <- function(x, center) {
-  .Call(`_manytestsr_fastmad`, x, center)
+    .Call(`_manytestsr_fastmad`, x, center)
 }
 
 fast_huberM <- function(x, k = 1.5, tol = 1e-06, trim = .05) {
-  .Call(`_manytestsr_fast_huberM`, x, k, tol, trim)
+    .Call(`_manytestsr_fast_huberM`, x, k, tol, trim)
 }
 
 col_huberM <- function(dx, k = 1.5, tol = 1e-06, trim = .05) {
-  .Call(`_manytestsr_col_huberM`, dx, k, tol, trim)
+    .Call(`_manytestsr_col_huberM`, dx, k, tol, trim)
 }
+

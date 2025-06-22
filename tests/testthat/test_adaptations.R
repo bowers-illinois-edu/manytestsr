@@ -1,8 +1,7 @@
 ## Test and develop functions to adapt p-values and alpha levels as the tree grows
-testthat::context("Alpha and P Adjusting Performance")
 
 ## The next lines are for use when creating the tests. We want interactive<-FALSE for production
-interactive <- TRUE
+interactive <- FALSE
 if (interactive) {
   library(devtools)
   library(testthat)
@@ -20,10 +19,6 @@ if (interactive) {
 }
 setDTthreads(1)
 options(digits = 4)
-
-## The unadjusted p-values should be lower than the adjusted ones.
-## Assess weak control of the FWER with no local adjustment or extra global
-## adjustment
 
 test_that("find_blocks should give reasonable answers in the true null situation", {
   #### First just see if find_blocks itself operates with no local adjustment or alpha adjustment and fixed block structure.
@@ -397,7 +392,7 @@ test_that("We have strong control of the FWER in some cases", {
     blocksize = "nb",
     by_block = TRUE,
     stop_splitby_constant = TRUE,
-    local_adj_p_fn = local_unadj_all_ps,
+    local_adj_p_fn = local_hommel_all_ps,
     bottom_up_adj = "hommel",
   )
 
@@ -405,11 +400,11 @@ test_that("We have strong control of the FWER in some cases", {
   t(res_half_rates)
 
   ## This is showing control of FWER in the strong sense.
-  expect_lt(res_half_rates$false_pos_prop, .05 + sim_err)
+  expect_lt(res_half_rates$node_false_rejection_prop, .05 + sim_err)
   ## Power to detect effects at the individual block level.
-  res_half_rates$true_pos_prop
+  res_half_rates$leaf_power
   ## This is a basic requirement of a good test: power above alpha
-  expect_gt(res_half_rates$true_pos_prop, .05)
+  expect_gt(res_half_rates$node_power, .05)
   res_half <- find_blocks(
     idat = idt, bdat = bdt1, blockid = "bF",
     splitfn = splitSpecifiedFactorMulti, pfn = pOneway, alphafn = NULL, local_adj_p_fn = NULL,
@@ -419,13 +414,13 @@ test_that("We have strong control of the FWER in some cases", {
 
   res_half
 
-  res_half %>%
+  res_half$bdat %>%
     select(node, level, parent, nonnull, lvls_fac, biggrp, starts_with("g"), starts_with("p")) %>%
     mutate(across(where(is.numeric), zapsmall))
 
   ## Deprecate make_results_tree or just replace it with the _direct one after some more testing
   # res_half_tree <- make_results_tree(res_half)
-  res_half_tree <- make_results_tree(res_half, block_id = "bF", return_what = "all")
+  res_half_tree <- make_results_tree(res_half$bdat, block_id = "bF", return_what = "all")
   # res_half_graph <- make_results_ggraph(res_half_tree)
   res_half_graph <- make_results_ggraph(res_half_tree$graph)
   res_half_graph
@@ -435,7 +430,7 @@ test_that("We have strong control of the FWER in some cases", {
   ## (where we may make an error or not for a hypothesis referring to multiple
   ## leaves). Currently this is still slow but keeping it slow for clarity.
   ## TODO make this change in padj_test_fn...
-  res_half_errs <- make_results_tree(res_half, block_id = "bF", return_what = "test_summary")
+  res_half_errs <- make_results_tree(res_half$bdat, block_id = "bF", return_what = "test_summary")
   res_half_errs
 })
 
@@ -483,8 +478,8 @@ testing_fn <- function(afn, sfn, local_adj, sby, fmla = Ytauv2 ~ ZF | bF, idat =
   ## afn and sfn and sby are character names
   theres <- find_blocks(
     idat = idat, bdat = bdat, blockid = "bF", splitfn = get(sfn),
-    pfn = pIndepDist, alphafn = theafn, local_adj_p_fn = local_adj, thealpha = 0.05, thew0 = .05 - .001,
-    fmla = fmla,
+    pfn = pTestTwice, alphafn = theafn, local_adj_p_fn = local_adj, thealpha = 0.05, thew0 = .05 - .001,
+    fmla = fmla,simthresh=1,
     copydts = TRUE, splitby = sby, stop_splitby_constant = TRUE, parallel = "multicore", ncores = 2
   )
   setkey(theres$bdat, bF)
@@ -858,7 +853,7 @@ test_that("alphafns work across splitters for no effects", {
 ##   ### blocks vary in size so perhaps the more sensitive procedures will be more
 ##   ### likely to pick up effects in the smaller blocks.
 ##   table(idat3$bF)
-## 
+##
 ##   tau_v1 <- mapply(
 ##     FUN = function(afn = afn, sfn = sfn, sby = sby) {
 ##       message(paste(afn, sfn, sby, collapse = ","))
@@ -869,22 +864,22 @@ test_that("alphafns work across splitters for no effects", {
 ##     sby = alpha_and_splits$splitby, SIMPLIFY = FALSE
 ##   )
 ##   names(tau_v1) <- resnms
-## 
+##
 ##   tau_v1_det <- lapply(seq_along(tau_v1), function(i) {
 ##     # message(i)
 ##     fwer <- stri_sub(names(tau_v1)[[i]], 1, 4) == "NULL"
 ##     report_detections(tau_v1[[i]], fwer = fwer, only_hits = TRUE)
 ##   })
 ##   names(tau_v1_det) <- resnms
-## 
+##
 ##   eval_maxp(tau_v1_det)
 ##   eval_minate(tau_v1_det, atenm = "ate_tau")
 ##   eval_numgrps(tau_v1_det)
 ##   eval_single_blocks_found(tau_v1_det)
 ##   eval_treedepth(tau_v1_det)
 ## })
-## 
-## 
+##
+##
 ## test_that("alphafns work across splitters for individually heterogeneous effects block-fixed effects and some completely null blocks.", {
 ##   ################
 ##   tau_v2 <- mapply(
@@ -897,14 +892,14 @@ test_that("alphafns work across splitters for no effects", {
 ##     sby = alpha_and_splits$splitby, SIMPLIFY = FALSE
 ##   )
 ##   names(tau_v2) <- resnms
-## 
+##
 ##   tau_v2_det <- lapply(seq_along(tau_v2), function(i) {
 ##     # message(i)
 ##     fwer <- stri_sub(names(tau_v2)[[i]], 1, 4) == "NULL"
 ##     report_detections(tau_v2[[i]], fwer = fwer, only_hits = TRUE)
 ##   })
 ##   names(tau_v2_det) <- resnms
-## 
+##
 ##   ### maxp and single_blocks don't fit the intuition here. Need to investigate. Commenting out for now.
 ##   ## eval_maxp(tau_v2_det)
 ##   ## eval_minate(tau_v2_det, atenm = "ate_tauv2")
