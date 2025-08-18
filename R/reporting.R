@@ -17,6 +17,43 @@
 
 #' @return A data.table adding a column \code{hit} to the \code{res} data.table
 #' indicating a "hit" or detection for that block (or group of blocks)
+#' @examples
+#' \donttest{
+#' # Use example data and run find_blocks
+#' data(example_dat, package = "manytestsr")
+#' library(data.table)
+#' library(dplyr)
+#' 
+#' # Create block-level dataset
+#' example_bdat <- example_dat %>%
+#'   group_by(blockF) %>%
+#'   summarize(
+#'     nb = n(),
+#'     pb = mean(trt),
+#'     hwt = (nb / nrow(example_dat)) * (pb * (1 - pb)),
+#'     .groups = "drop"
+#'   ) %>%
+#'   as.data.table()
+#' 
+#' # Run find_blocks
+#' results <- find_blocks(
+#'   idat = example_dat,
+#'   bdat = example_bdat,
+#'   blockid = "blockF",
+#'   splitfn = splitCluster,
+#'   pfn = pOneway,
+#'   fmla = Y1 ~ trtF | blockF,
+#'   parallel = "no"
+#' )
+#' 
+#' # Report detections using FWER control
+#' detections_fwer <- report_detections(results$bdat, fwer = TRUE, alpha = 0.05)
+#' head(detections_fwer[, .(blockF, hit, pfinalb)])
+#' 
+#' # Report only significant blocks
+#' hits_only <- report_detections(results$bdat, fwer = TRUE, only_hits = TRUE)
+#' print(hits_only)
+#' }
 
 #' @importFrom stringi stri_count_fixed stri_split_fixed
 #' @import data.table

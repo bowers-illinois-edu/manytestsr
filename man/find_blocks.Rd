@@ -159,3 +159,56 @@ random choice of a single block or could vary and thus focus the testing on
 the largest/highest ranked blocks.
 }
 }
+\examples{
+\donttest{
+# Load example data
+data(example_dat, package = "manytestsr")
+library(data.table)
+library(dplyr)
+
+# Create block-level dataset
+example_bdat <- example_dat \%>\%
+  group_by(blockF) \%>\%
+  summarize(
+    nb = n(),
+    pb = mean(trt),
+    hwt = (nb / nrow(example_dat)) * (pb * (1 - pb)),
+    place = unique(place),
+    year = unique(year),
+    place_year_block = factor(unique(place_year_block)),
+    .groups = "drop"
+  ) \%>\%
+  as.data.table()
+  
+# Basic usage with cluster-based splitting
+result1 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat, 
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pOneway,
+  fmla = Y1 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  trace = TRUE
+)
+
+# Access block-level results
+head(result1$bdat)
+
+# Access node-level results  
+head(result1$node_dat)
+
+# Example with pre-specified factor splitting
+result2 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF", 
+  splitfn = splitSpecifiedFactor,
+  pfn = pIndepDist,
+  fmla = Y2 ~ trtF | blockF,
+  splitby = "place_year_block",
+  parallel = "no"
+)
+}
+}

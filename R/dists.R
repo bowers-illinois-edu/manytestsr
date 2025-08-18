@@ -5,6 +5,19 @@
 #'
 #' @param x Is a numeric vector (the  outcome variable)
 #' @return A list  for inclusion in a data.table with  distances between each unit and other units as well as some transformations of those distances
+#' @examples
+#' # Example with continuous outcome data
+#' outcome <- c(2.1, 5.3, 1.8, 7.2, 3.4, 4.6)
+#' 
+#' # Compute distance-based transformations
+#' dist_results <- dists_and_trans(outcome)
+#' 
+#' # View components
+#' str(dist_results)
+#' print(dist_results$mean_dist)     # Mean distance to all other units
+#' print(dist_results$rankY)         # Ranks of original values
+#' print(dist_results$tanhY)         # Hyperbolic tangent transformation
+#' 
 #' @importFrom Rfast Dist rowmeans rowMads rowMaxs Rank vecdist rowmeans
 #' @export
 dists_and_trans <- function(x) {
@@ -43,6 +56,20 @@ fast_dists_and_trans_new_parallel <- function(threads) {
 #' @param x Is a numeric vector (the  outcome variable)
 #' @param Z is a binary numeric vector or a  factor vector with  only  two values
 #' @return Vector with  the individual level components of the energy distances between each unit and the units in  the control condition
+#' @examples
+#' # Example with treatment and control groups
+#' outcome <- c(2.1, 5.3, 1.8, 7.2, 3.4, 4.6, 6.1, 2.8)
+#' treatment <- c(0, 1, 0, 1, 0, 1, 1, 0)  # Binary treatment indicator
+#' 
+#' # Compute energy distances
+#' e_dists <- edisti(outcome, treatment)
+#' print(e_dists)
+#' 
+#' # With factor treatment variable
+#' treatment_factor <- factor(treatment, labels = c("Control", "Treatment"))
+#' e_dists2 <- edisti(outcome, treatment_factor)
+#' print(e_dists2)
+#' 
 #' @importFrom Rfast Dist colsums rowsums Order
 #' @export
 edisti <- function(x, Z) {

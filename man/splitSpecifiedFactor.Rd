@@ -14,3 +14,22 @@ splitSpecifiedFactor(bid, x)
 \description{
 This function does binary splits using a factor variable with dots separating the names of the subgroups. If there are more than two subgroups at any level, it makes one group from the largest subgroup and another group from the rest. If there are multiple subgroups the same size, it chooses the first subgroup by order of the levels of the factor.
 }
+\examples{
+# Create hierarchical factor for pre-specified splitting
+block_ids <- c("B1", "B2", "B3", "B4", "B5", "B6")
+hierarchical_factor <- factor(c(
+  "StateA.District1.School1",
+  "StateA.District1.School2", 
+  "StateA.District2.School1",
+  "StateB.District1.School1",
+  "StateB.District1.School2",
+  "StateB.District2.School1"
+))
+
+# First split will separate by state (StateA vs StateB)
+groups <- splitSpecifiedFactor(block_ids, hierarchical_factor)
+
+# Show the grouping
+data.frame(block = block_ids, hierarchy = hierarchical_factor, group = groups)
+
+}

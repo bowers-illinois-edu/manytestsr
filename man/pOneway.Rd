@@ -39,3 +39,18 @@ These functions accept a data frame and perhaps test specific arguments
 (like whether or not the test will be asymptotic or simulation based). It
 produces a p-value.
 }
+\examples{
+# Example using built-in data
+data(example_dat, package = "manytestsr")
+
+# Test for treatment effect on Y1 within a single block
+single_block <- subset(example_dat, blockF == "B080")
+p_val <- pOneway(single_block, Y1 ~ trtF | blockF, parallel = "no")
+print(p_val)
+
+# Test with permutation-based inference for small samples
+p_val_perm <- pOneway(single_block, Y1 ~ trtF | blockF, 
+                      simthresh = 100, sims = 500, parallel = "no")
+print(p_val_perm)
+
+}

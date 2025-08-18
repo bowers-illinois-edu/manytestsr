@@ -22,6 +22,20 @@
 
 #' @param ncpu is the number of workers (for "snow") or cores (for "multicore").
 #' @return A p-value
+#' @examples
+#' # Example using built-in data
+#' data(example_dat, package = "manytestsr")
+#' 
+#' # Test for treatment effect on Y1 within a single block
+#' single_block <- subset(example_dat, blockF == "B080")
+#' p_val <- pOneway(single_block, Y1 ~ trtF | blockF, parallel = "no")
+#' print(p_val)
+#' 
+#' # Test with permutation-based inference for small samples
+#' p_val_perm <- pOneway(single_block, Y1 ~ trtF | blockF, 
+#'                       simthresh = 100, sims = 500, parallel = "no")
+#' print(p_val_perm)
+#' 
 #' @importFrom coin oneway_test pvalue approximate exact asymptotic
 #' @importFrom parallel detectCores
 #' @export
@@ -135,6 +149,23 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 #' @importFrom Rfast Rank
 #' @importFrom parallel detectCores
 #' @importFrom dataPreparation which_are_constant
+#' @examples
+#' \donttest{
+#' # Example using distance-based independence test
+#' data(example_dat, package = "manytestsr")
+#' library(data.table)
+#' 
+#' # Test for treatment effect using distance-based approach
+#' single_block <- as.data.table(subset(example_dat, blockF == "B080"))
+#' p_val <- pIndepDist(single_block, Y1 ~ trtF | blockF, parallel = "no")
+#' print(p_val)
+#' 
+#' # Using different distance function
+#' p_val2 <- pIndepDist(single_block, Y2 ~ trtF | blockF, 
+#'                      distfn = fast_dists_and_trans_nomax_hybrid, 
+#'                      parallel = "no")
+#' print(p_val2)
+#' }
 #' @export
 pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
                        parallel = "yes", ncpu = NULL, distfn = fast_dists_and_trans_hybrid) {

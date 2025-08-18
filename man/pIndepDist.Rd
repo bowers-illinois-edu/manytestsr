@@ -56,3 +56,21 @@ it is better to parallelize the distance creation \code{distfn} (done here in C+
 in the \code{fastfns.cpp} file) rather than use the \code{data.table} approach of
 \code{setDTthreads()}. So, here we assume that the threads for data.table are 1.
 }
+\examples{
+\donttest{
+# Example using distance-based independence test
+data(example_dat, package = "manytestsr")
+library(data.table)
+
+# Test for treatment effect using distance-based approach
+single_block <- as.data.table(subset(example_dat, blockF == "B080"))
+p_val <- pIndepDist(single_block, Y1 ~ trtF | blockF, parallel = "no")
+print(p_val)
+
+# Using different distance function
+p_val2 <- pIndepDist(single_block, Y2 ~ trtF | blockF, 
+                     distfn = fast_dists_and_trans_nomax_hybrid, 
+                     parallel = "no")
+print(p_val2)
+}
+}
