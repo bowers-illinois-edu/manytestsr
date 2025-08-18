@@ -38,6 +38,7 @@ Imports:
     hommel (>= 1.8.0),
 Remotes:
     dsrobertson/onlineFDR
+    bowers-illinois-edu/TreeTestSim
 LinkingTo: Rcpp, RcppArmadillo, RcppDist, Rfast
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)

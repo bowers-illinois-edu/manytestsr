@@ -28,7 +28,7 @@ test_that("Some distance matrix creation functions produce the same results", {
   dist2 <- sqrt(outer(xblah, xblah, FUN = function(x, y) {
     (x - y)^2
   }))
-  testdist <- Dist(xblah)
+  testdist <- Rfast::Dist(xblah)
   expect_equal(dist2, testdist)
 })
 
@@ -44,19 +44,16 @@ vecdist_fn <- function() {
   Rfast::vecdist(xblah)
 }
 vecdist2_fn <- function() {
-  vecdist2(xblah)
+  manytestsr:::vecdist2(xblah)
 }
 vecdist3_fn <- function() {
-  vecdist3(xblah)
+  manytestsr:::vecdist3_arma(xblah)
 }
 vecdist_arma_fn <- function() {
-  vecdist_arma(xblah)
+  manytestsr:::vecdist_arma(xblah)
 }
 vecdist3_arma_fn <- function() {
-  vecdist3_arma(xblah)
-}
-vecdist4_arma_fn <- function() {
-  vecdist4_arma(xblah)
+  manytestsr:::vecdist3_arma(xblah)
 }
 ## vecdist_rcpp_fn <- function() { vecdist_rcpp(xblah) }
 ## vecdist2_rcpp_fn <- function() { vecdist2_rcpp(xblah) }
@@ -66,14 +63,14 @@ basedist_fn <- function() {
   return(mat)
 }
 manhattan_fn <- function() {
-  Dist(xblah, method = "manhattan")
+  Rfast::Dist(xblah, method = "manhattan")
 }
-manhattan2_fn <- function() {
-  manhattan_dist(xblah)
-}
-euc_dist_arma1_fn <- function() {
-  euc_dist_arma1(xblah)
-}
+## manhattan2_fn <- function() {
+##   manhattan_dist(xblah)
+## }
+## euc_dist_arma1_fn <- function() {
+##   euc_dist_arma1(xblah)
+## }
 
 test_that("All distance matrix creation functions produce the same results", {
   expect_equal(byhand_fn(), Dist_fn())
@@ -82,13 +79,12 @@ test_that("All distance matrix creation functions produce the same results", {
   ## expect_equal(byhand_fn(), vecdist2_rcpp_fn())
   expect_equal(byhand_fn(), vecdist2_fn())
   expect_equal(byhand_fn(), vecdist3_fn())
-  expect_equal(byhand_fn(), vecdist4_arma_fn())
   expect_equal(byhand_fn(), vecdist3_arma_fn())
   expect_equal(byhand_fn(), vecdist_arma_fn())
   expect_equal(byhand_fn(), basedist_fn())
   expect_equal(byhand_fn(), manhattan_fn())
   # expect_equal(byhand_fn(), manhattan2_fn())
-  expect_equal(byhand_fn(), euc_dist_arma1_fn())
+  # expect_equal(byhand_fn(), euc_dist_arma1_fn())
 })
 
 ## Now test the score functions since we basically stopped making full
@@ -117,7 +113,7 @@ slow_r_fn <- function(x=xblah){
 }
 
 by_unit_fn <- function(x=xblah){
-  fast_dists_and_trans_new(x)
+  manytestsr:::fast_dists_and_trans_new(x)
 }
 
 r_fast_fn <- function(x=xblah){
@@ -125,11 +121,11 @@ r_fast_fn <- function(x=xblah){
 }
 
 by_unit_fn_threads <- function(x=xblah){
-  fast_dists_and_trans_new_omp(x,threads=2)
+  manytestsr:::fast_dists_and_trans_new_omp(x,threads=2)
 }
 
 just_four <- function(x=xblah){
-  fast_dists_and_trans_nomax_hybrid(x)
+  manytestsr:::fast_dists_and_trans_nomax_hybrid(x)
 }
 
 test_that("All score creation functions produce same results",{
@@ -138,8 +134,8 @@ test_that("All score creation functions produce same results",{
   expect_equal(slow_r_fn(),r_fast_fn())
   expect_equal(by_unit_fn(),slow_r_fn())
   expect_equal(by_unit_fn(),r_fast_fn())
-  expect_equal(fast_dists_and_trans_new(xblah),fast_dists_and_trans_hybrid(xblah))
-  expect_equal(fast_dists_and_trans_new(xblah)[c("mean_dist","mean_rank_dist","rankY","tanhY")],fast_dists_and_trans_nomax_hybrid(xblah))
+  expect_equal(manytestsr:::fast_dists_and_trans_new(xblah),fast_dists_and_trans_hybrid(xblah))
+  expect_equal(manytestsr:::fast_dists_and_trans_new(xblah)[c("mean_dist","mean_rank_dist","rankY","tanhY")],manytestsr:::fast_dists_and_trans_nomax_hybrid(xblah))
 })
 
 

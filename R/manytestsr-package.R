@@ -8,7 +8,7 @@ NULL
 if (getRversion() >= "2.15.1") utils::globalVariables(c("."))
 
 utils::globalVariables(c(
-  "J", "Y", "a", "allnull", "alpha1", "anynotnull", "bF", "batch", "biggrp", "blocksbygroup", "both_ns",
+  "J", "Y", "a", "allnull", "alpha1", "anynotnull", "bF", "batch", "group_id", "blocksbygroup", "both_ns",
   "depth", "fin_grp", "fin_nodenum", "fin_parent", "fin_parent_p", "g1", "group_hit",
   "group_hit2", "grpsize", "hit", "hit_grp", "i.nodesize", "label", "leaves", "max_alpha",
   "max_p", "maxate", "maxdepth", "meanate", "medianate", "minate", "name", "newZ", "newZF",

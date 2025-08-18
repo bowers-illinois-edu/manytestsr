@@ -159,6 +159,9 @@ find_blocks <-
     }
 
     # Setup
+    ## Initialize numeric node tracking
+    node_tracker <- create_node_tracker()
+    
     ## Should we always copy the data tables? And rename them?
     if (copydts) {
       bdat <- data.table::copy(bdat)
@@ -167,13 +170,13 @@ find_blocks <-
       ## This is just some defensive programming to delete columns created in a previous run
       cols_to_del_b <-
         grep(
-          "^p[0-9]|^g[0-9]|^alpha[0-9]|pfinal|testable|nodesize|blocksize|blocksbygroup|^nodenum|biggrp",
+          "^p[0-9]|^g[0-9]|^alpha[0-9]|pfinal|testable|nodesize|blocksize|blocksbygroup|^nodenum|group_id",
           names(bdat),
           value = TRUE
         )
       cols_to_del_i <-
         grep(
-          "^p[0-9]|^g[0-9]|^alpha[0-9]|pfinal|testable|nodesize|blocksize|blocksbygroup|^nodenum|biggrp",
+          "^p[0-9]|^g[0-9]|^alpha[0-9]|pfinal|testable|nodesize|blocksize|blocksbygroup|^nodenum|group_id",
           names(idat),
           value = TRUE
         )
@@ -200,7 +203,8 @@ find_blocks <-
     # Record the names of the group and pvalues.
     gnm <- "g1"
     pnm <- "p1"
-    bdat[, biggrp := gl(1, nrow(bdat), labels = "1")] # initialize the biggrp factor var
+    bdat[, group_id := 1L] # initialize with numeric group ID
+    bdat[, biggrp := factor(rep("1", nrow(bdat)))] # for backward compatibility
     bdat[, g1 := biggrp]
     if (is.null(alphafn)) {
       bdat[, alpha1 := thealpha]
@@ -223,21 +227,22 @@ find_blocks <-
     bdat[, testable := (pfinalb < alpha1)]
     # node_dat is a node level dataset
     node_dat <- data.table(
-      parent = NA_character_,
+      parent = 0L,
       p = unique(bdat$p1),
+      group_id = 1L,
       biggrp = factor("1"),
       a = unique(bdat$alpha1),
       batch = "p1",
       testable = unique(bdat$testable),
-      nodenum = "1",
+      nodenum = 1L,
       depth = 1L,
       nodesize = sum(bdat[, get(blocksize)])
     )
-    bdat[, nodenum_current := "1"]
-    bdat[, nodenum_prev := "0"]
+    bdat[, nodenum_current := 1L]
+    bdat[, nodenum_prev := 0L]
     setkeyv(idat, blockid)
     setkeyv(bdat, "testable")
-    bdat[, blocksbygroup := length(unique(get(blockid))), by = biggrp]
+    bdat[, blocksbygroup := length(unique(get(blockid))), by = group_id]
     if (!all(bdat$testable)) {
       ## Return the objects
       if (all(return_what == "blocks")) {
@@ -265,22 +270,49 @@ find_blocks <-
       pnm <- paste0("p", i) # name of the p-value variable for the current split
       alphanm <- paste0("alpha", i)
       # Set Group to NA for blocks where we have to stop testing
-      bdat[(testable), (gnm) := splitfn(bid = get(blockid), x = get(splitby)), by = biggrp]
-      # maybe improve this next with
-      # https://stackoverflow.com/questions/33689098/interactions-between-factors-in-data-table
-      if (i == 2) {
-        bdat[(testable), nodenum_prev := nodenum_current]
-        bdat[(testable), nodenum_current := nodeidfn(get(gnm))]
-      } else {
-        bdat[(testable), nodenum_prev := nodenum_current]
-        bdat[(testable), nodenum_current := nodeidfn(paste0(nodenum_prev, get(gnm))), by = biggrp]
+      bdat[(testable), (gnm) := splitfn(bid = get(blockid), x = get(splitby)), by = group_id]
+      
+      # Update node tracking with numeric IDs
+      bdat[(testable), nodenum_prev := nodenum_current]
+      
+      # Create unique node IDs for each unique split group value within each parent group
+      testable_blocks <- bdat[(testable)]
+      if (nrow(testable_blocks) > 0) {
+        # Process each parent group separately to maintain proper tree structure
+        parent_groups <- unique(testable_blocks$nodenum_current)
+        
+        for (parent_id in parent_groups) {
+          parent_blocks <- testable_blocks[nodenum_current == parent_id]
+          unique_split_values <- unique(parent_blocks[[gnm]])
+          
+          # Assign new node IDs for children of this parent
+          for (k in seq_along(unique_split_values)) {
+            split_val <- unique_split_values[k]
+            new_node_id <- node_tracker$next_id
+            node_tracker$next_id <- node_tracker$next_id + 1L
+            
+            # All blocks with this split value get the same node ID
+            bdat[(testable) & nodenum_current == parent_id & get(gnm) == split_val, 
+                 nodenum_current := new_node_id]
+            
+            # Add to tracker
+            new_node <- data.table(
+              node_id = new_node_id,
+              parent_id = parent_id,
+              depth = i
+            )
+            node_tracker$tracker <- rbindlist(list(node_tracker$tracker, new_node))
+          }
+        }
       }
-      bdat[(testable), biggrp := interaction(biggrp, nodenum_current, drop = TRUE)]
-      bdat[, biggrp := droplevels(biggrp)] # annoying to need this extra step given drop=TRUE
-      bdat[, nodesize := sum(get(blocksize)), by = biggrp]
+      
+      # Update group_id and create biggrp  
+      bdat[(testable), group_id := nodenum_current]
+      bdat[, biggrp := factor(group_id)]
+      
+      bdat[, nodesize := sum(get(blocksize)), by = group_id]
       # Now merge idat and bdat again since the test has to be at the idat level
-      idat[bdat, c("testable", "biggrp") := mget(c("i.testable", "i.biggrp")), on = blockid]
-      idat[, biggrp := droplevels(biggrp)] # annoying to need to do this
+      idat[bdat, c("testable", "group_id", "biggrp") := mget(c("i.testable", "i.group_id", "i.biggrp")), on = blockid]
       pb <- idat[(testable), list(
         p = pfn(
           fmla = fmla,
@@ -290,30 +322,33 @@ find_blocks <-
           parallel = parallel,
           ncpu = ncores
         )
-      ), by = biggrp]
+      ), by = group_id]
       pb[, depth := i]
-      # This next could be made more efficient without string splitting but not sure what to do
-      pb[, nodenum := stri_split_fixed(biggrp, ".", simplify = TRUE)[, i]]
-      pb[, parent := stri_split_fixed(biggrp, ".", simplify = TRUE)[, i - 1]]
+      # Use numeric node IDs directly - no string splitting needed
+      pb[, nodenum := group_id]
+      pb[, parent := get_parent_from_tracker(node_tracker, group_id)]
       # call "blocksize" the sum of the block sizes within group
-      pb[bdat, nodesize := i.nodesize, on = "biggrp"]
+      pb[bdat, nodesize := i.nodesize, on = "group_id"]
       ## Adjust the p-values for a given node
       if (!is.null(local_adj_p_fn)) {
         pb[, p := local_adj_p_fn(p), by = parent]
       }
+      # Add biggrp to pb for compatibility
+      pb[, biggrp := factor(group_id)]
+      
       node_dat <-
-        rbind(node_dat[, .(parent, p, a, biggrp, batch, testable, nodenum, depth, nodesize)],
+        rbind(node_dat[, .(parent, p, a, group_id, biggrp, batch, testable, nodenum, depth, nodesize)],
           pb[, batch := pnm],
           fill = TRUE
         )
       setnames(pb, "p", pnm)
-      setkeyv(pb, "biggrp")
-      bdat[pb, (pnm) := get(paste0("i.", pnm)), on = "biggrp"]
+      setkeyv(pb, "group_id")
+      bdat[pb, (pnm) := get(paste0("i.", pnm)), on = "group_id"]
       # bdat[(testable), pfinalb := pmax(get(pnm), pfinalb)]
       bdat[(testable), pfinalb := get(pnm)]
       # Now decide which blocks (units) can be tested again.
       # If a split contains only one block. We cannot test further.
-      bdat[, blocksbygroup := .N, by = biggrp]
+      bdat[, blocksbygroup := .N, by = group_id]
       if (is.null(alphafn)) {
         bdat[, (alphanm) := thealpha]
         # Recall that `:=` **updates** values. So, it doesn't overwrite (testable==FALSE) values
@@ -337,20 +372,11 @@ find_blocks <-
 
           find_paths <- function(j) {
             tmp <- node_dat[depth == j, ]
-            tmp[, leaves := stri_extract_last(as.character(biggrp), regex = "\\.[:alnum:]*$")]
-            tmp[, paths := stri_replace_all(as.character(biggrp),
-              replacement = "",
-              fixed = leaves
-            )]
-            path_dat <-
-              tmp[, .(thepath = paste(
-                unique(paths),
-                paste(leaves, sep = "", collapse = ""),
-                sep = ""
-              )), by = paths]
-            path_vec <- stri_split_fixed(path_dat$thepath, ".")
-            # stopifnot(all(path_vec %in% node_dat$nodenum))
-            return(path_vec)
+            # Build paths using numeric ancestry from tracker
+            paths <- lapply(tmp$nodenum, function(node_id) {
+              build_numeric_ancestry(node_tracker, node_id)
+            })
+            return(paths)
           }
 
           setkey(node_dat, nodenum)
@@ -368,8 +394,8 @@ find_blocks <-
         }
 
         node_dat[is.na(a), a := get(alphanm)]
-        setkey(node_dat, biggrp)
-        bdat[node_dat, (alphanm) := get(paste0("i.", alphanm)), on = "biggrp"]
+        setkey(node_dat, group_id)
+        bdat[node_dat, (alphanm) := get(paste0("i.", alphanm)), on = "group_id"]
         # In deciding which blocks can be included in more testing we use
         # current p rather than max of previous p. A block is testable if current
         # p <= the alpha level AND the number of blocks in the group containing
@@ -387,7 +413,7 @@ find_blocks <-
         ## Here there is no sense in spliting by differences in covariate value
         ## (creating clusters using k-means) if covariate values do not differ
 
-        bdat[, testable := fifelse(uniqueN(get(splitby)) == 1, FALSE, unique(testable)), by = biggrp]
+        bdat[, testable := fifelse(uniqueN(get(splitby)) == 1, FALSE, unique(testable)), by = group_id]
       }
       node_dat[is.na(a), a := get(alphanm)]
       setkeyv(bdat, "testable") # for binary search speed
@@ -407,13 +433,75 @@ find_blocks <-
   }
 
 
-#' Use hashing to make a node id
+# Numeric node tracking system for performance
 
-#'
-#' This is an internal function used by find_blocks. Some (rare) designs can produce
-#' so many nodes that we have problems with integers. So, using hashes by default.
-#'
+#' Create node tracker object
+#' @return List with tracker data.table and next_id counter
+#' @keywords internal
+create_node_tracker <- function() {
+  list(
+    tracker = data.table(
+      node_id = 1L,
+      parent_id = 0L,
+      depth = 1L
+    ),
+    next_id = 2L
+  )
+}
 
+#' Add nodes to tracker
+#' @param tracker Node tracking object
+#' @param parent_ids Vector of parent node IDs
+#' @param depth Current depth
+#' @param n_children Number of children to create
+#' @return Updated tracker with new node IDs
+#' @keywords internal
+add_nodes_to_tracker <- function(tracker, parent_ids, depth, n_children) {
+  new_ids <- seq.int(tracker$next_id, length.out = n_children)
+  tracker$next_id <- tracker$next_id + n_children
+  
+  new_nodes <- data.table(
+    node_id = new_ids,
+    parent_id = rep(parent_ids, length.out = n_children),
+    depth = depth
+  )
+  
+  tracker$tracker <- rbindlist(list(tracker$tracker, new_nodes))
+  list(tracker = tracker, new_ids = new_ids)
+}
+
+#' Get parent ID from tracker
+#' @param tracker Node tracking object  
+#' @param node_ids Vector of node IDs to find parents for
+#' @return Vector of parent node IDs (0 for root)
+#' @keywords internal
+get_parent_from_tracker <- function(tracker, node_ids) {
+  sapply(node_ids, function(nid) {
+    parent <- tracker$tracker[node_id == nid, parent_id]
+    if (length(parent) == 0) 0L else parent
+  })
+}
+
+#' Build ancestry path for numeric node ID
+#' @param tracker Node tracking object
+#' @param node_id Node ID to build path for
+#' @return Integer vector of ancestry path from root to node
+#' @keywords internal
+build_numeric_ancestry <- function(tracker, node_id) {
+  path <- c()
+  current <- as.integer(node_id)
+  while (current != 0) {
+    path <- c(current, path)
+    current <- get_parent_from_tracker(tracker, current)
+  }
+  return(path)
+}
+
+#' Use hashing to make a node id (DEPRECATED)
+#'
+#' This function is deprecated in favor of numeric node tracking.
+#' Kept for backward compatibility only.
+#'
 #' @param d A vector
 #' @return a vector of hashes
 #' @importFrom digest digest getVDigest

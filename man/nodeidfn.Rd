@@ -2,7 +2,7 @@
 % Please edit documentation in R/find_blocks.R
 \name{nodeidfn}
 \alias{nodeidfn}
-\title{Use hashing to make a node id}
+\title{Use hashing to make a node id (DEPRECATED)}
 \usage{
 nodeidfn(d)
 }
@@ -13,6 +13,6 @@ nodeidfn(d)
 a vector of hashes
 }
 \description{
-This is an internal function used by find_blocks. Some (rare) designs can produce
-so many nodes that we have problems with integers. So, using hashes by default.
+This function is deprecated in favor of numeric node tracking.
+Kept for backward compatibility only.
 }

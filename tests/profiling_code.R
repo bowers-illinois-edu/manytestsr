@@ -146,81 +146,81 @@ blah <- matrix(rnorm(N), N / 4, 4)
 y <- matrix(blah[, 1], ncol = 1)
 y[2:3] <- y[1]
 
+## COMMENTED OUT - These functions were removed from the C++ codebase
 # all.equal(fastrowMeans(blah),fastrowMeans2(blah))
 # all.equal(fastrowMeans_Eigen(blah),rowMeans(blah))
-all.equal(fastrowMeans(blah), matrix(rowMeans(blah), ncol = 1))
-microbenchmark(fastrowMeans(blah), rowMeans(blah), times = 1000)
+# all.equal(fastrowMeans(blah), matrix(rowMeans(blah), ncol = 1))
+# microbenchmark(fastrowMeans(blah), rowMeans(blah), times = 1000)
 
 ## use manytestsr::fastrowMeans
 
 ### Fast row Mads
-tmp <- as.vector(fastrowMads(blah))
-tmp0 <- as.vector(fastrowMads2(blah))
-tmp2 <- rowMads(blah)
-tmp3 <- apply(blah, 1, mad)
+# tmp <- as.vector(fastrowMads(blah))
+# tmp0 <- as.vector(fastrowMads2(blah))
+# tmp2 <- rowMads(blah)
+# tmp3 <- apply(blah, 1, mad)
 
-all.equal(tmp, tmp2)
-all.equal(tmp0, tmp2)
-all.equal(tmp2, tmp3)
+# all.equal(tmp, tmp2)
+# all.equal(tmp0, tmp2)
+# all.equal(tmp2, tmp3)
 
-microbenchmark::microbenchmark(fastrowMads(blah), fastrowMads2(blah), rowMads(blah), apply(blah, 1, mad))
+# microbenchmark::microbenchmark(fastrowMads(blah), fastrowMads2(blah), rowMads(blah), apply(blah, 1, mad))
 
 ## use manytestsr::fastrowMads2
 
 ### Fast row Maxsa
-N <- 1000
-blah <- matrix(rnorm(N), N / 4, 4)
-tmp <- as.vector(fastrowMaxs(blah))
-tmp2 <- rowMaxs(blah, value = TRUE)
-tmp3 <- apply(blah, 1, max)
-tmp4 <- fastrowMaxs2(blah)
+# N <- 1000
+# blah <- matrix(rnorm(N), N / 4, 4)
+# tmp <- as.vector(fastrowMaxs(blah))
+# tmp2 <- rowMaxs(blah, value = TRUE)
+# tmp3 <- apply(blah, 1, max)
+# tmp4 <- fastrowMaxs2(blah)
 
-all.equal(tmp, tmp2)
-all.equal(tmp2, tmp3)
-all.equal(tmp2, tmp4)
+# all.equal(tmp, tmp2)
+# all.equal(tmp2, tmp3)
+# all.equal(tmp2, tmp4)
 
-microbenchmark::microbenchmark(fastrowMaxs(blah), fastrowMaxs2(blah), rowMaxs(blah, value = TRUE), apply(blah, 1, max), times = 1000)
+# microbenchmark::microbenchmark(fastrowMaxs(blah), fastrowMaxs2(blah), rowMaxs(blah, value = TRUE), apply(blah, 1, max), times = 1000)
 
 ## use manytestsr::fastrowMaxs2
 
 
 ### Fast covariance matrix
-all.equal(fastcova(blah), cov(blah))
-all.equal(fastcova(blah), cova(blah))
-microbenchmark(fastcova(blah), cova(blah), cov(blah))
+# all.equal(fastcova(blah), cov(blah))
+# all.equal(fastcova(blah), cova(blah))
+# microbenchmark(fastcova(blah), cova(blah), cov(blah))
 
 ## Use manytestsr:::fastcova
 
-### Fast variance
+### Fast variance - COMMENTED OUT - These functions were removed
 
-
-tmp1 <- var(y)
-tmp2 <- Var(y)
-tmp3 <- fastVar(y)
-all.equal(tmp1, tmp2)
-all.equal(tmp1, tmp3)
-microbenchmark(fastVar(y), var(y), Var(y), times = 1000)
+# tmp1 <- var(y)
+# tmp2 <- Var(y)
+# tmp3 <- fastVar(y)
+# all.equal(tmp1, tmp2)
+# all.equal(tmp1, tmp3)
+# microbenchmark(fastVar(y), var(y), Var(y), times = 1000)
 
 ## Use manytestsr:::fastVar
 
 ### Fast Mahalanobis distance (Which is just a z score) for a vector (not a matrix)
-tmp1 <- mahala(y, mu = fastMean(y), sigma = fastcova(y))
-tmp2 <- mahalanobis(y, center = fastMean(y), cov = fastcova(y))
-tmp4 <- zscore_vec(y)
-tmp5 <- as.vector((y - mean(y)) / sd(y))^2
-fn6 <- function(y) {
-  as.vector(((y - fastMean(y))^2 / Var(y)))
-}
+# tmp1 <- mahala(y, mu = fastMean(y), sigma = fastcova(y))
+# tmp2 <- mahalanobis(y, center = fastMean(y), cov = fastcova(y))
+# tmp4 <- zscore_vec(y)
+# tmp5 <- as.vector((y - mean(y)) / sd(y))^2
+# fn6 <- function(y) {
+#   as.vector(((y - fastMean(y))^2 / Var(y)))
+# }
 
-all.equal(tmp1, tmp2)
-all.equal(tmp1, as.vector(tmp4))
-all.equal(tmp1, tmp5)
-all.equal(tmp1, fn6(y))
-cor(tmp1, tmp5)
-cor(tmp1, tmp2)
-cor(tmp1, tmp4)
+# all.equal(tmp1, tmp2)
+# all.equal(tmp1, as.vector(tmp4))
+# all.equal(tmp1, tmp5)
+# all.equal(tmp1, fn6(y))
+# cor(tmp1, tmp5)
+# cor(tmp1, tmp2)
+# cor(tmp1, tmp4)
 
-microbenchmark(zscore_vec(y), fn6(y), mahala(y, mu = fastMean(y), sigma = fastcova(y)))
+# microbenchmark(zscore_vec(y), fn6(y), mahala(y, mu = fastMean(y), sigma = fastcova(y)))
 
 ### Ranks
 
@@ -251,95 +251,96 @@ all.equal(vecd1, vecd2)
 all.equal(vecd1, vecd3)
 all.equal(vecd1, vecd4)
 
-tmp1 <- dists_and_trans(y)
-tmp2 <- fast_dists_and_trans(y, Z = 1)
-tmp3 <- fast_dists_and_trans_by_unit(y, Z = 1)
+## COMMENTED OUT - These functions were removed from the C++ codebase
+# tmp1 <- dists_and_trans(y)
+# tmp2 <- fast_dists_and_trans(y, Z = 1)
+# tmp3 <- fast_dists_and_trans_by_unit(y, Z = 1)
 
-all.equal(length(tmp1), length(tmp2))
-all.equal(length(tmp1), length(tmp3))
-all.equal(tmp1[[1]], tmp2[[1]])
-all.equal(tmp1[[2]], tmp2[[2]])
-all.equal(tmp1[[3]], tmp2[[3]])
-all.equal(tmp1[[4]], tmp2[[4]])
-all.equal(tmp1[[5]], tmp2[[5]])
-all.equal(tmp1[[6]], tmp2[[6]])
-all.equal(tmp1[[7]], tmp2[[7]])
-all.equal(tmp1[[8]], tmp2[[8]])
+# all.equal(length(tmp1), length(tmp2))
+# all.equal(length(tmp1), length(tmp3))
+# all.equal(tmp1[[1]], tmp2[[1]])
+# all.equal(tmp1[[2]], tmp2[[2]])
+# all.equal(tmp1[[3]], tmp2[[3]])
+# all.equal(tmp1[[4]], tmp2[[4]])
+# all.equal(tmp1[[5]], tmp2[[5]])
+# all.equal(tmp1[[6]], tmp2[[6]])
+# all.equal(tmp1[[7]], tmp2[[7]])
+# all.equal(tmp1[[8]], tmp2[[8]])
 
-all.equal(tmp1[[1]], as.vector(tmp3[[1]]))
-all.equal(tmp1[[2]], as.vector(tmp3[[2]]))
-all.equal(tmp1[[3]], as.vector(tmp3[[3]]))
-all.equal(tmp1[[4]], as.vector(tmp3[[4]]))
-all.equal(tmp1[[5]], as.vector(tmp3[[5]]))
-all.equal(tmp1[[6]], as.vector(tmp3[[6]]))
-all.equal(tmp1[[7]], as.vector(tmp3[[7]]))
-all.equal(tmp1[[8]], as.vector(tmp3[[8]]))
+# all.equal(tmp1[[1]], as.vector(tmp3[[1]]))
+# all.equal(tmp1[[2]], as.vector(tmp3[[2]]))
+# all.equal(tmp1[[3]], as.vector(tmp3[[3]]))
+# all.equal(tmp1[[4]], as.vector(tmp3[[4]]))
+# all.equal(tmp1[[5]], as.vector(tmp3[[5]]))
+# all.equal(tmp1[[6]], as.vector(tmp3[[6]]))
+# all.equal(tmp1[[7]], as.vector(tmp3[[7]]))
+# all.equal(tmp1[[8]], as.vector(tmp3[[8]]))
 
 # http://adv-r.had.co.nz/C-interface.html
 # https://thecoatlessprofessor.com/programming/cpp/unofficial-rcpp-api-documentation/#iterators
 
 ## small y
-y <- as.numeric(seq(1.0, 100.0))
-microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 100)
+# y <- as.numeric(seq(1.0, 100.0))
+# microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 100)
 
 ## larger y
-y <- as.numeric(seq(1.0, 1000.0))
-microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 100)
+# y <- as.numeric(seq(1.0, 1000.0))
+# microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 100)
 
-y <- as.numeric(seq(1.0, 2000.0))
-microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 100)
+# y <- as.numeric(seq(1.0, 2000.0))
+# microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 100)
 
 ## This next the unit by unit approach is better
-y <- as.numeric(seq(1.0, 10000.0))
-microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 10)
+# y <- as.numeric(seq(1.0, 10000.0))
+# microbenchmark::microbenchmark(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), fast_dists_and_trans_by_unit(y, Z = 1), times = 10)
 
 ## Can't run this next
-y <- as.numeric(seq(1.0, 50000.0))
-tmp1 <- dists_and_trans(y)
-tmp2 <- fast_dists_and_trans(y, Z = 1)
-tmp3 <- fast_dists_and_trans_by_unit(y, Z = 1)
+# y <- as.numeric(seq(1.0, 50000.0))
+# tmp1 <- dists_and_trans(y)
+# tmp2 <- fast_dists_and_trans(y, Z = 1)
+# tmp3 <- fast_dists_and_trans_by_unit(y, Z = 1)
 
 ## Try bench::mark
 library(bench)
 
-y <- rnorm(1000)
-all.equal(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), check.attributes = FALSE)
-all.equal(dists_and_trans(y), fast_dists_and_trans_by_unit(y, Z = 1), check.attributes = FALSE)
+# y <- rnorm(1000)
+# all.equal(dists_and_trans(y), fast_dists_and_trans(y, Z = 1), check.attributes = FALSE)
+# all.equal(dists_and_trans(y), fast_dists_and_trans_by_unit(y, Z = 1), check.attributes = FALSE)
 
-set.seed(123456)
-y <- rnorm(100000)
+# set.seed(123456)
+# y <- rnorm(100000)
 ## Try to ensure that the values in N=10 are the same 10 (the first 10) as in the N=100, etc.
-dist_timings <- press(
-  N = c(10, 100, 500, 1000, 5000, 10000, 20000), # ,seq(1000,10000,1000)),
-  {
-    set.seed(12345)
-    y <- sample(y, N)
-    bench::mark(
-      main = dists_and_trans(y),
-      arma = fast_dists_and_trans(y, Z = 1),
-      byunit = fast_dists_and_trans_by_unit(y, Z = 1), min_iterations = 10, max_iterations = 1000, check = FALSE, filter_gc = FALSE
-    )
-  }
-)
-save(dist_timings, file = "dist_timings_linuxkeeling.rda")
+# dist_timings <- press(
+#   N = c(10, 100, 500, 1000, 5000, 10000, 20000), # ,seq(1000,10000,1000)),
+#   {
+#     set.seed(12345)
+#     y <- sample(y, N)
+#     bench::mark(
+#       main = dists_and_trans(y),
+#       arma = fast_dists_and_trans(y, Z = 1),
+#       byunit = fast_dists_and_trans_by_unit(y, Z = 1), min_iterations = 10, max_iterations = 1000, check = FALSE, filter_gc = FALSE
+#     )
+#   }
+# )
+# save(dist_timings, file = "dist_timings_linuxkeeling.rda")
 
 
 ## Here we cannot use any of the vecdist functions
-ybig <- as.numeric(seq(1.0, 10000.0))
+# ybig <- as.numeric(seq(1.0, 10000.0))
 ## All these fail with 50000 rows
-vecd1big <- Rfast::vecdist(ybig)
-vecd2big <- vecdist_arma(ybig) ## with latest compiler flag this works but is slow
-vecd3big <- vecdist2(ybig)
-vecd4big <- vecdist_squared(ybig)
+# vecd1big <- Rfast::vecdist(ybig)
+# vecd2big <- vecdist_arma(ybig) ## with latest compiler flag this works but is slow
+# vecd3big <- vecdist2(ybig)
+# # vecd4big <- vecdist_squared(ybig)
 
-microbenchmark::microbenchmark(fast_dists_and_trans_by_unit(ybig, Z = 1), fast_dists_and_trans(y, Z = 1), times = 1)
+# microbenchmark::microbenchmark(fast_dists_and_trans_by_unit(ybig, Z = 1), fast_dists_and_trans(y, Z = 1), times = 1)
 
-tmpbig0 <- dists_and_trans(ybig) ## this fails
+# tmpbig0 <- dists_and_trans(ybig) ## this fails
 
-system.time(
-  tmpbig2 <- fast_dists_and_trans_by_unit(ybig, Z = 1)
-)
+# system.time(
+#   tmpbig2 <- fast_dists_and_trans_by_unit(ybig, Z = 1)
+# )
 ## 182.999  39.181 222.864
-system.time(
-  tmpbig1 <- fast_dists_and_trans(ybig, Z = 1)
-)
+# system.time(
+#   tmpbig1 <- fast_dists_and_trans(ybig, Z = 1)
+# )
