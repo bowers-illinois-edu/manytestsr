@@ -1,0 +1,18 @@
+project:
+  type: website
+  
+format:
+  html:
+    theme: default
+    css: styles.css
+    toc: true
+    code-fold: false
+    
+website:
+  title: "manytestsr Vignettes"
+  navbar:
+    left:
+      - href: getting-started.html
+        text: "Getting Started"
+      - href: hierarchical-testing-workflow.html  
+        text: "Complete Workflow"
