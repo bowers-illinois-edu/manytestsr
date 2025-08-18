@@ -452,7 +452,7 @@ test_that("We have strong control of the FWER in some cases", {
   res_half
 
   res_half$bdat %>%
-    select(node, level, parent, nonnull, lvls_fac, biggrp, starts_with("g"), starts_with("p")) %>%
+    select(node, level, parent, nonnull, lvls_fac, node_id, starts_with("g"), starts_with("p")) %>%
     mutate(across(where(is.numeric), zapsmall))
 
   res_half_tree <- make_results_tree(res_half$bdat, block_id = "bF", return_what = "all")
@@ -517,7 +517,7 @@ testing_fn <- function(afn, sfn, local_adj, sby, fmla = Ytauv2 ~ ZF | bF, idat =
     copydts = TRUE, splitby = sby, stop_splitby_constant = TRUE, parallel = "multicore", ncores = 2
   )
   setkey(theres$bdat, bF)
-  return(theres$bdat)[order(biggrp)]
+  return(theres$bdat)[order(node_id)]
 }
 
 alpha_and_splits[c(1, 2, 4), ]
@@ -591,17 +591,17 @@ cbind(
 ## ## With alpha fixed
 ## res_fwer_det <- report_detections(res_fwer)
 ## ## So we can say that we discovered hits in the following blocks or groups of blocks
-## res_fwer_det[(hit), .(biggrp, bF, hit_grp, max_p, fin_parent_p, max_alpha, parent_alpha, single_hit, group_hit)][order(hit_grp)]
+## res_fwer_det[(hit), .(node_id, bF, hit_grp, max_p, fin_parent_p, max_alpha, parent_alpha, single_hit, group_hit)][order(hit_grp)]
 ##
 ## ## With alpha varying according to the alpha investing
 ## res_ai_det <- report_detections(res_ai, fwer = FALSE)
 ## ## So we can say that we discovered hits in the following blocks or groups of blocks
-## res_ai_det[(hit), .(biggrp, bF, hit_grp, max_p, fin_parent_p, max_alpha, parent_alpha, single_hit, group_hit)][order(hit_grp)]
+## res_ai_det[(hit), .(node_id, bF, hit_grp, max_p, fin_parent_p, max_alpha, parent_alpha, single_hit, group_hit)][order(hit_grp)]
 ##
 ## ## And with the saffron procedure
 ## res_saffron_det <- report_detections(res_saffron, fwer = FALSE)
 ## ## So we can say that we discovered hits in the following blocks or groups of blocks
-## res_saffron_det[(hit), .(biggrp, bF, hit_grp, max_p, fin_parent_p, max_alpha, parent_alpha, single_hit, group_hit)][order(hit_grp)]
+## res_saffron_det[(hit), .(node_id, bF, hit_grp, max_p, fin_parent_p, max_alpha, parent_alpha, single_hit, group_hit)][order(hit_grp)]
 ##
 ## res_fwer_tree <- make_results_tree(res_fwer, blockid = "bF")
 ## res_saffron_tree <- make_results_tree(res_saffron, blockid = "bF")
@@ -673,7 +673,7 @@ cbind(
 ##
 ## eval_treedepth <- function(detection_obj) {
 ##   treedepth <- sapply(detection_obj, function(dat) {
-##     max(stri_count_fixed(dat$biggrp, ".")) + 1
+##     max(stri_count_fixed(dat$node_id, ".")) + 1
 ##   })
 ##   expect_lte(treedepth[[4]], max(treedepth[1:3])) ## FWER should be smaller than at least one of the alpha adjusters
 ##   expect_lte(treedepth[[8]], max(treedepth[5:7]))

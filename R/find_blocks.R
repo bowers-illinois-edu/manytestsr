@@ -204,8 +204,8 @@ find_blocks <-
     gnm <- "g1"
     pnm <- "p1"
     bdat[, group_id := 1L] # initialize with numeric group ID
-    bdat[, biggrp := factor(rep("1", nrow(bdat)))] # for backward compatibility
-    bdat[, g1 := biggrp]
+    bdat[, node_id := factor(rep("1", nrow(bdat)))] # root node identifier
+    bdat[, g1 := node_id]
     if (is.null(alphafn)) {
       bdat[, alpha1 := thealpha]
     } else {
@@ -230,7 +230,7 @@ find_blocks <-
       parent = 0L,
       p = unique(bdat$p1),
       group_id = 1L,
-      biggrp = factor("1"),
+      node_id = factor("1"),
       a = unique(bdat$alpha1),
       batch = "p1",
       testable = unique(bdat$testable),
@@ -306,13 +306,13 @@ find_blocks <-
         }
       }
       
-      # Update group_id and create biggrp  
+      # Update group_id and create node_id  
       bdat[(testable), group_id := nodenum_current]
-      bdat[, biggrp := factor(group_id)]
+      bdat[, node_id := factor(group_id)]
       
       bdat[, nodesize := sum(get(blocksize)), by = group_id]
       # Now merge idat and bdat again since the test has to be at the idat level
-      idat[bdat, c("testable", "group_id", "biggrp") := mget(c("i.testable", "i.group_id", "i.biggrp")), on = blockid]
+      idat[bdat, c("testable", "group_id", "node_id") := mget(c("i.testable", "i.group_id", "i.node_id")), on = blockid]
       pb <- idat[(testable), list(
         p = pfn(
           fmla = fmla,
@@ -333,11 +333,11 @@ find_blocks <-
       if (!is.null(local_adj_p_fn)) {
         pb[, p := local_adj_p_fn(p), by = parent]
       }
-      # Add biggrp to pb for compatibility
-      pb[, biggrp := factor(group_id)]
+      # Add node_id to pb for compatibility
+      pb[, node_id := factor(group_id)]
       
       node_dat <-
-        rbind(node_dat[, .(parent, p, a, group_id, biggrp, batch, testable, nodenum, depth, nodesize)],
+        rbind(node_dat[, .(parent, p, a, group_id, node_id, batch, testable, nodenum, depth, nodesize)],
           pb[, batch := pnm],
           fill = TRUE
         )

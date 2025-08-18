@@ -161,7 +161,7 @@ make_results_ggraph <- function(res_graph, remove_na_p = TRUE) {
 #' visualization in terms of a tree graph.
 #'
 #' @param orig_res data.table from find_blocks(); must include elements such as
-#'   - biggrp    (dot-sep lineage, may be truncated),
+#'   - node_id    (node identifier, may be factorized),
 #'   - p1,p2,… and a pfinal*,
 #'   - alpha1, alpha2, …
 #' @param block_id   name of your block ID column (e.g. "bF")
@@ -220,7 +220,7 @@ make_results_tree <- function(orig_res, block_id, node_label = NULL, return_what
           p = unique(res[!is.na(get(p_col)), get(p_col)]),
           a = unique(res[!is.na(get(a_col)), get(a_col)]),
           group_id = 1L,
-          biggrp = factor("1"),
+          node_id = factor("1"),
           testable = TRUE,
           nodesize = sum(res[!is.na(get(p_col)), nb], na.rm = TRUE)
         )
@@ -322,7 +322,7 @@ make_results_tree <- function(orig_res, block_id, node_label = NULL, return_what
               p = pval,
               a = unique(blocks_with_this_p[[a_col]]),
               group_id = as.integer(node_id),
-              biggrp = factor(node_id),
+              node_id = factor(node_id),
               testable = NA,
               nodesize = nodesize_val
             )
@@ -541,7 +541,7 @@ make_results_tree <- function(orig_res, block_id, node_label = NULL, return_what
 ###   ## for testins
 ###   # res <- res_fwer
 ###   # blockid <- "bF"
-###   res_nodeids <- stri_split_fixed(as.character(res$biggrp), pattern = ".", simplify = TRUE)
+###   res_nodeids <- stri_split_fixed(as.character(res$node_id), pattern = ".", simplify = TRUE)
 ###   res_nodeids[res_nodeids == ""] <- NA
 ###   # class(res_nodeids) <- "integer"
 ###   res[, paste("nodenum", 1:ncol(res_nodeids), sep = "") := lapply(1:ncol(res_nodeids), function(i) {
@@ -561,7 +561,7 @@ make_results_tree <- function(orig_res, block_id, node_label = NULL, return_what
 ###   if (!any(names(res) == "nonnull")) {
 ###     res[, nonnull := NULL]
 ###   }
-###   longnms <- c("biggrp", blockid, "nodenum_current", "nodenum_prev", "node_label", "nonnull")
+###   longnms <- c("node_id", blockid, "nodenum_current", "nodenum_prev", "node_label", "nonnull")
 ###   reslong <- melt(res,
 ###     id = longnms,
 ###     measure.vars = list(p = pnms, a = anms, nodenum = nodenums),

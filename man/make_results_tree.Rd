@@ -15,7 +15,7 @@ make_results_tree(
 \arguments{
 \item{orig_res}{data.table from find_blocks(); must include elements such as
 \itemize{
-\item biggrp    (dot-sep lineage, may be truncated),
+\item node_id    (node identifier, may be factorized),
 \item p1,p2,… and a pfinal*,
 \item alpha1, alpha2, …
 }}

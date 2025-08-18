@@ -112,7 +112,7 @@ example_bdat[g4 == 0, g5 := splitSpecifiedFactor(bid = blockF, x = place_year_bl
 example_bdat[g5 == 0, g6 := splitSpecifiedFactor(bid = blockF, x = place_year_block)]
 # with(droplevels(example_bdat[g5 == 0, ]), table(g6, place_year_block, exclude = c()))
 
-#### When splitby has no variation within biggrp, further splitting doesn't do
+#### When splitby has no variation within node_id, further splitting doesn't do
 ### anything and the algorithm may just continue to produce the same p-values
 ### until maxtest is reached depending on the splitting function. So, for
 ### example, in splitSpecifiedFactor and splitCluster we want the algorithm to
@@ -157,9 +157,9 @@ test_that("splitCluster follows the values of discrete splitby variables. Here w
     splitfn = splitCluster, splitby = "twosplits", stop_splitby_constant = TRUE
   )
 
-  expect_equal(uniqueN(theres1$bdat$biggrp), uniqueN(bdat4$twosplits))
+  expect_equal(uniqueN(theres1$bdat$node_id), uniqueN(bdat4$twosplits))
 
-  thetab <- table(theres1$bdat$twosplitsF, theres1$bdat$biggrp)
+  thetab <- table(theres1$bdat$twosplitsF, theres1$bdat$node_id)
   expect_equal(c(thetab[1, 1], thetab[2, 2]), c(0, 0))
   ## We should have one root node and only two children
   expect_equal(nrow(theres1$node_dat), 3)
@@ -269,14 +269,14 @@ test_that("Splitters work as expected given splitby variables
   ## report that as a rejection.
   ##  1:             splitLOO  twosplits          TRUE
   resobj <- which(names(res) == "splitLOO_twosplits_TRUE")
-  with(res[[resobj]], table(biggrp, twosplits, exclude = c()))
+  with(res[[resobj]], table(node_id, twosplits, exclude = c()))
   with(res[[resobj]], table(fin_grp, twosplits, exclude = c()))
   ## All of the group with the smallest value on twosplits will be put in one split
   expect_equal(sum(res[[resobj]]$twosplits == 0), max(table(res[[resobj]]$fin_nodenum)))
   ##  4:             splitLOO twosplitsF          TRUE
   ### This should be the same as above. Factor is the same as numeric here.
   resobj <- which(names(res) == "splitLOO_twosplits_TRUE")
-  with(res[[resobj]], table(biggrp, twosplits, exclude = c()))
+  with(res[[resobj]], table(node_id, twosplits, exclude = c()))
   with(res[[resobj]], table(fin_nodenum, twosplits, exclude = c()))
   expect_equal(sum(res[[resobj]]$twosplitsF == 0), max(table(res[[resobj]]$fin_nodenum)))
 
@@ -286,7 +286,7 @@ test_that("Splitters work as expected given splitby variables
   ## happen when the systematic variation in splitby is used up.
   ## Not putting in an explicit test here but allowing code to run to catch errors
   resobj <- which(names(res) == "splitLOO_twosplits_FALSE")
-  with(res[[resobj]], table(biggrp, twosplits, exclude = c()))
+  with(res[[resobj]], table(node_id, twosplits, exclude = c()))
   with(res[[resobj]], table(fin_grp, twosplits, exclude = c()))
   with(res[[resobj]], table(hit, twosplits, exclude = c()))
 
@@ -304,7 +304,7 @@ test_that("Splitters work as expected given splitby variables
   ## 18:             splitLOO twosplitsF         FALSE
 
   resobj <- which(names(res) == "splitLOO_twosplitsF_FALSE")
-  with(res[[resobj]], table(biggrp, twosplitsF, exclude = c()))
+  with(res[[resobj]], table(node_id, twosplitsF, exclude = c()))
   with(res[[resobj]], table(fin_grp, twosplitsF, exclude = c()))
   with(res[[resobj]], table(hit, twosplitsF, exclude = c()))
 
@@ -319,7 +319,7 @@ test_that("Splitters work as expected given splitby variables
   ##  8:             splitLOO       lvs2          TRUE
   resobj <- which(names(res) == "splitLOO_lvs2_TRUE")
   ### Basically don't use splitLOO with overly discrete splitby unless we are happy with random splits
-  with(res[[resobj]], table(biggrp, lvs2, exclude = c()))
+  with(res[[resobj]], table(node_id, lvs2, exclude = c()))
   with(res[[resobj]], table(fin_grp, lvs2, exclude = c()))
 
   ## 12:             splitLOO     constv          TRUE
@@ -434,7 +434,7 @@ test_that("Splitters work as expected given splitby variables
   expect_true(all(apply(tabres11, 2, function(x) {
     sum(x > 0)
   })))
-  expect_equal(uniqueN(res[[resobj]]$biggrp), uniqueN(res[[resobj]]$lvs2))
+  expect_equal(uniqueN(res[[resobj]]$node_id), uniqueN(res[[resobj]]$lvs2))
 
   ## 21: splitSpecifiedFactor twosplitsF         FALSE
   expect_equal(res[["splitSpecifiedFactor_twosplitsF_FALSE"]], NA)
@@ -451,8 +451,8 @@ test_that("Splitters work as expected given splitby variables
     splitfn = splitSpecifiedFactor, splitby = "lvs2", stop_splitby_constant = TRUE
   )
   theres2_det <- report_detections(theres2$bdat, blockid = "bF")
-  expect_equal(uniqueN(theres2$bdat$biggrp), uniqueN(bdat4$lvs2))
-  table(theres2$bdat$lvs2, theres2$bdat$biggrp)
+  expect_equal(uniqueN(theres2$bdat$node_id), uniqueN(bdat4$lvs2))
+  table(theres2$bdat$lvs2, theres2$bdat$node_id)
 })
 
 
