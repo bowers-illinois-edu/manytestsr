@@ -83,6 +83,20 @@ pOneway <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 
 #' @param ncpu is the number of workers (for "snow") or cores (for "multicore").
 #' @return A p-value
+#' @examples
+#' # Example using Wilcoxon rank-sum test
+#' data(example_dat, package = "manytestsr")
+#' 
+#' # Test for treatment effect on Y1 within a single block
+#' single_block <- subset(example_dat, blockF == "B080")
+#' p_val <- pWilcox(single_block, Y1 ~ trtF | blockF, parallel = "no")
+#' print(p_val)
+#' 
+#' # Compare with permutation-based version
+#' p_val_perm <- pWilcox(single_block, Y1 ~ trtF | blockF, 
+#'                       simthresh = 100, sims = 500, parallel = "no")
+#' print(p_val_perm)
+#' 
 #' @importFrom coin wilcox_test pvalue approximate exact asymptotic
 #' @importFrom parallel detectCores
 #' @export

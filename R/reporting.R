@@ -7,14 +7,12 @@
 #' Currently calculates rejections using an FWER style criteria (p of a node =
 #' max of all previous nodes) if the final alphas are all the same as the
 #' scalar alpha OR if fwer=TRUE.
-
 #' @param orig_res results data.table output from the \code{\link{find_blocks}} function.
 #' @param fwer (default is TRUE) means that a block is detected (or not) using the maximum p-value associated with the
 #' block (or the groups containing that block). fwer=FALSE to detect blocks (or groups of blocks) using FDR control.
 #' @param alpha Is the false positive rate used for detecting an effect if it is constant (i.e. not an FDR-style approach).
 #' @param only_hits (default FALSE) returns only the detected blocks instead of all of them
 #' @param blockid Name of block variable (the blocking variable is a factor)
-
 #' @return A data.table adding a column \code{hit} to the \code{res} data.table
 #' indicating a "hit" or detection for that block (or group of blocks)
 #' @examples
@@ -54,7 +52,6 @@
 #' hits_only <- report_detections(results$bdat, fwer = TRUE, only_hits = TRUE)
 #' print(hits_only)
 #' }
-
 #' @importFrom stringi stri_count_fixed stri_split_fixed
 #' @import data.table
 #' @export
@@ -155,15 +152,58 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 #' plot the graph. You'll need to do that with the resulting object.
 #'
 #' @param res_graph A tidygraph object produced from make_results_tree
-
 #' @param remove_na_p A logical indicating whether the graph should include
 #' nodes/leaves that were not tested. Default (TRUE) is to remove them. When
 #' remove_na_p is FALSE, the graph might look strange since some blocks will
 #' not have a known position in the graph  (the graph is fixed, but not
 #' specified by the find_blocks function when a node or block is not visited
 #' for testing.)
-
 #' @return A ggraph object
+#' @examples
+#' \donttest{
+#' # Complete workflow example
+#' data(example_dat, package = "manytestsr")
+#' library(data.table)
+#' library(dplyr)
+#' 
+#' # Create block-level dataset
+#' example_bdat <- example_dat %>%
+#'   group_by(blockF) %>%
+#'   summarize(
+#'     nb = n(),
+#'     pb = mean(trt),
+#'     hwt = (nb / nrow(example_dat)) * (pb * (1 - pb)),
+#'     .groups = "drop"
+#'   ) %>%
+#'   as.data.table()
+#' 
+#' # Run find_blocks
+#' results <- find_blocks(
+#'   idat = example_dat,
+#'   bdat = example_bdat,
+#'   blockid = "blockF",
+#'   splitfn = splitCluster,
+#'   pfn = pOneway,
+#'   fmla = Y1 ~ trtF | blockF,
+#'   parallel = "no"
+#' )
+#' 
+#' # Create tree structure
+#' tree_results <- make_results_tree(results$bdat, block_id = "blockF")
+#' 
+#' # Create ggraph visualization
+#' library(ggraph)
+#' library(ggplot2)
+#' graph_plot <- make_results_ggraph(tree_results$graph)
+#' 
+#' # Display the plot
+#' print(graph_plot)
+#' 
+#' # Customize the visualization
+#' graph_plot + 
+#'   labs(title = "Hierarchical Testing Results Tree") +
+#'   theme_void()
+#' }
 #' @import ggraph
 #' @import ggplot2
 #' @export
@@ -207,14 +247,63 @@ make_results_ggraph <- function(res_graph, remove_na_p = TRUE) {
 #' object with nodes and edges), "nodes" (a data.table with node level
 #' information), "test_summary" (a data.table object with one row indicating
 #' false and true discoveries, etc.)
-
 #' @param truevar_name the optional name of a column recording the true
 #' treatment effect (used here to find blocks where the true effect is 0 or
 #' not). In some simulations we have a column called nonnull which is TRUE if
 #' that block or node has a non-zero effect and FALSE if the block or node has
 #' a truly zero effect. So, truevar_name can be "nonnull"
-
 #' @return a list that can contain nodes, a tbl_graph object, and/or a test_summary
+#' @examples
+#' \donttest{
+#' # Complete workflow example
+#' data(example_dat, package = "manytestsr")
+#' library(data.table)
+#' library(dplyr)
+#' 
+#' # Create block-level dataset
+#' example_bdat <- example_dat %>%
+#'   group_by(blockF) %>%
+#'   summarize(
+#'     nb = n(),
+#'     pb = mean(trt),
+#'     hwt = (nb / nrow(example_dat)) * (pb * (1 - pb)),
+#'     .groups = "drop"
+#'   ) %>%
+#'   as.data.table()
+#' 
+#' # Run find_blocks
+#' results <- find_blocks(
+#'   idat = example_dat,
+#'   bdat = example_bdat,
+#'   blockid = "blockF",
+#'   splitfn = splitCluster,
+#'   pfn = pOneway,
+#'   fmla = Y1 ~ trtF | blockF,
+#'   parallel = "no"
+#' )
+#' 
+#' # Create tree structure (default returns all components)
+#' tree_results <- make_results_tree(results$bdat, block_id = "blockF")
+#' 
+#' # Examine the components
+#' str(tree_results)
+#' 
+#' # Look at node-level information
+#' head(tree_results$nodes)
+#' 
+#' # Look at test summary
+#' print(tree_results$test_summary)
+#' 
+#' # Get only the graph component
+#' tree_graph <- make_results_tree(results$bdat, block_id = "blockF", 
+#'                                 return_what = "graph")
+#' print(tree_graph)
+#' 
+#' # Get only node information  
+#' tree_nodes <- make_results_tree(results$bdat, block_id = "blockF", 
+#'                                 return_what = "nodes")
+#' head(tree_nodes)
+#' }
 #' @importFrom stringi stri_split_fixed stri_sub
 #' @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent activate
 #' @import tidygraph data.table
