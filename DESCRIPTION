@@ -40,7 +40,7 @@ Imports:
     dataPreparation (>= 1.1.0),
     hommel (>= 1.8.0),
 Remotes:
-    dsrobertson/onlineFDR
+    dsrobertson/onlineFDR,
     bowers-illinois-edu/TreeTestSim
 LinkingTo: Rcpp, RcppArmadillo, RcppDist, Rfast
 NeedsCompilation: yes

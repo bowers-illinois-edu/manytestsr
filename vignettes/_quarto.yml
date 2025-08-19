@@ -16,3 +16,5 @@ website:
         text: "Getting Started"
       - href: hierarchical-testing-workflow.html  
         text: "Complete Workflow"
+      - href: advanced-methodologies.html
+        text: "Advanced Methodologies"

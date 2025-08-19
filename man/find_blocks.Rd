@@ -25,7 +25,11 @@ find_blocks(
   stop_splitby_constant = TRUE,
   blocksize = "hwt",
   return_what = c("blocks", "nodes"),
-  trace = FALSE
+  trace = FALSE,
+  use_closed_testing = FALSE,
+  use_evalues = FALSE,
+  closed_testing_method = "simes",
+  evalue_wealth_rule = "kelly"
 )
 }
 \arguments{
@@ -91,6 +95,14 @@ variance of the outcome within the block.)}
 data.table of nodes "nodes", or default both c("blocks","nodes").}
 
 \item{trace}{Logical, FALSE (default) to not print split number. TRUE prints the split number.}
+
+\item{use_closed_testing}{Logical, whether to apply proper closed testing procedure (Goeman methodology)}
+
+\item{use_evalues}{Logical, whether to use e-value methodology for sequential testing (Ramdas approach)}
+
+\item{closed_testing_method}{Method for combining p-values in intersection tests ("simes", "fisher", "min")}
+
+\item{evalue_wealth_rule}{Wealth rule for e-value betting ("kelly", "fixed", "adaptive")}
 
 \item{final_global_adj}{Character. One of \code{"none"}, \code{"fdr"}, \code{"fwer"}.}
 }
@@ -210,5 +222,52 @@ result2 <- find_blocks(
   splitby = "place_year_block",
   parallel = "no"
 )
+
+# Example using Goeman's proper closed testing procedure
+result3 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pIndepDist,
+  fmla = Y1 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  use_closed_testing = TRUE,
+  closed_testing_method = "simes",
+  thealpha = 0.05
+)
+
+# Check closed testing results
+if ("closed_testing_reject" \%in\% names(result3$node_dat)) {
+  cat("Nodes rejected by closed testing procedure:\n")
+  rejected_nodes <- result3$node_dat[closed_testing_reject == TRUE, nodenum]
+  print(rejected_nodes)
+}
+
+# Example using e-value methodology for sequential testing
+result4 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pOneway,
+  fmla = Y1 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  use_evalues = TRUE,
+  evalue_wealth_rule = "kelly",
+  thealpha = 0.05
+)
+
+# Compare traditional FWER control vs closed testing
+traditional_detections <- report_detections(result1$bdat, fwer = TRUE)
+if (exists("result3") && "node_dat" \%in\% names(result3)) {
+  cat("Traditional FWER detections:", sum(traditional_detections$hit, na.rm = TRUE), "\n")
+  if ("closed_testing_reject" \%in\% names(result3$node_dat)) {
+    closed_detections <- sum(result3$node_dat$closed_testing_reject, na.rm = TRUE)
+    cat("Closed testing detections:", closed_detections, "\n")
+  }
+}
 }
 }

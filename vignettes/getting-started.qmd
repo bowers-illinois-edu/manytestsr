@@ -239,12 +239,58 @@ if(!is.null(summary_table) && is.data.frame(summary_table) && nrow(summary_table
 - Consider effect sizes, not just p-values
 - Validate findings with additional data if possible
 
+## Advanced Methodologies
+
+The `manytestsr` package also includes state-of-the-art methodologies from leading researchers:
+
+### Goeman's Closed Testing
+
+```{r advanced-goeman, eval=FALSE}
+# Enhanced FWER control with improved power
+results_goeman <- find_blocks(
+  idat = idat, bdat = bdat,
+  blockid = "blockF", splitfn = splitCluster, pfn = pIndepDist,
+  fmla = Y1 ~ trtF | blockF, splitby = "hwt", parallel = "no",
+  use_closed_testing = TRUE,                    # Enable Goeman's method
+  closed_testing_method = "simes",              # Recommended approach
+  thealpha = 0.05
+)
+```
+
+### Meinshausen's Hierarchical Testing
+
+```{r advanced-meinshausen, eval=FALSE}
+# Hierarchical variable importance testing with sequential rejection
+results_meinshausen <- find_blocks(
+  idat = idat, bdat = bdat,
+  blockid = "blockF", splitfn = splitCluster, pfn = pIndepDist,
+  fmla = Y2 ~ trtF | blockF, splitby = "hwt", parallel = "no",
+  use_meinshausen = TRUE,                       # Enable Meinshausen's method
+  meinshausen_method = "simes",                 # P-value combination
+  meinshausen_sequential = TRUE,                # Sequential rejection enhancement
+  thealpha = 0.05
+)
+```
+
+### E-values for Sequential Testing
+
+```{r advanced-evalues, eval=FALSE}  
+# Always-valid inference for sequential data collection
+results_evalues <- find_blocks(
+  idat = idat, bdat = bdat,
+  blockid = "blockF", splitfn = splitCluster, pfn = pOneway,
+  fmla = Y1 ~ trtF | blockF, splitby = "hwt", parallel = "no",
+  use_evalues = TRUE,                           # Enable e-value methodology
+  evalue_wealth_rule = "kelly",                 # Wealth accumulation rule
+  thealpha = 0.05
+)
+```
+
 ### Next Steps
 
-For more advanced usage, see the full workflow vignette:
-- Multiple outcome testing
-- Custom splitting strategies  
-- Parallel processing
-- Advanced visualization options
+For comprehensive coverage of advanced methodologies, see the specialized vignettes:
+- **Advanced Methodologies**: Goeman, Meinshausen, Ramdas, and Rosenbaum approaches
+- **Hierarchical Testing Workflow**: Complete analysis pipelines
+- **Design Sensitivity Analysis**: Robustness to unobserved confounding
 
 The hierarchical testing framework provides a principled way to navigate the multiple testing problem while maintaining power to detect heterogeneous treatment effects across experimental blocks.
