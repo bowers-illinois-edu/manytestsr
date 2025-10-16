@@ -25,17 +25,18 @@
 #' @examples
 #' # Example using built-in data
 #' data(example_dat, package = "manytestsr")
-#' 
+#'
 #' # Test for treatment effect on Y1 within a single block
 #' single_block <- subset(example_dat, blockF == "B080")
 #' p_val <- pOneway(single_block, Y1 ~ trtF | blockF, parallel = "no")
 #' print(p_val)
-#' 
+#'
 #' # Test with permutation-based inference for small samples
-#' p_val_perm <- pOneway(single_block, Y1 ~ trtF | blockF, 
-#'                       simthresh = 100, sims = 500, parallel = "no")
+#' p_val_perm <- pOneway(single_block, Y1 ~ trtF | blockF,
+#'   simthresh = 100, sims = 500, parallel = "no"
+#' )
 #' print(p_val_perm)
-#' 
+#'
 #' @importFrom coin oneway_test pvalue approximate exact asymptotic
 #' @importFrom parallel detectCores
 #' @export
@@ -86,17 +87,18 @@ pOneway <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 #' @examples
 #' # Example using Wilcoxon rank-sum test
 #' data(example_dat, package = "manytestsr")
-#' 
+#'
 #' # Test for treatment effect on Y1 within a single block
 #' single_block <- subset(example_dat, blockF == "B080")
 #' p_val <- pWilcox(single_block, Y1 ~ trtF | blockF, parallel = "no")
 #' print(p_val)
-#' 
+#'
 #' # Compare with permutation-based version
-#' p_val_perm <- pWilcox(single_block, Y1 ~ trtF | blockF, 
-#'                       simthresh = 100, sims = 500, parallel = "no")
+#' p_val_perm <- pWilcox(single_block, Y1 ~ trtF | blockF,
+#'   simthresh = 100, sims = 500, parallel = "no"
+#' )
 #' print(p_val_perm)
-#' 
+#'
 #' @importFrom coin wilcox_test pvalue approximate exact asymptotic
 #' @importFrom parallel detectCores
 #' @export
@@ -168,23 +170,24 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 #' # Example using distance-based independence test
 #' data(example_dat, package = "manytestsr")
 #' library(data.table)
-#' 
+#'
 #' # Test for treatment effect using distance-based approach
 #' single_block <- as.data.table(subset(example_dat, blockF == "B080"))
 #' p_val <- pIndepDist(single_block, Y1 ~ trtF | blockF, parallel = "no")
 #' print(p_val)
-#' 
+#'
 #' # Using different distance function
-#' p_val2 <- pIndepDist(single_block, Y2 ~ trtF | blockF, 
-#'                      distfn = fast_dists_and_trans_nomax_hybrid, 
-#'                      parallel = "no")
+#' p_val2 <- pIndepDist(single_block, Y2 ~ trtF | blockF,
+#'   distfn = fast_dists_and_trans_nomax_hybrid,
+#'   parallel = "no"
+#' )
 #' print(p_val2)
 #' }
 #' @export
 pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
                        parallel = "yes", ncpu = NULL, distfn = fast_dists_and_trans_hybrid) {
   force(distfn)
-  stopifnot(inherits(dat,"data.table"))
+  stopifnot(inherits(dat, "data.table"))
   fmla_vars <- all.vars(fmla)
   theresponse <- fmla_vars[attr(terms(fmla), "response")]
   thetreat <- fmla_vars[[2]]
@@ -204,7 +207,7 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
   thedat <- copy(dat)
 
   ### These must match the names of the functions used in src/dists_and_trans.cpp
-  outcome_names <- c(theresponse,"mean_dist" ,"mean_rank_dist","max_dist","rankY","tanhY")
+  outcome_names <- c(theresponse, "mean_dist", "mean_rank_dist", "max_dist", "rankY", "tanhY")
 
   if (length(fmla_vars) == 3) {
     theblock <- fmla_vars[[3]]
@@ -353,7 +356,6 @@ pTestTwice <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
 #' transformations are all calculated by block when block is supplied in the
 #' formula.
 
-
 #' @param dat An object inheriting from class data.frame
 #' @param fmla  A formula  appropriate to the function. Here it should  be something like outcome~treatment|block
 #' @param sims Either NULL (meaning use an asymptotic reference dist) or a
@@ -401,7 +403,7 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
 
   thedat <- copy(dat)
 
-  outcome_names <- c(theresponse,"mean_dist" ,"mean_rank_dist","rankY","tanhY")
+  outcome_names <- c(theresponse, "mean_dist", "mean_rank_dist", "rankY", "tanhY")
 
   ## To enable the use of this function without a `|block` --- basically to
   ## make it easier to compare with the bottom-up approaches where we just test
