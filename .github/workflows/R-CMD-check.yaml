@@ -49,6 +49,9 @@ jobs:
       - name: Install Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
+      - name: Install package
+        run: R CMD INSTALL .
+
       - name: Render vignettes
         run: quarto render vignettes/ --output-dir vignettes/
 
