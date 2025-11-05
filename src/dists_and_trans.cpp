@@ -88,14 +88,14 @@ Rcpp::List fast_dists_and_trans_new(const arma::vec &x) {
  */
 // [[Rcpp::export]]
 Rcpp::List fast_dists_and_trans_new_omp(const arma::vec &x, const int threads=0) {
-
 #ifdef _OPENMP
   // turn off OpenMP’s own dynamic adjustment (optional but predictable)
   omp_set_dynamic(0);
-
-  if (threads > 0)
-    threads = std::min<int>(threads, omp_get_max_threads());
-  omp_set_num_threads(threads);            // user-supplied
+ 
+  int nthreads = threads;
+  if (nthreads > 0)
+    nthreads = std::min<int>(nthreads, omp_get_max_threads());
+  omp_set_num_threads(nthreads);            // user-supplied
   /* else              */
   /*   keep whatever OMP_NUM_THREADS or omp_set_num_threads()  */
   /*   has already established for this R session              */
