@@ -86,6 +86,6 @@ This is an R package called `manytestsr` that implements nesting or top-down pro
 ### Testing Strategy
 
 - Comprehensive test suite covering all major functions
-- Tests use simulated data from `TreeTestsSim` package
+- Tests use simulated data from `TreeTestSim` package
 - Performance profiling code available in `tests/` directory
 - Tests exclude profiling by default (`filter = "profil", invert = TRUE`)

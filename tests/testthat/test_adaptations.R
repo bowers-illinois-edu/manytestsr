@@ -10,11 +10,11 @@ if (interactive) {
   library(data.table)
   library(dtplyr)
   # remotes::install_github("bowers-illinois-edu/TreeTestSim")
-  library(TreeTestsSim)
-  # load_all("~/repos/TreeTestsSim")
+  library(TreeTestSim)
+  # load_all("~/repos/TreeTestSim")
   ## This next creates and loads different datasets that we use
   source(here("tests/testthat", "make_test_data.R"))
-  ## This next is a copy from the package TreeTestsSim
+  ## This next is a copy from the package TreeTestSim
   ## source(here("tests/testthat", "generate_tree.R"))
   load_all() ## use  this during debugging
 }
