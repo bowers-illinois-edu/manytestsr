@@ -35,7 +35,7 @@ following the framework of Ramdas et al. This provides anytime-valid
 inference with optional stopping and flexible error control.
 }
 \examples{
-\donttest{
+\dontrun{
 # Load example data for e-value testing with find_blocks
 data(example_dat, package = "manytestsr")
 library(data.table)

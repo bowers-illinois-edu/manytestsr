@@ -26,7 +26,7 @@ reporting results in terms of a binary tree graph. This does not print or
 plot the graph. You'll need to do that with the resulting object.
 }
 \examples{
-\donttest{
+\dontrun{
 # Complete workflow example
 data(example_dat, package = "manytestsr")
 library(data.table)

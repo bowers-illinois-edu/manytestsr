@@ -60,15 +60,17 @@ fast_dists_and_trans_new_parallel <- function(threads) {
 #' # Example with treatment and control groups
 #' outcome <- c(2.1, 5.3, 1.8, 7.2, 3.4, 4.6, 6.1, 2.8)
 #' treatment <- c(0, 1, 0, 1, 0, 1, 1, 0)  # Binary treatment indicator
-#' 
+#'
 #' # Compute energy distances
 #' e_dists <- edisti(outcome, treatment)
 #' print(e_dists)
-#' 
+#'
+#' \dontrun{
 #' # With factor treatment variable
 #' treatment_factor <- factor(treatment, labels = c("Control", "Treatment"))
 #' e_dists2 <- edisti(outcome, treatment_factor)
 #' print(e_dists2)
+#' }
 #' 
 #' @importFrom Rfast Dist colsums rowsums Order
 #' @export

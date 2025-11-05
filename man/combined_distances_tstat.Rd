@@ -13,6 +13,8 @@ combined_distances_tstat(
 The combined distances test statistic
 }
 \examples{
+\dontrun{
+# Requires dat object to be defined in environment
 tstat_dt <- combined_distances_tstat()
 
 splitCluster("blockF", x)
@@ -23,4 +25,5 @@ splitCluster("blockF", x)
 ## Approach 2:
 clus <- Ckmeans.1d.dp(x, k = 2)$cluster
 group <- factor(as.numeric(clus == 1))
+}
 }

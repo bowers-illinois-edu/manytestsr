@@ -26,9 +26,11 @@ treatment <- c(0, 1, 0, 1, 0, 1, 1, 0)  # Binary treatment indicator
 e_dists <- edisti(outcome, treatment)
 print(e_dists)
 
+\dontrun{
 # With factor treatment variable
 treatment_factor <- factor(treatment, labels = c("Control", "Treatment"))
 e_dists2 <- edisti(outcome, treatment_factor)
 print(e_dists2)
+}
 
 }

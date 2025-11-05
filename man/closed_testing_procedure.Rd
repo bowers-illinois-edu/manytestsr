@@ -23,7 +23,7 @@ This implements a valid closed testing procedure following Goeman's methodology
 that ensures proper FWER control by testing all intersection hypotheses.
 }
 \examples{
-\donttest{
+\dontrun{
 # Load example data and run find_blocks with closed testing
 data(example_dat, package = "manytestsr")
 library(data.table)

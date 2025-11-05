@@ -129,7 +129,7 @@
 #' the largest/highest ranked blocks.
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # Load example data
 #' data(example_dat, package = "manytestsr")
 #' library(data.table)

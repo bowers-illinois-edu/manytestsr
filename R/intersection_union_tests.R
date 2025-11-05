@@ -15,8 +15,9 @@
 #' Berger, R. L. (1982). Multiparameter hypothesis testing and acceptance sampling.
 #' Technometrics, 24(4), 295-300.
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # Apply intersection-union tests to find_blocks results
+#' # Requires dplyr package
 #' data(example_dat, package = "manytestsr")
 #' library(data.table)
 #' library(dplyr)

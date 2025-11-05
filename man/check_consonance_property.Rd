@@ -30,8 +30,9 @@ all hypotheses that logically imply it should also be rejectable.
 Essential for validating find_blocks() results and ensuring logical coherence.
 }
 \examples{
-\donttest{
+\dontrun{
 # Check consonance of find_blocks results
+# Requires dplyr package
 data(example_dat, package = "manytestsr")
 library(data.table)
 library(dplyr)

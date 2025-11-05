@@ -36,7 +36,7 @@ max of all previous nodes) if the final alphas are all the same as the
 scalar alpha OR if fwer=TRUE.
 }
 \examples{
-\donttest{
+\dontrun{
 # Use example data and run find_blocks
 data(example_dat, package = "manytestsr")
 library(data.table)

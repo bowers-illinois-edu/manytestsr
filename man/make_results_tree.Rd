@@ -44,7 +44,7 @@ data set for use in reporting results and as input to ggraph for
 visualization in terms of a tree graph.
 }
 \examples{
-\donttest{
+\dontrun{
 # Complete workflow example
 data(example_dat, package = "manytestsr")
 library(data.table)

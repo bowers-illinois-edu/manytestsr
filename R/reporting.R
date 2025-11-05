@@ -16,7 +16,7 @@
 #' @return A data.table adding a column \code{hit} to the \code{res} data.table
 #' indicating a "hit" or detection for that block (or group of blocks)
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # Use example data and run find_blocks
 #' data(example_dat, package = "manytestsr")
 #' library(data.table)
@@ -160,7 +160,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 #' for testing.)
 #' @return A ggraph object
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # Complete workflow example
 #' data(example_dat, package = "manytestsr")
 #' library(data.table)
@@ -254,7 +254,7 @@ make_results_ggraph <- function(res_graph, remove_na_p = TRUE) {
 #' a truly zero effect. So, truevar_name can be "nonnull"
 #' @return a list that can contain nodes, a tbl_graph object, and/or a test_summary
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # Complete workflow example
 #' data(example_dat, package = "manytestsr")
 #' library(data.table)

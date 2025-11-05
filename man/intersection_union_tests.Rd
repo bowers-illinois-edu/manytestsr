@@ -33,8 +33,9 @@ that the hierarchical structure is respected in hypothesis testing.
 Particularly useful for validating the logical structure of find_blocks() results.
 }
 \examples{
-\donttest{
+\dontrun{
 # Apply intersection-union tests to find_blocks results
+# Requires dplyr package
 data(example_dat, package = "manytestsr")
 library(data.table)
 library(dplyr)

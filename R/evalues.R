@@ -15,7 +15,7 @@
 #' Ramdas, A., Grünwald, P., Vovk, V., & Shafer, G. (2023). Game-theoretic 
 #' statistics and safe anytime-valid inference. Statistical Science, 38(4), 576-601.
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # Load example data for e-value testing with find_blocks
 #' data(example_dat, package = "manytestsr")
 #' library(data.table)

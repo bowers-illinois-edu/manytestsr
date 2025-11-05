@@ -15,7 +15,7 @@
 #' Goeman, J. J., & Finos, L. (2012). The inheritance procedure: multiple testing of 
 #' tree-structured hypotheses. Statistical Applications in Genetics and Molecular Biology, 11(1).
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # Load example data and run find_blocks with closed testing
 #' data(example_dat, package = "manytestsr")
 #' library(data.table)
