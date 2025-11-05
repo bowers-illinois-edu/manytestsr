@@ -17,7 +17,8 @@ Suggests:
     here (>= 1.0.1),
     knitr,
     quarto,
-    patchwork
+    patchwork,
+    dtplyr
 Depends:
     R (>= 3.5.0),
     data.table (>= 1.12.0),
