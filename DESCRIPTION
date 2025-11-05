@@ -20,7 +20,11 @@ Suggests:
     patchwork,
     dtplyr,
     TreeTestSim,
-    conflicted
+    conflicted,
+    devtools,
+    microbenchmark,
+    mvtnorm,
+    scales
 Depends:
     R (>= 3.5.0),
     data.table (>= 1.12.0),
