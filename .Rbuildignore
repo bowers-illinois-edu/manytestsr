@@ -33,3 +33,7 @@ README.md
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^vignettes/_site$
+^vignettes/\.quarto$
+^vignettes/vignettes$
+^_quarto\.yml\.backup$
