@@ -327,12 +327,10 @@ check_iu_consistency <- function(iu_results) {
 #' @param iu_results Results from intersection_union_tests
 #' @param highlight_inconsistencies Logical, whether to highlight inconsistencies
 #' @return ggplot object
+#' @importFrom ggplot2 ggplot aes geom_point geom_abline geom_hline geom_vline labs scale_size_manual theme_minimal theme element_text
 #' @export
 plot_intersection_union_results <- function(iu_results, highlight_inconsistencies = TRUE) {
-  
-  library(ggplot2)
-  library(dplyr)
-  
+
   node_dat <- iu_results$node_dat
   
   # Check for inconsistencies if requested

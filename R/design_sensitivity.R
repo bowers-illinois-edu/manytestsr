@@ -310,18 +310,17 @@ compute_sensitivity_summary <- function(sensitivity_results, alpha) {
 #' @param sensitivity_analysis Results from design_sensitivity_analysis
 #' @param blocks Vector of block IDs to plot (NULL for all)
 #' @return ggplot object
+#' @importFrom ggplot2 ggplot aes geom_ribbon geom_hline facet_wrap labs theme_minimal theme element_text
 #' @export
 plot_design_sensitivity <- function(sensitivity_analysis, blocks = NULL) {
-  
+
   results <- sensitivity_analysis$sensitivity_results
-  
+
   if (!is.null(blocks)) {
     results <- results[results$block_id %in% blocks, ]
   }
-  
+
   # Create the plot
-  library(ggplot2)
-  
   p <- ggplot(results, aes(x = gamma)) +
     geom_ribbon(aes(ymin = p_value_lower, ymax = p_value_upper, fill = block_id), 
                 alpha = 0.3) +
