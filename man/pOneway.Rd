@@ -49,8 +49,9 @@ p_val <- pOneway(single_block, Y1 ~ trtF | blockF, parallel = "no")
 print(p_val)
 
 # Test with permutation-based inference for small samples
-p_val_perm <- pOneway(single_block, Y1 ~ trtF | blockF, 
-                      simthresh = 100, sims = 500, parallel = "no")
+p_val_perm <- pOneway(single_block, Y1 ~ trtF | blockF,
+  simthresh = 100, sims = 500, parallel = "no"
+)
 print(p_val_perm)
 
 }

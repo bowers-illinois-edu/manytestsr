@@ -28,8 +28,11 @@ find_blocks(
   trace = FALSE,
   use_closed_testing = FALSE,
   use_evalues = FALSE,
+  use_meinshausen = FALSE,
   closed_testing_method = "simes",
-  evalue_wealth_rule = "kelly"
+  evalue_wealth_rule = "kelly",
+  meinshausen_method = "simes",
+  meinshausen_sequential = TRUE
 )
 }
 \arguments{
@@ -100,9 +103,15 @@ data.table of nodes "nodes", or default both c("blocks","nodes").}
 
 \item{use_evalues}{Logical, whether to use e-value methodology for sequential testing (Ramdas approach)}
 
+\item{use_meinshausen}{Logical, whether to apply Meinshausen's hierarchical testing (2008) with sequential rejection}
+
 \item{closed_testing_method}{Method for combining p-values in intersection tests ("simes", "fisher", "min")}
 
 \item{evalue_wealth_rule}{Wealth rule for e-value betting ("kelly", "fixed", "adaptive")}
+
+\item{meinshausen_method}{Method for Meinshausen hierarchical testing ("simes", "fisher", "bonferroni")}
+
+\item{meinshausen_sequential}{Logical, whether to use Goeman-Solari sequential rejection enhancement}
 
 \item{final_global_adj}{Character. One of \code{"none"}, \code{"fdr"}, \code{"fwer"}.}
 }
@@ -118,7 +127,7 @@ splitting criteria (splitby) and stopping criteria (stop_splitby_constant).
 \itemize{
 \item \code{\link[=splitCluster]{splitCluster()}} splits the blocks into groups that are as similar as
 possible to each other on splitby using the kmeans clustering algorithm
-(using a combination of \code{\link[=kmeans]{kmeans()}} or \code{\link[=KMeans_rcpp]{KMeans_rcpp()}}). This will not work
+(using a combination of \code{\link[=kmeans]{kmeans()}} or \code{\link[ClusterR:KMeans_rcpp]{ClusterR::KMeans_rcpp()}}). This will not work
 with factor variables. When the splitting criteria is constant, it will
 return random splits into roughly two equal sized groups of blocks if
 stop_splitby_constant=FALSE. If stop_splitby_constant=TRUE then
@@ -259,6 +268,29 @@ result4 <- find_blocks(
   evalue_wealth_rule = "kelly",
   thealpha = 0.05
 )
+
+# Example using Meinshausen's hierarchical testing with sequential rejection
+result5 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pIndepDist,
+  fmla = Y2 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  use_meinshausen = TRUE,
+  meinshausen_method = "simes",
+  meinshausen_sequential = TRUE,
+  thealpha = 0.05
+)
+
+# Check Meinshausen testing results
+if ("meinshausen_reject" \%in\% names(result5$node_dat)) {
+  cat("Nodes rejected by Meinshausen hierarchical procedure:\\\\n")
+  rejected_meinshausen <- result5$node_dat[meinshausen_reject == TRUE, nodenum]
+  print(rejected_meinshausen)
+}
 
 # Compare traditional FWER control vs closed testing
 traditional_detections <- report_detections(result1$bdat, fwer = TRUE)

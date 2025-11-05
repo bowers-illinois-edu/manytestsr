@@ -49,8 +49,9 @@ p_val <- pWilcox(single_block, Y1 ~ trtF | blockF, parallel = "no")
 print(p_val)
 
 # Compare with permutation-based version
-p_val_perm <- pWilcox(single_block, Y1 ~ trtF | blockF, 
-                      simthresh = 100, sims = 500, parallel = "no")
+p_val_perm <- pWilcox(single_block, Y1 ~ trtF | blockF,
+  simthresh = 100, sims = 500, parallel = "no"
+)
 print(p_val_perm)
 
 }

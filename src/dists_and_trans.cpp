@@ -13,10 +13,6 @@
 #include "fastfns.h"
 
 
-
-
-
-
 /*  Compute, for every unit i:
  *    – mean |x_i − x_j|               (col 1)
  *    – mean |rank_i − rank_j|         (col 2)
@@ -117,7 +113,7 @@ Rcpp::List fast_dists_and_trans_new_omp(const arma::vec &x, const int threads=0)
   //  arma::vec max_rank(n,  arma::fill::zeros);
 
 #ifdef _OPENMP
-  #pragma omp parallel for default(none) shared(n,x,rankx,mean_raw,mean_rank,max_raw,max_rank)
+  #pragma omp parallel for default(none) shared(n,x,rankx,mean_raw,mean_rank,max_raw)
 #endif
 
   for (arma::uword i = 0; i < n; ++i) {

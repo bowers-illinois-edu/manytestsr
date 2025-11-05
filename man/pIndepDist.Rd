@@ -68,9 +68,10 @@ p_val <- pIndepDist(single_block, Y1 ~ trtF | blockF, parallel = "no")
 print(p_val)
 
 # Using different distance function
-p_val2 <- pIndepDist(single_block, Y2 ~ trtF | blockF, 
-                     distfn = fast_dists_and_trans_nomax_hybrid, 
-                     parallel = "no")
+p_val2 <- pIndepDist(single_block, Y2 ~ trtF | blockF,
+  distfn = fast_dists_and_trans_nomax_hybrid,
+  parallel = "no"
+)
 print(p_val2)
 }
 }
