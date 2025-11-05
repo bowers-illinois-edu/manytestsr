@@ -19,7 +19,8 @@ Suggests:
     quarto,
     patchwork,
     dtplyr,
-    TreeTestSim
+    TreeTestSim,
+    conflicted
 Depends:
     R (>= 3.5.0),
     data.table (>= 1.12.0),
