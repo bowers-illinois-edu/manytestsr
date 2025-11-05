@@ -24,7 +24,8 @@ Suggests:
     devtools,
     microbenchmark,
     mvtnorm,
-    scales
+    scales,
+    dplyr
 Depends:
     R (>= 3.5.0),
     data.table (>= 1.12.0),
