@@ -78,7 +78,7 @@ The key insight: test all possible intersections of hypotheses and reject indivi
 
 ### Implementation
 
-```{r goeman-closed-testing}
+```{r goeman-closed-testing, eval=FALSE}
 # Run hierarchical testing with Goeman's closed testing
 result_goeman <- find_blocks(
   idat = idat,
@@ -114,7 +114,7 @@ if ("closed_testing_reject" %in% names(result_goeman$node_dat)) {
 
 ### Key Features of Closed Testing
 
-```{r goeman-features}
+```{r goeman-features, eval=FALSE}
 # Compare traditional vs closed testing power
 traditional_detections <- report_detections(result_goeman$bdat, fwer = TRUE)
 traditional_hits <- sum(traditional_detections$hit, na.rm = TRUE)
@@ -140,7 +140,7 @@ Meinshausen (2008) addresses high-dimensional variable selection by:
 
 ### Implementation
 
-```{r meinshausen-hierarchical}
+```{r meinshausen-hierarchical, eval=FALSE}
 # Apply Meinshausen's hierarchical testing with sequential rejection
 result_meinshausen <- find_blocks(
   idat = idat,
@@ -177,7 +177,7 @@ if ("meinshausen_reject" %in% names(result_meinshausen$node_dat)) {
 
 ### Sequential vs Traditional Meinshausen
 
-```{r meinshausen-comparison}
+```{r meinshausen-comparison, eval=FALSE}
 # Compare sequential vs traditional Meinshausen
 result_meinshausen_trad <- find_blocks(
   idat = idat,
@@ -223,7 +223,7 @@ E-values (Ramdas et al.) provide a modern framework for:
 
 ### Implementation
 
-```{r ramdas-evalues}
+```{r ramdas-evalues, eval=FALSE}
 # Apply e-value methodology (currently experimental)
 result_evalues <- find_blocks(
   idat = idat,
@@ -291,7 +291,7 @@ cat("- Gamma sensitivity parameters can assess robustness\n")
 
 ### Power and Error Control Comparison
 
-```{r method-comparison}
+```{r method-comparison, eval=FALSE}
 # Compare all methods on same outcome
 methods_comparison <- data.frame(
   Method = character(),
@@ -337,7 +337,7 @@ print(methods_comparison)
 
 ### Visualization of Method Performance
 
-```{r method-visualization}
+```{r method-visualization, eval=FALSE}
 if (nrow(methods_comparison) > 1) {
   # Create comparison plot
   ggplot(methods_comparison, aes(x = Method, y = Rejections, fill = Conservative_Level)) +
