@@ -454,5 +454,5 @@ These methods collectively address the modern challenges of multiple testing in 
 
 - Goeman, J. J., & Solari, A. (2011). Multiple testing for exploratory research. *Statistical Science*, 26(4), 584-597.
 - Meinshausen, N. (2008). Hierarchical testing of variable importance. *Biometrika*, 95(2), 265-278.
-- Ramdas, A., et al. (2020). A unified treatment of multiple testing with prior knowledge using the e-value. *Annals of Statistics*, 48(5), 2790-2807.
+- Ramdas, A., Ruf, J., Larsson, M., & Koolen, W. M. (2020). A unified treatment of multiple testing with prior knowledge using the e-value. *Annals of Statistics*, 48(5), 2790-2807.
 - Rosenbaum, P. R. (2017). *Observation and Experiment: An Introduction to Causal Inference*. Harvard University Press.
