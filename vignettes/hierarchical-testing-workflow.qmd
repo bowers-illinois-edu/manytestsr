@@ -470,7 +470,15 @@ print(multi_comparison)
 ```{r workflow-demo, eval=FALSE}
 # 1. Prepare data
 idat <- your_individual_data
-bdat <- create_block_summary(idat)
+bdat <- idat %>%
+  group_by(blockF) %>%
+  summarize(
+    nb = n(),
+    pb = mean(trt),
+    hwt = (nb / nrow(idat)) * (pb * (1 - pb)),
+    .groups = "drop"
+  ) %>%
+  as.data.table()
 
 # 2. Choose approach based on data structure
 if(have_hierarchical_structure) {
