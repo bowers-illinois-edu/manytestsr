@@ -55,7 +55,7 @@ pOneway <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin:::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
   }
 
   thep <- pvalue(oneway_test(fmla, data = dat, distribution = thedist))[[1]]
@@ -117,7 +117,7 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin:::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
   }
 
   thep <- pvalue(wilcox_test(fmla, data = dat, distribution = thedist))[[1]]
@@ -235,7 +235,7 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin:::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
   }
 
   ## Quadratic combination is best when most/all of the test statistics move in
@@ -330,7 +330,7 @@ pTestTwice <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin:::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
   }
 
   thep <- pvalue(independence_test(newfmla, data = thedat, distribution = thedist, teststat = "quadratic"))[[1]]
@@ -444,7 +444,7 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin:::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
   }
 
   p_vals <- sapply(the_fmlas, function(thefmla) {
