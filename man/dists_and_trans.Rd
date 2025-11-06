@@ -15,3 +15,17 @@ A list  for inclusion in a data.table with  distances between each unit and othe
 \description{
 Outcome distances and transformations
 }
+\examples{
+# Example with continuous outcome data
+outcome <- c(2.1, 5.3, 1.8, 7.2, 3.4, 4.6)
+
+# Compute distance-based transformations
+dist_results <- dists_and_trans(outcome)
+
+# View components
+str(dist_results)
+print(dist_results$mean_dist)     # Mean distance to all other units
+print(dist_results$rankY)         # Ranks of original values
+print(dist_results$tanhY)         # Hyperbolic tangent transformation
+
+}

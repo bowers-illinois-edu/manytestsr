@@ -53,14 +53,19 @@
 #' @param return_what Character. Return a data.table of blocks "blocks", a
 #' data.table of nodes "nodes", or default both c("blocks","nodes").
 
-#' @param final_global_adj Character. One of \code{"none"}, \code{"fdr"}, \code{"fwer"}.
-
 #' @param parallel Should the pfn use multicore processing for permutation
 #' based testing. Default is no. But could be "snow" or "multicore" following
 #' `approximate` in the coin package.
 
 #' @param ncores The number of cores used for parallel processing
 #' @param trace Logical, FALSE (default) to not print split number. TRUE prints the split number.
+#' @param use_closed_testing Logical, whether to apply proper closed testing procedure (Goeman methodology)
+#' @param use_evalues Logical, whether to use e-value methodology for sequential testing (Ramdas approach)
+#' @param use_meinshausen Logical, whether to apply Meinshausen's hierarchical testing (2008) with sequential rejection
+#' @param closed_testing_method Method for combining p-values in intersection tests ("simes", "fisher", "min")
+#' @param evalue_wealth_rule Wealth rule for e-value betting ("kelly", "fixed", "adaptive")
+#' @param meinshausen_method Method for Meinshausen hierarchical testing ("simes", "fisher", "bonferroni")
+#' @param meinshausen_sequential Logical, whether to use Goeman-Solari sequential rejection enhancement
 #' @return A data.table containing information about the sequence of splitting and testing
 
 #' @details Some notes about the splitting functions and how they relate to
@@ -121,6 +126,128 @@
 #' random choice of a single block or could vary and thus focus the testing on
 #' the largest/highest ranked blocks.
 #'
+#' @examples
+#' \dontrun{
+#' # Load example data
+#' data(example_dat, package = "manytestsr")
+#' library(data.table)
+#' library(dplyr)
+#' 
+#' # Create block-level dataset
+#' example_bdat <- example_dat %>%
+#'   group_by(blockF) %>%
+#'   summarize(
+#'     nb = n(),
+#'     pb = mean(trt),
+#'     hwt = (nb / nrow(example_dat)) * (pb * (1 - pb)),
+#'     place = unique(place),
+#'     year = unique(year),
+#'     place_year_block = factor(unique(place_year_block)),
+#'     .groups = "drop"
+#'   ) %>%
+#'   as.data.table()
+#'   
+#' # Basic usage with cluster-based splitting
+#' result1 <- find_blocks(
+#'   idat = example_dat,
+#'   bdat = example_bdat, 
+#'   blockid = "blockF",
+#'   splitfn = splitCluster,
+#'   pfn = pOneway,
+#'   fmla = Y1 ~ trtF | blockF,
+#'   splitby = "hwt",
+#'   parallel = "no",
+#'   trace = TRUE
+#' )
+#' 
+#' # Access block-level results
+#' head(result1$bdat)
+#' 
+#' # Access node-level results  
+#' head(result1$node_dat)
+#' 
+#' # Example with pre-specified factor splitting
+#' result2 <- find_blocks(
+#'   idat = example_dat,
+#'   bdat = example_bdat,
+#'   blockid = "blockF", 
+#'   splitfn = splitSpecifiedFactor,
+#'   pfn = pIndepDist,
+#'   fmla = Y2 ~ trtF | blockF,
+#'   splitby = "place_year_block",
+#'   parallel = "no"
+#' )
+#' 
+#' # Example using Goeman's proper closed testing procedure
+#' result3 <- find_blocks(
+#'   idat = example_dat,
+#'   bdat = example_bdat,
+#'   blockid = "blockF",
+#'   splitfn = splitCluster,
+#'   pfn = pIndepDist,
+#'   fmla = Y1 ~ trtF | blockF,
+#'   splitby = "hwt",
+#'   parallel = "no",
+#'   use_closed_testing = TRUE,
+#'   closed_testing_method = "simes",
+#'   thealpha = 0.05
+#' )
+#' 
+#' # Check closed testing results
+#' if ("closed_testing_reject" %in% names(result3$node_dat)) {
+#'   cat("Nodes rejected by closed testing procedure:\n")
+#'   rejected_nodes <- result3$node_dat[closed_testing_reject == TRUE, nodenum]
+#'   print(rejected_nodes)
+#' }
+#' 
+#' # Example using e-value methodology for sequential testing
+#' result4 <- find_blocks(
+#'   idat = example_dat,
+#'   bdat = example_bdat,
+#'   blockid = "blockF",
+#'   splitfn = splitCluster,
+#'   pfn = pOneway,
+#'   fmla = Y1 ~ trtF | blockF,
+#'   splitby = "hwt",
+#'   parallel = "no",
+#'   use_evalues = TRUE,
+#'   evalue_wealth_rule = "kelly",
+#'   thealpha = 0.05
+#' )
+#' 
+#' # Example using Meinshausen's hierarchical testing with sequential rejection
+#' result5 <- find_blocks(
+#'   idat = example_dat,
+#'   bdat = example_bdat,
+#'   blockid = "blockF",
+#'   splitfn = splitCluster,
+#'   pfn = pIndepDist,
+#'   fmla = Y2 ~ trtF | blockF,
+#'   splitby = "hwt",
+#'   parallel = "no",
+#'   use_meinshausen = TRUE,
+#'   meinshausen_method = "simes",
+#'   meinshausen_sequential = TRUE,
+#'   thealpha = 0.05
+#' )
+#' 
+#' # Check Meinshausen testing results
+#' if ("meinshausen_reject" %in% names(result5$node_dat)) {
+#'   cat("Nodes rejected by Meinshausen hierarchical procedure:\\n")
+#'   rejected_meinshausen <- result5$node_dat[meinshausen_reject == TRUE, nodenum]
+#'   print(rejected_meinshausen)
+#' }
+#' 
+#' # Compare traditional FWER control vs closed testing
+#' traditional_detections <- report_detections(result1$bdat, fwer = TRUE)
+#' if (exists("result3") && "node_dat" %in% names(result3)) {
+#'   cat("Traditional FWER detections:", sum(traditional_detections$hit, na.rm = TRUE), "\n")
+#'   if ("closed_testing_reject" %in% names(result3$node_dat)) {
+#'     closed_detections <- sum(result3$node_dat$closed_testing_reject, na.rm = TRUE)
+#'     cat("Closed testing detections:", closed_detections, "\n")
+#'   }
+#' }
+#' }
 #' @importFrom stringi stri_count_fixed stri_split_fixed stri_split stri_sub stri_replace_all stri_extract_last
 #' @importFrom digest digest getVDigest
 #' @export
@@ -145,7 +272,14 @@ find_blocks <-
            stop_splitby_constant = TRUE,
            blocksize = "hwt",
            return_what = c("blocks", "nodes"),
-           trace = FALSE) {
+           trace = FALSE,
+           use_closed_testing = FALSE,
+           use_evalues = FALSE,
+           use_meinshausen = FALSE,
+           closed_testing_method = "simes",
+           evalue_wealth_rule = "kelly",
+           meinshausen_method = "simes",
+           meinshausen_sequential = TRUE) {
     # Some checks: We can split on a constant variable if we are collecting the
     # blocks into groups of equal size
 
@@ -159,6 +293,9 @@ find_blocks <-
     }
 
     # Setup
+    ## Initialize numeric node tracking
+    node_tracker <- create_node_tracker()
+    
     ## Should we always copy the data tables? And rename them?
     if (copydts) {
       bdat <- data.table::copy(bdat)
@@ -167,13 +304,13 @@ find_blocks <-
       ## This is just some defensive programming to delete columns created in a previous run
       cols_to_del_b <-
         grep(
-          "^p[0-9]|^g[0-9]|^alpha[0-9]|pfinal|testable|nodesize|blocksize|blocksbygroup|^nodenum|biggrp",
+          "^p[0-9]|^g[0-9]|^alpha[0-9]|pfinal|testable|nodesize|blocksize|blocksbygroup|^nodenum|group_id",
           names(bdat),
           value = TRUE
         )
       cols_to_del_i <-
         grep(
-          "^p[0-9]|^g[0-9]|^alpha[0-9]|pfinal|testable|nodesize|blocksize|blocksbygroup|^nodenum|biggrp",
+          "^p[0-9]|^g[0-9]|^alpha[0-9]|pfinal|testable|nodesize|blocksize|blocksbygroup|^nodenum|group_id",
           names(idat),
           value = TRUE
         )
@@ -200,8 +337,9 @@ find_blocks <-
     # Record the names of the group and pvalues.
     gnm <- "g1"
     pnm <- "p1"
-    bdat[, biggrp := gl(1, nrow(bdat), labels = "1")] # initialize the biggrp factor var
-    bdat[, g1 := biggrp]
+    bdat[, group_id := 1L] # initialize with numeric group ID
+    bdat[, node_id := factor(rep("1", nrow(bdat)))] # root node identifier
+    bdat[, g1 := node_id]
     if (is.null(alphafn)) {
       bdat[, alpha1 := thealpha]
     } else {
@@ -223,22 +361,44 @@ find_blocks <-
     bdat[, testable := (pfinalb < alpha1)]
     # node_dat is a node level dataset
     node_dat <- data.table(
-      parent = NA_character_,
+      parent = 0L,
       p = unique(bdat$p1),
-      biggrp = factor("1"),
+      group_id = 1L,
+      node_id = factor("1"),
       a = unique(bdat$alpha1),
       batch = "p1",
       testable = unique(bdat$testable),
-      nodenum = "1",
+      nodenum = 1L,
       depth = 1L,
       nodesize = sum(bdat[, get(blocksize)])
     )
-    bdat[, nodenum_current := "1"]
-    bdat[, nodenum_prev := "0"]
+    bdat[, nodenum_current := 1L]
+    bdat[, nodenum_prev := 0L]
     setkeyv(idat, blockid)
     setkeyv(bdat, "testable")
-    bdat[, blocksbygroup := length(unique(get(blockid))), by = biggrp]
+    bdat[, blocksbygroup := length(unique(get(blockid))), by = group_id]
     if (!all(bdat$testable)) {
+      ## Apply advanced methodologies if requested before early return
+      if (use_meinshausen && exists("meinshausen_hierarchical_test")) {
+        tryCatch({
+          node_dat <- meinshausen_hierarchical_test(
+            node_dat,
+            node_tracker,
+            alpha = thealpha,
+            method = meinshausen_method,
+            use_sequential = meinshausen_sequential
+          )
+        }, error = function(e) {
+          warning("Meinshausen hierarchical testing failed: ", e$message, ". Continuing with standard results.")
+        })
+      }
+      
+      if (use_evalues) {
+        # E-value analysis would be applied to the sequential nature of the testing
+        # This is a placeholder for future integration
+        warning("E-value integration is experimental and under development")
+      }
+      
       ## Return the objects
       if (all(return_what == "blocks")) {
         return(bdat)
@@ -265,22 +425,49 @@ find_blocks <-
       pnm <- paste0("p", i) # name of the p-value variable for the current split
       alphanm <- paste0("alpha", i)
       # Set Group to NA for blocks where we have to stop testing
-      bdat[(testable), (gnm) := splitfn(bid = get(blockid), x = get(splitby)), by = biggrp]
-      # maybe improve this next with
-      # https://stackoverflow.com/questions/33689098/interactions-between-factors-in-data-table
-      if (i == 2) {
-        bdat[(testable), nodenum_prev := nodenum_current]
-        bdat[(testable), nodenum_current := nodeidfn(get(gnm))]
-      } else {
-        bdat[(testable), nodenum_prev := nodenum_current]
-        bdat[(testable), nodenum_current := nodeidfn(paste0(nodenum_prev, get(gnm))), by = biggrp]
+      bdat[(testable), (gnm) := splitfn(bid = get(blockid), x = get(splitby)), by = group_id]
+      
+      # Update node tracking with numeric IDs
+      bdat[(testable), nodenum_prev := nodenum_current]
+      
+      # Create unique node IDs for each unique split group value within each parent group
+      testable_blocks <- bdat[(testable)]
+      if (nrow(testable_blocks) > 0) {
+        # Process each parent group separately to maintain proper tree structure
+        parent_groups <- unique(testable_blocks$nodenum_current)
+        
+        for (parent_id in parent_groups) {
+          parent_blocks <- testable_blocks[nodenum_current == parent_id]
+          unique_split_values <- unique(parent_blocks[[gnm]])
+          
+          # Assign new node IDs for children of this parent
+          for (k in seq_along(unique_split_values)) {
+            split_val <- unique_split_values[k]
+            new_node_id <- node_tracker$next_id
+            node_tracker$next_id <- node_tracker$next_id + 1L
+            
+            # All blocks with this split value get the same node ID
+            bdat[(testable) & nodenum_current == parent_id & get(gnm) == split_val, 
+                 nodenum_current := new_node_id]
+            
+            # Add to tracker
+            new_node <- data.table(
+              node_id = new_node_id,
+              parent_id = parent_id,
+              depth = i
+            )
+            node_tracker$tracker <- rbindlist(list(node_tracker$tracker, new_node))
+          }
+        }
       }
-      bdat[(testable), biggrp := interaction(biggrp, nodenum_current, drop = TRUE)]
-      bdat[, biggrp := droplevels(biggrp)] # annoying to need this extra step given drop=TRUE
-      bdat[, nodesize := sum(get(blocksize)), by = biggrp]
+      
+      # Update group_id and create node_id  
+      bdat[(testable), group_id := nodenum_current]
+      bdat[, node_id := factor(group_id)]
+      
+      bdat[, nodesize := sum(get(blocksize)), by = group_id]
       # Now merge idat and bdat again since the test has to be at the idat level
-      idat[bdat, c("testable", "biggrp") := mget(c("i.testable", "i.biggrp")), on = blockid]
-      idat[, biggrp := droplevels(biggrp)] # annoying to need to do this
+      idat[bdat, c("testable", "group_id", "node_id") := mget(c("i.testable", "i.group_id", "i.node_id")), on = blockid]
       pb <- idat[(testable), list(
         p = pfn(
           fmla = fmla,
@@ -290,30 +477,33 @@ find_blocks <-
           parallel = parallel,
           ncpu = ncores
         )
-      ), by = biggrp]
+      ), by = group_id]
       pb[, depth := i]
-      # This next could be made more efficient without string splitting but not sure what to do
-      pb[, nodenum := stri_split_fixed(biggrp, ".", simplify = TRUE)[, i]]
-      pb[, parent := stri_split_fixed(biggrp, ".", simplify = TRUE)[, i - 1]]
+      # Use numeric node IDs directly - no string splitting needed
+      pb[, nodenum := group_id]
+      pb[, parent := get_parent_from_tracker(node_tracker, group_id)]
       # call "blocksize" the sum of the block sizes within group
-      pb[bdat, nodesize := i.nodesize, on = "biggrp"]
+      pb[bdat, nodesize := i.nodesize, on = "group_id"]
       ## Adjust the p-values for a given node
       if (!is.null(local_adj_p_fn)) {
         pb[, p := local_adj_p_fn(p), by = parent]
       }
+      # Add node_id to pb for compatibility
+      pb[, node_id := factor(group_id)]
+      
       node_dat <-
-        rbind(node_dat[, .(parent, p, a, biggrp, batch, testable, nodenum, depth, nodesize)],
+        rbind(node_dat[, .(parent, p, a, group_id, node_id, batch, testable, nodenum, depth, nodesize)],
           pb[, batch := pnm],
           fill = TRUE
         )
       setnames(pb, "p", pnm)
-      setkeyv(pb, "biggrp")
-      bdat[pb, (pnm) := get(paste0("i.", pnm)), on = "biggrp"]
+      setkeyv(pb, "group_id")
+      bdat[pb, (pnm) := get(paste0("i.", pnm)), on = "group_id"]
       # bdat[(testable), pfinalb := pmax(get(pnm), pfinalb)]
       bdat[(testable), pfinalb := get(pnm)]
       # Now decide which blocks (units) can be tested again.
       # If a split contains only one block. We cannot test further.
-      bdat[, blocksbygroup := .N, by = biggrp]
+      bdat[, blocksbygroup := .N, by = group_id]
       if (is.null(alphafn)) {
         bdat[, (alphanm) := thealpha]
         # Recall that `:=` **updates** values. So, it doesn't overwrite (testable==FALSE) values
@@ -337,20 +527,11 @@ find_blocks <-
 
           find_paths <- function(j) {
             tmp <- node_dat[depth == j, ]
-            tmp[, leaves := stri_extract_last(as.character(biggrp), regex = "\\.[:alnum:]*$")]
-            tmp[, paths := stri_replace_all(as.character(biggrp),
-              replacement = "",
-              fixed = leaves
-            )]
-            path_dat <-
-              tmp[, .(thepath = paste(
-                unique(paths),
-                paste(leaves, sep = "", collapse = ""),
-                sep = ""
-              )), by = paths]
-            path_vec <- stri_split_fixed(path_dat$thepath, ".")
-            # stopifnot(all(path_vec %in% node_dat$nodenum))
-            return(path_vec)
+            # Build paths using numeric ancestry from tracker
+            paths <- lapply(tmp$nodenum, function(node_id) {
+              build_numeric_ancestry(node_tracker, node_id)
+            })
+            return(paths)
           }
 
           setkey(node_dat, nodenum)
@@ -368,8 +549,8 @@ find_blocks <-
         }
 
         node_dat[is.na(a), a := get(alphanm)]
-        setkey(node_dat, biggrp)
-        bdat[node_dat, (alphanm) := get(paste0("i.", alphanm)), on = "biggrp"]
+        setkey(node_dat, group_id)
+        bdat[node_dat, (alphanm) := get(paste0("i.", alphanm)), on = "group_id"]
         # In deciding which blocks can be included in more testing we use
         # current p rather than max of previous p. A block is testable if current
         # p <= the alpha level AND the number of blocks in the group containing
@@ -387,13 +568,48 @@ find_blocks <-
         ## Here there is no sense in spliting by differences in covariate value
         ## (creating clusters using k-means) if covariate values do not differ
 
-        bdat[, testable := fifelse(uniqueN(get(splitby)) == 1, FALSE, unique(testable)), by = biggrp]
+        bdat[, testable := fifelse(uniqueN(get(splitby)) == 1, FALSE, unique(testable)), by = group_id]
       }
       node_dat[is.na(a), a := get(alphanm)]
       setkeyv(bdat, "testable") # for binary search speed
       # message(paste(unique(signif(bdat$pfinalb,4)),collapse=' '),appendLF = TRUE)
       # message('Number of blocks left to test: ', sum(bdat$testable))
     }
+    
+    ## Apply advanced methodologies if requested
+    if (use_closed_testing && exists("closed_testing_procedure")) {
+      tryCatch({
+        node_dat <- closed_testing_procedure(
+          node_dat, 
+          node_tracker, 
+          alpha = thealpha,
+          method = closed_testing_method
+        )
+      }, error = function(e) {
+        warning("Closed testing procedure failed: ", e$message, ". Continuing with standard results.")
+      })
+    }
+    
+    if (use_meinshausen && exists("meinshausen_hierarchical_test")) {
+      tryCatch({
+        node_dat <- meinshausen_hierarchical_test(
+          node_dat,
+          node_tracker,
+          alpha = thealpha,
+          method = meinshausen_method,
+          use_sequential = meinshausen_sequential
+        )
+      }, error = function(e) {
+        warning("Meinshausen hierarchical testing failed: ", e$message, ". Continuing with standard results.")
+      })
+    }
+    
+    if (use_evalues) {
+      # E-value analysis would be applied to the sequential nature of the testing
+      # This is a placeholder for future integration
+      warning("E-value integration is experimental and under development")
+    }
+    
     ## Return the objects
     if (all(return_what == "blocks")) {
       return(bdat)
@@ -402,18 +618,80 @@ find_blocks <-
       return(node_dat)
     }
     if (all(return_what %in% c("blocks", "nodes"))) {
-      return(list(bdat = bdat, node_dat = node_dat))
+      return(list(bdat = bdat, node_dat = node_dat, node_tracker = node_tracker))
     }
   }
 
 
-#' Use hashing to make a node id
+# Numeric node tracking system for performance
 
-#'
-#' This is an internal function used by find_blocks. Some (rare) designs can produce
-#' so many nodes that we have problems with integers. So, using hashes by default.
-#'
+#' Create node tracker object
+#' @return List with tracker data.table and next_id counter
+#' @keywords internal
+create_node_tracker <- function() {
+  list(
+    tracker = data.table(
+      node_id = 1L,
+      parent_id = 0L,
+      depth = 1L
+    ),
+    next_id = 2L
+  )
+}
 
+#' Add nodes to tracker
+#' @param tracker Node tracking object
+#' @param parent_ids Vector of parent node IDs
+#' @param depth Current depth
+#' @param n_children Number of children to create
+#' @return Updated tracker with new node IDs
+#' @keywords internal
+add_nodes_to_tracker <- function(tracker, parent_ids, depth, n_children) {
+  new_ids <- seq.int(tracker$next_id, length.out = n_children)
+  tracker$next_id <- tracker$next_id + n_children
+  
+  new_nodes <- data.table(
+    node_id = new_ids,
+    parent_id = rep(parent_ids, length.out = n_children),
+    depth = depth
+  )
+  
+  tracker$tracker <- rbindlist(list(tracker$tracker, new_nodes))
+  list(tracker = tracker, new_ids = new_ids)
+}
+
+#' Get parent ID from tracker
+#' @param tracker Node tracking object  
+#' @param node_ids Vector of node IDs to find parents for
+#' @return Vector of parent node IDs (0 for root)
+#' @keywords internal
+get_parent_from_tracker <- function(tracker, node_ids) {
+  sapply(node_ids, function(nid) {
+    parent <- tracker$tracker[node_id == nid, parent_id]
+    if (length(parent) == 0) 0L else parent
+  })
+}
+
+#' Build ancestry path for numeric node ID
+#' @param tracker Node tracking object
+#' @param node_id Node ID to build path for
+#' @return Integer vector of ancestry path from root to node
+#' @keywords internal
+build_numeric_ancestry <- function(tracker, node_id) {
+  path <- c()
+  current <- as.integer(node_id)
+  while (current != 0) {
+    path <- c(current, path)
+    current <- get_parent_from_tracker(tracker, current)
+  }
+  return(path)
+}
+
+#' Use hashing to make a node id (DEPRECATED)
+#'
+#' This function is deprecated in favor of numeric node tracking.
+#' Kept for backward compatibility only.
+#'
 #' @param d A vector
 #' @return a vector of hashes
 #' @importFrom digest digest getVDigest

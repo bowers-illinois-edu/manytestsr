@@ -22,6 +22,21 @@
 
 #' @param ncpu is the number of workers (for "snow") or cores (for "multicore").
 #' @return A p-value
+#' @examples
+#' # Example using built-in data
+#' data(example_dat, package = "manytestsr")
+#'
+#' # Test for treatment effect on Y1 within a single block
+#' single_block <- subset(example_dat, blockF == "B080")
+#' p_val <- pOneway(single_block, Y1 ~ trtF | blockF, parallel = "no")
+#' print(p_val)
+#'
+#' # Test with permutation-based inference for small samples
+#' p_val_perm <- pOneway(single_block, Y1 ~ trtF | blockF,
+#'   simthresh = 100, sims = 500, parallel = "no"
+#' )
+#' print(p_val_perm)
+#'
 #' @importFrom coin oneway_test pvalue approximate exact asymptotic
 #' @importFrom parallel detectCores
 #' @export
@@ -40,7 +55,7 @@ pOneway <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin:::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
   }
 
   thep <- pvalue(oneway_test(fmla, data = dat, distribution = thedist))[[1]]
@@ -69,6 +84,21 @@ pOneway <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 
 #' @param ncpu is the number of workers (for "snow") or cores (for "multicore").
 #' @return A p-value
+#' @examples
+#' # Example using Wilcoxon rank-sum test
+#' data(example_dat, package = "manytestsr")
+#'
+#' # Test for treatment effect on Y1 within a single block
+#' single_block <- subset(example_dat, blockF == "B080")
+#' p_val <- pWilcox(single_block, Y1 ~ trtF | blockF, parallel = "no")
+#' print(p_val)
+#'
+#' # Compare with permutation-based version
+#' p_val_perm <- pWilcox(single_block, Y1 ~ trtF | blockF,
+#'   simthresh = 100, sims = 500, parallel = "no"
+#' )
+#' print(p_val_perm)
+#'
 #' @importFrom coin wilcox_test pvalue approximate exact asymptotic
 #' @importFrom parallel detectCores
 #' @export
@@ -87,7 +117,7 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin:::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
   }
 
   thep <- pvalue(wilcox_test(fmla, data = dat, distribution = thedist))[[1]]
@@ -135,11 +165,26 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 #' @importFrom Rfast Rank
 #' @importFrom parallel detectCores
 #' @importFrom dataPreparation which_are_constant
+#' @examples
+#' \donttest{
+#' # Example using distance-based independence test
+#' data(example_dat, package = "manytestsr")
+#' library(data.table)
+#'
+#' # Test for treatment effect using distance-based approach
+#' single_block <- as.data.table(subset(example_dat, blockF == "B080"))
+#' p_val <- pIndepDist(single_block, Y1 ~ trtF | blockF, parallel = "no")
+#' print(p_val)
+#'
+#' # Test with different outcome variable
+#' p_val2 <- pIndepDist(single_block, Y2 ~ trtF | blockF, parallel = "no")
+#' print(p_val2)
+#' }
 #' @export
 pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
                        parallel = "yes", ncpu = NULL, distfn = fast_dists_and_trans_hybrid) {
   force(distfn)
-  stopifnot(inherits(dat,"data.table"))
+  stopifnot(inherits(dat, "data.table"))
   fmla_vars <- all.vars(fmla)
   theresponse <- fmla_vars[attr(terms(fmla), "response")]
   thetreat <- fmla_vars[[2]]
@@ -159,7 +204,7 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
   thedat <- copy(dat)
 
   ### These must match the names of the functions used in src/dists_and_trans.cpp
-  outcome_names <- c(theresponse,"mean_dist" ,"mean_rank_dist","max_dist","rankY","tanhY")
+  outcome_names <- c(theresponse, "mean_dist", "mean_rank_dist", "max_dist", "rankY", "tanhY")
 
   if (length(fmla_vars) == 3) {
     theblock <- fmla_vars[[3]]
@@ -190,7 +235,7 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin:::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
   }
 
   ## Quadratic combination is best when most/all of the test statistics move in
@@ -210,26 +255,21 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
 #' @details For now, this  function  does an omnibus-style max-T test using (1)
 #' the raw outcome and (2) a rank transformed raw outcome. Inspired by Rosenbaum (2008) on Testing Twicee
 #'
-
 #' @param dat An object inheriting from class data.frame
 #' @param fmla  A formula  appropriate to the function. Here it should  be something like outcome~treatment|block
 #' @param sims Either NULL (meaning use an asymptotic reference dist) or a
 #' number (meaning sampling from the randomization distribution implied by the
 #' formula)
 #' @param simthresh is the size of the data below which we use direct permutations for p-values
-
-#' @param distfn is  a function that produces one or more vectors (a data frame
-#' or matrix) of the  same number of  rows as the dat
-
 #' @param parallel is "no" then parallelization is not required, otherwise it
 #' is "multicore" or "snow" in the call to `coin::independence_test()` (see
 #' help for coin::approximate()). Also, if parallel is not "no" and
 #' `adaptive_dist_function` is TRUE, then an openmp version of the distance
 #' creation function is called using `ncpu` threads (or
 #' `parallel::detectCores(logical=FALSE)` cores).
-
 #' @param ncpu is number of cpus  to be used for parallel operation.
-
+#' @param groups Currently unused parameter, reserved for future functionality
+#'
 #' @return A p-value
 #' @importFrom coin independence_test pvalue approximate exact asymptotic
 #' @importFrom Rfast Rank
@@ -285,7 +325,7 @@ pTestTwice <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin:::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
   }
 
   thep <- pvalue(independence_test(newfmla, data = thedat, distribution = thedist, teststat = "quadratic"))[[1]]
@@ -307,7 +347,6 @@ pTestTwice <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
 #' Hansen and Bowers (2008) on omnibus tests. Distance and ranks and other
 #' transformations are all calculated by block when block is supplied in the
 #' formula.
-
 
 #' @param dat An object inheriting from class data.frame
 #' @param fmla  A formula  appropriate to the function. Here it should  be something like outcome~treatment|block
@@ -356,7 +395,7 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
 
   thedat <- copy(dat)
 
-  outcome_names <- c(theresponse,"mean_dist" ,"mean_rank_dist","rankY","tanhY")
+  outcome_names <- c(theresponse, "mean_dist", "mean_rank_dist", "rankY", "tanhY")
 
   ## To enable the use of this function without a `|block` --- basically to
   ## make it easier to compare with the bottom-up approaches where we just test
@@ -400,7 +439,7 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin:::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
   }
 
   p_vals <- sapply(the_fmlas, function(thefmla) {

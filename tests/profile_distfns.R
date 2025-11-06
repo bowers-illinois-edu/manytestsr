@@ -31,10 +31,10 @@ numcores <- 16
 test_that("All algorithmns give the same answers", {
   y <- 1:5
   tmp1 <- dists_and_trans(y)
-  tmp2 <- fast_dists_and_trans(y, Z = 1)
-  tmp3 <- fast_dists_and_trans_by_unit_arma(y, Z = 1)
-  tmp4 <- fast_dists_and_trans_by_unit_arma2(y, Z = 1)
-  tmp5 <- fast_dists_by_unit_arma2_par(y, Z = 1, threads = numcores)
+  tmp2 <- fast_dists_and_trans_hybrid(y)
+  tmp3 <- fast_dists_and_trans_nomax_hybrid(y)
+  tmp4 <- fast_dists_and_trans_new(y)
+  tmp5 <- fast_dists_and_trans_new_omp(y, threads = numcores)
   test_length_fn(tmp1, tmp2)
   test_length_fn(tmp1, tmp3)
   test_length_fn(tmp1, tmp4)
@@ -63,10 +63,10 @@ dist_timings_small <- press(
     y <- sample(ypop, N)
     bench::mark(
       main = dists_and_trans(y),
-      arma = fast_dists_and_trans(y, Z = 1),
-      byunit_arma = fast_dists_and_trans_by_unit_arma(y, Z = 1),
-      byunit_arma2 = fast_dists_and_trans_by_unit_arma2(y, Z = 1),
-      byunit_arma2_par = fast_dists_by_unit_arma2_par(y, Z = 1, threads = numcores),
+      hybrid = fast_dists_and_trans_hybrid(y),
+      nomax_hybrid = fast_dists_and_trans_nomax_hybrid(y),
+      new = fast_dists_and_trans_new(y),
+      new_omp = fast_dists_and_trans_new_omp(y, threads = numcores),
       min_iterations = 100, max_iterations = 1000, check = FALSE, filter_gc = FALSE
     )
   }
@@ -86,10 +86,10 @@ dist_timings_large <- press(N = unique(c(seq(1000, 10000, 1000), 20000)), {
   y <- sample(ypop, N)
   bench::mark(
     main = dists_and_trans(y),
-    arma = fast_dists_and_trans(y, Z = 1),
-    byunit_arma = fast_dists_and_trans_by_unit_arma(y, Z = 1),
-    byunit_arma2 = fast_dists_and_trans_by_unit_arma2(y, Z = 1),
-    byunit_arma2_par = fast_dists_by_unit_arma2_par(y, Z = 1, threads = numcores),
+    hybrid = fast_dists_and_trans_hybrid(y),
+    nomax_hybrid = fast_dists_and_trans_nomax_hybrid(y),
+    new = fast_dists_and_trans_new(y),
+    new_omp = fast_dists_and_trans_new_omp(y, threads = numcores),
     min_iterations = 2, max_iterations = 1000, check = FALSE, filter_gc = FALSE
   )
 })

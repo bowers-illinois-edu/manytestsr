@@ -36,9 +36,9 @@ bdat4[, g5 := splitCluster(bid = as.character(bF), x = v4)]
 bdat4[, g_x1 := splitCluster(bid = as.character(bF), x = x1)]
 bdat4[, g_x2 := splitCluster(bid = as.character(bF), x = x2)]
 bdat4[, g_x3 := splitCluster(bid = as.character(bF), x = x3)]
-with(bdat4, table(g_x1, x1, exclude = c()))
-with(bdat4, table(g_x2, x2, exclude = c()))
-with(bdat4, table(g_x3, x3, exclude = c()))
+# with(bdat4, table(g_x1, x1, exclude = c()))
+# with(bdat4, table(g_x2, x2, exclude = c()))
+# with(bdat4, table(g_x3, x3, exclude = c()))
 
 test_that("Clustering based splitting makes the splits more homogeneous and distant in mean", {
   bdat4[, g1 := splitCluster(bid = as.character(bF), x = hwt)]
@@ -56,30 +56,30 @@ bdat4[, lv2 := cut(v2, 2, labels = c("l2_1", "l2_2")), by = lv1]
 bdat4[, lv3 := seq(1, .N), by = interaction(lv1, lv2, lex.order = TRUE, drop = TRUE)]
 bdat4[, lvs := interaction(lv1, lv2, lv3, lex.order = TRUE, drop = TRUE)]
 
-with(bdat4, table(lv1, lv3))
-with(bdat4, table(lv1, lv2))
-table(bdat4$lv1)
-table(bdat4$lvs)
+# with(bdat4, table(lv1, lv3))
+# with(bdat4, table(lv1, lv2))
+# table(bdat4$lv1)
+# table(bdat4$lvs)
 
 ## Test pre-specified splitters
 ## deprecate splitSpecified
 bdat4[, gf5 := splitSpecified(bF, x = data.table(lv1, lv2, bF))]
-with(bdat4, table(lvs, gf5))
+# with(bdat4, table(lvs, gf5))
 bdat4[lv1 != "l1_1", gf6 := splitSpecified(bF, x = data.table(lv1, lv2, bF))]
-with(bdat4, table(lvs, gf6, exclude = c()))
+# with(bdat4, table(lvs, gf6, exclude = c()))
 bdat4[lv1 != "l1_1" & lv2 != "l2_2", gf7 := splitSpecified(bF, x = data.table(lv1, lv2, bF))]
-with(bdat4, table(lvs, gf7, exclude = c()))
+# with(bdat4, table(lvs, gf7, exclude = c()))
 
 ## The first split should be from the left-most element of the label
 bdat4[, gf8 := splitSpecifiedFactorMulti(bF, x = lvs)]
-with(bdat4, table(lvs, gf8))
+# with(bdat4, table(lvs, gf8))
 bdat4[lv1 != "l1_1", gf9 := splitSpecifiedFactorMulti(bF, x = lvs)]
-with(bdat4, table(lvs, gf9, exclude = c()))
-with(droplevels(bdat4[lv1 != "l1_1", ]), table(lvs, gf9))
+# with(bdat4, table(lvs, gf9, exclude = c()))
+# with(droplevels(bdat4[lv1 != "l1_1", ]), table(lvs, gf9))
 bdat4[lv1 != "l1_1" & lv2 != "l2_2", gf10 := splitSpecifiedFactorMulti(bF, x = lvs)]
-with(bdat4, table(lvs, gf10, exclude = c()))
+# with(bdat4, table(lvs, gf10, exclude = c()))
 ## This should have five splits
-with(droplevels(bdat4[lv1 != "l1_1" & lv2 != "l2_2", ]), table(lvs, gf10, exclude = c()))
+# with(droplevels(bdat4[lv1 != "l1_1" & lv2 != "l2_2", ]), table(lvs, gf10, exclude = c()))
 
 data(example_dat, package = "manytestsr")
 example_dat$blockF <- factor(example_dat$blockF)
@@ -96,23 +96,23 @@ example_bdat <- example_dat %>%
     place_year_block = factor(unique(place_year_block))
   ) %>%
   as.data.table()
-example_bdat
+# example_bdat
 
 example_bdat[, g1 := splitSpecifiedFactor(bid = blockF, x = place_year_block)]
-with(example_bdat, table(g1, place, exclude = c()))
+# with(example_bdat, table(g1, place, exclude = c()))
 # with(example_bdat, table(g1, place_year_block, exclude = c()))
 example_bdat[g1 == 0, g2 := splitSpecifiedFactor(bid = blockF, x = place_year_block)]
-with(example_bdat, table(g2, place, exclude = c()))
+# with(example_bdat, table(g2, place, exclude = c()))
 example_bdat[g2 == 0, g3 := splitSpecifiedFactor(bid = blockF, x = place_year_block)]
-with(example_bdat, table(g3, place, exclude = c()))
+# with(example_bdat, table(g3, place, exclude = c()))
 example_bdat[g3 == 0, g4 := splitSpecifiedFactor(bid = blockF, x = place_year_block)]
-with(example_bdat, table(g4, place, exclude = c()))
+# with(example_bdat, table(g4, place, exclude = c()))
 example_bdat[g4 == 0, g5 := splitSpecifiedFactor(bid = blockF, x = place_year_block)]
-with(droplevels(example_bdat[g4 == 0, ]), table(g5, place_year_block, exclude = c()))
+# with(droplevels(example_bdat[g4 == 0, ]), table(g5, place_year_block, exclude = c()))
 example_bdat[g5 == 0, g6 := splitSpecifiedFactor(bid = blockF, x = place_year_block)]
-with(droplevels(example_bdat[g5 == 0, ]), table(g6, place_year_block, exclude = c()))
+# with(droplevels(example_bdat[g5 == 0, ]), table(g6, place_year_block, exclude = c()))
 
-#### When splitby has no variation within biggrp, further splitting doesn't do
+#### When splitby has no variation within node_id, further splitting doesn't do
 ### anything and the algorithm may just continue to produce the same p-values
 ### until maxtest is reached depending on the splitting function. So, for
 ### example, in splitSpecifiedFactor and splitCluster we want the algorithm to
@@ -141,15 +141,15 @@ bdat4[, lvs2 := interaction(lv1, lv2)] ## should only have 4 spits
 bdat4[, constv := rep(10, .N)] ## a constant
 
 ## Notice that basically not hitting within individual blocks with Ytauv2 despite large mean diffs in half of the blocks
-#blah <- idat3[, .(pIndepDist(.SD,Ytauv2 ~ ZF,parallel="no"), pOneway(Ytauv2 ~ ZF), pWilcox(Ytauv2 ~ ZF), coef(lm(Ytauv2 ~ ZF)), mean(tauv2), sd(y0), .N), by = bF]
+# blah <- idat3[, .(pIndepDist(.SD,Ytauv2 ~ ZF,parallel="no"), pOneway(Ytauv2 ~ ZF), pWilcox(Ytauv2 ~ ZF), coef(lm(Ytauv2 ~ ZF)), mean(tauv2), sd(y0), .N), by = bF]
 #
-#head(blah)
-#tail(blah)
+# head(blah)
+# tail(blah)
 # library(ggplot2)
 # g <- ggplot(data=idat3,aes(x=bF,y=Ytauv2,fill=ZF))+geom_boxplot()
 # g
 
-test_that("splitCluster follows the values of discrete splitby variables", {
+test_that("splitCluster follows the values of discrete splitby variables. Here we should only see two splits.", {
   theres1 <- find_blocks(
     idat = idat3, bdat = bdat4, blockid = "bF", pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
     fmla = Ytauv2 ~ ZF | bF,
@@ -157,14 +157,16 @@ test_that("splitCluster follows the values of discrete splitby variables", {
     splitfn = splitCluster, splitby = "twosplits", stop_splitby_constant = TRUE
   )
 
-  expect_equal(uniqueN(theres1$bdat$biggrp), uniqueN(bdat4$twosplits))
+  expect_equal(uniqueN(theres1$bdat$node_id), uniqueN(bdat4$twosplits))
 
-  thetab <- table(theres1$bdat$twosplitsF, theres1$bdat$biggrp)
-  expect_equal(c(thetab[1, 2], thetab[2, 1]), c(0, 0))
+  thetab <- table(theres1$bdat$twosplitsF, theres1$bdat$node_id)
+  expect_equal(c(thetab[1, 1], thetab[2, 2]), c(0, 0))
+  ## We should have one root node and only two children
+  expect_equal(nrow(theres1$node_dat), 3)
+  expect_equal(sum(theres1$node_dat$depth == 2), 2)
 })
 
 test_that("splitCluster stops appropriately (i.e. doesn't just keep randomly splitting) with continuous splitting criteria.", {
-
   set.seed(12345)
   bdat4$cov <- runif(nrow(bdat4))
 
@@ -175,23 +177,23 @@ test_that("splitCluster stops appropriately (i.e. doesn't just keep randomly spl
   theres1 <- find_blocks(
     idat = idat3, bdat = bdat4, blockid = "bF", pfn = pOneway, alphafn = NULL, thealpha = 0.05,
     fmla = Ytauv2 ~ ZF | bF,
-    parallel = "no", copydts = TRUE, simthresh=1,
+    parallel = "no", copydts = TRUE, simthresh = 1,
     splitfn = splitCluster, splitby = "cov", stop_splitby_constant = TRUE
   )
   theres1_det <- report_detections(theres1$bdat, blockid = "bF")
   theres2 <- find_blocks(
     idat = idat3, bdat = bdat4, blockid = "bF", pfn = pOneway, alphafn = NULL, thealpha = 0.05,
     fmla = Ytauv2 ~ ZF | bF,
-    parallel = "no", copydts = TRUE, simthresh=1,
+    parallel = "no", copydts = TRUE, simthresh = 1,
     splitfn = splitCluster, splitby = "cov", stop_splitby_constant = FALSE
   )
   theres2_det <- report_detections(theres2$bdat, blockid = "bF")
 
-  theres1_tree <- make_results_tree(theres1$bdat,block_id="bF",node_label="hwt")
-  theres2_tree <- make_results_tree(theres2$bdat,block_id="bF",node_label="hwt")
+  theres1_tree <- make_results_tree(theres1$bdat, block_id = "bF", node_label = "hwt")
+  theres2_tree <- make_results_tree(theres2$bdat, block_id = "bF", node_label = "hwt")
 
-  expect_equal(theres1_tree$test_summary,theres2_tree$test_summary)
-  expect_equal(theres1_tree$nodes$p,theres2_tree$nodes$p)
+  expect_equal(theres1_tree$test_summary, theres2_tree$test_summary)
+  expect_equal(theres1_tree$nodes$p, theres2_tree$nodes$p)
   expect_equal(theres1_det, theres2_det)
 })
 
@@ -217,7 +219,7 @@ test_splitters_fn <- function(sfn, splitby, stopsplitting) {
   theres <- find_blocks(
     idat = idat3, bdat = bdat4, blockid = "bF",
     pfn = pOneway, alphafn = NULL, thealpha = 0.05,
-    fmla = Ytauv2 ~ ZF | bF,simthresh=1,
+    fmla = Ytauv2 ~ ZF | bF, simthresh = 1,
     parallel = "no", copydts = TRUE,
     splitfn = get(sfn), splitby = splitby, stop_splitby_constant = stopsplitting
   )
@@ -267,14 +269,14 @@ test_that("Splitters work as expected given splitby variables
   ## report that as a rejection.
   ##  1:             splitLOO  twosplits          TRUE
   resobj <- which(names(res) == "splitLOO_twosplits_TRUE")
-  with(res[[resobj]], table(biggrp, twosplits, exclude = c()))
+  with(res[[resobj]], table(node_id, twosplits, exclude = c()))
   with(res[[resobj]], table(fin_grp, twosplits, exclude = c()))
   ## All of the group with the smallest value on twosplits will be put in one split
   expect_equal(sum(res[[resobj]]$twosplits == 0), max(table(res[[resobj]]$fin_nodenum)))
   ##  4:             splitLOO twosplitsF          TRUE
   ### This should be the same as above. Factor is the same as numeric here.
   resobj <- which(names(res) == "splitLOO_twosplits_TRUE")
-  with(res[[resobj]], table(biggrp, twosplits, exclude = c()))
+  with(res[[resobj]], table(node_id, twosplits, exclude = c()))
   with(res[[resobj]], table(fin_nodenum, twosplits, exclude = c()))
   expect_equal(sum(res[[resobj]]$twosplitsF == 0), max(table(res[[resobj]]$fin_nodenum)))
 
@@ -284,7 +286,7 @@ test_that("Splitters work as expected given splitby variables
   ## happen when the systematic variation in splitby is used up.
   ## Not putting in an explicit test here but allowing code to run to catch errors
   resobj <- which(names(res) == "splitLOO_twosplits_FALSE")
-  with(res[[resobj]], table(biggrp, twosplits, exclude = c()))
+  with(res[[resobj]], table(node_id, twosplits, exclude = c()))
   with(res[[resobj]], table(fin_grp, twosplits, exclude = c()))
   with(res[[resobj]], table(hit, twosplits, exclude = c()))
 
@@ -295,14 +297,14 @@ test_that("Splitters work as expected given splitby variables
   blah2a <- test_splitters_fn(sfn = "splitLOO", splitby = "twosplits", stopsplitting = FALSE)
   blah2a_det <- report_detections(blah2a$bdat, blockid = "bF")
   with(blah2a_det, table(fin_grp, twosplits, exclude = c()))
-    ## Again, just running code to see if they produce errors.
-    ## The expectation is that there is no error here. But I don't see that in testthat 
-  blah2_tree <- make_results_ggraph(make_results_tree(blah2$bdat,block_id="bF")$graph)
+  ## Again, just running code to see if they produce errors.
+  ## The expectation is that there is no error here. But I don't see that in testthat
+  blah2_tree <- make_results_ggraph(make_results_tree(blah2$bdat, block_id = "bF")$graph)
 
   ## 18:             splitLOO twosplitsF         FALSE
 
   resobj <- which(names(res) == "splitLOO_twosplitsF_FALSE")
-  with(res[[resobj]], table(biggrp, twosplitsF, exclude = c()))
+  with(res[[resobj]], table(node_id, twosplitsF, exclude = c()))
   with(res[[resobj]], table(fin_grp, twosplitsF, exclude = c()))
   with(res[[resobj]], table(hit, twosplitsF, exclude = c()))
 
@@ -317,7 +319,7 @@ test_that("Splitters work as expected given splitby variables
   ##  8:             splitLOO       lvs2          TRUE
   resobj <- which(names(res) == "splitLOO_lvs2_TRUE")
   ### Basically don't use splitLOO with overly discrete splitby unless we are happy with random splits
-  with(res[[resobj]], table(biggrp, lvs2, exclude = c()))
+  with(res[[resobj]], table(node_id, lvs2, exclude = c()))
   with(res[[resobj]], table(fin_grp, lvs2, exclude = c()))
 
   ## 12:             splitLOO     constv          TRUE
@@ -381,8 +383,8 @@ test_that("Splitters work as expected given splitby variables
   ##########################
   ##  3:         splitCluster  twosplits          TRUE
   tabres3 <- with(res[["splitCluster_twosplits_TRUE"]], table(fin_nodenum, twosplits, exclude = c()))
-  expect_equal(tabres3[1, 2], 0)
-  expect_equal(tabres3[2, 1], 0)
+  expect_equal(tabres3[1, 1], 0)
+  expect_equal(tabres3[2, 2], 0)
   expect_equal(dim(tabres3), c(2, 2))
 
   ##  6:         splitCluster twosplitsF          TRUE
@@ -432,7 +434,7 @@ test_that("Splitters work as expected given splitby variables
   expect_true(all(apply(tabres11, 2, function(x) {
     sum(x > 0)
   })))
-  expect_equal(uniqueN(res[[resobj]]$biggrp), uniqueN(res[[resobj]]$lvs2))
+  expect_equal(uniqueN(res[[resobj]]$node_id), uniqueN(res[[resobj]]$lvs2))
 
   ## 21: splitSpecifiedFactor twosplitsF         FALSE
   expect_equal(res[["splitSpecifiedFactor_twosplitsF_FALSE"]], NA)
@@ -444,13 +446,13 @@ test_that("Splitters work as expected given splitby variables
   theres2 <- find_blocks(
     idat = idat3, bdat = bdat4, blockid = "bF",
     pfn = pIndepDist, alphafn = NULL, thealpha = 0.05,
-    fmla = Ytauv2 ~ ZF | bF,simthresh=1,
+    fmla = Ytauv2 ~ ZF | bF, simthresh = 1,
     parallel = "no", copydts = TRUE,
     splitfn = splitSpecifiedFactor, splitby = "lvs2", stop_splitby_constant = TRUE
   )
   theres2_det <- report_detections(theres2$bdat, blockid = "bF")
-  expect_equal(uniqueN(theres2$bdat$biggrp), uniqueN(bdat4$lvs2))
-  table(theres2$bdat$lvs2, theres2$bdat$biggrp)
+  expect_equal(uniqueN(theres2$bdat$node_id), uniqueN(bdat4$lvs2))
+  table(theres2$bdat$lvs2, theres2$bdat$node_id)
 })
 
 

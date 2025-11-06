@@ -19,3 +19,14 @@ A splitting function takes block ids and block ordering
 vector (or vectors) and produces a factor that assigns some block ids to one
 group or another group such that the sum of x within one group is approximately equal to the sum of x in the other group. If x is something like block-size then this equalized the total observations in each split. If x is a covariate, then this splitting approach may make less conceptual sense --- if x <- c(1,2,3,4) it would put 1 and 3 in one group and 2 and 4 in another group.
 }
+\examples{
+# Example with block sizes - equalizes total size across groups
+block_ids <- c("B1", "B2", "B3", "B4", "B5", "B6")
+block_sizes <- c(10, 30, 15, 35, 20, 25)  # Total = 135
+
+groups <- splitEqualApprox(block_ids, block_sizes)
+
+# Check the split - should have approximately equal sums
+tapply(block_sizes, groups, sum)
+
+}

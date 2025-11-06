@@ -1,0 +1,70 @@
+/* Custom styles for manytestsr vignettes */
+
+/* Code blocks */
+pre {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 0.25rem;
+  padding: 0.75rem;
+}
+
+/* Output blocks */
+.sourceCode {
+  background-color: #f8f9fa;
+}
+
+/* Headers */
+h1, h2, h3 {
+  color: #2c3e50;
+}
+
+h1 {
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 0.5rem;
+}
+
+h2 {
+  border-bottom: 1px solid #bdc3c7;
+  padding-bottom: 0.3rem;
+}
+
+/* Tables */
+table {
+  margin: 1rem 0;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+/* Callout boxes */
+.callout {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-left: 4px solid #3498db;
+  background-color: #f8f9fa;
+}
+
+.callout-title {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+/* Links */
+a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

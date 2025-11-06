@@ -25,3 +25,49 @@ graph from \link{make_results_tree}, make a node level data set for use in
 reporting results in terms of a binary tree graph. This does not print or
 plot the graph. You'll need to do that with the resulting object.
 }
+\examples{
+\dontrun{
+# Complete workflow example
+data(example_dat, package = "manytestsr")
+library(data.table)
+library(dplyr)
+
+# Create block-level dataset
+example_bdat <- example_dat \%>\%
+  group_by(blockF) \%>\%
+  summarize(
+    nb = n(),
+    pb = mean(trt),
+    hwt = (nb / nrow(example_dat)) * (pb * (1 - pb)),
+    .groups = "drop"
+  ) \%>\%
+  as.data.table()
+
+# Run find_blocks
+results <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pOneway,
+  fmla = Y1 ~ trtF | blockF,
+  parallel = "no"
+)
+
+# Create tree structure
+tree_results <- make_results_tree(results$bdat, block_id = "blockF")
+
+# Create ggraph visualization
+library(ggraph)
+library(ggplot2)
+graph_plot <- make_results_ggraph(tree_results$graph)
+
+# Display the plot
+print(graph_plot)
+
+# Customize the visualization
+graph_plot + 
+  labs(title = "Hierarchical Testing Results Tree") +
+  theme_void()
+}
+}

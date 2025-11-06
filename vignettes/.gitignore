@@ -1,0 +1,7 @@
+/.quarto/
+/_site/
+/vignettes/
+
+**/*.quarto_ipynb
+**/*.knit.md
+**/*.html

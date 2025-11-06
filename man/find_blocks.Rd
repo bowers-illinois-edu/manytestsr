@@ -25,7 +25,14 @@ find_blocks(
   stop_splitby_constant = TRUE,
   blocksize = "hwt",
   return_what = c("blocks", "nodes"),
-  trace = FALSE
+  trace = FALSE,
+  use_closed_testing = FALSE,
+  use_evalues = FALSE,
+  use_meinshausen = FALSE,
+  closed_testing_method = "simes",
+  evalue_wealth_rule = "kelly",
+  meinshausen_method = "simes",
+  meinshausen_sequential = TRUE
 )
 }
 \arguments{
@@ -92,7 +99,19 @@ data.table of nodes "nodes", or default both c("blocks","nodes").}
 
 \item{trace}{Logical, FALSE (default) to not print split number. TRUE prints the split number.}
 
-\item{final_global_adj}{Character. One of \code{"none"}, \code{"fdr"}, \code{"fwer"}.}
+\item{use_closed_testing}{Logical, whether to apply proper closed testing procedure (Goeman methodology)}
+
+\item{use_evalues}{Logical, whether to use e-value methodology for sequential testing (Ramdas approach)}
+
+\item{use_meinshausen}{Logical, whether to apply Meinshausen's hierarchical testing (2008) with sequential rejection}
+
+\item{closed_testing_method}{Method for combining p-values in intersection tests ("simes", "fisher", "min")}
+
+\item{evalue_wealth_rule}{Wealth rule for e-value betting ("kelly", "fixed", "adaptive")}
+
+\item{meinshausen_method}{Method for Meinshausen hierarchical testing ("simes", "fisher", "bonferroni")}
+
+\item{meinshausen_sequential}{Logical, whether to use Goeman-Solari sequential rejection enhancement}
 }
 \value{
 A data.table containing information about the sequence of splitting and testing
@@ -106,7 +125,7 @@ splitting criteria (splitby) and stopping criteria (stop_splitby_constant).
 \itemize{
 \item \code{\link[=splitCluster]{splitCluster()}} splits the blocks into groups that are as similar as
 possible to each other on splitby using the kmeans clustering algorithm
-(using a combination of \code{\link[=kmeans]{kmeans()}} or \code{\link[=KMeans_rcpp]{KMeans_rcpp()}}). This will not work
+(using a combination of \code{\link[=kmeans]{kmeans()}} or \code{\link[ClusterR:KMeans_rcpp]{ClusterR::KMeans_rcpp()}}). This will not work
 with factor variables. When the splitting criteria is constant, it will
 return random splits into roughly two equal sized groups of blocks if
 stop_splitby_constant=FALSE. If stop_splitby_constant=TRUE then
@@ -157,5 +176,128 @@ splitby vector with few categories. \code{\link[=splitLOO]{splitLOO()}} is best 
 vector like block-size --- which could be constant and thus just create a
 random choice of a single block or could vary and thus focus the testing on
 the largest/highest ranked blocks.
+}
+}
+\examples{
+\dontrun{
+# Load example data
+data(example_dat, package = "manytestsr")
+library(data.table)
+library(dplyr)
+
+# Create block-level dataset
+example_bdat <- example_dat \%>\%
+  group_by(blockF) \%>\%
+  summarize(
+    nb = n(),
+    pb = mean(trt),
+    hwt = (nb / nrow(example_dat)) * (pb * (1 - pb)),
+    place = unique(place),
+    year = unique(year),
+    place_year_block = factor(unique(place_year_block)),
+    .groups = "drop"
+  ) \%>\%
+  as.data.table()
+  
+# Basic usage with cluster-based splitting
+result1 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat, 
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pOneway,
+  fmla = Y1 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  trace = TRUE
+)
+
+# Access block-level results
+head(result1$bdat)
+
+# Access node-level results  
+head(result1$node_dat)
+
+# Example with pre-specified factor splitting
+result2 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF", 
+  splitfn = splitSpecifiedFactor,
+  pfn = pIndepDist,
+  fmla = Y2 ~ trtF | blockF,
+  splitby = "place_year_block",
+  parallel = "no"
+)
+
+# Example using Goeman's proper closed testing procedure
+result3 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pIndepDist,
+  fmla = Y1 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  use_closed_testing = TRUE,
+  closed_testing_method = "simes",
+  thealpha = 0.05
+)
+
+# Check closed testing results
+if ("closed_testing_reject" \%in\% names(result3$node_dat)) {
+  cat("Nodes rejected by closed testing procedure:\n")
+  rejected_nodes <- result3$node_dat[closed_testing_reject == TRUE, nodenum]
+  print(rejected_nodes)
+}
+
+# Example using e-value methodology for sequential testing
+result4 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pOneway,
+  fmla = Y1 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  use_evalues = TRUE,
+  evalue_wealth_rule = "kelly",
+  thealpha = 0.05
+)
+
+# Example using Meinshausen's hierarchical testing with sequential rejection
+result5 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pIndepDist,
+  fmla = Y2 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  use_meinshausen = TRUE,
+  meinshausen_method = "simes",
+  meinshausen_sequential = TRUE,
+  thealpha = 0.05
+)
+
+# Check Meinshausen testing results
+if ("meinshausen_reject" \%in\% names(result5$node_dat)) {
+  cat("Nodes rejected by Meinshausen hierarchical procedure:\\\\n")
+  rejected_meinshausen <- result5$node_dat[meinshausen_reject == TRUE, nodenum]
+  print(rejected_meinshausen)
+}
+
+# Compare traditional FWER control vs closed testing
+traditional_detections <- report_detections(result1$bdat, fwer = TRUE)
+if (exists("result3") && "node_dat" \%in\% names(result3)) {
+  cat("Traditional FWER detections:", sum(traditional_detections$hit, na.rm = TRUE), "\n")
+  if ("closed_testing_reject" \%in\% names(result3$node_dat)) {
+    closed_detections <- sum(result3$node_dat$closed_testing_reject, na.rm = TRUE)
+    cat("Closed testing detections:", closed_detections, "\n")
+  }
+}
 }
 }

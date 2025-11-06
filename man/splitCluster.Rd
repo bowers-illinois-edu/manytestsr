@@ -19,3 +19,16 @@ A splitting function takes block ids and a block ordering
 vector (or vectors) and produces a factor that assigns some block ids to one
 group or another group.
 }
+\examples{
+# Simple example with block weights
+block_ids <- c("B1", "B2", "B3", "B4", "B5", "B6")
+block_weights <- c(0.1, 0.8, 0.2, 0.9, 0.3, 0.7)
+
+# Split blocks into clusters based on weights
+groups <- splitCluster(block_ids, block_weights)
+print(groups)
+
+# View which blocks are in each group
+data.frame(block_id = block_ids, weight = block_weights, group = groups)
+
+}

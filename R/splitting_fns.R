@@ -8,6 +8,18 @@
 #' @param bid Block id
 #' @param x A vector that we can use to order the blocks
 #' @return A factor categorizing blocks into groups.
+#' @examples
+#' # Simple example with block weights
+#' block_ids <- c("B1", "B2", "B3", "B4", "B5", "B6")
+#' block_weights <- c(0.1, 0.8, 0.2, 0.9, 0.3, 0.7)
+#' 
+#' # Split blocks into clusters based on weights
+#' groups <- splitCluster(block_ids, block_weights)
+#' print(groups)
+#' 
+#' # View which blocks are in each group
+#' data.frame(block_id = block_ids, weight = block_weights, group = groups)
+#' 
 #' @importFrom ClusterR KMeans_rcpp
 #' @importFrom Ckmeans.1d.dp Ckmeans.1d.dp
 #' @export
@@ -55,6 +67,16 @@ splitCluster <- function(bid, x) {
 #' @param bid Block id
 #' @param x A vector that we can use to order the blocks
 #' @return A factor categorizing blocks into groups.
+#' @examples
+#' # Example with block sizes - equalizes total size across groups
+#' block_ids <- c("B1", "B2", "B3", "B4", "B5", "B6")
+#' block_sizes <- c(10, 30, 15, 35, 20, 25)  # Total = 135
+#' 
+#' groups <- splitEqualApprox(block_ids, block_sizes)
+#' 
+#' # Check the split - should have approximately equal sums
+#' tapply(block_sizes, groups, sum)
+#' 
 #' @export
 splitEqualApprox <- function(bid, x) {
   if (length(x) == 2) {
@@ -78,6 +100,16 @@ splitEqualApprox <- function(bid, x) {
 #' @param x A vector that we can use to order the blocks. A block-level value.
 #' Like N or harmonic mean weight of the block.
 #' @return A factor categorizing blocks into groups.
+#' @examples
+#' # Leave-one-out splitting - focuses on largest block vs rest
+#' block_ids <- c("B1", "B2", "B3", "B4", "B5")
+#' block_weights <- c(0.1, 0.3, 0.8, 0.2, 0.4)  # B3 is largest
+#' 
+#' groups <- splitLOO(block_ids, block_weights)
+#' 
+#' # Show which block is isolated (should be B3 with weight 0.8)
+#' data.frame(block_id = block_ids, weight = block_weights, group = groups)
+#' 
 #' @export
 splitLOO <- function(bid, x) {
   if (length(x) == 2) {
@@ -100,6 +132,24 @@ splitLOO <- function(bid, x) {
 #'
 #' @param bid Block id
 #' @param x Is a a factor with levels like "state.district.school". The splits will occur from left to right depending on whether there is existing variation at that level
+#' @examples
+#' # Create hierarchical factor for pre-specified splitting
+#' block_ids <- c("B1", "B2", "B3", "B4", "B5", "B6")
+#' hierarchical_factor <- factor(c(
+#'   "StateA.District1.School1",
+#'   "StateA.District1.School2", 
+#'   "StateA.District2.School1",
+#'   "StateB.District1.School1",
+#'   "StateB.District1.School2",
+#'   "StateB.District2.School1"
+#' ))
+#' 
+#' # First split will separate by state (StateA vs StateB)
+#' groups <- splitSpecifiedFactor(block_ids, hierarchical_factor)
+#' 
+#' # Show the grouping
+#' data.frame(block = block_ids, hierarchy = hierarchical_factor, group = groups)
+#' 
 #' @importFrom stringi stri_split_regex
 #' @export
 splitSpecifiedFactor <- function(bid, x) {

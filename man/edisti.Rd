@@ -17,3 +17,20 @@ Vector with  the individual level components of the energy distances between eac
 \description{
 Outcome e-distances between treatment arms
 }
+\examples{
+# Example with treatment and control groups
+outcome <- c(2.1, 5.3, 1.8, 7.2, 3.4, 4.6, 6.1, 2.8)
+treatment <- c(0, 1, 0, 1, 0, 1, 1, 0)  # Binary treatment indicator
+
+# Compute energy distances
+e_dists <- edisti(outcome, treatment)
+print(e_dists)
+
+\dontrun{
+# With factor treatment variable
+treatment_factor <- factor(treatment, labels = c("Control", "Treatment"))
+e_dists2 <- edisti(outcome, treatment_factor)
+print(e_dists2)
+}
+
+}
