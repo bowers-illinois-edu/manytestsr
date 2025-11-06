@@ -6,7 +6,8 @@
 \usage{
 combined_distances_tstat(
   fmla = Y ~ trtF | blockF,
-  distfn = fast_dists_and_trans_hybrid
+  distfn = fast_dists_and_trans_hybrid,
+  dat
 )
 }
 \description{
@@ -15,7 +16,7 @@ The combined distances test statistic
 \examples{
 \dontrun{
 # Requires dat object to be defined in environment
-tstat_dt <- combined_distances_tstat()
+# tstat_dt <- combined_distances_tstat()
 
 splitCluster("blockF", x)
 ## clus <- tryCatch(KMeans_rcpp(as.matrix(x), clusters = 2, num_init = 2,
@@ -23,7 +24,8 @@ splitCluster("blockF", x)
 ##    kmeans(x, centers = 2)$cluster})
 
 ## Approach 2:
-clus <- Ckmeans.1d.dp(x, k = 2)$cluster
-group <- factor(as.numeric(clus == 1))
+# clus <- Ckmeans.1d.dp(x, k = 2)$cluster
+# group <- factor(as.numeric(clus == 1))
+#
 }
 }
