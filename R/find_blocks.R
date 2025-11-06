@@ -53,8 +53,6 @@
 #' @param return_what Character. Return a data.table of blocks "blocks", a
 #' data.table of nodes "nodes", or default both c("blocks","nodes").
 
-#' @param final_global_adj Character. One of \code{"none"}, \code{"fdr"}, \code{"fwer"}.
-
 #' @param parallel Should the pfn use multicore processing for permutation
 #' based testing. Default is no. But could be "snow" or "multicore" following
 #' `approximate` in the coin package.

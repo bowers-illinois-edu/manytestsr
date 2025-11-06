@@ -10,6 +10,13 @@ combined_distances_tstat(
   dat
 )
 }
+\arguments{
+\item{fmla}{A formula specifying the response, treatment, and optionally block variables (e.g., Y ~ trtF | blockF)}
+
+\item{distfn}{A distance function to compute distances (default: fast_dists_and_trans_hybrid)}
+
+\item{dat}{A data.table containing the variables specified in the formula}
+}
 \description{
 The combined distances test statistic
 }

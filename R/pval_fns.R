@@ -255,26 +255,21 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
 #' @details For now, this  function  does an omnibus-style max-T test using (1)
 #' the raw outcome and (2) a rank transformed raw outcome. Inspired by Rosenbaum (2008) on Testing Twicee
 #'
-
 #' @param dat An object inheriting from class data.frame
 #' @param fmla  A formula  appropriate to the function. Here it should  be something like outcome~treatment|block
 #' @param sims Either NULL (meaning use an asymptotic reference dist) or a
 #' number (meaning sampling from the randomization distribution implied by the
 #' formula)
 #' @param simthresh is the size of the data below which we use direct permutations for p-values
-
-#' @param distfn is  a function that produces one or more vectors (a data frame
-#' or matrix) of the  same number of  rows as the dat
-
 #' @param parallel is "no" then parallelization is not required, otherwise it
 #' is "multicore" or "snow" in the call to `coin::independence_test()` (see
 #' help for coin::approximate()). Also, if parallel is not "no" and
 #' `adaptive_dist_function` is TRUE, then an openmp version of the distance
 #' creation function is called using `ncpu` threads (or
 #' `parallel::detectCores(logical=FALSE)` cores).
-
 #' @param ncpu is number of cpus  to be used for parallel operation.
-
+#' @param groups Currently unused parameter, reserved for future functionality
+#'
 #' @return A p-value
 #' @importFrom coin independence_test pvalue approximate exact asymptotic
 #' @importFrom Rfast Rank

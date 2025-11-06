@@ -112,8 +112,6 @@ data.table of nodes "nodes", or default both c("blocks","nodes").}
 \item{meinshausen_method}{Method for Meinshausen hierarchical testing ("simes", "fisher", "bonferroni")}
 
 \item{meinshausen_sequential}{Logical, whether to use Goeman-Solari sequential rejection enhancement}
-
-\item{final_global_adj}{Character. One of \code{"none"}, \code{"fdr"}, \code{"fwer"}.}
 }
 \value{
 A data.table containing information about the sequence of splitting and testing

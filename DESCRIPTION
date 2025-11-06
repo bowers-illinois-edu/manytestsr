@@ -8,7 +8,7 @@ Authors@R:
            email = "jake@jakebowers.org",
            comment = c(ORCID = "0000-0002-4048-1166"))
 Description: Implements the nesting or top-down procedures detailed in Bowers and Chen 2020.
-License: `use_mit_license()`
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Suggests:

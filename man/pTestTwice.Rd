@@ -34,8 +34,7 @@ creation function is called using \code{ncpu} threads (or
 
 \item{ncpu}{is number of cpus  to be used for parallel operation.}
 
-\item{distfn}{is  a function that produces one or more vectors (a data frame
-or matrix) of the  same number of  rows as the dat}
+\item{groups}{Currently unused parameter, reserved for future functionality}
 }
 \value{
 A p-value
