@@ -20,6 +20,12 @@ produces a p-value."></head><body>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/advanced-methodologies.html">Advanced Statistical Methodologies in manytestsr</a></li>
+    <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with manytestsr</a></li>
+    <li><a class="dropdown-item" href="../articles/hierarchical-testing-workflow.html">Hierarchical Testing with manytestsr</a></li>
+  </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -91,6 +97,26 @@ based testing. Default is no. But could be "snow" or "multicore" following
     <p>A p-value</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Example using built-in data</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_dat</span>, package <span class="op">=</span> <span class="st">"manytestsr"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Test for treatment effect on Y1 within a single block</span></span></span>
+<span class="r-in"><span><span class="va">single_block</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">example_dat</span>, <span class="va">blockF</span> <span class="op">==</span> <span class="st">"B080"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p_val</span> <span class="op">&lt;-</span> <span class="fu">pOneway</span><span class="op">(</span><span class="va">single_block</span>, <span class="va">Y1</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>, parallel <span class="op">=</span> <span class="st">"no"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p_val</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2576562</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Test with permutation-based inference for small samples</span></span></span>
+<span class="r-in"><span><span class="va">p_val_perm</span> <span class="op">&lt;-</span> <span class="fu">pOneway</span><span class="op">(</span><span class="va">single_block</span>, <span class="va">Y1</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>,</span></span>
+<span class="r-in"><span>  simthresh <span class="op">=</span> <span class="fl">100</span>, sims <span class="op">=</span> <span class="fl">500</span>, parallel <span class="op">=</span> <span class="st">"no"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p_val_perm</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2576562</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

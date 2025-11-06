@@ -20,6 +20,12 @@ group or another group."></head><body>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/advanced-methodologies.html">Advanced Statistical Methodologies in manytestsr</a></li>
+    <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with manytestsr</a></li>
+    <li><a class="dropdown-item" href="../articles/hierarchical-testing-workflow.html">Hierarchical Testing with manytestsr</a></li>
+  </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -64,6 +70,25 @@ Like N or harmonic mean weight of the block.</p></dd>
     <p>A factor categorizing blocks into groups.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Leave-one-out splitting - focuses on largest block vs rest</span></span></span>
+<span class="r-in"><span><span class="va">block_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B1"</span>, <span class="st">"B2"</span>, <span class="st">"B3"</span>, <span class="st">"B4"</span>, <span class="st">"B5"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">block_weights</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.3</span>, <span class="fl">0.8</span>, <span class="fl">0.2</span>, <span class="fl">0.4</span><span class="op">)</span>  <span class="co"># B3 is largest</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">groups</span> <span class="op">&lt;-</span> <span class="fu">splitLOO</span><span class="op">(</span><span class="va">block_ids</span>, <span class="va">block_weights</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Show which block is isolated (should be B3 with weight 0.8)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>block_id <span class="op">=</span> <span class="va">block_ids</span>, weight <span class="op">=</span> <span class="va">block_weights</span>, group <span class="op">=</span> <span class="va">groups</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   block_id weight group</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1       B1    0.1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2       B2    0.3     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3       B3    0.8     0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4       B4    0.2     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5       B5    0.4     1</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

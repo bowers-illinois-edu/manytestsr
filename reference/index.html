@@ -16,6 +16,12 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/advanced-methodologies.html">Advanced Statistical Methodologies in manytestsr</a></li>
+    <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with manytestsr</a></li>
+    <li><a class="dropdown-item" href="../articles/hierarchical-testing-workflow.html">Hierarchical Testing with manytestsr</a></li>
+  </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -42,6 +48,18 @@
 
       <dl><dt>
 
+          <code><a href="adaptive_evalue.html">adaptive_evalue()</a></code>
+
+        </dt>
+        <dd>Adaptive betting strategy for e-values</dd>
+      </dl><dl><dt>
+
+          <code><a href="adjust_pvalues_level.html">adjust_pvalues_level()</a></code>
+
+        </dt>
+        <dd>Adjust p-values at a given level using sequential rejection</dd>
+      </dl><dl><dt>
+
           <code><a href="alpha_addis.html">alpha_addis()</a></code>
 
         </dt>
@@ -60,6 +78,120 @@
         <dd>Alpha adjustment function: SAFFRON</dd>
       </dl><dl><dt>
 
+          <code><a href="analyze_violation_patterns.html">analyze_violation_patterns()</a></code>
+
+        </dt>
+        <dd>Analyze violation patterns</dd>
+      </dl><dl><dt>
+
+          <code><a href="apply_closed_testing_principle.html">apply_closed_testing_principle()</a></code>
+
+        </dt>
+        <dd>Apply closed testing principle to determine valid rejections</dd>
+      </dl><dl><dt>
+
+          <code><a href="apply_consonance_correction.html">apply_consonance_correction()</a></code>
+
+        </dt>
+        <dd>Apply consonance correction to test results</dd>
+      </dl><dl><dt>
+
+          <code><a href="apply_sequential_rejection_meinshausen.html">apply_sequential_rejection_meinshausen()</a></code>
+
+        </dt>
+        <dd>Apply Sequential Rejection Principle (Goeman-Solari enhancement)</dd>
+      </dl><dl><dt>
+
+          <code><a href="apply_traditional_meinshausen.html">apply_traditional_meinshausen()</a></code>
+
+        </dt>
+        <dd>Apply Traditional Meinshausen Procedure</dd>
+      </dl><dl><dt>
+
+          <code><a href="build_hierarchy_structure.html">build_hierarchy_structure()</a></code>
+
+        </dt>
+        <dd>Build hierarchy structure from node data and tracker</dd>
+      </dl><dl><dt>
+
+          <code><a href="check_consonance_property.html">check_consonance_property()</a></code>
+
+        </dt>
+        <dd>Consonance Property Checking for Hierarchical Testing</dd>
+      </dl><dl><dt>
+
+          <code><a href="check_iu_consistency.html">check_iu_consistency()</a></code>
+
+        </dt>
+        <dd>Check consistency of intersection-union test results</dd>
+      </dl><dl><dt>
+
+          <code><a href="check_stopping_rule.html">check_stopping_rule()</a></code>
+
+        </dt>
+        <dd>Check stopping rule</dd>
+      </dl><dl><dt>
+
+          <code><a href="closed_testing_procedure.html">closed_testing_procedure()</a></code>
+
+        </dt>
+        <dd>Proper Closed Testing Procedure for Hierarchical Hypotheses</dd>
+      </dl><dl><dt>
+
+          <code><a href="combine_pvalues.html">combine_pvalues()</a></code>
+
+        </dt>
+        <dd>Combine p-values using specified method</dd>
+      </dl><dl><dt>
+
+          <code><a href="combine_pvalues_traditional.html">combine_pvalues_traditional()</a></code>
+
+        </dt>
+        <dd>Traditional p-value combination (used in original Meinshausen)</dd>
+      </dl><dl><dt>
+
+          <code><a href="combined_distances_tstat.html">combined_distances_tstat()</a></code>
+
+        </dt>
+        <dd>The combined distances test statistic</dd>
+      </dl><dl><dt>
+
+          <code><a href="compute_evalue.html">compute_evalue()</a></code>
+
+        </dt>
+        <dd>Compute e-value for a single test</dd>
+      </dl><dl><dt>
+
+          <code><a href="compute_exact_wilcoxon_bound.html">compute_exact_wilcoxon_bound()</a></code>
+
+        </dt>
+        <dd>Exact Wilcoxon bound computation (simplified)</dd>
+      </dl><dl><dt>
+
+          <code><a href="compute_sensitivity_bounds.html">compute_sensitivity_bounds()</a></code>
+
+        </dt>
+        <dd>Compute sensitivity bounds for a single block</dd>
+      </dl><dl><dt>
+
+          <code><a href="compute_sensitivity_summary.html">compute_sensitivity_summary()</a></code>
+
+        </dt>
+        <dd>Compute summary statistics for sensitivity analysis</dd>
+      </dl><dl><dt>
+
+          <code><a href="compute_t_statistic.html">compute_t_statistic()</a></code>
+
+        </dt>
+        <dd>Compute t-statistic for two-sample test</dd>
+      </dl><dl><dt>
+
+          <code><a href="design_sensitivity_analysis.html">design_sensitivity_analysis()</a></code>
+
+        </dt>
+        <dd>Design Sensitivity Analysis for Hierarchical Testing</dd>
+      </dl><dl><dt>
+
           <code><a href="dists_and_trans.html">dists_and_trans()</a></code>
 
         </dt>
@@ -72,16 +204,142 @@
         <dd>Outcome e-distances between treatment arms</dd>
       </dl><dl><dt>
 
-          <code><a href="fast_dists_and_trans_by_unit_arma_parR.html">fast_dists_and_trans_by_unit_arma_parR()</a></code>
+          <code><a href="evalue_confidence_sequence.html">evalue_confidence_sequence()</a></code>
+
+        </dt>
+        <dd>E-value based confidence sequences</dd>
+      </dl><dl><dt>
+
+          <code><a href="evalue_sequential_test.html">evalue_sequential_test()</a></code>
+
+        </dt>
+        <dd>E-value Based Sequential Testing</dd>
+      </dl><dl><dt>
+
+          <code><a href="evalue_to_pvalue.html">evalue_to_pvalue()</a></code>
+
+        </dt>
+        <dd>Convert e-value to p-value</dd>
+      </dl><dl><dt>
+
+          <code><a href="example_dat.html">example_dat</a></code>
+
+        </dt>
+        <dd>Example Data for Block-Randomized Experiment</dd>
+      </dl><dl><dt>
+
+          <code><a href="extract_hierarchy_relationships.html">extract_hierarchy_relationships()</a></code>
+
+        </dt>
+        <dd>Extract hierarchy relationships</dd>
+      </dl><dl><dt>
+
+          <code><a href="fast_dists_and_trans_hybrid.html">fast_dists_and_trans_hybrid()</a></code>
+
+        </dt>
+        <dd>Fast per-unit distance summaries (scalar outcome)</dd>
+      </dl><dl><dt>
+
+          <code><a href="fast_dists_and_trans_new_parallel.html">fast_dists_and_trans_new_parallel()</a></code>
 
         </dt>
         <dd>Outcome distances and transformations: C++ OpenMP Parallel version</dd>
+      </dl><dl><dt>
+
+          <code><a href="find_all_descendants.html">find_all_descendants()</a></code>
+
+        </dt>
+        <dd>Find all descendants of a node</dd>
       </dl><dl><dt>
 
           <code><a href="find_blocks.html">find_blocks()</a></code>
 
         </dt>
         <dd>Test, Split, Repeat</dd>
+      </dl><dl><dt>
+
+          <code><a href="find_consonance_violations.html">find_consonance_violations()</a></code>
+
+        </dt>
+        <dd>Find consonance violations</dd>
+      </dl><dl><dt>
+
+          <code><a href="find_containing_intersections.html">find_containing_intersections()</a></code>
+
+        </dt>
+        <dd>Find all intersection results containing a specific node</dd>
+      </dl><dl><dt>
+
+          <code><a href="find_leaf_descendants.html">find_leaf_descendants()</a></code>
+
+        </dt>
+        <dd>Find leaf descendants of a node</dd>
+      </dl><dl><dt>
+
+          <code><a href="find_leaf_nodes.html">find_leaf_nodes()</a></code>
+
+        </dt>
+        <dd>Find leaf nodes in the hierarchy</dd>
+      </dl><dl><dt>
+
+          <code><a href="fixed_evalue.html">fixed_evalue()</a></code>
+
+        </dt>
+        <dd>Fixed betting strategy for e-values</dd>
+      </dl><dl><dt>
+
+          <code><a href="generate_all_intersections.html">generate_all_intersections()</a></code>
+
+        </dt>
+        <dd>Generate all possible intersection hypotheses</dd>
+      </dl><dl><dt>
+
+          <code><a href="generate_corrective_actions.html">generate_corrective_actions()</a></code>
+
+        </dt>
+        <dd>Generate corrective actions for consonance violations</dd>
+      </dl><dl><dt>
+
+          <code><a href="generate_meinshausen_hierarchy.html">generate_meinshausen_hierarchy()</a></code>
+
+        </dt>
+        <dd>Generate Meinshausen hierarchical clustering for variables</dd>
+      </dl><dl><dt>
+
+          <code><a href="get_children_nodes.html">get_children_nodes()</a></code>
+
+        </dt>
+        <dd>Get children nodes from tracker</dd>
+      </dl><dl><dt>
+
+          <code><a href="get_descendant_nodes.html">get_descendant_nodes()</a></code>
+
+        </dt>
+        <dd>Get all descendant nodes for a given node</dd>
+      </dl><dl><dt>
+
+          <code><a href="hodges_lehmann_sensitivity_bounds.html">hodges_lehmann_sensitivity_bounds()</a></code>
+
+        </dt>
+        <dd>Hodges-Lehmann estimator sensitivity bounds</dd>
+      </dl><dl><dt>
+
+          <code><a href="integrate_meinshausen_find_blocks.html">integrate_meinshausen_find_blocks()</a></code>
+
+        </dt>
+        <dd>Integration function for find_blocks with Meinshausen testing</dd>
+      </dl><dl><dt>
+
+          <code><a href="intersection_union_tests.html">intersection_union_tests()</a></code>
+
+        </dt>
+        <dd>Intersection-Union Tests for Hierarchical Hypotheses</dd>
+      </dl><dl><dt>
+
+          <code><a href="kelly_evalue.html">kelly_evalue()</a></code>
+
+        </dt>
+        <dd>Kelly optimal betting for e-values</dd>
       </dl><dl><dt>
 
           <code><a href="local_bh_all_ps.html">local_bh_all_ps()</a></code>
@@ -126,10 +384,22 @@
         <dd>Make a node-level dataset from a block-level dataset</dd>
       </dl><dl><dt>
 
+          <code><a href="meinshausen_hierarchical_test.html">meinshausen_hierarchical_test()</a></code>
+
+        </dt>
+        <dd>Meinshausen's Hierarchical Testing with Sequential Rejection Principle</dd>
+      </dl><dl><dt>
+
           <code><a href="nodeidfn.html">nodeidfn()</a></code>
 
         </dt>
-        <dd>Use hashing to make a node id</dd>
+        <dd>Use hashing to make a node id (DEPRECATED)</dd>
+      </dl><dl><dt>
+
+          <code><a href="pCombCauchyDist.html">pCombCauchyDist()</a></code>
+
+        </dt>
+        <dd>P-value function: Cauchy Combined Indepence Test</dd>
       </dl><dl><dt>
 
           <code><a href="pIndepDist.html">pIndepDist()</a></code>
@@ -156,10 +426,40 @@
         <dd>P-value function: Wilcox Test</dd>
       </dl><dl><dt>
 
+          <code><a href="parse_formula.html">parse_formula()</a></code>
+
+        </dt>
+        <dd>Parse formula to extract components</dd>
+      </dl><dl><dt>
+
+          <code><a href="parse_formula_components.html">parse_formula_components()</a></code>
+
+        </dt>
+        <dd>Parse formula components</dd>
+      </dl><dl><dt>
+
+          <code><a href="plot_design_sensitivity.html">plot_design_sensitivity()</a></code>
+
+        </dt>
+        <dd>Plot sensitivity analysis results</dd>
+      </dl><dl><dt>
+
+          <code><a href="plot_intersection_union_results.html">plot_intersection_union_results()</a></code>
+
+        </dt>
+        <dd>Visualize intersection-union test results</dd>
+      </dl><dl><dt>
+
           <code><a href="report_detections.html">report_detections()</a></code>
 
         </dt>
         <dd>Return detected blocks plus info</dd>
+      </dl><dl><dt>
+
+          <code><a href="sign_test_sensitivity_bounds.html">sign_test_sensitivity_bounds()</a></code>
+
+        </dt>
+        <dd>Sign test sensitivity bounds</dd>
       </dl><dl><dt>
 
           <code><a href="splitCluster.html">splitCluster()</a></code>
@@ -196,6 +496,54 @@
 
         </dt>
         <dd>A set of pre-specified splits</dd>
+      </dl><dl><dt>
+
+          <code><a href="test_children_recursive_meinshausen.html">test_children_recursive_meinshausen()</a></code>
+
+        </dt>
+        <dd>Recursive testing of children in Meinshausen procedure</dd>
+      </dl><dl><dt>
+
+          <code><a href="test_intersection_null.html">test_intersection_null()</a></code>
+
+        </dt>
+        <dd>Test intersection null hypothesis</dd>
+      </dl><dl><dt>
+
+          <code><a href="test_intersections.html">test_intersections()</a></code>
+
+        </dt>
+        <dd>Test intersection hypotheses</dd>
+      </dl><dl><dt>
+
+          <code><a href="test_union_alternative.html">test_union_alternative()</a></code>
+
+        </dt>
+        <dd>Test union alternative hypothesis</dd>
+      </dl><dl><dt>
+
+          <code><a href="update_wealth.html">update_wealth()</a></code>
+
+        </dt>
+        <dd>Update wealth using e-value</dd>
+      </dl><dl><dt>
+
+          <code><a href="validate_fwer_control.html">validate_fwer_control()</a></code>
+
+        </dt>
+        <dd>Validate closed testing procedure maintains FWER control</dd>
+      </dl><dl><dt>
+
+          <code><a href="validate_logical_hierarchy.html">validate_logical_hierarchy()</a></code>
+
+        </dt>
+        <dd>Validate logical hierarchy structure</dd>
+      </dl><dl><dt>
+
+          <code><a href="wilcoxon_sensitivity_bounds.html">wilcoxon_sensitivity_bounds()</a></code>
+
+        </dt>
+        <dd>Wilcoxon test sensitivity bounds</dd>
       </dl></div>
   </main></div>
 

@@ -20,6 +20,12 @@ based). It produces a p-value."></head><body>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/advanced-methodologies.html">Advanced Statistical Methodologies in manytestsr</a></li>
+    <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with manytestsr</a></li>
+    <li><a class="dropdown-item" href="../articles/hierarchical-testing-workflow.html">Hierarchical Testing with manytestsr</a></li>
+  </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -50,9 +56,7 @@ based). It produces a p-value.</p>
 <span>  sims <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  parallel <span class="op">=</span> <span class="st">"yes"</span>,</span>
 <span>  ncpu <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  groups <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  distfn <span class="op">=</span> <span class="va">dists_and_trans</span>,</span>
-<span>  adaptive_dist_function <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  distfn <span class="op">=</span> <span class="va">fast_dists_and_trans_hybrid</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -91,18 +95,9 @@ creation function is called using <code>ncpu</code> threads (or
 <dd><p>is number of cpus  to be used for parallel operation.</p></dd>
 
 
-<dt id="arg-groups">groups<a class="anchor" aria-label="anchor" href="#arg-groups"></a></dt>
-<dd><p>is a vector defining the groups within which the inter-unit  distances are calculated. Not used here.</p></dd>
-
-
 <dt id="arg-distfn">distfn<a class="anchor" aria-label="anchor" href="#arg-distfn"></a></dt>
 <dd><p>is  a function that produces one or more vectors (a data frame
 or matrix) of the  same number of  rows as the dat</p></dd>
-
-
-<dt id="arg-adaptive-dist-function">adaptive_dist_function<a class="anchor" aria-label="anchor" href="#arg-adaptive-dist-function"></a></dt>
-<dd><p>is TRUE if the distance calculation function
-should be chosen using previous benchmarks. See the code.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -118,9 +113,29 @@ each unit; and (3) the raw outcome.</p>
 <p>Although the distances are calculated by block, our profiling suggests that
 it is better to parallelize the distance creation <code>distfn</code> (done here in C++
 in the <code>fastfns.cpp</code> file) rather than use the <code>data.table</code> approach of
-<code>setDTthreads()</code>. So, here we assume that the threads for data.table are 1.</p>
+<code><a href="https://rdatatable.gitlab.io/data.table/reference/openmp-utils.html" class="external-link">setDTthreads()</a></code>. So, here we assume that the threads for data.table are 1.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co"># Example using distance-based independence test</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_dat</span>, package <span class="op">=</span> <span class="st">"manytestsr"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Test for treatment effect using distance-based approach</span></span></span>
+<span class="r-in"><span><span class="va">single_block</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">example_dat</span>, <span class="va">blockF</span> <span class="op">==</span> <span class="st">"B080"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p_val</span> <span class="op">&lt;-</span> <span class="fu">pIndepDist</span><span class="op">(</span><span class="va">single_block</span>, <span class="va">Y1</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>, parallel <span class="op">=</span> <span class="st">"no"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p_val</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.5394499</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Test with different outcome variable</span></span></span>
+<span class="r-in"><span><span class="va">p_val2</span> <span class="op">&lt;-</span> <span class="fu">pIndepDist</span><span class="op">(</span><span class="va">single_block</span>, <span class="va">Y2</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>, parallel <span class="op">=</span> <span class="st">"no"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p_val2</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.7764711</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

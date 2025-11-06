@@ -18,6 +18,12 @@ It produces a vector of alpha values."></head><body>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/advanced-methodologies.html">Advanced Statistical Methodologies in manytestsr</a></li>
+    <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with manytestsr</a></li>
+    <li><a class="dropdown-item" href="../articles/hierarchical-testing-workflow.html">Hierarchical Testing with manytestsr</a></li>
+  </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -74,6 +80,33 @@ produced in the tree and the subsequent p-values should be produced on the child
     <p>A vector of alpha values</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Example with ADDIS procedure for hierarchical testing</span></span></span>
+<span class="r-in"><span><span class="va">pvals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="fl">0.04</span>, <span class="fl">0.12</span>, <span class="fl">0.08</span>, <span class="fl">0.15</span>, <span class="fl">0.02</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">batches</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>  <span class="co"># Tree depth levels</span></span></span>
+<span class="r-in"><span><span class="va">node_sizes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">50</span>, <span class="fl">50</span>, <span class="fl">25</span>, <span class="fl">25</span>, <span class="fl">25</span><span class="op">)</span>  <span class="co"># Sample sizes at each node</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Apply ADDIS procedure</span></span></span>
+<span class="r-in"><span><span class="va">alpha_vals</span> <span class="op">&lt;-</span> <span class="fu">alpha_addis</span><span class="op">(</span><span class="va">pvals</span>, <span class="va">batches</span>, <span class="va">node_sizes</span>, thealpha <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Compare p-values to adjusted alpha levels</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  pval <span class="op">=</span> <span class="va">pvals</span>,</span></span>
+<span class="r-in"><span>  batch <span class="op">=</span> <span class="va">batches</span>,</span></span>
+<span class="r-in"><span>  alpha <span class="op">=</span> <span class="va">alpha_vals</span>,</span></span>
+<span class="r-in"><span>  significant <span class="op">=</span> <span class="va">pvals</span> <span class="op">&lt;=</span> <span class="va">alpha_vals</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   pval batch       alpha significant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.01     1 0.006431105       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.04     2 0.006431105       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.12     2 0.006431105       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.08     3 0.006431105       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 0.15     3 0.006431105       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 0.02     3 0.006431105       FALSE</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

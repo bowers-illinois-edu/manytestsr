@@ -16,6 +16,12 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/advanced-methodologies.html">Advanced Statistical Methodologies in manytestsr</a></li>
+    <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with manytestsr</a></li>
+    <li><a class="dropdown-item" href="../articles/hierarchical-testing-workflow.html">Hierarchical Testing with manytestsr</a></li>
+  </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -53,6 +59,34 @@
 
 </dl></div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Create hierarchical factor for pre-specified splitting</span></span></span>
+<span class="r-in"><span><span class="va">block_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B1"</span>, <span class="st">"B2"</span>, <span class="st">"B3"</span>, <span class="st">"B4"</span>, <span class="st">"B5"</span>, <span class="st">"B6"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">hierarchical_factor</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"StateA.District1.School1"</span>,</span></span>
+<span class="r-in"><span>  <span class="st">"StateA.District1.School2"</span>, </span></span>
+<span class="r-in"><span>  <span class="st">"StateA.District2.School1"</span>,</span></span>
+<span class="r-in"><span>  <span class="st">"StateB.District1.School1"</span>,</span></span>
+<span class="r-in"><span>  <span class="st">"StateB.District1.School2"</span>,</span></span>
+<span class="r-in"><span>  <span class="st">"StateB.District2.School1"</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># First split will separate by state (StateA vs StateB)</span></span></span>
+<span class="r-in"><span><span class="va">groups</span> <span class="op">&lt;-</span> <span class="fu">splitSpecifiedFactor</span><span class="op">(</span><span class="va">block_ids</span>, <span class="va">hierarchical_factor</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Show the grouping</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>block <span class="op">=</span> <span class="va">block_ids</span>, hierarchy <span class="op">=</span> <span class="va">hierarchical_factor</span>, group <span class="op">=</span> <span class="va">groups</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   block                hierarchy group</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    B1 StateA.District1.School1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    B2 StateA.District1.School2     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    B3 StateA.District2.School1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    B4 StateB.District1.School1     0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    B5 StateB.District1.School2     0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    B6 StateB.District2.School1     0</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

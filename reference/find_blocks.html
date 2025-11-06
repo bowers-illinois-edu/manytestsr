@@ -16,6 +16,12 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/advanced-methodologies.html">Advanced Statistical Methodologies in manytestsr</a></li>
+    <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with manytestsr</a></li>
+    <li><a class="dropdown-item" href="../articles/hierarchical-testing-workflow.html">Hierarchical Testing with manytestsr</a></li>
+  </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -58,7 +64,14 @@
 <span>  stop_splitby_constant <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  blocksize <span class="op">=</span> <span class="st">"hwt"</span>,</span>
 <span>  return_what <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"blocks"</span>, <span class="st">"nodes"</span><span class="op">)</span>,</span>
-<span>  trace <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  trace <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  use_closed_testing <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  use_evalues <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  use_meinshausen <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  closed_testing_method <span class="op">=</span> <span class="st">"simes"</span>,</span>
+<span>  evalue_wealth_rule <span class="op">=</span> <span class="st">"kelly"</span>,</span>
+<span>  meinshausen_method <span class="op">=</span> <span class="st">"simes"</span>,</span>
+<span>  meinshausen_sequential <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -171,8 +184,32 @@ data.table of nodes "nodes", or default both c("blocks","nodes").</p></dd>
 <dd><p>Logical, FALSE (default) to not print split number. TRUE prints the split number.</p></dd>
 
 
-<dt id="arg-final-global-adj">final_global_adj<a class="anchor" aria-label="anchor" href="#arg-final-global-adj"></a></dt>
-<dd><p>Character. One of <code>"none"</code>, <code>"fdr"</code>, <code>"fwer"</code>.</p></dd>
+<dt id="arg-use-closed-testing">use_closed_testing<a class="anchor" aria-label="anchor" href="#arg-use-closed-testing"></a></dt>
+<dd><p>Logical, whether to apply proper closed testing procedure (Goeman methodology)</p></dd>
+
+
+<dt id="arg-use-evalues">use_evalues<a class="anchor" aria-label="anchor" href="#arg-use-evalues"></a></dt>
+<dd><p>Logical, whether to use e-value methodology for sequential testing (Ramdas approach)</p></dd>
+
+
+<dt id="arg-use-meinshausen">use_meinshausen<a class="anchor" aria-label="anchor" href="#arg-use-meinshausen"></a></dt>
+<dd><p>Logical, whether to apply Meinshausen's hierarchical testing (2008) with sequential rejection</p></dd>
+
+
+<dt id="arg-closed-testing-method">closed_testing_method<a class="anchor" aria-label="anchor" href="#arg-closed-testing-method"></a></dt>
+<dd><p>Method for combining p-values in intersection tests ("simes", "fisher", "min")</p></dd>
+
+
+<dt id="arg-evalue-wealth-rule">evalue_wealth_rule<a class="anchor" aria-label="anchor" href="#arg-evalue-wealth-rule"></a></dt>
+<dd><p>Wealth rule for e-value betting ("kelly", "fixed", "adaptive")</p></dd>
+
+
+<dt id="arg-meinshausen-method">meinshausen_method<a class="anchor" aria-label="anchor" href="#arg-meinshausen-method"></a></dt>
+<dd><p>Method for Meinshausen hierarchical testing ("simes", "fisher", "bonferroni")</p></dd>
+
+
+<dt id="arg-meinshausen-sequential">meinshausen_sequential<a class="anchor" aria-label="anchor" href="#arg-meinshausen-sequential"></a></dt>
+<dd><p>Logical, whether to use Goeman-Solari sequential rejection enhancement</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -182,33 +219,9 @@ data.table of nodes "nodes", or default both c("blocks","nodes").</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Some notes about the splitting functions and how they relate to
-splitting criteria (splitby) and stopping criteria (stop_splitby_constant).</p><ul><li><p><code><a href="splitLOO.html">splitLOO()</a></code> chooses the blocks largest on the splitby vector one at a
-time so that we have two tests, one focusing on the highest ranked block and
-one on all of the rest of the blocks (for example, the block with the most
-units in it versus the rest of the blocks). When the splitby vector has
-ties, it chooses one block at random among those tied for the first or
-largest rank. When the split vector has few values, for example, only two
-values, it will still split assuming that the vector is numeric (so, 1 is
-ranked higher than 0) and then randomly among ties. If
-stop_splitby_constant=TRUE, then the algorithm will stop after exhausting
-the blocks in the higher ranked category (thinking about the binary splitby
-case). For this reason we advise against using splitLOO with a factor
-splitby vector with few categories. <code><a href="splitLOO.html">splitLOO()</a></code> is best used with a splitby
-vector like block-size — which could be constant and thus just create a
-random choice of a single block or could vary and thus focus the testing on
-the largest/highest ranked blocks.</p></li>
-<li><p><code><a href="splitEqualApprox.html">splitEqualApprox()</a></code> splits the sets of blocks into two groups where the
-sum of the splitby vector is approximately the same in each split. For
-example, if splitby is number of units in a block, then this splitting
-function makes two groups of blocks, each group having the same total
-number of units. This splitting function will work with discrete or factors
-but will do: <code>rank_splitby &lt;- rank(splitby)</code> and then divide the blocks
-into groups based on taking every other rank. So, for factors variables
-with few categories that are ordered, this will allocate every other
-category to one or another group.</p></li>
-<li><p><code><a href="splitCluster.html">splitCluster()</a></code> splits the blocks into groups that are as similar as
+splitting criteria (splitby) and stopping criteria (stop_splitby_constant).</p><ul><li><p><code><a href="splitCluster.html">splitCluster()</a></code> splits the blocks into groups that are as similar as
 possible to each other on splitby using the kmeans clustering algorithm
-(using a combination of <code><a href="https://rdrr.io/r/stats/kmeans.html" class="external-link">kmeans()</a></code> or <code>KMeans_rcpp()</code>). This will not work
+(using a combination of <code><a href="https://rdrr.io/r/stats/kmeans.html" class="external-link">kmeans()</a></code> or <code><a href="https://mlampros.github.io/ClusterR/reference/KMeans_rcpp.html" class="external-link">ClusterR::KMeans_rcpp()</a></code>). This will not work
 with factor variables. When the splitting criteria is constant, it will
 return random splits into roughly two equal sized groups of blocks if
 stop_splitby_constant=FALSE. If stop_splitby_constant=TRUE then
@@ -235,8 +248,157 @@ label of this factor be the individual blocks themselves—to ensure that
 testing descends to the block level if it can. When the factor is constant
 and stop_splitby_constant=TRUE splitting stops. When
 stop_splitby_constant=FALSE, then it uses random splits.</p></li>
+<li><p><code><a href="splitEqualApprox.html">splitEqualApprox()</a></code> splits the sets of blocks into two groups where the
+sum of the splitby vector is approximately the same in each split. For
+example, if splitby is number of units in a block, then this splitting
+function makes two groups of blocks, each group having the same total
+number of units. This splitting function will work with discrete or factors
+but will do: <code>rank_splitby &lt;- rank(splitby)</code> and then divide the blocks
+into groups based on taking every other rank. So, for factors variables
+with few categories that are ordered, this will allocate every other
+category to one or another group.</p></li>
+<li><p><code><a href="splitLOO.html">splitLOO()</a></code> chooses the blocks largest on the splitby vector one at a
+time so that we have two tests, one focusing on the highest ranked block and
+one on all of the rest of the blocks (for example, the block with the most
+units in it versus the rest of the blocks). When the splitby vector has
+ties, it chooses one block at random among those tied for the first or
+largest rank. When the split vector has few values, for example, only two
+values, it will still split assuming that the vector is numeric (so, 1 is
+ranked higher than 0) and then randomly among ties. If
+stop_splitby_constant=TRUE, then the algorithm will stop after exhausting
+the blocks in the higher ranked category (thinking about the binary splitby
+case). For this reason we advise against using splitLOO with a factor
+splitby vector with few categories. <code><a href="splitLOO.html">splitLOO()</a></code> is best used with a splitby
+vector like block-size — which could be constant and thus just create a
+random choice of a single block or could vary and thus focus the testing on
+the largest/highest ranked blocks.</p></li>
 </ul></div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># Load example data</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_dat</span>, package <span class="op">=</span> <span class="st">"manytestsr"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Create block-level dataset</span></span></span>
+<span class="r-in"><span><span class="va">example_bdat</span> <span class="op">&lt;-</span> <span class="va">example_dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">blockF</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    nb <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/context.html" class="external-link">n</a></span><span class="op">(</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    pb <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">trt</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    hwt <span class="op">=</span> <span class="op">(</span><span class="va">nb</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">example_dat</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="op">(</span><span class="va">pb</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">pb</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    place <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">place</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    year <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">year</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    place_year_block <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">place_year_block</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  </span></span>
+<span class="r-in"><span><span class="co"># Basic usage with cluster-based splitting</span></span></span>
+<span class="r-in"><span><span class="va">result1</span> <span class="op">&lt;-</span> <span class="fu">find_blocks</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  idat <span class="op">=</span> <span class="va">example_dat</span>,</span></span>
+<span class="r-in"><span>  bdat <span class="op">=</span> <span class="va">example_bdat</span>, </span></span>
+<span class="r-in"><span>  blockid <span class="op">=</span> <span class="st">"blockF"</span>,</span></span>
+<span class="r-in"><span>  splitfn <span class="op">=</span> <span class="va">splitCluster</span>,</span></span>
+<span class="r-in"><span>  pfn <span class="op">=</span> <span class="va">pOneway</span>,</span></span>
+<span class="r-in"><span>  fmla <span class="op">=</span> <span class="va">Y1</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>,</span></span>
+<span class="r-in"><span>  splitby <span class="op">=</span> <span class="st">"hwt"</span>,</span></span>
+<span class="r-in"><span>  parallel <span class="op">=</span> <span class="st">"no"</span>,</span></span>
+<span class="r-in"><span>  trace <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Access block-level results</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result1</span><span class="op">$</span><span class="va">bdat</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Access node-level results  </span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result1</span><span class="op">$</span><span class="va">node_dat</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Example with pre-specified factor splitting</span></span></span>
+<span class="r-in"><span><span class="va">result2</span> <span class="op">&lt;-</span> <span class="fu">find_blocks</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  idat <span class="op">=</span> <span class="va">example_dat</span>,</span></span>
+<span class="r-in"><span>  bdat <span class="op">=</span> <span class="va">example_bdat</span>,</span></span>
+<span class="r-in"><span>  blockid <span class="op">=</span> <span class="st">"blockF"</span>, </span></span>
+<span class="r-in"><span>  splitfn <span class="op">=</span> <span class="va">splitSpecifiedFactor</span>,</span></span>
+<span class="r-in"><span>  pfn <span class="op">=</span> <span class="va">pIndepDist</span>,</span></span>
+<span class="r-in"><span>  fmla <span class="op">=</span> <span class="va">Y2</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>,</span></span>
+<span class="r-in"><span>  splitby <span class="op">=</span> <span class="st">"place_year_block"</span>,</span></span>
+<span class="r-in"><span>  parallel <span class="op">=</span> <span class="st">"no"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Example using Goeman's proper closed testing procedure</span></span></span>
+<span class="r-in"><span><span class="va">result3</span> <span class="op">&lt;-</span> <span class="fu">find_blocks</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  idat <span class="op">=</span> <span class="va">example_dat</span>,</span></span>
+<span class="r-in"><span>  bdat <span class="op">=</span> <span class="va">example_bdat</span>,</span></span>
+<span class="r-in"><span>  blockid <span class="op">=</span> <span class="st">"blockF"</span>,</span></span>
+<span class="r-in"><span>  splitfn <span class="op">=</span> <span class="va">splitCluster</span>,</span></span>
+<span class="r-in"><span>  pfn <span class="op">=</span> <span class="va">pIndepDist</span>,</span></span>
+<span class="r-in"><span>  fmla <span class="op">=</span> <span class="va">Y1</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>,</span></span>
+<span class="r-in"><span>  splitby <span class="op">=</span> <span class="st">"hwt"</span>,</span></span>
+<span class="r-in"><span>  parallel <span class="op">=</span> <span class="st">"no"</span>,</span></span>
+<span class="r-in"><span>  use_closed_testing <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  closed_testing_method <span class="op">=</span> <span class="st">"simes"</span>,</span></span>
+<span class="r-in"><span>  thealpha <span class="op">=</span> <span class="fl">0.05</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Check closed testing results</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="st">"closed_testing_reject"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result3</span><span class="op">$</span><span class="va">node_dat</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Nodes rejected by closed testing procedure:\n"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">rejected_nodes</span> <span class="op">&lt;-</span> <span class="va">result3</span><span class="op">$</span><span class="va">node_dat</span><span class="op">[</span><span class="va">closed_testing_reject</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="va">nodenum</span><span class="op">]</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">rejected_nodes</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Example using e-value methodology for sequential testing</span></span></span>
+<span class="r-in"><span><span class="va">result4</span> <span class="op">&lt;-</span> <span class="fu">find_blocks</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  idat <span class="op">=</span> <span class="va">example_dat</span>,</span></span>
+<span class="r-in"><span>  bdat <span class="op">=</span> <span class="va">example_bdat</span>,</span></span>
+<span class="r-in"><span>  blockid <span class="op">=</span> <span class="st">"blockF"</span>,</span></span>
+<span class="r-in"><span>  splitfn <span class="op">=</span> <span class="va">splitCluster</span>,</span></span>
+<span class="r-in"><span>  pfn <span class="op">=</span> <span class="va">pOneway</span>,</span></span>
+<span class="r-in"><span>  fmla <span class="op">=</span> <span class="va">Y1</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>,</span></span>
+<span class="r-in"><span>  splitby <span class="op">=</span> <span class="st">"hwt"</span>,</span></span>
+<span class="r-in"><span>  parallel <span class="op">=</span> <span class="st">"no"</span>,</span></span>
+<span class="r-in"><span>  use_evalues <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  evalue_wealth_rule <span class="op">=</span> <span class="st">"kelly"</span>,</span></span>
+<span class="r-in"><span>  thealpha <span class="op">=</span> <span class="fl">0.05</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Example using Meinshausen's hierarchical testing with sequential rejection</span></span></span>
+<span class="r-in"><span><span class="va">result5</span> <span class="op">&lt;-</span> <span class="fu">find_blocks</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  idat <span class="op">=</span> <span class="va">example_dat</span>,</span></span>
+<span class="r-in"><span>  bdat <span class="op">=</span> <span class="va">example_bdat</span>,</span></span>
+<span class="r-in"><span>  blockid <span class="op">=</span> <span class="st">"blockF"</span>,</span></span>
+<span class="r-in"><span>  splitfn <span class="op">=</span> <span class="va">splitCluster</span>,</span></span>
+<span class="r-in"><span>  pfn <span class="op">=</span> <span class="va">pIndepDist</span>,</span></span>
+<span class="r-in"><span>  fmla <span class="op">=</span> <span class="va">Y2</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>,</span></span>
+<span class="r-in"><span>  splitby <span class="op">=</span> <span class="st">"hwt"</span>,</span></span>
+<span class="r-in"><span>  parallel <span class="op">=</span> <span class="st">"no"</span>,</span></span>
+<span class="r-in"><span>  use_meinshausen <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  meinshausen_method <span class="op">=</span> <span class="st">"simes"</span>,</span></span>
+<span class="r-in"><span>  meinshausen_sequential <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  thealpha <span class="op">=</span> <span class="fl">0.05</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Check Meinshausen testing results</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="st">"meinshausen_reject"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result5</span><span class="op">$</span><span class="va">node_dat</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Nodes rejected by Meinshausen hierarchical procedure:\\n"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">rejected_meinshausen</span> <span class="op">&lt;-</span> <span class="va">result5</span><span class="op">$</span><span class="va">node_dat</span><span class="op">[</span><span class="va">meinshausen_reject</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="va">nodenum</span><span class="op">]</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">rejected_meinshausen</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Compare traditional FWER control vs closed testing</span></span></span>
+<span class="r-in"><span><span class="va">traditional_detections</span> <span class="op">&lt;-</span> <span class="fu"><a href="report_detections.html">report_detections</a></span><span class="op">(</span><span class="va">result1</span><span class="op">$</span><span class="va">bdat</span>, fwer <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/exists.html" class="external-link">exists</a></span><span class="op">(</span><span class="st">"result3"</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="st">"node_dat"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result3</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Traditional FWER detections:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">traditional_detections</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="st">"closed_testing_reject"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result3</span><span class="op">$</span><span class="va">node_dat</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="va">closed_detections</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">result3</span><span class="op">$</span><span class="va">node_dat</span><span class="op">$</span><span class="va">closed_testing_reject</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Closed testing detections:"</span>, <span class="va">closed_detections</span>, <span class="st">"\n"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">}</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
