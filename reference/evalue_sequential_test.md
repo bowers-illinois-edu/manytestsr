@@ -1,0 +1,138 @@
+# E-value Based Sequential Testing
+
+Implementation of e-value methodology for sequential hypothesis testing
+following the framework of Ramdas et al. This provides anytime-valid
+inference with optional stopping and flexible error control.
+
+## Usage
+
+``` r
+evalue_sequential_test(
+  data,
+  formula,
+  blocks,
+  alpha = 0.05,
+  wealth_rule = "kelly",
+  stopping_rule = "wealth_threshold"
+)
+```
+
+## Arguments
+
+- data:
+
+  Individual-level data
+
+- formula:
+
+  Test formula
+
+- blocks:
+
+  Block identifiers
+
+- alpha:
+
+  Type I error rate
+
+- wealth_rule:
+
+  Wealth accumulation rule ("kelly", "fixed", "adaptive")
+
+- stopping_rule:
+
+  Early stopping rule ("never", "wealth_threshold", "e_threshold")
+
+## Value
+
+E-value based test results
+
+## References
+
+Ramdas, A., Grünwald, P., Vovk, V., & Shafer, G. (2023). Game-theoretic
+statistics and safe anytime-valid inference. Statistical Science, 38(4),
+576-601.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# Load example data for e-value testing with find_blocks
+data(example_dat, package = "manytestsr")
+library(data.table)
+library(dplyr)
+
+# Prepare data
+idat <- as.data.table(example_dat)
+bdat <- idat %>%
+  group_by(blockF) %>%
+  summarize(
+    nb = n(),
+    pb = mean(trt),
+    hwt = (nb / nrow(idat)) * (pb * (1 - pb)),
+    .groups = "drop"
+  ) %>%
+  as.data.table()
+
+# Run find_blocks with e-value methodology (experimental)
+# Note: This provides anytime-valid inference
+results_evalues <- find_blocks(
+  idat = idat,
+  bdat = bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pOneway,
+  fmla = Y1 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  use_evalues = TRUE,
+  evalue_wealth_rule = "kelly", # Ramdas recommends Kelly betting
+  thealpha = 0.05,
+  maxtest = 15
+)
+
+# Direct use of e-value sequential testing
+evalue_results <- evalue_sequential_test(
+  data = idat,
+  formula = Y1 ~ trtF,
+  blocks = idat$blockF,
+  alpha = 0.05,
+  wealth_rule = "kelly",
+  stopping_rule = "wealth_threshold"
+)
+
+# Examine e-value results
+cat("E-value sequential testing results:\n")
+cat("Final wealth:", evalue_results$final_wealth, "\n")
+cat("Total rejections:", evalue_results$total_rejections, "\n")
+cat("Stopped early:", evalue_results$stopped_early, "\n")
+
+# Plot wealth accumulation over time
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  library(ggplot2)
+  wealth_plot <- ggplot(
+    evalue_results$results,
+    aes(x = seq_along(block_id), y = wealth)
+  ) +
+    geom_line() +
+    geom_hline(yintercept = 1 / 0.05, linetype = "dashed", color = "red") +
+    labs(
+      x = "Sequential Test Number", y = "Wealth",
+      title = "E-value Wealth Accumulation",
+      subtitle = "Red line shows rejection threshold (1/alpha)"
+    )
+  print(wealth_plot)
+}
+
+# Compare e-values with traditional p-values
+comparison_data <- data.frame(
+  test = seq_along(evalue_results$results$e_value),
+  e_value = evalue_results$results$e_value,
+  p_value = evalue_results$results$p_value,
+  wealth = evalue_results$results$wealth
+)
+
+cat("E-value vs P-value comparison (first 5 tests):\n")
+print(head(comparison_data, 5))
+} # }
+```

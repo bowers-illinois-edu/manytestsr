@@ -137,12 +137,12 @@
 <span>  bdat <span class="op">=</span> <span class="va">bdat</span>,</span>
 <span>  blockid <span class="op">=</span> <span class="st">"blockF"</span>,</span>
 <span>  splitfn <span class="op">=</span> <span class="va">splitCluster</span>,</span>
-<span>  pfn <span class="op">=</span> <span class="va">pIndepDist</span>,  <span class="co"># Robust test as Goeman would recommend</span></span>
+<span>  pfn <span class="op">=</span> <span class="va">pIndepDist</span>, <span class="co"># Robust test as Goeman would recommend</span></span>
 <span>  fmla <span class="op">=</span> <span class="va">Y1</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>,</span>
 <span>  splitby <span class="op">=</span> <span class="st">"hwt"</span>,</span>
 <span>  parallel <span class="op">=</span> <span class="st">"no"</span>,</span>
 <span>  use_closed_testing <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  closed_testing_method <span class="op">=</span> <span class="st">"simes"</span>,  <span class="co"># Goeman &amp; Solari's recommended method</span></span>
+<span>  closed_testing_method <span class="op">=</span> <span class="st">"simes"</span>, <span class="co"># Goeman &amp; Solari's recommended method</span></span>
 <span>  thealpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  maxtest <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  trace <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -152,7 +152,7 @@
 <span><span class="kw">if</span> <span class="op">(</span><span class="st">"closed_testing_reject"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result_goeman</span><span class="op">$</span><span class="va">node_dat</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">closed_rejections</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">result_goeman</span><span class="op">$</span><span class="va">node_dat</span><span class="op">$</span><span class="va">closed_testing_reject</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Closed testing rejections:"</span>, <span class="va">closed_rejections</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span>  </span>
+<span></span>
 <span>  <span class="co"># Show rejected nodes</span></span>
 <span>  <span class="va">rejected_nodes</span> <span class="op">&lt;-</span> <span class="va">result_goeman</span><span class="op">$</span><span class="va">node_dat</span><span class="op">[</span><span class="va">closed_testing_reject</span> <span class="op">==</span> <span class="cn">TRUE</span><span class="op">]</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">rejected_nodes</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
@@ -207,7 +207,7 @@
 <span>  parallel <span class="op">=</span> <span class="st">"no"</span>,</span>
 <span>  use_meinshausen <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  meinshausen_method <span class="op">=</span> <span class="st">"simes"</span>,</span>
-<span>  meinshausen_sequential <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co"># Use Goeman-Solari enhancement</span></span>
+<span>  meinshausen_sequential <span class="op">=</span> <span class="cn">TRUE</span>, <span class="co"># Use Goeman-Solari enhancement</span></span>
 <span>  thealpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  maxtest <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  trace <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -217,7 +217,7 @@
 <span><span class="kw">if</span> <span class="op">(</span><span class="st">"meinshausen_reject"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result_meinshausen</span><span class="op">$</span><span class="va">node_dat</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">meinshausen_rejections</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">result_meinshausen</span><span class="op">$</span><span class="va">node_dat</span><span class="op">$</span><span class="va">meinshausen_reject</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Meinshausen hierarchical rejections:"</span>, <span class="va">meinshausen_rejections</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span>  </span>
+<span></span>
 <span>  <span class="co"># Show rejected nodes with adjusted p-values</span></span>
 <span>  <span class="va">rejected_meinshausen</span> <span class="op">&lt;-</span> <span class="va">result_meinshausen</span><span class="op">$</span><span class="va">node_dat</span><span class="op">[</span><span class="va">meinshausen_reject</span> <span class="op">==</span> <span class="cn">TRUE</span><span class="op">]</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">rejected_meinshausen</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
@@ -244,7 +244,7 @@
 <span>  parallel <span class="op">=</span> <span class="st">"no"</span>,</span>
 <span>  use_meinshausen <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  meinshausen_method <span class="op">=</span> <span class="st">"simes"</span>,</span>
-<span>  meinshausen_sequential <span class="op">=</span> <span class="cn">FALSE</span>,  <span class="co"># Traditional approach</span></span>
+<span>  meinshausen_sequential <span class="op">=</span> <span class="cn">FALSE</span>, <span class="co"># Traditional approach</span></span>
 <span>  thealpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  maxtest <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  trace <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -253,10 +253,10 @@
 <span><span class="co"># Compare approaches</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"meinshausen_reject"</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result_meinshausen</span><span class="op">$</span><span class="va">node_dat</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">seq_rejections</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">result_meinshausen</span><span class="op">$</span><span class="va">node_dat</span><span class="op">$</span><span class="va">meinshausen_reject</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span>  </span>
+<span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="st">"meinshausen_reject"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result_meinshausen_trad</span><span class="op">$</span><span class="va">node_dat</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">trad_rejections</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">result_meinshausen_trad</span><span class="op">$</span><span class="va">node_dat</span><span class="op">$</span><span class="va">meinshausen_reject</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Meinshausen Method Comparison:\n"</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"- Sequential rejection approach:"</span>, <span class="va">seq_rejections</span>, <span class="st">"rejections\n"</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"- Traditional approach:"</span>, <span class="va">trad_rejections</span>, <span class="st">"rejections\n"</span><span class="op">)</span></span>
@@ -299,7 +299,7 @@
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"E-value methodology provides always-valid inference\n"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Particularly useful for:\n"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"- Sequential data collection\n"</span><span class="op">)</span> </span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"- Sequential data collection\n"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"- Optional stopping\n"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"- Online learning scenarios\n"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -335,9 +335,10 @@
 <span><span class="va">sensitivity_data</span><span class="op">[</span>, <span class="va">treatment</span> <span class="op">:=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">.N</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="fl">0.2</span> <span class="op">*</span> <span class="va">block_confounder</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Add outcomes with treatment effect + confounding</span></span>
-<span><span class="va">sensitivity_data</span><span class="op">[</span>, <span class="va">outcome</span> <span class="op">:=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">.N</span>, </span>
-<span>  mean <span class="op">=</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">treatment</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">block_confounder</span>, </span>
-<span>  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">sensitivity_data</span><span class="op">[</span>, <span class="va">outcome</span> <span class="op">:=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">.N</span>,</span>
+<span>  mean <span class="op">=</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">treatment</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">block_confounder</span>,</span>
+<span>  sd <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Simulated sensitivity analysis dataset:\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Simulated sensitivity analysis dataset:</span></span>
@@ -492,7 +493,8 @@
 <span><span class="co"># Step 4: Validate results with sensitivity analysis</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="va">causal_inference_context</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">sensitivity_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/design_sensitivity_analysis.html">design_sensitivity_analysis</a></span><span class="op">(</span></span>
-<span>    <span class="va">idat</span>, <span class="va">bdat</span>, formula <span class="op">=</span> <span class="va">outcome</span> <span class="op">~</span> <span class="va">treatment</span>,</span>
+<span>    <span class="va">idat</span>, <span class="va">bdat</span>,</span>
+<span>    formula <span class="op">=</span> <span class="va">outcome</span> <span class="op">~</span> <span class="va">treatment</span>,</span>
 <span>    gamma_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
@@ -506,7 +508,7 @@
 <div class="sourceCode cell-code" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Check logical consistency of hierarchical rejections</span></span>
 <span><span class="va">consonance_check</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/check_consonance_property.html">check_consonance_property</a></span><span class="op">(</span></span>
-<span>  <span class="va">result_goeman</span><span class="op">$</span><span class="va">node_dat</span>, </span>
+<span>  <span class="va">result_goeman</span><span class="op">$</span><span class="va">node_dat</span>,</span>
 <span>  <span class="va">result_goeman</span><span class="op">$</span><span class="va">node_tracker</span>,</span>
 <span>  rejection_column <span class="op">=</span> <span class="st">"closed_testing_reject"</span></span>
 <span><span class="op">)</span></span>
@@ -646,7 +648,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

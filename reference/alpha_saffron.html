@@ -84,8 +84,8 @@ produced in the tree and the subsequent p-values should be produced on the child
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Example with SAFFRON procedure for hierarchical testing</span></span></span>
 <span class="r-in"><span><span class="va">pvals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="fl">0.04</span>, <span class="fl">0.12</span>, <span class="fl">0.08</span>, <span class="fl">0.15</span>, <span class="fl">0.02</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">batches</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>  <span class="co"># Tree depth levels</span></span></span>
-<span class="r-in"><span><span class="va">node_sizes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">50</span>, <span class="fl">50</span>, <span class="fl">25</span>, <span class="fl">25</span>, <span class="fl">25</span><span class="op">)</span>  <span class="co"># Sample sizes at each node</span></span></span>
+<span class="r-in"><span><span class="va">batches</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span> <span class="co"># Tree depth levels</span></span></span>
+<span class="r-in"><span><span class="va">node_sizes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">50</span>, <span class="fl">50</span>, <span class="fl">25</span>, <span class="fl">25</span>, <span class="fl">25</span><span class="op">)</span> <span class="co"># Sample sizes at each node</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Apply SAFFRON procedure</span></span></span>
 <span class="r-in"><span><span class="va">alpha_vals</span> <span class="op">&lt;-</span> <span class="fu">alpha_saffron</span><span class="op">(</span><span class="va">pvals</span>, <span class="va">batches</span>, <span class="va">node_sizes</span>, thealpha <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></span>
@@ -116,7 +116,7 @@ produced in the tree and the subsequent p-values should be produced on the child
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

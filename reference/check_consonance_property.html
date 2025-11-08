@@ -128,7 +128,7 @@ Statistical science, 26(4), 584-597.</p>
 <span class="r-in"><span><span class="co"># Check consonance of the testable decisions</span></span></span>
 <span class="r-in"><span><span class="va">consonance_check</span> <span class="op">&lt;-</span> <span class="fu">check_consonance_property</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  node_dat <span class="op">=</span> <span class="va">results</span><span class="op">$</span><span class="va">node_dat</span>,</span></span>
-<span class="r-in"><span>  tracker <span class="op">=</span> <span class="va">results</span><span class="op">$</span><span class="va">node_tracker</span>,  <span class="co"># Assuming tracker is available</span></span></span>
+<span class="r-in"><span>  tracker <span class="op">=</span> <span class="va">results</span><span class="op">$</span><span class="va">node_tracker</span>, <span class="co"># Assuming tracker is available</span></span></span>
 <span class="r-in"><span>  rejection_column <span class="op">=</span> <span class="st">"testable"</span>,</span></span>
 <span class="r-in"><span>  alpha <span class="op">=</span> <span class="fl">0.05</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
@@ -142,7 +142,7 @@ Statistical science, 26(4), 584-597.</p>
 <span class="r-in"><span>    <span class="va">violation</span> <span class="op">&lt;-</span> <span class="va">consonance_check</span><span class="op">$</span><span class="va">violations</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span></span></span>
 <span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"-"</span>, <span class="va">violation</span><span class="op">$</span><span class="va">violation_description</span>, <span class="st">"\n"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">}</span></span></span>
-<span class="r-in"><span>  </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Print violation analysis</span></span></span>
 <span class="r-in"><span>  <span class="va">analysis</span> <span class="op">&lt;-</span> <span class="va">consonance_check</span><span class="op">$</span><span class="va">violation_analysis</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\nViolation Analysis:\n"</span><span class="op">)</span></span></span>
@@ -154,21 +154,21 @@ Statistical science, 26(4), 584-597.</p>
 <span class="r-in"><span><span class="co"># Apply consonance correction if needed</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="va">consonance_check</span><span class="op">$</span><span class="va">is_consonant</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\nApplying consonance correction...\n"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="va">corrected_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="apply_consonance_correction.html">apply_consonance_correction</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    node_dat <span class="op">=</span> <span class="va">results</span><span class="op">$</span><span class="va">node_dat</span>,</span></span>
 <span class="r-in"><span>    tracker <span class="op">=</span> <span class="va">results</span><span class="op">$</span><span class="va">node_tracker</span>,</span></span>
 <span class="r-in"><span>    rejection_column <span class="op">=</span> <span class="st">"testable"</span>,</span></span>
 <span class="r-in"><span>    correction_method <span class="op">=</span> <span class="st">"propagate_up"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span>  </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Check if correction worked</span></span></span>
 <span class="r-in"><span>  <span class="va">corrected_check</span> <span class="op">&lt;-</span> <span class="fu">check_consonance_property</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="va">corrected_results</span>,</span></span>
 <span class="r-in"><span>    <span class="va">results</span><span class="op">$</span><span class="va">node_tracker</span>,</span></span>
 <span class="r-in"><span>    <span class="st">"testable_consonant"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span>  </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="va">corrected_check</span><span class="op">$</span><span class="va">is_consonant</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Consonance correction successful.\n"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span></span>
@@ -195,7 +195,7 @@ Statistical science, 26(4), 584-597.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

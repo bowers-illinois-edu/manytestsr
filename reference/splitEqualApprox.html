@@ -73,7 +73,7 @@ group or another group such that the sum of x within one group is approximately 
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Example with block sizes - equalizes total size across groups</span></span></span>
 <span class="r-in"><span><span class="va">block_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B1"</span>, <span class="st">"B2"</span>, <span class="st">"B3"</span>, <span class="st">"B4"</span>, <span class="st">"B5"</span>, <span class="st">"B6"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">block_sizes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">30</span>, <span class="fl">15</span>, <span class="fl">35</span>, <span class="fl">20</span>, <span class="fl">25</span><span class="op">)</span>  <span class="co"># Total = 135</span></span></span>
+<span class="r-in"><span><span class="va">block_sizes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">30</span>, <span class="fl">15</span>, <span class="fl">35</span>, <span class="fl">20</span>, <span class="fl">25</span><span class="op">)</span> <span class="co"># Total = 135</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">groups</span> <span class="op">&lt;-</span> <span class="fu">splitEqualApprox</span><span class="op">(</span><span class="va">block_ids</span>, <span class="va">block_sizes</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -93,7 +93,7 @@ group or another group such that the sum of x within one group is approximately 
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

@@ -1,0 +1,386 @@
+# Test, Split, Repeat
+
+Split and test.
+
+## Usage
+
+``` r
+find_blocks(
+  idat,
+  bdat,
+  blockid = "block",
+  splitfn,
+  pfn,
+  alphafn = NULL,
+  local_adj_p_fn = NULL,
+  simthresh = 20,
+  sims = 1000,
+  maxtest = 2000,
+  thealpha = 0.05,
+  thew0 = 0.05 - 0.001,
+  fmla = YContNorm ~ trtF | blockF,
+  parallel = "multicore",
+  ncores = 4,
+  copydts = FALSE,
+  splitby = "hwt",
+  stop_splitby_constant = TRUE,
+  blocksize = "hwt",
+  return_what = c("blocks", "nodes"),
+  trace = FALSE,
+  use_closed_testing = FALSE,
+  use_evalues = FALSE,
+  use_meinshausen = FALSE,
+  closed_testing_method = "simes",
+  evalue_wealth_rule = "kelly",
+  meinshausen_method = "simes",
+  meinshausen_sequential = TRUE
+)
+```
+
+## Arguments
+
+- idat:
+
+  Data at the unit level.
+
+- bdat:
+
+  Data at the block level.
+
+- blockid:
+
+  A character name of the column in idat and bdat indicating the block.
+
+- splitfn:
+
+  A function to split the data into two pieces — using bdat
+
+- pfn:
+
+  A function to produce pvalues — using idat.
+
+- alphafn:
+
+  A function to adjust alpha at each step. Takes one or more p-values
+  plus a stratum or batch indicator. Currently alpha_investing,
+  alpha_saffron, alpha_addis are accepted. All of them wrap the
+  corresponding functions from the `onlineFDR` package.
+
+- local_adj_p_fn:
+
+  Function. A function that adjusts p-values at a node (e.g.
+  `local_simes`).
+
+- simthresh:
+
+  Below which number of total observations should the p-value functions
+  use permutations rather than asymptotic approximations
+
+- sims:
+
+  Number of permutations for permutation-based testing
+
+- maxtest:
+
+  Maximum splits or tests to do. Should probably not be smaller than the
+  number of experimental blocks.
+
+- thealpha:
+
+  Is the error rate for a given test (for cases where alphafn is NULL,
+  or the starting alpha for alphafn not null)
+
+- thew0:
+
+  Is the starting "wealth" of the alpha investing procedure (this is
+  only relevant when alphafn is not null).
+
+- fmla:
+
+  A formula with outcome~treatment assignment \| block where treatment
+  assignment and block must be factors.
+
+- parallel:
+
+  Should the pfn use multicore processing for permutation based testing.
+  Default is no. But could be "snow" or "multicore" following
+  `approximate` in the coin package.
+
+- ncores:
+
+  The number of cores used for parallel processing
+
+- copydts:
+
+  TRUE or FALSE. TRUE if using find_blocks standalone. FALSE if copied
+  objects are being sent to find_blocks from other functions.
+
+- splitby:
+
+  A string indicating which column in bdat contains a variable to guide
+  splitting (for example, a column with block sizes or block harmonic
+  mean weights or a column with a covariate (or a function of
+  covariates) or a column with a factor with levels separated by "."
+  that indicates a pre-specified series of splits (see
+  splitSpecifiedFactor))
+
+- stop_splitby_constant:
+
+  TRUE if the splitting should stop when splitby is constant within a
+  given branch of the tree. FALSE if splitting should continue even when
+  splitby is constant. Default is TRUE. Different combinations of
+  splitby, splitfn, and stop_splitby_constant make more or less sense as
+  described below.
+
+- blocksize:
+
+  A string with the name of the column in bdat contains information
+  about the size of the block (or other determinant of the power of
+  tests within that block, such as harmonic mean weight of the block or
+  variance of the outcome within the block.)
+
+- return_what:
+
+  Character. Return a data.table of blocks "blocks", a data.table of
+  nodes "nodes", or default both c("blocks","nodes").
+
+- trace:
+
+  Logical, FALSE (default) to not print split number. TRUE prints the
+  split number.
+
+- use_closed_testing:
+
+  Logical, whether to apply proper closed testing procedure (Goeman
+  methodology)
+
+- use_evalues:
+
+  Logical, whether to use e-value methodology for sequential testing
+  (Ramdas approach)
+
+- use_meinshausen:
+
+  Logical, whether to apply Meinshausen's hierarchical testing (2008)
+  with sequential rejection
+
+- closed_testing_method:
+
+  Method for combining p-values in intersection tests ("simes",
+  "fisher", "min")
+
+- evalue_wealth_rule:
+
+  Wealth rule for e-value betting ("kelly", "fixed", "adaptive")
+
+- meinshausen_method:
+
+  Method for Meinshausen hierarchical testing ("simes", "fisher",
+  "bonferroni")
+
+- meinshausen_sequential:
+
+  Logical, whether to use Goeman-Solari sequential rejection enhancement
+
+## Value
+
+A data.table containing information about the sequence of splitting and
+testing
+
+## Details
+
+Some notes about the splitting functions and how they relate to
+splitting criteria (splitby) and stopping criteria
+(stop_splitby_constant).
+
+- [`splitCluster()`](splitCluster.md) splits the blocks into groups that
+  are as similar as possible to each other on splitby using the kmeans
+  clustering algorithm (using a combination of
+  [`kmeans()`](https://rdrr.io/r/stats/kmeans.html) or
+  [`ClusterR::KMeans_rcpp()`](https://mlampros.github.io/ClusterR/reference/KMeans_rcpp.html)).
+  This will not work with factor variables. When the splitting criteria
+  is constant, it will return random splits into roughly two equal sized
+  groups of blocks if stop_splitby_constant=FALSE. If
+  stop_splitby_constant=TRUE then `find_blocks()` will stop and return
+  groups of blocks as detected or not.
+
+- [`splitSpecifiedFactor()`](splitSpecifiedFactor.md) will split the
+  blocks into two groups following prespecified pattern encoded into the
+  labels for the levels of the factor. For example, if we imagine three
+  nested levels of splitting (like states, districts, neighborhoods),
+  the factor would have labels like
+  `category1_level1.category2_level1.category3_level1` and where splits
+  will occur from left to right depending on whether there is existing
+  variation at that level. When the factor is constant and
+  stop_splitby_constant=TRUE splitting stops. For this reason we
+  recommend that the right-most label of this factor be the individual
+  blocks themselves—to ensure that testing descends to the block level
+  if it can. When stop_splitby_constant=FALSE, then it uses random
+  splits.
+
+- [`splitSpecifiedFactorMulti()`](splitSpecifiedFactorMulti.md) will
+  split the blocks into two or more groups following prespecified
+  pattern encoded into the labels for the levels of the factor. For
+  example, if we imagine three nested levels of splitting (like states,
+  districts, neighborhoods), the factor would have labels like
+  `category1_level1.category2_level1.category3_level1` and where splits
+  will occur from left to right depending on whether there is existing
+  variation at that level. For this reason we recommend that the
+  right-most label of this factor be the individual blocks themselves—to
+  ensure that testing descends to the block level if it can. When the
+  factor is constant and stop_splitby_constant=TRUE splitting stops.
+  When stop_splitby_constant=FALSE, then it uses random splits.
+
+- [`splitEqualApprox()`](splitEqualApprox.md) splits the sets of blocks
+  into two groups where the sum of the splitby vector is approximately
+  the same in each split. For example, if splitby is number of units in
+  a block, then this splitting function makes two groups of blocks, each
+  group having the same total number of units. This splitting function
+  will work with discrete or factors but will do:
+  `rank_splitby <- rank(splitby)` and then divide the blocks into groups
+  based on taking every other rank. So, for factors variables with few
+  categories that are ordered, this will allocate every other category
+  to one or another group.
+
+- [`splitLOO()`](splitLOO.md) chooses the blocks largest on the splitby
+  vector one at a time so that we have two tests, one focusing on the
+  highest ranked block and one on all of the rest of the blocks (for
+  example, the block with the most units in it versus the rest of the
+  blocks). When the splitby vector has ties, it chooses one block at
+  random among those tied for the first or largest rank. When the split
+  vector has few values, for example, only two values, it will still
+  split assuming that the vector is numeric (so, 1 is ranked higher
+  than 0) and then randomly among ties. If stop_splitby_constant=TRUE,
+  then the algorithm will stop after exhausting the blocks in the higher
+  ranked category (thinking about the binary splitby case). For this
+  reason we advise against using splitLOO with a factor splitby vector
+  with few categories. [`splitLOO()`](splitLOO.md) is best used with a
+  splitby vector like block-size — which could be constant and thus just
+  create a random choice of a single block or could vary and thus focus
+  the testing on the largest/highest ranked blocks.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# Load example data
+data(example_dat, package = "manytestsr")
+library(data.table)
+library(dplyr)
+
+# Create block-level dataset
+example_bdat <- example_dat %>%
+  group_by(blockF) %>%
+  summarize(
+    nb = n(),
+    pb = mean(trt),
+    hwt = (nb / nrow(example_dat)) * (pb * (1 - pb)),
+    place = unique(place),
+    year = unique(year),
+    place_year_block = factor(unique(place_year_block)),
+    .groups = "drop"
+  ) %>%
+  as.data.table()
+
+# Basic usage with cluster-based splitting
+result1 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pOneway,
+  fmla = Y1 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  trace = TRUE
+)
+
+# Access block-level results
+head(result1$bdat)
+
+# Access node-level results
+head(result1$node_dat)
+
+# Example with pre-specified factor splitting
+result2 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF",
+  splitfn = splitSpecifiedFactor,
+  pfn = pIndepDist,
+  fmla = Y2 ~ trtF | blockF,
+  splitby = "place_year_block",
+  parallel = "no"
+)
+
+# Example using Goeman's proper closed testing procedure
+result3 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pIndepDist,
+  fmla = Y1 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  use_closed_testing = TRUE,
+  closed_testing_method = "simes",
+  thealpha = 0.05
+)
+
+# Check closed testing results
+if ("closed_testing_reject" %in% names(result3$node_dat)) {
+  cat("Nodes rejected by closed testing procedure:\n")
+  rejected_nodes <- result3$node_dat[closed_testing_reject == TRUE, nodenum]
+  print(rejected_nodes)
+}
+
+# Example using e-value methodology for sequential testing
+result4 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pOneway,
+  fmla = Y1 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  use_evalues = TRUE,
+  evalue_wealth_rule = "kelly",
+  thealpha = 0.05
+)
+
+# Example using Meinshausen's hierarchical testing with sequential rejection
+result5 <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pIndepDist,
+  fmla = Y2 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  use_meinshausen = TRUE,
+  meinshausen_method = "simes",
+  meinshausen_sequential = TRUE,
+  thealpha = 0.05
+)
+
+# Check Meinshausen testing results
+if ("meinshausen_reject" %in% names(result5$node_dat)) {
+  cat("Nodes rejected by Meinshausen hierarchical procedure:\\n")
+  rejected_meinshausen <- result5$node_dat[meinshausen_reject == TRUE, nodenum]
+  print(rejected_meinshausen)
+}
+
+# Compare traditional FWER control vs closed testing
+traditional_detections <- report_detections(result1$bdat, fwer = TRUE)
+if (exists("result3") && "node_dat" %in% names(result3)) {
+  cat("Traditional FWER detections:", sum(traditional_detections$hit, na.rm = TRUE), "\n")
+  if ("closed_testing_reject" %in% names(result3$node_dat)) {
+    closed_detections <- sum(result3$node_dat$closed_testing_reject, na.rm = TRUE)
+    cat("Closed testing detections:", closed_detections, "\n")
+  }
+}
+} # }
+```

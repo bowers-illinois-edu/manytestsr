@@ -1,0 +1,161 @@
+# Package index
+
+## All functions
+
+- [`adaptive_evalue()`](adaptive_evalue.md) : Adaptive betting strategy
+  for e-values
+- [`adjust_pvalues_level()`](adjust_pvalues_level.md) : Adjust p-values
+  at a given level using sequential rejection
+- [`alpha_addis()`](alpha_addis.md) : Alpha adjustment function: ADDIS
+- [`alpha_investing()`](alpha_investing.md) : Alpha adjustment function:
+  Alpha Investing
+- [`alpha_saffron()`](alpha_saffron.md) : Alpha adjustment function:
+  SAFFRON
+- [`analyze_violation_patterns()`](analyze_violation_patterns.md) :
+  Analyze violation patterns
+- [`apply_closed_testing_principle()`](apply_closed_testing_principle.md)
+  : Apply closed testing principle to determine valid rejections
+- [`apply_consonance_correction()`](apply_consonance_correction.md) :
+  Apply consonance correction to test results
+- [`apply_sequential_rejection_meinshausen()`](apply_sequential_rejection_meinshausen.md)
+  : Apply Sequential Rejection Principle (Goeman-Solari enhancement)
+- [`apply_traditional_meinshausen()`](apply_traditional_meinshausen.md)
+  : Apply Traditional Meinshausen Procedure
+- [`build_hierarchy_structure()`](build_hierarchy_structure.md) : Build
+  hierarchy structure from node data and tracker
+- [`check_consonance_property()`](check_consonance_property.md) :
+  Consonance Property Checking for Hierarchical Testing
+- [`check_iu_consistency()`](check_iu_consistency.md) : Check
+  consistency of intersection-union test results
+- [`check_stopping_rule()`](check_stopping_rule.md) : Check stopping
+  rule
+- [`closed_testing_procedure()`](closed_testing_procedure.md) : Proper
+  Closed Testing Procedure for Hierarchical Hypotheses
+- [`combine_pvalues()`](combine_pvalues.md) : Combine p-values using
+  specified method
+- [`combine_pvalues_traditional()`](combine_pvalues_traditional.md) :
+  Traditional p-value combination (used in original Meinshausen)
+- [`combined_distances_tstat()`](combined_distances_tstat.md) : The
+  combined distances test statistic
+- [`compute_evalue()`](compute_evalue.md) : Compute e-value for a single
+  test
+- [`compute_exact_wilcoxon_bound()`](compute_exact_wilcoxon_bound.md) :
+  Exact Wilcoxon bound computation (simplified)
+- [`compute_sensitivity_bounds()`](compute_sensitivity_bounds.md) :
+  Compute sensitivity bounds for a single block
+- [`compute_sensitivity_summary()`](compute_sensitivity_summary.md) :
+  Compute summary statistics for sensitivity analysis
+- [`compute_t_statistic()`](compute_t_statistic.md) : Compute
+  t-statistic for two-sample test
+- [`design_sensitivity_analysis()`](design_sensitivity_analysis.md) :
+  Design Sensitivity Analysis for Hierarchical Testing
+- [`dists_and_trans()`](dists_and_trans.md) : Outcome distances and
+  transformations
+- [`edisti()`](edisti.md) : Outcome e-distances between treatment arms
+- [`evalue_confidence_sequence()`](evalue_confidence_sequence.md) :
+  E-value based confidence sequences
+- [`evalue_sequential_test()`](evalue_sequential_test.md) : E-value
+  Based Sequential Testing
+- [`evalue_to_pvalue()`](evalue_to_pvalue.md) : Convert e-value to
+  p-value
+- [`example_dat`](example_dat.md) : Example Data for Block-Randomized
+  Experiment
+- [`extract_hierarchy_relationships()`](extract_hierarchy_relationships.md)
+  : Extract hierarchy relationships
+- [`fast_dists_and_trans_hybrid()`](fast_dists_and_trans_hybrid.md) :
+  Fast per-unit distance summaries (scalar outcome)
+- [`fast_dists_and_trans_new_parallel()`](fast_dists_and_trans_new_parallel.md)
+  : Outcome distances and transformations: C++ OpenMP Parallel version
+- [`find_all_descendants()`](find_all_descendants.md) : Find all
+  descendants of a node
+- [`find_blocks()`](find_blocks.md) : Test, Split, Repeat
+- [`find_consonance_violations()`](find_consonance_violations.md) : Find
+  consonance violations
+- [`find_containing_intersections()`](find_containing_intersections.md)
+  : Find all intersection results containing a specific node
+- [`find_leaf_descendants()`](find_leaf_descendants.md) : Find leaf
+  descendants of a node
+- [`find_leaf_nodes()`](find_leaf_nodes.md) : Find leaf nodes in the
+  hierarchy
+- [`fixed_evalue()`](fixed_evalue.md) : Fixed betting strategy for
+  e-values
+- [`generate_all_intersections()`](generate_all_intersections.md) :
+  Generate all possible intersection hypotheses
+- [`generate_corrective_actions()`](generate_corrective_actions.md) :
+  Generate corrective actions for consonance violations
+- [`generate_meinshausen_hierarchy()`](generate_meinshausen_hierarchy.md)
+  : Generate Meinshausen hierarchical clustering for variables
+- [`get_children_nodes()`](get_children_nodes.md) : Get children nodes
+  from tracker
+- [`get_descendant_nodes()`](get_descendant_nodes.md) : Get all
+  descendant nodes for a given node
+- [`hodges_lehmann_sensitivity_bounds()`](hodges_lehmann_sensitivity_bounds.md)
+  : Hodges-Lehmann estimator sensitivity bounds
+- [`integrate_meinshausen_find_blocks()`](integrate_meinshausen_find_blocks.md)
+  : Integration function for find_blocks with Meinshausen testing
+- [`intersection_union_tests()`](intersection_union_tests.md) :
+  Intersection-Union Tests for Hierarchical Hypotheses
+- [`kelly_evalue()`](kelly_evalue.md) : Kelly optimal betting for
+  e-values
+- [`local_bh_all_ps()`](local_bh_all_ps.md) : BH local adjustment
+- [`local_hommel_all_ps()`](local_hommel_all_ps.md) : Compute local
+  Hommel p-value for a Vector of Child p-values
+- [`local_min_p()`](local_min_p.md) : Unadjusted local minimal p-value
+- [`local_simes()`](local_simes.md) : Compute local Simes p-value for a
+  Vector of Child p-values
+- [`local_unadj_all_ps()`](local_unadj_all_ps.md) : Unadjusted local
+  step (pass-through)
+- [`make_results_ggraph()`](make_results_ggraph.md) : Make a plot of the
+  nodes
+- [`make_results_tree()`](make_results_tree.md) : Make a node-level
+  dataset from a block-level dataset
+- [`meinshausen_hierarchical_test()`](meinshausen_hierarchical_test.md)
+  : Meinshausen's Hierarchical Testing with Sequential Rejection
+  Principle
+- [`nodeidfn()`](nodeidfn.md) : Use hashing to make a node id
+  (DEPRECATED)
+- [`pCombCauchyDist()`](pCombCauchyDist.md) : P-value function: Cauchy
+  Combined Indepence Test
+- [`pIndepDist()`](pIndepDist.md) : P-value function: Independence
+  Treatment Distance Test
+- [`pOneway()`](pOneway.md) : P-value function: T-test
+- [`pTestTwice()`](pTestTwice.md) : P-value function: Testing twice
+- [`pWilcox()`](pWilcox.md) : P-value function: Wilcox Test
+- [`parse_formula()`](parse_formula.md) : Parse formula to extract
+  components
+- [`parse_formula_components()`](parse_formula_components.md) : Parse
+  formula components
+- [`plot_design_sensitivity()`](plot_design_sensitivity.md) : Plot
+  sensitivity analysis results
+- [`plot_intersection_union_results()`](plot_intersection_union_results.md)
+  : Visualize intersection-union test results
+- [`report_detections()`](report_detections.md) : Return detected blocks
+  plus info
+- [`sign_test_sensitivity_bounds()`](sign_test_sensitivity_bounds.md) :
+  Sign test sensitivity bounds
+- [`splitCluster()`](splitCluster.md) : Splitting function: K-Means
+  Clustering
+- [`splitEqualApprox()`](splitEqualApprox.md) : Splitting function:
+  Approx Equal Splits
+- [`splitLOO()`](splitLOO.md) : Splitting function: Leave One Out
+- [`splitSpecified()`](splitSpecified.md) : A set of pre-specified
+  splits using a data.table object (Deprecate)
+- [`splitSpecifiedFactor()`](splitSpecifiedFactor.md) : A set of
+  pre-specified splits
+- [`splitSpecifiedFactorMulti()`](splitSpecifiedFactorMulti.md) : A set
+  of pre-specified splits
+- [`test_children_recursive_meinshausen()`](test_children_recursive_meinshausen.md)
+  : Recursive testing of children in Meinshausen procedure
+- [`test_intersection_null()`](test_intersection_null.md) : Test
+  intersection null hypothesis
+- [`test_intersections()`](test_intersections.md) : Test intersection
+  hypotheses
+- [`test_union_alternative()`](test_union_alternative.md) : Test union
+  alternative hypothesis
+- [`update_wealth()`](update_wealth.md) : Update wealth using e-value
+- [`validate_fwer_control()`](validate_fwer_control.md) : Validate
+  closed testing procedure maintains FWER control
+- [`validate_logical_hierarchy()`](validate_logical_hierarchy.md) :
+  Validate logical hierarchy structure
+- [`wilcoxon_sensitivity_bounds()`](wilcoxon_sensitivity_bounds.md) :
+  Wilcoxon test sensitivity bounds

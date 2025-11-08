@@ -1,0 +1,131 @@
+# Intersection-Union Tests for Hierarchical Hypotheses
+
+Implementation of proper intersection-union testing for hierarchical
+structures. This ensures that composite null hypotheses are tested
+appropriately and that the hierarchical structure is respected in
+hypothesis testing. Particularly useful for validating the logical
+structure of find_blocks() results.
+
+## Usage
+
+``` r
+intersection_union_tests(
+  node_dat,
+  tracker,
+  alpha = 0.05,
+  union_method = "max",
+  intersection_method = "simes"
+)
+```
+
+## Arguments
+
+- node_dat:
+
+  Node data with p-values and hierarchy
+
+- tracker:
+
+  Node tracker with tree structure
+
+- alpha:
+
+  Type I error rate
+
+- union_method:
+
+  Method for testing union alternatives ("max", "simes", "fisher")
+
+- intersection_method:
+
+  Method for testing intersection nulls ("min", "simes", "fisher")
+
+## Value
+
+Updated node data with intersection-union test results
+
+## References
+
+Berger, R. L. (1982). Multiparameter hypothesis testing and acceptance
+sampling. Technometrics, 24(4), 295-300.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# Apply intersection-union tests to find_blocks results
+# Requires dplyr package
+data(example_dat, package = "manytestsr")
+library(data.table)
+library(dplyr)
+
+# Prepare data
+idat <- as.data.table(example_dat)
+bdat <- idat %>%
+  group_by(blockF) %>%
+  summarize(
+    nb = n(),
+    pb = mean(trt),
+    hwt = (nb / nrow(idat)) * (pb * (1 - pb)),
+    .groups = "drop"
+  ) %>%
+  as.data.table()
+
+# Run find_blocks to get hierarchical structure
+results <- find_blocks(
+  idat = idat,
+  bdat = bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pIndepDist,
+  fmla = Y1 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  maxtest = 15,
+  trace = FALSE
+)
+
+# Apply intersection-union tests to validate hypothesis structure
+iu_results <- intersection_union_tests(
+  node_dat = results$node_dat,
+  tracker = results$node_tracker, # Assuming tracker is available
+  alpha = 0.05,
+  union_method = "simes",
+  intersection_method = "simes"
+)
+
+# Examine intersection-union test results
+if ("iu_p_intersection" %in% names(iu_results$node_dat)) {
+  iu_summary <- iu_results$node_dat[, .(
+    nodenum,
+    original_p = p,
+    intersection_p = iu_p_intersection,
+    union_p = iu_p_union,
+    reject_intersection = iu_reject_intersection,
+    reject_union = iu_reject_union
+  )]
+
+  cat("Intersection-Union Test Results:\n")
+  print(head(iu_summary))
+
+  # Count rejections by method
+  cat("Intersection null rejections:", sum(iu_summary$reject_intersection, na.rm = TRUE), "\n")
+  cat("Union alternative rejections:", sum(iu_summary$reject_union, na.rm = TRUE), "\n")
+}
+
+# Check consistency of intersection-union results
+consistency_check <- check_iu_consistency(iu_results)
+if (consistency_check$is_consistent) {
+  cat("Intersection-union tests are logically consistent.\n")
+} else {
+  cat("Found inconsistencies:\n")
+  print(consistency_check$inconsistencies)
+}
+
+# Visualize intersection-union results
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  iu_plot <- plot_intersection_union_results(iu_results)
+  print(iu_plot)
+}
+} # }
+```

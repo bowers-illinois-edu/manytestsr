@@ -1,0 +1,142 @@
+# Consonance Property Checking for Hierarchical Testing
+
+Implementation of consonance property validation for hierarchical
+multiple testing procedures. The consonance property ensures logical
+consistency: if a hypothesis is rejected, all hypotheses that logically
+imply it should also be rejectable. Essential for validating
+find_blocks() results and ensuring logical coherence.
+
+## Usage
+
+``` r
+check_consonance_property(
+  node_dat,
+  tracker,
+  rejection_column = "testable",
+  alpha = 0.05
+)
+```
+
+## Arguments
+
+- node_dat:
+
+  Node data with test results
+
+- tracker:
+
+  Node tracker with hierarchy structure
+
+- rejection_column:
+
+  Column name containing rejection decisions
+
+- alpha:
+
+  Type I error rate used for testing
+
+## Value
+
+List with consonance check results and recommendations
+
+## References
+
+Goeman, J. J., & Solari, A. (2011). Multiple testing for exploratory
+research. Statistical science, 26(4), 584-597.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# Check consonance of find_blocks results
+# Requires dplyr package
+data(example_dat, package = "manytestsr")
+library(data.table)
+library(dplyr)
+
+# Prepare data
+idat <- as.data.table(example_dat)
+bdat <- idat %>%
+  group_by(blockF) %>%
+  summarize(
+    nb = n(),
+    pb = mean(trt),
+    hwt = (nb / nrow(idat)) * (pb * (1 - pb)),
+    .groups = "drop"
+  ) %>%
+  as.data.table()
+
+# Run find_blocks
+results <- find_blocks(
+  idat = idat,
+  bdat = bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pOneway,
+  fmla = Y1 ~ trtF | blockF,
+  splitby = "hwt",
+  parallel = "no",
+  maxtest = 20,
+  trace = FALSE
+)
+
+# Check consonance of the testable decisions
+consonance_check <- check_consonance_property(
+  node_dat = results$node_dat,
+  tracker = results$node_tracker, # Assuming tracker is available
+  rejection_column = "testable",
+  alpha = 0.05
+)
+
+# Examine consonance results
+if (consonance_check$is_consonant) {
+  cat("The hierarchical testing procedure is consonant.\n")
+} else {
+  cat("Found consonance violations:\n")
+  for (i in seq_along(consonance_check$violations)) {
+    violation <- consonance_check$violations[[i]]
+    cat("-", violation$violation_description, "\n")
+  }
+
+  # Print violation analysis
+  analysis <- consonance_check$violation_analysis
+  cat("\nViolation Analysis:\n")
+  cat("Total violations:", analysis$total_violations, "\n")
+  cat("Severity level:", analysis$severity, "\n")
+  cat("Affected nodes:", paste(analysis$affected_nodes, collapse = ", "), "\n")
+}
+
+# Apply consonance correction if needed
+if (!consonance_check$is_consonant) {
+  cat("\nApplying consonance correction...\n")
+
+  corrected_results <- apply_consonance_correction(
+    node_dat = results$node_dat,
+    tracker = results$node_tracker,
+    rejection_column = "testable",
+    correction_method = "propagate_up"
+  )
+
+  # Check if correction worked
+  corrected_check <- check_consonance_property(
+    corrected_results,
+    results$node_tracker,
+    "testable_consonant"
+  )
+
+  if (corrected_check$is_consonant) {
+    cat("Consonance correction successful.\n")
+  } else {
+    cat("Additional corrections may be needed.\n")
+  }
+}
+
+# Compare original and corrected rejection counts
+original_rejections <- sum(results$node_dat$testable, na.rm = TRUE)
+if (exists("corrected_results")) {
+  corrected_rejections <- sum(corrected_results$testable_consonant, na.rm = TRUE)
+  cat("Original rejections:", original_rejections, "\n")
+  cat("Corrected rejections:", corrected_rejections, "\n")
+}
+} # }
+```

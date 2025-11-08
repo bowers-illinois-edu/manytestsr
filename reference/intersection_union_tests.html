@@ -133,7 +133,7 @@ Technometrics, 24(4), 295-300.</p>
 <span class="r-in"><span><span class="co"># Apply intersection-union tests to validate hypothesis structure</span></span></span>
 <span class="r-in"><span><span class="va">iu_results</span> <span class="op">&lt;-</span> <span class="fu">intersection_union_tests</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  node_dat <span class="op">=</span> <span class="va">results</span><span class="op">$</span><span class="va">node_dat</span>,</span></span>
-<span class="r-in"><span>  tracker <span class="op">=</span> <span class="va">results</span><span class="op">$</span><span class="va">node_tracker</span>,  <span class="co"># Assuming tracker is available</span></span></span>
+<span class="r-in"><span>  tracker <span class="op">=</span> <span class="va">results</span><span class="op">$</span><span class="va">node_tracker</span>, <span class="co"># Assuming tracker is available</span></span></span>
 <span class="r-in"><span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span></span>
 <span class="r-in"><span>  union_method <span class="op">=</span> <span class="st">"simes"</span>,</span></span>
 <span class="r-in"><span>  intersection_method <span class="op">=</span> <span class="st">"simes"</span></span></span>
@@ -142,17 +142,17 @@ Technometrics, 24(4), 295-300.</p>
 <span class="r-in"><span><span class="co"># Examine intersection-union test results</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="st">"iu_p_intersection"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">iu_results</span><span class="op">$</span><span class="va">node_dat</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">iu_summary</span> <span class="op">&lt;-</span> <span class="va">iu_results</span><span class="op">$</span><span class="va">node_dat</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="va">nodenum</span>, </span></span>
+<span class="r-in"><span>    <span class="va">nodenum</span>,</span></span>
 <span class="r-in"><span>    original_p <span class="op">=</span> <span class="va">p</span>,</span></span>
 <span class="r-in"><span>    intersection_p <span class="op">=</span> <span class="va">iu_p_intersection</span>,</span></span>
 <span class="r-in"><span>    union_p <span class="op">=</span> <span class="va">iu_p_union</span>,</span></span>
 <span class="r-in"><span>    reject_intersection <span class="op">=</span> <span class="va">iu_reject_intersection</span>,</span></span>
 <span class="r-in"><span>    reject_union <span class="op">=</span> <span class="va">iu_reject_union</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-in"><span>  </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Intersection-Union Test Results:\n"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">iu_summary</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Count rejections by method</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Intersection null rejections:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">iu_summary</span><span class="op">$</span><span class="va">reject_intersection</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Union alternative rejections:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">iu_summary</span><span class="op">$</span><span class="va">reject_union</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></span>
@@ -184,7 +184,7 @@ Technometrics, 24(4), 295-300.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>
