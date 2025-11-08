@@ -53,7 +53,9 @@ fast_dists_and_trans_hybrid(x)
 ## compare to explicit distance matrix (slow / big):
 dx <- abs(outer(x, x, "-"))
 mean_dist_ref <- colSums(dx) / (length(x) - 1)
-stopifnot(all.equal(fast_dists_and_trans_hybrid(x)$mean_dist,
-                    mean_dist_ref))
+stopifnot(all.equal(
+  fast_dists_and_trans_hybrid(x)$mean_dist,
+  mean_dist_ref
+))
 
 }

@@ -172,24 +172,24 @@ test_that("The local adjustment approaches produce sensible results", {
 
   head(res_half_tree) %>% select(-blocks)
   head(res_half_hommel_tree) %>% select(-blocks)
-  
+
   # Different adjustment methods may create different tree structures
   # Test basic properties instead of exact node-by-node equality
-  
+
   # All methods should create valid tree structures with at least a root node
   expect_true(nrow(res_half_tree) > 0)
   expect_true(nrow(res_half_hommel_tree) > 0)
   expect_true(nrow(res_half_simes_tree) > 0)
   expect_true(nrow(res_half_bh_tree) > 0)
   expect_true(nrow(res_half_minp_tree) > 0)
-  
+
   # All should have a root node at depth 1
   expect_true(1 %in% res_half_tree$depth)
   expect_true(1 %in% res_half_hommel_tree$depth)
   expect_true(1 %in% res_half_simes_tree$depth)
   expect_true(1 %in% res_half_bh_tree$depth)
   expect_true(1 %in% res_half_minp_tree$depth)
-  
+
   # Node numbers should be positive integers
   expect_true(all(res_half_tree$node_number > 0))
   expect_true(all(res_half_hommel_tree$node_number > 0))
@@ -220,11 +220,11 @@ test_that("The local adjustment approaches produce sensible results", {
   # Only test where both p-values are available
   valid_hommel <- !is.na(test_local_adj_ps$p_unadj) & !is.na(test_local_adj_ps$p_hommel)
   valid_bh <- !is.na(test_local_adj_ps$p_unadj) & !is.na(test_local_adj_ps$p_bh)
-  
-  if(sum(valid_hommel) > 0) {
+
+  if (sum(valid_hommel) > 0) {
     expect_true(all(test_local_adj_ps[valid_hommel, p_unadj <= p_hommel]))
   }
-  if(sum(valid_bh) > 0) {
+  if (sum(valid_bh) > 0) {
     expect_true(all(test_local_adj_ps[valid_bh, p_unadj <= p_bh]))
   }
 
@@ -340,7 +340,7 @@ test_that("We have strong control of the FWER in some cases", {
   ## The tau_size and prop_blocks_0 and block size below should produce very high
   ## power for each block a 1 sd difference
   # power.t.test(power=.8,sd=1,delta=1,sig.level=.05)
- skip_on_ci()
+  skip_on_ci()
   skip_on_cran()
   skip()
 
@@ -395,17 +395,21 @@ test_that("We have strong control of the FWER in some cases", {
       "node_power", "leaf_power", "bot_leaf_power"
     ))
 
- fwer_meas <- test_measures %>% dplyr::filter(grepl("prop",stat)) %>%
-  select(one_of(p_val_funs)) %>% unlist()
+  fwer_meas <- test_measures %>%
+    dplyr::filter(grepl("prop", stat)) %>%
+    select(one_of(p_val_funs)) %>%
+    unlist()
 
-  expect_true(all(fwer_meas <= (.05+sim_err)))
+  expect_true(all(fwer_meas <= (.05 + sim_err)))
 
- power_meas <- test_measures %>% filter(stat %in% c("leaf_power","node_power")) %>%
-  select(one_of(p_val_funs)) %>% unlist()
+  power_meas <- test_measures %>%
+    filter(stat %in% c("leaf_power", "node_power")) %>%
+    select(one_of(p_val_funs)) %>%
+    unlist()
 
- expect_true(all(power_meas > .05))
+  expect_true(all(power_meas > .05))
 
-## these next lines are just to catch errors in running the code
+  ## these next lines are just to catch errors in running the code
   set.seed(12345)
   p_half_res <- padj_test_fn(
     idat = idt,
@@ -513,7 +517,7 @@ testing_fn <- function(afn, sfn, local_adj, sby, fmla = Ytauv2 ~ ZF | bF, idat =
   theres <- find_blocks(
     idat = idat, bdat = bdat, blockid = "bF", splitfn = get(sfn),
     pfn = pTestTwice, alphafn = theafn, local_adj_p_fn = local_adj, thealpha = 0.05, thew0 = .05 - .001,
-    fmla = fmla,simthresh=1,
+    fmla = fmla, simthresh = 1,
     copydts = TRUE, splitby = sby, stop_splitby_constant = TRUE, parallel = "multicore", ncores = 2
   )
   setkey(theres$bdat, bF)
@@ -706,7 +710,7 @@ test_that("alphafns work across splitters for no effects", {
   tau_null <- mapply(
     FUN = function(afn = afn, sfn = sfn, sby = sby) {
       message(paste(afn, sfn, sby, collapse = ","))
-      testing_fn(afn = afn, sfn = sfn, sby = sby, idat = idat3, bdat = bdat4, fmla = Ynull ~ ZF | bF,local_adj="local_unadj_all_ps")
+      testing_fn(afn = afn, sfn = sfn, sby = sby, idat = idat3, bdat = bdat4, fmla = Ynull ~ ZF | bF, local_adj = "local_unadj_all_ps")
     },
     afn = alpha_and_splits$afn,
     sfn = alpha_and_splits$sfn,
@@ -725,7 +729,7 @@ test_that("alphafns work across splitters for no effects", {
   expect(all(anydetected == 0), TRUE)
 })
 
-##test_that("alphafns work across splitters for large and homogenous effects", {
+## test_that("alphafns work across splitters for large and homogenous effects", {
 ##  ## All blocks same large effect. Both approaches should detect effects in basically all blocks (blocks only differ in size)
 ##  tau_homog <- mapply(
 ##    FUN = function(afn = afn, sfn = sfn, sby = sby) {
@@ -779,10 +783,10 @@ test_that("alphafns work across splitters for no effects", {
 ##  #    ggsave(g_homog[[i]], file = paste0("tau_homog_g",i,".pdf"),
 ##  #           bg = "transparent", width = 14, height = 7)
 ##  # }
-##})
+## })
 ##
 ##
-##test_that("alphafns work across splitters for individually heteogeneous effects and increase with block size. Also some completely null blocks.", {
+## test_that("alphafns work across splitters for individually heteogeneous effects and increase with block size. Also some completely null blocks.", {
 ##  ################################################################################
 ##  ## Some blocks have no effect at all in norm_inc
 ##  tau_norm_inc <- mapply(
@@ -848,7 +852,7 @@ test_that("alphafns work across splitters for no effects", {
 ##  #     bg = "transparent", width = 14, height = 7
 ##  #   )
 ##  # }
-##})
+## })
 ##
 ## TODO this next not working. Maybe intuitions are wrong?
 ## test_that("alphafns work across splitters for individually heteogeneous effects

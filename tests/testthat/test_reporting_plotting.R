@@ -37,51 +37,51 @@ example_bdat <- example_dat %>%
   as.data.table()
 example_bdat
 
-example_dat[,nb:=.N,by=blockF]
+example_dat[, nb := .N, by = blockF]
 table(example_dat$nb)
 
-##dists1 <- example_dat[,dists_and_trans(Y1),by=blockF]
-##dists2 <- example_dat[,fast_dists_and_trans_hybrid(Y1),by=blockF]
-##expect_equal(dists1,dists2)
+## dists1 <- example_dat[,dists_and_trans(Y1),by=blockF]
+## dists2 <- example_dat[,fast_dists_and_trans_hybrid(Y1),by=blockF]
+## expect_equal(dists1,dists2)
 ##
-##uniq_ys <- example_dat %>% group_by(blockF) %>% 
-##  summarize(n_uniq_y1=length(unique(Y1))) %>% 
+## uniq_ys <- example_dat %>% group_by(blockF) %>%
+##  summarize(n_uniq_y1=length(unique(Y1))) %>%
 ##  arrange(n_uniq_y1) %>% as.data.table()
 ##
-##dists <- cbind(d1=dists1,d2=dists2,example_dat[,.(Y1,nb)])
-##all.equal(dists$d1.blockF,dists$d2.blockF)
-##dists[,same_mean_rank_dist:=(d1.mean_rank_dist-d2.mean_rank_dist),by=d1.blockF]
+## dists <- cbind(d1=dists1,d2=dists2,example_dat[,.(Y1,nb)])
+## all.equal(dists$d1.blockF,dists$d2.blockF)
+## dists[,same_mean_rank_dist:=(d1.mean_rank_dist-d2.mean_rank_dist),by=d1.blockF]
 ##
-##dists %>%
-##  filter(d1.blockF %in% c("B092","B107","B108","B090")) %>% 
+## dists %>%
+##  filter(d1.blockF %in% c("B092","B107","B108","B090")) %>%
 ##  select(Y1,nb,d1.rankY,d1.blockF,d1.mean_dist,d1.mean_rank_dist,d2.mean_rank_dist)
 ##
-##summary(dists$same_mean_rank_dist,exclude=c())
-##table(dists$same_mean_rank_dist==0)
-##good_results <- dists[same_mean_rank_dist==0,.(d1.blockF,d1.rankY,Y1,nb,same_mean_rank_dist)]
-##summary(good_results$nb)
-##summary(good_results$d1.rankY)
+## summary(dists$same_mean_rank_dist,exclude=c())
+## table(dists$same_mean_rank_dist==0)
+## good_results <- dists[same_mean_rank_dist==0,.(d1.blockF,d1.rankY,Y1,nb,same_mean_rank_dist)]
+## summary(good_results$nb)
+## summary(good_results$d1.rankY)
 ##
-##bad_results <- dists[same_mean_rank_dist!=0,.(d1.blockF,d1.rankY,Y1,nb,same_mean_rank_dist)]
-##summary(bad_results$nb)
-##summary(bad_results$d1.rankY)
-##
-##
-##dists1 <- dists_and_trans(example_dat[nb>2,Y1])
-##dists2 <- fast_dists_and_trans_hybrid(example_dat[nb>2,Y1])
-##expect_equal(dists1,dists2)
+## bad_results <- dists[same_mean_rank_dist!=0,.(d1.blockF,d1.rankY,Y1,nb,same_mean_rank_dist)]
+## summary(bad_results$nb)
+## summary(bad_results$d1.rankY)
 ##
 ##
-##example_dat[,rank_Y1_v1:=Rfast::Rank(Y1),by=blockF]
-##example_dat[,rank_Y1_v2:=avg_rank_arma(Y1),by=blockF]
+## dists1 <- dists_and_trans(example_dat[nb>2,Y1])
+## dists2 <- fast_dists_and_trans_hybrid(example_dat[nb>2,Y1])
+## expect_equal(dists1,dists2)
 ##
-##all.equal(example_dat$rank_Y1_v1, example_dat$rank_Y1_v2)
 ##
-##table(example_bdat$nb)
+## example_dat[,rank_Y1_v1:=Rfast::Rank(Y1),by=blockF]
+## example_dat[,rank_Y1_v2:=avg_rank_arma(Y1),by=blockF]
+##
+## all.equal(example_dat$rank_Y1_v1, example_dat$rank_Y1_v2)
+##
+## table(example_bdat$nb)
 ##
 ## Varying block sizes, some variation in proportion in treatment within block
 ## Blocks created by place and year
-pIndepDist(dat = example_dat, fmla = Y1 ~ trtF | blockF, distfn=fast_dists_and_trans_new)
+pIndepDist(dat = example_dat, fmla = Y1 ~ trtF | blockF, distfn = fast_dists_and_trans_new)
 pIndepDist(dat = example_dat, fmla = Y1 ~ trtF | blockF, distfn = fast_dists_and_trans_hybrid)
 pIndepDist(dat = example_dat, fmla = Y1 ~ trtF | blockF, distfn = dists_and_trans)
 pIndepDist(dat = example_dat, fmla = Y1 ~ trtF | blockF)
@@ -120,7 +120,7 @@ example_nodes_spec_fwer <- example_tree_spec_fwer$graph %>%
 ## In this case we want to know the place and year and block info for nodes below the first overall test.
 ## That is, we learn (1) that we can reject the null of no effects overall
 ## (and that we have 5 splits from this first test)
-##example_nodes_spec_fwer %>%
+## example_nodes_spec_fwer %>%
 ##  select(nodenum, name, parent_name, p, a, depth, out_degree, num_blocks, leaf_hit, group_hit, hit)
 #### See just two nodes where we can reject the null: (node 1 --- the overall node, and node 6)
 example_tree_spec_fwer$graph %>%
@@ -194,20 +194,20 @@ node_info_parent <- example_hits_spec_fdr[, .(
 node_info <- rbind(node_info_parent, node_info_leaves)
 stopifnot(length(unique(node_info$nodenum)) == nrow(node_info))
 
-#example_nodes_spec_fdr2 <- merge(example_nodes_spec_fdr, node_info, by = "node_number", all = TRUE)
-#example_nodes_spec_fdr2$nodesize[example_nodes_spec_fdr2$nodenum == "1"] <- nrow(example_dat)
-#example_nodes_spec_fdr2 %>%
+# example_nodes_spec_fdr2 <- merge(example_nodes_spec_fdr, node_info, by = "node_number", all = TRUE)
+# example_nodes_spec_fdr2$nodesize[example_nodes_spec_fdr2$nodenum == "1"] <- nrow(example_dat)
+# example_nodes_spec_fdr2 %>%
 #  select(nodenum, name, parent_name, p, a, depth, out_degree, nodesize, places) %>%
 #  arrange(depth)
 #
 #
-#with(
+# with(
 #  example_nodes_spec_fdr2,
 #  alpha_saffron(pval = p, batch = depth, nodesize = nodesize, thealpha = .1, thew0 = .1 - .001)
-#)
+# )
 #
 
-#ggraph(example_tree_spec_fdr$graph) +
+# ggraph(example_tree_spec_fdr$graph) +
 #  geom_edge_diagonal() +
 #  geom_node_label(aes(label = round(p, 3), colour = hit),
 #    repel = FALSE, show.legend = FALSE, label.r = unit(0.5, "lines"),

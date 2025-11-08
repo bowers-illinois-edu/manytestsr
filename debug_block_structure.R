@@ -36,7 +36,7 @@ p_cols <- grep("^p[0-9]", names(bdat_orig), value = TRUE)
 orig_p_summary <- bdat_orig[, lapply(.SD, function(x) length(unique(x[!is.na(x)]))), .SDcols = p_cols]
 print(orig_p_summary)
 
-cat("\nHommel block data p-values:\n") 
+cat("\nHommel block data p-values:\n")
 hommel_p_summary <- bdat_hommel[, lapply(.SD, function(x) length(unique(x[!is.na(x)]))), .SDcols = p_cols]
 print(hommel_p_summary)
 
@@ -57,7 +57,7 @@ cat("\nMissing p2 values in Hommel:\n")
 missing_p2 <- setdiff(orig_p2_unique, hommel_p2_unique)
 print(missing_p2)
 
-cat("\nExtra p2 values in Hommel:\n") 
+cat("\nExtra p2 values in Hommel:\n")
 extra_p2 <- setdiff(hommel_p2_unique, orig_p2_unique)
 print(extra_p2)
 

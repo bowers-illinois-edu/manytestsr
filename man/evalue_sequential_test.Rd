@@ -65,7 +65,7 @@ results_evalues <- find_blocks(
   splitby = "hwt",
   parallel = "no",
   use_evalues = TRUE,
-  evalue_wealth_rule = "kelly",  # Ramdas recommends Kelly betting
+  evalue_wealth_rule = "kelly", # Ramdas recommends Kelly betting
   thealpha = 0.05,
   maxtest = 15
 )
@@ -89,13 +89,17 @@ cat("Stopped early:", evalue_results$stopped_early, "\n")
 # Plot wealth accumulation over time
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   library(ggplot2)
-  wealth_plot <- ggplot(evalue_results$results, 
-                       aes(x = seq_along(block_id), y = wealth)) +
+  wealth_plot <- ggplot(
+    evalue_results$results,
+    aes(x = seq_along(block_id), y = wealth)
+  ) +
     geom_line() +
-    geom_hline(yintercept = 1/0.05, linetype = "dashed", color = "red") +
-    labs(x = "Sequential Test Number", y = "Wealth", 
-         title = "E-value Wealth Accumulation",
-         subtitle = "Red line shows rejection threshold (1/alpha)")
+    geom_hline(yintercept = 1 / 0.05, linetype = "dashed", color = "red") +
+    labs(
+      x = "Sequential Test Number", y = "Wealth",
+      title = "E-value Wealth Accumulation",
+      subtitle = "Red line shows rejection threshold (1/alpha)"
+    )
   print(wealth_plot)
 }
 

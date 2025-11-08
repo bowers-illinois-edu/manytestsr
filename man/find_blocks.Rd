@@ -198,11 +198,11 @@ example_bdat <- example_dat \%>\%
     .groups = "drop"
   ) \%>\%
   as.data.table()
-  
+
 # Basic usage with cluster-based splitting
 result1 <- find_blocks(
   idat = example_dat,
-  bdat = example_bdat, 
+  bdat = example_bdat,
   blockid = "blockF",
   splitfn = splitCluster,
   pfn = pOneway,
@@ -215,14 +215,14 @@ result1 <- find_blocks(
 # Access block-level results
 head(result1$bdat)
 
-# Access node-level results  
+# Access node-level results
 head(result1$node_dat)
 
 # Example with pre-specified factor splitting
 result2 <- find_blocks(
   idat = example_dat,
   bdat = example_bdat,
-  blockid = "blockF", 
+  blockid = "blockF",
   splitfn = splitSpecifiedFactor,
   pfn = pIndepDist,
   fmla = Y2 ~ trtF | blockF,

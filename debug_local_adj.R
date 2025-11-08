@@ -32,7 +32,7 @@ cat("Original (no adjustment) nodes:\n")
 orig_nodes <- res_half$node_dat
 print(orig_nodes[order(depth, nodenum), .(nodenum, parent, depth, p)])
 
-cat("\nHommel adjusted nodes:\n") 
+cat("\nHommel adjusted nodes:\n")
 hommel_nodes <- res_half_hommel$node_dat
 print(hommel_nodes[order(depth, nodenum), .(nodenum, parent, depth, p)])
 
@@ -51,7 +51,7 @@ cat("Hommel reconstructed:", nrow(res_half_hommel_tree$nodes), "nodes\n")
 cat("\nReconstructed nodes - Original:\n")
 print(res_half_tree$nodes[order(depth, name), .(name, parent_name, depth, p)])
 
-cat("\nReconstructed nodes - Hommel:\n") 
+cat("\nReconstructed nodes - Hommel:\n")
 print(res_half_hommel_tree$nodes[order(depth, name), .(name, parent_name, depth, p)])
 
 # Compare specific columns that are failing in the tests
@@ -64,6 +64,6 @@ cat("Hommel node_number length:", length(hommel_node_numbers), "\n")
 
 if (length(orig_node_numbers) != length(hommel_node_numbers)) {
   cat("Different lengths detected!\n")
-  cat("Original node_numbers:", paste(orig_node_numbers, collapse=", "), "\n")
-  cat("Hommel node_numbers:", paste(hommel_node_numbers, collapse=", "), "\n")
+  cat("Original node_numbers:", paste(orig_node_numbers, collapse = ", "), "\n")
+  cat("Hommel node_numbers:", paste(hommel_node_numbers, collapse = ", "), "\n")
 }

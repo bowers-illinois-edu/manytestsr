@@ -11,8 +11,8 @@
 #' @references
 #' Goeman, J. J., & Solari, A. (2011). Multiple testing for exploratory research.
 #' Statistical science, 26(4), 584-597.
-#' 
-#' Goeman, J. J., & Finos, L. (2012). The inheritance procedure: multiple testing of 
+#'
+#' Goeman, J. J., & Finos, L. (2012). The inheritance procedure: multiple testing of
 #' tree-structured hypotheses. Statistical Applications in Genetics and Molecular Biology, 11(1).
 #' @examples
 #' \dontrun{
@@ -20,7 +20,7 @@
 #' data(example_dat, package = "manytestsr")
 #' library(data.table)
 #' library(dplyr)
-#' 
+#'
 #' # Prepare data
 #' idat <- as.data.table(example_dat)
 #' bdat <- idat %>%
@@ -32,7 +32,7 @@
 #'     .groups = "drop"
 #'   ) %>%
 #'   as.data.table()
-#' 
+#'
 #' # Run find_blocks with closed testing procedure
 #' results_closed <- find_blocks(
 #'   idat = idat,
@@ -44,16 +44,16 @@
 #'   splitby = "hwt",
 #'   parallel = "no",
 #'   use_closed_testing = TRUE,
-#'   closed_testing_method = "simes",  # Goeman & Solari recommend Simes
+#'   closed_testing_method = "simes", # Goeman & Solari recommend Simes
 #'   thealpha = 0.05,
 #'   maxtest = 20
 #' )
-#' 
+#'
 #' # Compare with traditional approach
 #' results_traditional <- find_blocks(
 #'   idat = idat,
 #'   bdat = bdat,
-#'   blockid = "blockF", 
+#'   blockid = "blockF",
 #'   splitfn = splitCluster,
 #'   pfn = pIndepDist,
 #'   fmla = Y1 ~ trtF | blockF,
@@ -63,53 +63,52 @@
 #'   thealpha = 0.05,
 #'   maxtest = 20
 #' )
-#' 
+#'
 #' # Examine closed testing results
 #' if ("closed_testing_reject" %in% names(results_closed$node_dat)) {
 #'   closed_rejections <- results_closed$node_dat[
-#'     closed_testing_reject == TRUE, 
+#'     closed_testing_reject == TRUE,
 #'     .(nodenum, p, closed_testing_reject)
 #'   ]
 #'   cat("Closed testing rejections:\n")
 #'   print(closed_rejections)
 #' }
-#' 
+#'
 #' # Traditional rejections for comparison
 #' traditional_detections <- report_detections(results_traditional$bdat, fwer = TRUE)
 #' cat("Traditional FWER rejections:", sum(traditional_detections$hit, na.rm = TRUE), "\n")
 #' }
 #' @export
 closed_testing_procedure <- function(node_dat, tracker, alpha = 0.05, method = "simes") {
-  
   # Parameter validation
   if (!is.numeric(alpha) || length(alpha) != 1 || alpha <= 0 || alpha >= 1) {
     stop("alpha must be a number between 0 and 1")
   }
-  
+
   if (!method %in% c("simes", "fisher", "min")) {
     warning("Unknown method '", method, "'. Using 'simes' instead.")
     method <- "simes"
   }
-  
+
   if (nrow(node_dat) == 0) {
     node_dat[, closed_testing_reject := logical(0)]
     return(node_dat)
   }
-  
+
   # Step 1: Identify all possible intersection hypotheses
   leaf_nodes <- find_leaf_nodes(node_dat, tracker)
   all_intersections <- generate_all_intersections(leaf_nodes, tracker)
-  
+
   # Step 2: Test each intersection hypothesis
   intersection_results <- test_intersections(all_intersections, node_dat, method, alpha)
-  
+
   # Step 3: Apply closed testing principle
   rejection_decisions <- apply_closed_testing_principle(
-    intersection_results, 
-    all_intersections, 
+    intersection_results,
+    all_intersections,
     alpha
   )
-  
+
   # Step 4: Update node_dat with valid rejection decisions
   node_dat[, closed_testing_reject := FALSE]
   for (node_id in names(rejection_decisions)) {
@@ -117,7 +116,7 @@ closed_testing_procedure <- function(node_dat, tracker, alpha = 0.05, method = "
       node_dat[nodenum == as.numeric(node_id), closed_testing_reject := TRUE]
     }
   }
-  
+
   return(node_dat)
 }
 
@@ -137,10 +136,9 @@ find_leaf_nodes <- function(node_dat, tracker) {
 #' @param tracker Node tracker object
 #' @return List of intersection hypotheses (sets of nodes)
 generate_all_intersections <- function(leaf_nodes, tracker) {
-  
   # Get all nodes from root to leaves
   all_nodes <- unique(tracker$tracker$node_id)
-  
+
   # For each node, find all leaf descendants
   node_descendants <- list()
   for (node in all_nodes) {
@@ -149,10 +147,10 @@ generate_all_intersections <- function(leaf_nodes, tracker) {
       node_descendants[[as.character(node)]] <- descendants
     }
   }
-  
+
   # Generate all non-empty intersections
   intersections <- list()
-  
+
   # Single node intersections (individual hypotheses)
   for (node in names(node_descendants)) {
     intersections[[paste0("H_", node)]] <- list(
@@ -160,7 +158,7 @@ generate_all_intersections <- function(leaf_nodes, tracker) {
       leaves = node_descendants[[node]]
     )
   }
-  
+
   # Multi-node intersections
   node_list <- names(node_descendants)
   for (i in 2:length(node_list)) {
@@ -176,7 +174,7 @@ generate_all_intersections <- function(leaf_nodes, tracker) {
       }
     }
   }
-  
+
   return(intersections)
 }
 
@@ -203,22 +201,23 @@ find_leaf_descendants <- function(node_id, leaf_nodes, tracker) {
 #' @param alpha Type I error rate
 #' @return List of intersection test results
 test_intersections <- function(intersections, node_dat, method, alpha) {
-  
   results <- list()
-  
+
   for (int_name in names(intersections)) {
     intersection <- intersections[[int_name]]
-    
+
     # Get p-values for nodes in this intersection
     p_values <- sapply(intersection$nodes, function(nid) {
       p_val <- node_dat[nodenum == nid, p]
-      if (length(p_val) == 0 || is.na(p_val)) return(1.0)  # Conservative
+      if (length(p_val) == 0 || is.na(p_val)) {
+        return(1.0)
+      } # Conservative
       return(p_val)
     })
-    
+
     # Combine p-values according to method
     combined_p <- combine_pvalues(p_values, method)
-    
+
     results[[int_name]] <- list(
       nodes = intersection$nodes,
       leaves = intersection$leaves,
@@ -226,7 +225,7 @@ test_intersections <- function(intersections, node_dat, method, alpha) {
       reject = combined_p <= alpha
     )
   }
-  
+
   return(results)
 }
 
@@ -237,8 +236,10 @@ test_intersections <- function(intersections, node_dat, method, alpha) {
 combine_pvalues <- function(p_values, method) {
   # Remove NA values
   p_values <- p_values[!is.na(p_values)]
-  if (length(p_values) == 0) return(1.0)
-  
+  if (length(p_values) == 0) {
+    return(1.0)
+  }
+
   switch(method,
     "simes" = {
       # Simes method (valid under positive dependence)
@@ -250,7 +251,9 @@ combine_pvalues <- function(p_values, method) {
     },
     "fisher" = {
       # Fisher's method (assumes independence)
-      if (any(p_values == 0)) return(0)
+      if (any(p_values == 0)) {
+        return(0)
+      }
       chi_sq_stat <- -2 * sum(log(p_values))
       return(1 - pchisq(chi_sq_stat, df = 2 * length(p_values)))
     },
@@ -270,27 +273,26 @@ combine_pvalues <- function(p_values, method) {
 #' @param alpha Type I error rate
 #' @return Named list of rejection decisions for each node
 apply_closed_testing_principle <- function(intersection_results, intersections, alpha) {
-  
   # Get all individual node hypotheses
   single_node_results <- intersection_results[grepl("^H_[0-9]+$", names(intersection_results))]
-  
+
   rejections <- list()
-  
+
   for (result_name in names(single_node_results)) {
     node_id <- as.character(single_node_results[[result_name]]$nodes[1])
-    
+
     # Find all intersections that contain this node
     containing_intersections <- find_containing_intersections(
-      as.numeric(node_id), 
+      as.numeric(node_id),
       intersection_results
     )
-    
+
     # Check if ALL containing intersections are rejected
     all_rejected <- all(sapply(containing_intersections, function(x) x$reject))
-    
+
     rejections[[node_id]] <- all_rejected
   }
-  
+
   return(rejections)
 }
 
@@ -300,14 +302,14 @@ apply_closed_testing_principle <- function(intersection_results, intersections, 
 #' @return List of intersection results containing the node
 find_containing_intersections <- function(node_id, intersection_results) {
   containing <- list()
-  
+
   for (result_name in names(intersection_results)) {
     result <- intersection_results[[result_name]]
     if (node_id %in% result$nodes) {
       containing[[result_name]] <- result
     }
   }
-  
+
   return(containing)
 }
 
@@ -318,13 +320,13 @@ find_containing_intersections <- function(node_id, intersection_results) {
 validate_fwer_control <- function(node_dat, alpha) {
   # This is a theoretical check - in practice FWER control is guaranteed
   # by the closed testing principle when properly implemented
-  
+
   rejected_nodes <- node_dat[closed_testing_reject == TRUE, nodenum]
-  
+
   # Check consonance property: if a node is rejected, all its ancestors should be rejectable
   for (node_id in rejected_nodes) {
     # This would need ancestry checking - implementation depends on specific use case
   }
-  
-  return(TRUE)  # Properly implemented closed testing always controls FWER
+
+  return(TRUE) # Properly implemented closed testing always controls FWER
 }

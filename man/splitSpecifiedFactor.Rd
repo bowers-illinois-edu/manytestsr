@@ -19,7 +19,7 @@ This function does binary splits using a factor variable with dots separating th
 block_ids <- c("B1", "B2", "B3", "B4", "B5", "B6")
 hierarchical_factor <- factor(c(
   "StateA.District1.School1",
-  "StateA.District1.School2", 
+  "StateA.District1.School2",
   "StateA.District2.School1",
   "StateB.District1.School1",
   "StateB.District1.School2",

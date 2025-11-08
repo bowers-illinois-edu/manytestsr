@@ -132,7 +132,7 @@
 #' data(example_dat, package = "manytestsr")
 #' library(data.table)
 #' library(dplyr)
-#' 
+#'
 #' # Create block-level dataset
 #' example_bdat <- example_dat %>%
 #'   group_by(blockF) %>%
@@ -146,11 +146,11 @@
 #'     .groups = "drop"
 #'   ) %>%
 #'   as.data.table()
-#'   
+#'
 #' # Basic usage with cluster-based splitting
 #' result1 <- find_blocks(
 #'   idat = example_dat,
-#'   bdat = example_bdat, 
+#'   bdat = example_bdat,
 #'   blockid = "blockF",
 #'   splitfn = splitCluster,
 #'   pfn = pOneway,
@@ -159,25 +159,25 @@
 #'   parallel = "no",
 #'   trace = TRUE
 #' )
-#' 
+#'
 #' # Access block-level results
 #' head(result1$bdat)
-#' 
-#' # Access node-level results  
+#'
+#' # Access node-level results
 #' head(result1$node_dat)
-#' 
+#'
 #' # Example with pre-specified factor splitting
 #' result2 <- find_blocks(
 #'   idat = example_dat,
 #'   bdat = example_bdat,
-#'   blockid = "blockF", 
+#'   blockid = "blockF",
 #'   splitfn = splitSpecifiedFactor,
 #'   pfn = pIndepDist,
 #'   fmla = Y2 ~ trtF | blockF,
 #'   splitby = "place_year_block",
 #'   parallel = "no"
 #' )
-#' 
+#'
 #' # Example using Goeman's proper closed testing procedure
 #' result3 <- find_blocks(
 #'   idat = example_dat,
@@ -192,14 +192,14 @@
 #'   closed_testing_method = "simes",
 #'   thealpha = 0.05
 #' )
-#' 
+#'
 #' # Check closed testing results
 #' if ("closed_testing_reject" %in% names(result3$node_dat)) {
 #'   cat("Nodes rejected by closed testing procedure:\n")
 #'   rejected_nodes <- result3$node_dat[closed_testing_reject == TRUE, nodenum]
 #'   print(rejected_nodes)
 #' }
-#' 
+#'
 #' # Example using e-value methodology for sequential testing
 #' result4 <- find_blocks(
 #'   idat = example_dat,
@@ -214,7 +214,7 @@
 #'   evalue_wealth_rule = "kelly",
 #'   thealpha = 0.05
 #' )
-#' 
+#'
 #' # Example using Meinshausen's hierarchical testing with sequential rejection
 #' result5 <- find_blocks(
 #'   idat = example_dat,
@@ -230,14 +230,14 @@
 #'   meinshausen_sequential = TRUE,
 #'   thealpha = 0.05
 #' )
-#' 
+#'
 #' # Check Meinshausen testing results
 #' if ("meinshausen_reject" %in% names(result5$node_dat)) {
 #'   cat("Nodes rejected by Meinshausen hierarchical procedure:\\n")
 #'   rejected_meinshausen <- result5$node_dat[meinshausen_reject == TRUE, nodenum]
 #'   print(rejected_meinshausen)
 #' }
-#' 
+#'
 #' # Compare traditional FWER control vs closed testing
 #' traditional_detections <- report_detections(result1$bdat, fwer = TRUE)
 #' if (exists("result3") && "node_dat" %in% names(result3)) {
@@ -295,7 +295,7 @@ find_blocks <-
     # Setup
     ## Initialize numeric node tracking
     node_tracker <- create_node_tracker()
-    
+
     ## Should we always copy the data tables? And rename them?
     if (copydts) {
       bdat <- data.table::copy(bdat)
@@ -380,25 +380,28 @@ find_blocks <-
     if (!all(bdat$testable)) {
       ## Apply advanced methodologies if requested before early return
       if (use_meinshausen && exists("meinshausen_hierarchical_test")) {
-        tryCatch({
-          node_dat <- meinshausen_hierarchical_test(
-            node_dat,
-            node_tracker,
-            alpha = thealpha,
-            method = meinshausen_method,
-            use_sequential = meinshausen_sequential
-          )
-        }, error = function(e) {
-          warning("Meinshausen hierarchical testing failed: ", e$message, ". Continuing with standard results.")
-        })
+        tryCatch(
+          {
+            node_dat <- meinshausen_hierarchical_test(
+              node_dat,
+              node_tracker,
+              alpha = thealpha,
+              method = meinshausen_method,
+              use_sequential = meinshausen_sequential
+            )
+          },
+          error = function(e) {
+            warning("Meinshausen hierarchical testing failed: ", e$message, ". Continuing with standard results.")
+          }
+        )
       }
-      
+
       if (use_evalues) {
         # E-value analysis would be applied to the sequential nature of the testing
         # This is a placeholder for future integration
         warning("E-value integration is experimental and under development")
       }
-      
+
       ## Return the objects
       if (all(return_what == "blocks")) {
         return(bdat)
@@ -426,30 +429,32 @@ find_blocks <-
       alphanm <- paste0("alpha", i)
       # Set Group to NA for blocks where we have to stop testing
       bdat[(testable), (gnm) := splitfn(bid = get(blockid), x = get(splitby)), by = group_id]
-      
+
       # Update node tracking with numeric IDs
       bdat[(testable), nodenum_prev := nodenum_current]
-      
+
       # Create unique node IDs for each unique split group value within each parent group
       testable_blocks <- bdat[(testable)]
       if (nrow(testable_blocks) > 0) {
         # Process each parent group separately to maintain proper tree structure
         parent_groups <- unique(testable_blocks$nodenum_current)
-        
+
         for (parent_id in parent_groups) {
           parent_blocks <- testable_blocks[nodenum_current == parent_id]
           unique_split_values <- unique(parent_blocks[[gnm]])
-          
+
           # Assign new node IDs for children of this parent
           for (k in seq_along(unique_split_values)) {
             split_val <- unique_split_values[k]
             new_node_id <- node_tracker$next_id
             node_tracker$next_id <- node_tracker$next_id + 1L
-            
+
             # All blocks with this split value get the same node ID
-            bdat[(testable) & nodenum_current == parent_id & get(gnm) == split_val, 
-                 nodenum_current := new_node_id]
-            
+            bdat[
+              (testable) & nodenum_current == parent_id & get(gnm) == split_val,
+              nodenum_current := new_node_id
+            ]
+
             # Add to tracker
             new_node <- data.table(
               node_id = new_node_id,
@@ -460,11 +465,11 @@ find_blocks <-
           }
         }
       }
-      
-      # Update group_id and create node_id  
+
+      # Update group_id and create node_id
       bdat[(testable), group_id := nodenum_current]
       bdat[, node_id := factor(group_id)]
-      
+
       bdat[, nodesize := sum(get(blocksize)), by = group_id]
       # Now merge idat and bdat again since the test has to be at the idat level
       idat[bdat, c("testable", "group_id", "node_id") := mget(c("i.testable", "i.group_id", "i.node_id")), on = blockid]
@@ -490,7 +495,7 @@ find_blocks <-
       }
       # Add node_id to pb for compatibility
       pb[, node_id := factor(group_id)]
-      
+
       node_dat <-
         rbind(node_dat[, .(parent, p, a, group_id, node_id, batch, testable, nodenum, depth, nodesize)],
           pb[, batch := pnm],
@@ -575,41 +580,47 @@ find_blocks <-
       # message(paste(unique(signif(bdat$pfinalb,4)),collapse=' '),appendLF = TRUE)
       # message('Number of blocks left to test: ', sum(bdat$testable))
     }
-    
+
     ## Apply advanced methodologies if requested
     if (use_closed_testing && exists("closed_testing_procedure")) {
-      tryCatch({
-        node_dat <- closed_testing_procedure(
-          node_dat, 
-          node_tracker, 
-          alpha = thealpha,
-          method = closed_testing_method
-        )
-      }, error = function(e) {
-        warning("Closed testing procedure failed: ", e$message, ". Continuing with standard results.")
-      })
+      tryCatch(
+        {
+          node_dat <- closed_testing_procedure(
+            node_dat,
+            node_tracker,
+            alpha = thealpha,
+            method = closed_testing_method
+          )
+        },
+        error = function(e) {
+          warning("Closed testing procedure failed: ", e$message, ". Continuing with standard results.")
+        }
+      )
     }
-    
+
     if (use_meinshausen && exists("meinshausen_hierarchical_test")) {
-      tryCatch({
-        node_dat <- meinshausen_hierarchical_test(
-          node_dat,
-          node_tracker,
-          alpha = thealpha,
-          method = meinshausen_method,
-          use_sequential = meinshausen_sequential
-        )
-      }, error = function(e) {
-        warning("Meinshausen hierarchical testing failed: ", e$message, ". Continuing with standard results.")
-      })
+      tryCatch(
+        {
+          node_dat <- meinshausen_hierarchical_test(
+            node_dat,
+            node_tracker,
+            alpha = thealpha,
+            method = meinshausen_method,
+            use_sequential = meinshausen_sequential
+          )
+        },
+        error = function(e) {
+          warning("Meinshausen hierarchical testing failed: ", e$message, ". Continuing with standard results.")
+        }
+      )
     }
-    
+
     if (use_evalues) {
       # E-value analysis would be applied to the sequential nature of the testing
       # This is a placeholder for future integration
       warning("E-value integration is experimental and under development")
     }
-    
+
     ## Return the objects
     if (all(return_what == "blocks")) {
       return(bdat)
@@ -649,19 +660,19 @@ create_node_tracker <- function() {
 add_nodes_to_tracker <- function(tracker, parent_ids, depth, n_children) {
   new_ids <- seq.int(tracker$next_id, length.out = n_children)
   tracker$next_id <- tracker$next_id + n_children
-  
+
   new_nodes <- data.table(
     node_id = new_ids,
     parent_id = rep(parent_ids, length.out = n_children),
     depth = depth
   )
-  
+
   tracker$tracker <- rbindlist(list(tracker$tracker, new_nodes))
   list(tracker = tracker, new_ids = new_ids)
 }
 
 #' Get parent ID from tracker
-#' @param tracker Node tracking object  
+#' @param tracker Node tracking object
 #' @param node_ids Vector of node IDs to find parents for
 #' @return Vector of parent node IDs (0 for root)
 #' @keywords internal

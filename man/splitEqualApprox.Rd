@@ -22,7 +22,7 @@ group or another group such that the sum of x within one group is approximately 
 \examples{
 # Example with block sizes - equalizes total size across groups
 block_ids <- c("B1", "B2", "B3", "B4", "B5", "B6")
-block_sizes <- c(10, 30, 15, 35, 20, 25)  # Total = 135
+block_sizes <- c(10, 30, 15, 35, 20, 25) # Total = 135
 
 groups <- splitEqualApprox(block_ids, block_sizes)
 

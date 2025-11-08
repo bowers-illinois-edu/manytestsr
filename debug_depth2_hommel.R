@@ -29,13 +29,13 @@ for (pval in unique_p2_values) {
   blocks_with_this_p2 <- blocks_with_p2[p2 == pval]
   current_nodes <- unique(blocks_with_this_p2$nodenum_current)
   prev_nodes <- unique(blocks_with_this_p2$nodenum_prev)
-  
+
   cat(sprintf("\nP2 value: %.3e\n", pval))
-  cat("  Current nodes:", paste(current_nodes, collapse=", "), "\n")
-  cat("  Prev nodes:", paste(prev_nodes, collapse=", "), "\n")
+  cat("  Current nodes:", paste(current_nodes, collapse = ", "), "\n")
+  cat("  Prev nodes:", paste(prev_nodes, collapse = ", "), "\n")
   cat("  Length current nodes:", length(current_nodes), "\n")
   cat("  Length prev nodes:", length(prev_nodes), "\n")
-  
+
   # Check my logic conditions
   if (length(current_nodes) == 1 && !is.na(current_nodes)) {
     cat("  -> Would match Case 1: single nodenum_current\n")
@@ -43,15 +43,15 @@ for (pval in unique_p2_values) {
     cat("  -> Would match Case 2: multiple nodenum_current, single nodenum_prev\n")
   } else if (length(prev_nodes) > 1 && length(current_nodes) > 1) {
     sorted_prev_nodes <- sort(prev_nodes)
-    prev_pattern <- paste(sorted_prev_nodes, collapse=",")
+    prev_pattern <- paste(sorted_prev_nodes, collapse = ",")
     cat("  -> Would match Case 3: multiple prev and current nodes\n")
     cat("     Prev pattern:", prev_pattern, "\n")
-    
+
     # Check my pattern matching
     if (prev_pattern %in% c("2,8,9")) {
       cat("     Pattern matches: node 2\n")
     } else if (prev_pattern %in% c("3,11,12,13")) {
-      cat("     Pattern matches: node 3\n")  
+      cat("     Pattern matches: node 3\n")
     } else if (prev_pattern %in% c("14,15,16,17")) {
       cat("     Pattern matches: node 4\n")
     } else if (prev_pattern %in% c("5,18")) {

@@ -2,7 +2,7 @@
 # Focusing especially on test statistics that will not allow positive and negative effects to cancel out
 # And on outcomes that people would treat as continuous but which have lots of ties and zeros and skew
 
-interactive <-FALSE
+interactive <- FALSE
 if (interactive) {
   library(testthat)
   local_edition(3)
@@ -66,7 +66,7 @@ test_that("Basics of the omnibus test works as expected in regards False Positiv
   ## Get the names of the transformations of the outcome
   dists <- with(idat[bF == 1], dists_and_trans(Ynull))
   dists_fast <- with(idat[bF == 1], fast_dists_and_trans_hybrid(Ynull))
-  expect_equal(dists,dists_fast)
+  expect_equal(dists, dists_fast)
   idat[, names(dists) := dists_and_trans(Ynull), by = bF]
   b1[, names(dists) := dists_and_trans(Ynull)]
   Yvers <- c("Ynull", names(dists))
@@ -212,23 +212,23 @@ test_that("pIndepDist works as expected", {
   expect_lt(res_normb_idat, .05)
   expect_lt(res_normb_b1, .05)
 
-  expect_lt(res_fast_cancel_idat , .05)
-  expect_lt(res_fast_cancel_b1   , .05)
-  expect_gt(res_fast_null_idat   , .05)
-  expect_gt(res_fast_null_b1     , .05)
-  expect_lt(res_fast_homog_idat  , .05)
-  expect_lt(res_fast_homog_b1    , .05)
-  expect_lt(res_fast_normb_idat  , .05)
-  expect_lt(res_fast_normb_b1    , .05)
+  expect_lt(res_fast_cancel_idat, .05)
+  expect_lt(res_fast_cancel_b1, .05)
+  expect_gt(res_fast_null_idat, .05)
+  expect_gt(res_fast_null_b1, .05)
+  expect_lt(res_fast_homog_idat, .05)
+  expect_lt(res_fast_homog_b1, .05)
+  expect_lt(res_fast_normb_idat, .05)
+  expect_lt(res_fast_normb_b1, .05)
 
-  expect_equal(res_fast_cancel_idat , res_cancel_idat )
-  expect_equal(res_fast_cancel_b1   , res_cancel_b1   )
-  expect_equal(res_fast_null_idat   , res_null_idat   )
-  expect_equal(res_fast_null_b1     , res_null_b1     )
-  expect_equal(res_fast_homog_idat  , res_homog_idat  )
-  expect_equal(res_fast_homog_b1    , res_homog_b1    )
-  expect_equal(res_fast_normb_idat  , res_normb_idat  )
-  expect_equal(res_fast_normb_b1    , res_normb_b1    )
+  expect_equal(res_fast_cancel_idat, res_cancel_idat)
+  expect_equal(res_fast_cancel_b1, res_cancel_b1)
+  expect_equal(res_fast_null_idat, res_null_idat)
+  expect_equal(res_fast_null_b1, res_null_b1)
+  expect_equal(res_fast_homog_idat, res_homog_idat)
+  expect_equal(res_fast_homog_b1, res_homog_b1)
+  expect_equal(res_fast_normb_idat, res_normb_idat)
+  expect_equal(res_fast_normb_b1, res_normb_b1)
 })
 
 test_that("Ordinary tests do not reject when effects cancel across blocks", {
@@ -241,11 +241,11 @@ test_that("Ordinary tests do reject when effects are large within blocks even if
 })
 
 test_that("passing a block factor to a p-value function with one block gives the same results as  omitting it", {
-  res_cancel_b1_block <- pIndepDist(dat = b1, fmla = Y ~ ZF | bF,  ncpu = 4, parallel = "multicore")
+  res_cancel_b1_block <- pIndepDist(dat = b1, fmla = Y ~ ZF | bF, ncpu = 4, parallel = "multicore")
   res_cancel_b1_noblock <- pIndepDist(dat = b1, fmla = Y ~ ZF, ncpu = 4, parallel = "multicore")
   expect_equal(res_cancel_b1_block, res_cancel_b1_block)
-  res_null_b1_block <- pIndepDist(dat = b1, fmla = Ynull ~ ZF | bF,   ncpu = 4, parallel = "multicore")
-  res_null_b1_noblock <- pIndepDist(dat = b1, fmla = Ynull ~ ZF,  ncpu = 4, parallel = "multicore")
+  res_null_b1_block <- pIndepDist(dat = b1, fmla = Ynull ~ ZF | bF, ncpu = 4, parallel = "multicore")
+  res_null_b1_noblock <- pIndepDist(dat = b1, fmla = Ynull ~ ZF, ncpu = 4, parallel = "multicore")
   expect_equal(res_null_b1_block, res_null_b1_block)
 })
 

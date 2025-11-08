@@ -8,16 +8,16 @@
 #' @examples
 #' # Example with continuous outcome data
 #' outcome <- c(2.1, 5.3, 1.8, 7.2, 3.4, 4.6)
-#' 
+#'
 #' # Compute distance-based transformations
 #' dist_results <- dists_and_trans(outcome)
-#' 
+#'
 #' # View components
 #' str(dist_results)
-#' print(dist_results$mean_dist)     # Mean distance to all other units
-#' print(dist_results$rankY)         # Ranks of original values
-#' print(dist_results$tanhY)         # Hyperbolic tangent transformation
-#' 
+#' print(dist_results$mean_dist) # Mean distance to all other units
+#' print(dist_results$rankY) # Ranks of original values
+#' print(dist_results$tanhY) # Hyperbolic tangent transformation
+#'
 #' @importFrom Rfast Dist rowmeans rowMads rowMaxs Rank vecdist rowmeans
 #' @export
 dists_and_trans <- function(x) {
@@ -27,8 +27,8 @@ dists_and_trans <- function(x) {
   dxRank0 <- Rfast::vecdist(rankx) # distance among the ranks
   res <- list(
     ## Don't include the diagonals in the means
-    mean_dist= Rfast::colsums(dx)/(n-1),
-    mean_rank_dist= Rfast::colsums(dxRank0)/(n-1),
+    mean_dist = Rfast::colsums(dx) / (n - 1),
+    mean_rank_dist = Rfast::colsums(dxRank0) / (n - 1),
     max_dist = Rfast::colMaxs(dx, value = TRUE),
     rankY = rankx,
     tanhY = tanh(x)
@@ -59,7 +59,7 @@ fast_dists_and_trans_new_parallel <- function(threads) {
 #' @examples
 #' # Example with treatment and control groups
 #' outcome <- c(2.1, 5.3, 1.8, 7.2, 3.4, 4.6, 6.1, 2.8)
-#' treatment <- c(0, 1, 0, 1, 0, 1, 1, 0)  # Binary treatment indicator
+#' treatment <- c(0, 1, 0, 1, 0, 1, 1, 0) # Binary treatment indicator
 #'
 #' # Compute energy distances
 #' e_dists <- edisti(outcome, treatment)
@@ -71,7 +71,7 @@ fast_dists_and_trans_new_parallel <- function(threads) {
 #' e_dists2 <- edisti(outcome, treatment_factor)
 #' print(e_dists2)
 #' }
-#' 
+#'
 #' @importFrom Rfast Dist colsums rowsums Order
 #' @export
 edisti <- function(x, Z) {

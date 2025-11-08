@@ -20,7 +20,7 @@ Outcome e-distances between treatment arms
 \examples{
 # Example with treatment and control groups
 outcome <- c(2.1, 5.3, 1.8, 7.2, 3.4, 4.6, 6.1, 2.8)
-treatment <- c(0, 1, 0, 1, 0, 1, 1, 0)  # Binary treatment indicator
+treatment <- c(0, 1, 0, 1, 0, 1, 1, 0) # Binary treatment indicator
 
 # Compute energy distances
 e_dists <- edisti(outcome, treatment)

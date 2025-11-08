@@ -24,8 +24,8 @@ dist_results <- dists_and_trans(outcome)
 
 # View components
 str(dist_results)
-print(dist_results$mean_dist)     # Mean distance to all other units
-print(dist_results$rankY)         # Ranks of original values
-print(dist_results$tanhY)         # Hyperbolic tangent transformation
+print(dist_results$mean_dist) # Mean distance to all other units
+print(dist_results$rankY) # Ranks of original values
+print(dist_results$tanhY) # Hyperbolic tangent transformation
 
 }

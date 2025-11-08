@@ -108,12 +108,12 @@ results_cluster <- find_blocks(
   idat = idat,
   bdat = bdat,
   blockid = "blockF",
-  splitfn = splitCluster,  # Split using k-means clustering
-  pfn = pOneway,          # Use t-tests
+  splitfn = splitCluster, # Split using k-means clustering
+  pfn = pOneway, # Use t-tests
   fmla = Y1 ~ trtF | blockF,
-  splitby = "hwt",        # Split based on harmonic mean weights
-  parallel = "no",        # Disable parallel processing for demo
-  trace = TRUE,           # Show split progression
+  splitby = "hwt", # Split based on harmonic mean weights
+  parallel = "no", # Disable parallel processing for demo
+  trace = TRUE, # Show split progression
   thealpha = 0.05
 )
 
@@ -129,7 +129,7 @@ cat("Block-level results structure:\n")
 cat("Number of blocks:", nrow(results_cluster$bdat), "\n")
 cat("Variables:", names(results_cluster$bdat), "\n\n")
 
-# Node-level results  
+# Node-level results
 cat("Node-level results structure:\n")
 cat("Number of nodes:", nrow(results_cluster$node_dat), "\n")
 cat("Depth levels:", sort(unique(results_cluster$node_dat$depth)), "\n")
@@ -148,7 +148,7 @@ results_hierarchical <- find_blocks(
   bdat = bdat,
   blockid = "blockF",
   splitfn = splitSpecifiedFactor,
-  pfn = pIndepDist,        # Use distance-based test
+  pfn = pIndepDist, # Use distance-based test
   fmla = Y2 ~ trtF | blockF,
   splitby = "place_year_block",
   parallel = "no",
@@ -156,8 +156,10 @@ results_hierarchical <- find_blocks(
   thealpha = 0.05
 )
 
-print(paste("Hierarchical approach found", 
-           nrow(results_hierarchical$node_dat), "nodes"))
+print(paste(
+  "Hierarchical approach found",
+  nrow(results_hierarchical$node_dat), "nodes"
+))
 ```
 
 ### Leave-One-Out Splitting
@@ -169,17 +171,19 @@ Focus testing on largest blocks first:
 results_loo <- find_blocks(
   idat = idat,
   bdat = bdat,
-  blockid = "blockF", 
+  blockid = "blockF",
   splitfn = splitLOO,
   pfn = pOneway,
   fmla = Y1 ~ trtF | blockF,
-  splitby = "hwt",  # Focus on blocks with highest power
+  splitby = "hwt", # Focus on blocks with highest power
   parallel = "no",
   thealpha = 0.05
 )
 
-print(paste("LOO approach found", 
-           nrow(results_loo$node_dat), "nodes"))
+print(paste(
+  "LOO approach found",
+  nrow(results_loo$node_dat), "nodes"
+))
 ```
 
 ## Sequential Error Rate Control
@@ -196,21 +200,25 @@ results_fdr <- find_blocks(
   blockid = "blockF",
   splitfn = splitCluster,
   pfn = pIndepDist,
-  alphafn = alpha_investing,  # Sequential FDR control
+  alphafn = alpha_investing, # Sequential FDR control
   fmla = Y1 ~ trtF | blockF,
   splitby = "hwt",
   parallel = "no",
   thealpha = 0.05,
-  thew0 = 0.049  # Starting wealth
+  thew0 = 0.049 # Starting wealth
 )
 
 # Compare alpha levels across approaches
 alpha_comparison <- data.frame(
   Node = 1:min(nrow(results_cluster$node_dat), nrow(results_fdr$node_dat)),
-  Fixed_Alpha = results_cluster$node_dat$a[1:min(nrow(results_cluster$node_dat), 
-                                                nrow(results_fdr$node_dat))],
-  Adaptive_Alpha = results_fdr$node_dat$a[1:min(nrow(results_cluster$node_dat), 
-                                               nrow(results_fdr$node_dat))]
+  Fixed_Alpha = results_cluster$node_dat$a[1:min(
+    nrow(results_cluster$node_dat),
+    nrow(results_fdr$node_dat)
+  )],
+  Adaptive_Alpha = results_fdr$node_dat$a[1:min(
+    nrow(results_cluster$node_dat),
+    nrow(results_fdr$node_dat)
+  )]
 )
 
 print("Alpha level comparison:")
@@ -234,13 +242,17 @@ detections_fwer <- report_detections(
 cat("FWER Results:\n")
 cat("Total blocks:", nrow(detections_fwer), "\n")
 cat("Significant blocks:", sum(detections_fwer$hit, na.rm = TRUE), "\n")
-cat("Detection rate:", 
-    round(mean(detections_fwer$hit, na.rm = TRUE) * 100, 1), "%\n\n")
+cat(
+  "Detection rate:",
+  round(mean(detections_fwer$hit, na.rm = TRUE) * 100, 1), "%\n\n"
+)
 
 # Show significant blocks
-if(sum(detections_fwer$hit, na.rm = TRUE) > 0) {
-  significant_blocks <- detections_fwer[hit == TRUE, 
-                                       .(blockF, pfinalb, fin_nodenum)]
+if (sum(detections_fwer$hit, na.rm = TRUE) > 0) {
+  significant_blocks <- detections_fwer[
+    hit == TRUE,
+    .(blockF, pfinalb, fin_nodenum)
+  ]
   print("Significant blocks:")
   print(significant_blocks)
 }
@@ -252,14 +264,16 @@ if(sum(detections_fwer$hit, na.rm = TRUE) > 0) {
 # Detect using FDR control
 detections_fdr <- report_detections(
   results_fdr$bdat,
-  fwer = FALSE,  # Use FDR instead
+  fwer = FALSE, # Use FDR instead
   alpha = 0.05
 )
 
 cat("FDR Results:\n")
 cat("Significant blocks:", sum(detections_fdr$hit, na.rm = TRUE), "\n")
-cat("Detection rate:", 
-    round(mean(detections_fdr$hit, na.rm = TRUE) * 100, 1), "%\n")
+cat(
+  "Detection rate:",
+  round(mean(detections_fdr$hit, na.rm = TRUE) * 100, 1), "%\n"
+)
 ```
 
 ## Visualizing Results
@@ -269,7 +283,7 @@ cat("Detection rate:",
 ```{r tree-visualization, fig.width=10, fig.height=8}
 # Create tree structure for visualization
 tree_results <- make_results_tree(
-  results_cluster$bdat, 
+  results_cluster$bdat,
   block_id = "blockF",
   node_label = "hwt"
 )
@@ -308,7 +322,7 @@ detection_summary <- data.frame(
   ),
   Total_Blocks = c(
     nrow(detections_fwer),
-    nrow(detections_fdr), 
+    nrow(detections_fdr),
     nrow(results_hierarchical$bdat),
     nrow(results_loo$bdat)
   )
@@ -319,8 +333,9 @@ detection_summary$Detection_Rate <- detection_summary$Detections / detection_sum
 # Create comparison plot
 ggplot(detection_summary, aes(x = Method, y = Detection_Rate, fill = Method)) +
   geom_col(alpha = 0.8) +
-  geom_text(aes(label = paste0(Detections, "/", Total_Blocks)), 
-            vjust = -0.5, size = 3) +
+  geom_text(aes(label = paste0(Detections, "/", Total_Blocks)),
+    vjust = -0.5, size = 3
+  ) +
   labs(
     title = "Detection Rates Across Testing Methods",
     y = "Proportion of Blocks with Detected Effects",
@@ -341,9 +356,9 @@ ggplot(detection_summary, aes(x = Method, y = Detection_Rate, fill = Method)) +
 ```{r pvalue-analysis}
 # Examine p-value patterns
 pvalue_data <- results_cluster$node_dat[, .(
-  nodenum, 
-  depth, 
-  p, 
+  nodenum,
+  depth,
+  p,
   a,
   testable,
   nodesize
@@ -388,7 +403,7 @@ p2 <- ggplot(power_data, aes(x = hwt, y = -log10(pfinalb), color = hit)) +
   geom_point(alpha = 0.7, size = 2) +
   scale_color_manual(values = c("FALSE" = "blue", "TRUE" = "red")) +
   labs(
-    title = "Detection by Harmonic Mean Weight", 
+    title = "Detection by Harmonic Mean Weight",
     x = "Harmonic Mean Weight",
     y = "-log10(p-value)",
     color = "Detected"
@@ -412,7 +427,7 @@ results_multi_Y1 <- find_blocks(
   blockid = "blockF",
   splitfn = splitCluster,
   pfn = pIndepDist,
-  local_adj_p_fn = local_simes,  # Simes adjustment within nodes
+  local_adj_p_fn = local_simes, # Simes adjustment within nodes
   fmla = Y1 ~ trtF | blockF,
   splitby = "hwt",
   parallel = "no",
@@ -473,12 +488,12 @@ idat <- your_individual_data
 bdat <- create_block_summary(idat)
 
 # 2. Choose approach based on data structure
-if(have_hierarchical_structure) {
+if (have_hierarchical_structure) {
   splitfn <- splitSpecifiedFactor
   splitby <- "hierarchical_variable"
 } else {
-  splitfn <- splitCluster  
-  splitby <- "power_variable"  # e.g., block size or weights
+  splitfn <- splitCluster
+  splitby <- "power_variable" # e.g., block size or weights
 }
 
 # 3. Run hierarchical testing
@@ -486,14 +501,14 @@ results <- find_blocks(
   idat = idat,
   bdat = bdat,
   splitfn = splitfn,
-  pfn = pIndepDist,  # Robust choice
-  alphafn = alpha_investing,  # For more power
+  pfn = pIndepDist, # Robust choice
+  alphafn = alpha_investing, # For more power
   splitby = splitby,
   thealpha = 0.05
 )
 
 # 4. Detect significant effects
-detections <- report_detections(results$bdat, fwer = FALSE)  # FDR control
+detections <- report_detections(results$bdat, fwer = FALSE) # FDR control
 
 # 5. Visualize results
 tree <- make_results_tree(results$bdat, block_id = "block_variable")

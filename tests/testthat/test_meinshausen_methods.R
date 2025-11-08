@@ -340,4 +340,3 @@ test_that("Helper functions for Meinshausen work correctly", {
     expect_true(nrow(descendants_1) >= 1) # Should include self
   }
 })
-

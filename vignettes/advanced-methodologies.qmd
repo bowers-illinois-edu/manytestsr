@@ -85,12 +85,12 @@ result_goeman <- find_blocks(
   bdat = bdat,
   blockid = "blockF",
   splitfn = splitCluster,
-  pfn = pIndepDist,  # Robust test as Goeman would recommend
+  pfn = pIndepDist, # Robust test as Goeman would recommend
   fmla = Y1 ~ trtF | blockF,
   splitby = "hwt",
   parallel = "no",
   use_closed_testing = TRUE,
-  closed_testing_method = "simes",  # Goeman & Solari's recommended method
+  closed_testing_method = "simes", # Goeman & Solari's recommended method
   thealpha = 0.05,
   maxtest = 15,
   trace = FALSE
@@ -100,7 +100,7 @@ result_goeman <- find_blocks(
 if ("closed_testing_reject" %in% names(result_goeman$node_dat)) {
   closed_rejections <- sum(result_goeman$node_dat$closed_testing_reject, na.rm = TRUE)
   cat("Closed testing rejections:", closed_rejections, "\n")
-  
+
   # Show rejected nodes
   rejected_nodes <- result_goeman$node_dat[closed_testing_reject == TRUE]
   if (nrow(rejected_nodes) > 0) {
@@ -153,7 +153,7 @@ result_meinshausen <- find_blocks(
   parallel = "no",
   use_meinshausen = TRUE,
   meinshausen_method = "simes",
-  meinshausen_sequential = TRUE,  # Use Goeman-Solari enhancement
+  meinshausen_sequential = TRUE, # Use Goeman-Solari enhancement
   thealpha = 0.05,
   maxtest = 15,
   trace = FALSE
@@ -163,7 +163,7 @@ result_meinshausen <- find_blocks(
 if ("meinshausen_reject" %in% names(result_meinshausen$node_dat)) {
   meinshausen_rejections <- sum(result_meinshausen$node_dat$meinshausen_reject, na.rm = TRUE)
   cat("Meinshausen hierarchical rejections:", meinshausen_rejections, "\n")
-  
+
   # Show rejected nodes with adjusted p-values
   rejected_meinshausen <- result_meinshausen$node_dat[meinshausen_reject == TRUE]
   if (nrow(rejected_meinshausen) > 0) {
@@ -190,7 +190,7 @@ result_meinshausen_trad <- find_blocks(
   parallel = "no",
   use_meinshausen = TRUE,
   meinshausen_method = "simes",
-  meinshausen_sequential = FALSE,  # Traditional approach
+  meinshausen_sequential = FALSE, # Traditional approach
   thealpha = 0.05,
   maxtest = 15,
   trace = FALSE
@@ -199,10 +199,10 @@ result_meinshausen_trad <- find_blocks(
 # Compare approaches
 if (all(c("meinshausen_reject") %in% names(result_meinshausen$node_dat))) {
   seq_rejections <- sum(result_meinshausen$node_dat$meinshausen_reject, na.rm = TRUE)
-  
+
   if ("meinshausen_reject" %in% names(result_meinshausen_trad$node_dat)) {
     trad_rejections <- sum(result_meinshausen_trad$node_dat$meinshausen_reject, na.rm = TRUE)
-    
+
     cat("Meinshausen Method Comparison:\n")
     cat("- Sequential rejection approach:", seq_rejections, "rejections\n")
     cat("- Traditional approach:", trad_rejections, "rejections\n")
@@ -243,7 +243,7 @@ result_evalues <- find_blocks(
 
 cat("E-value methodology provides always-valid inference\n")
 cat("Particularly useful for:\n")
-cat("- Sequential data collection\n") 
+cat("- Sequential data collection\n")
 cat("- Optional stopping\n")
 cat("- Online learning scenarios\n")
 ```
@@ -277,9 +277,10 @@ sensitivity_data[, block_confounder := rnorm(1), by = block]
 sensitivity_data[, treatment := rbinom(.N, 1, plogis(0.2 * block_confounder))]
 
 # Add outcomes with treatment effect + confounding
-sensitivity_data[, outcome := rnorm(.N, 
-  mean = 0.3 * treatment + 0.4 * block_confounder, 
-  sd = 1)]
+sensitivity_data[, outcome := rnorm(.N,
+  mean = 0.3 * treatment + 0.4 * block_confounder,
+  sd = 1
+)]
 
 cat("Simulated sensitivity analysis dataset:\n")
 cat("- Blocks with varying confounding levels\n")
@@ -398,7 +399,8 @@ results <- find_blocks(
 # Step 4: Validate results with sensitivity analysis
 if (causal_inference_context) {
   sensitivity_results <- design_sensitivity_analysis(
-    idat, bdat, formula = outcome ~ treatment,
+    idat, bdat,
+    formula = outcome ~ treatment,
     gamma_range = seq(1, 2, by = 0.1)
   )
 }
@@ -413,7 +415,7 @@ Advanced hierarchical testing procedures should satisfy the **consonance propert
 ```{r consonance-checking, eval=FALSE}
 # Check logical consistency of hierarchical rejections
 consonance_check <- check_consonance_property(
-  result_goeman$node_dat, 
+  result_goeman$node_dat,
   result_goeman$node_tracker,
   rejection_column = "closed_testing_reject"
 )

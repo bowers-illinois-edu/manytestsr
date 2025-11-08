@@ -2,11 +2,11 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 fast_dists_and_trans_new <- function(x) {
-    .Call(`_manytestsr_fast_dists_and_trans_new`, x)
+  .Call(`_manytestsr_fast_dists_and_trans_new`, x)
 }
 
 fast_dists_and_trans_new_omp <- function(x, threads = 0L) {
-    .Call(`_manytestsr_fast_dists_and_trans_new_omp`, x, threads)
+  .Call(`_manytestsr_fast_dists_and_trans_new_omp`, x, threads)
 }
 
 #' Fast per-unit distance summaries (scalar outcome)
@@ -54,44 +54,45 @@ fast_dists_and_trans_new_omp <- function(x, threads = 0L) {
 #' ## compare to explicit distance matrix (slow / big):
 #' dx <- abs(outer(x, x, "-"))
 #' mean_dist_ref <- colSums(dx) / (length(x) - 1)
-#' stopifnot(all.equal(fast_dists_and_trans_hybrid(x)$mean_dist,
-#'                     mean_dist_ref))
+#' stopifnot(all.equal(
+#'   fast_dists_and_trans_hybrid(x)$mean_dist,
+#'   mean_dist_ref
+#' ))
 #'
 #' @name fast_dists_and_trans_hybrid
 #' @export
 fast_dists_and_trans_hybrid <- function(x) {
-    .Call(`_manytestsr_fast_dists_and_trans_hybrid`, x)
+  .Call(`_manytestsr_fast_dists_and_trans_hybrid`, x)
 }
 
 fast_dists_and_trans_nomax_hybrid <- function(x) {
-    .Call(`_manytestsr_fast_dists_and_trans_nomax_hybrid`, x)
+  .Call(`_manytestsr_fast_dists_and_trans_nomax_hybrid`, x)
 }
 
 vecdist_arma <- function(x) {
-    .Call(`_manytestsr_vecdist_arma`, x)
+  .Call(`_manytestsr_vecdist_arma`, x)
 }
 
 vecdist3_arma <- function(A) {
-    .Call(`_manytestsr_vecdist3_arma`, A)
+  .Call(`_manytestsr_vecdist3_arma`, A)
 }
 
 vecdist2 <- function(x) {
-    .Call(`_manytestsr_vecdist2`, x)
+  .Call(`_manytestsr_vecdist2`, x)
 }
 
 avg_rank_arma <- function(x) {
-    .Call(`_manytestsr_avg_rank_arma`, x)
+  .Call(`_manytestsr_avg_rank_arma`, x)
 }
 
 avg_rank <- function(x) {
-    .Call(`_manytestsr_avg_rank`, x)
+  .Call(`_manytestsr_avg_rank`, x)
 }
 
 fastmad_arma <- function(x) {
-    .Call(`_manytestsr_fastmad_arma`, x)
+  .Call(`_manytestsr_fastmad_arma`, x)
 }
 
 fastmad <- function(x, center) {
-    .Call(`_manytestsr_fastmad`, x, center)
+  .Call(`_manytestsr_fastmad`, x, center)
 }
-

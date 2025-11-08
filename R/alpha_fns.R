@@ -19,12 +19,12 @@
 #' # Example with hierarchical testing scenario
 #' # Simulate p-values from different levels of a tree
 #' pvals <- c(0.01, 0.04, 0.12, 0.08, 0.15, 0.02)
-#' batches <- c(1, 2, 2, 3, 3, 3)  # Tree depth levels
-#' node_sizes <- c(100, 50, 50, 25, 25, 25)  # Sample sizes at each node
-#' 
+#' batches <- c(1, 2, 2, 3, 3, 3) # Tree depth levels
+#' node_sizes <- c(100, 50, 50, 25, 25, 25) # Sample sizes at each node
+#'
 #' # Apply alpha investing procedure
 #' alpha_vals <- alpha_investing(pvals, batches, node_sizes, thealpha = 0.05)
-#' 
+#'
 #' # Compare p-values to adjusted alpha levels
 #' data.frame(
 #'   pval = pvals,
@@ -32,7 +32,7 @@
 #'   alpha = alpha_vals,
 #'   significant = pvals <= alpha_vals
 #' )
-#' 
+#'
 #' @importFrom onlineFDR Alpha_investing
 #' @import data.table
 #' @export
@@ -70,12 +70,12 @@ alpha_investing <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 -
 #' @examples
 #' # Example with SAFFRON procedure for hierarchical testing
 #' pvals <- c(0.01, 0.04, 0.12, 0.08, 0.15, 0.02)
-#' batches <- c(1, 2, 2, 3, 3, 3)  # Tree depth levels
-#' node_sizes <- c(100, 50, 50, 25, 25, 25)  # Sample sizes at each node
-#' 
+#' batches <- c(1, 2, 2, 3, 3, 3) # Tree depth levels
+#' node_sizes <- c(100, 50, 50, 25, 25, 25) # Sample sizes at each node
+#'
 #' # Apply SAFFRON procedure
 #' alpha_vals <- alpha_saffron(pvals, batches, node_sizes, thealpha = 0.05)
-#' 
+#'
 #' # Compare p-values to adjusted alpha levels
 #' data.frame(
 #'   pval = pvals,
@@ -83,7 +83,7 @@ alpha_investing <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 -
 #'   alpha = alpha_vals,
 #'   significant = pvals <= alpha_vals
 #' )
-#' 
+#'
 #' @importFrom onlineFDR SAFFRON
 #' @export
 alpha_saffron <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .001) {
@@ -119,12 +119,12 @@ alpha_saffron <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .
 #' @examples
 #' # Example with ADDIS procedure for hierarchical testing
 #' pvals <- c(0.01, 0.04, 0.12, 0.08, 0.15, 0.02)
-#' batches <- c(1, 2, 2, 3, 3, 3)  # Tree depth levels
-#' node_sizes <- c(100, 50, 50, 25, 25, 25)  # Sample sizes at each node
-#' 
+#' batches <- c(1, 2, 2, 3, 3, 3) # Tree depth levels
+#' node_sizes <- c(100, 50, 50, 25, 25, 25) # Sample sizes at each node
+#'
 #' # Apply ADDIS procedure
 #' alpha_vals <- alpha_addis(pvals, batches, node_sizes, thealpha = 0.05)
-#' 
+#'
 #' # Compare p-values to adjusted alpha levels
 #' data.frame(
 #'   pval = pvals,
@@ -132,7 +132,7 @@ alpha_saffron <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .
 #'   alpha = alpha_vals,
 #'   significant = pvals <= alpha_vals
 #' )
-#' 
+#'
 #' @importFrom onlineFDR ADDIS
 #' @export
 alpha_addis <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .001) {

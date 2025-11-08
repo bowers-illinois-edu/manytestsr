@@ -69,7 +69,7 @@ results <- find_blocks(
 # Apply intersection-union tests to validate hypothesis structure
 iu_results <- intersection_union_tests(
   node_dat = results$node_dat,
-  tracker = results$node_tracker,  # Assuming tracker is available
+  tracker = results$node_tracker, # Assuming tracker is available
   alpha = 0.05,
   union_method = "simes",
   intersection_method = "simes"
@@ -78,17 +78,17 @@ iu_results <- intersection_union_tests(
 # Examine intersection-union test results
 if ("iu_p_intersection" \%in\% names(iu_results$node_dat)) {
   iu_summary <- iu_results$node_dat[, .(
-    nodenum, 
+    nodenum,
     original_p = p,
     intersection_p = iu_p_intersection,
     union_p = iu_p_union,
     reject_intersection = iu_reject_intersection,
     reject_union = iu_reject_union
   )]
-  
+
   cat("Intersection-Union Test Results:\n")
   print(head(iu_summary))
-  
+
   # Count rejections by method
   cat("Intersection null rejections:", sum(iu_summary$reject_intersection, na.rm = TRUE), "\n")
   cat("Union alternative rejections:", sum(iu_summary$reject_union, na.rm = TRUE), "\n")

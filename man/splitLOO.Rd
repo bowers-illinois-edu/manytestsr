@@ -23,7 +23,7 @@ group or another group.
 \examples{
 # Leave-one-out splitting - focuses on largest block vs rest
 block_ids <- c("B1", "B2", "B3", "B4", "B5")
-block_weights <- c(0.1, 0.3, 0.8, 0.2, 0.4)  # B3 is largest
+block_weights <- c(0.1, 0.3, 0.8, 0.2, 0.4) # B3 is largest
 
 groups <- splitLOO(block_ids, block_weights)
 

@@ -52,7 +52,7 @@ results_closed <- find_blocks(
   splitby = "hwt",
   parallel = "no",
   use_closed_testing = TRUE,
-  closed_testing_method = "simes",  # Goeman & Solari recommend Simes
+  closed_testing_method = "simes", # Goeman & Solari recommend Simes
   thealpha = 0.05,
   maxtest = 20
 )
@@ -61,7 +61,7 @@ results_closed <- find_blocks(
 results_traditional <- find_blocks(
   idat = idat,
   bdat = bdat,
-  blockid = "blockF", 
+  blockid = "blockF",
   splitfn = splitCluster,
   pfn = pIndepDist,
   fmla = Y1 ~ trtF | blockF,
@@ -75,7 +75,7 @@ results_traditional <- find_blocks(
 # Examine closed testing results
 if ("closed_testing_reject" \%in\% names(results_closed$node_dat)) {
   closed_rejections <- results_closed$node_dat[
-    closed_testing_reject == TRUE, 
+    closed_testing_reject == TRUE,
     .(nodenum, p, closed_testing_reject)
   ]
   cat("Closed testing rejections:\n")

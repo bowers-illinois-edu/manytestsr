@@ -13,17 +13,21 @@
 local_simes <- function(pvals_children, alpha = .05) {
   # Remove NA values
   pvals_children <- pvals_children[!is.na(pvals_children)]
-  
+
   k <- length(pvals_children)
-  
+
   # Handle edge cases
-  if (k == 0) return(1.0)
-  if (k == 1) return(pvals_children[1])
-  
+  if (k == 0) {
+    return(1.0)
+  }
+  if (k == 1) {
+    return(pvals_children[1])
+  }
+
   sort_p <- sort(pvals_children)
   i_seq <- seq_len(k)
   simes_vals <- (k / i_seq) * sort_p
-  
+
   # Ensure result is at most 1
   result <- min(simes_vals)
   return(min(result, 1.0))

@@ -66,7 +66,7 @@ results <- find_blocks(
 # Check consonance of the testable decisions
 consonance_check <- check_consonance_property(
   node_dat = results$node_dat,
-  tracker = results$node_tracker,  # Assuming tracker is available
+  tracker = results$node_tracker, # Assuming tracker is available
   rejection_column = "testable",
   alpha = 0.05
 )
@@ -80,7 +80,7 @@ if (consonance_check$is_consonant) {
     violation <- consonance_check$violations[[i]]
     cat("-", violation$violation_description, "\n")
   }
-  
+
   # Print violation analysis
   analysis <- consonance_check$violation_analysis
   cat("\nViolation Analysis:\n")
@@ -92,21 +92,21 @@ if (consonance_check$is_consonant) {
 # Apply consonance correction if needed
 if (!consonance_check$is_consonant) {
   cat("\nApplying consonance correction...\n")
-  
+
   corrected_results <- apply_consonance_correction(
     node_dat = results$node_dat,
     tracker = results$node_tracker,
     rejection_column = "testable",
     correction_method = "propagate_up"
   )
-  
+
   # Check if correction worked
   corrected_check <- check_consonance_property(
     corrected_results,
     results$node_tracker,
     "testable_consonant"
   )
-  
+
   if (corrected_check$is_consonant) {
     cat("Consonance correction successful.\n")
   } else {
