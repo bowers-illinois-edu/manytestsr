@@ -311,7 +311,7 @@ cat(
 ``` r
 # Create tree structure for visualization
 tree_results <- make_results_tree(
-  results_cluster$bdat,
+  results_cluster,
   block_id = "blockF",
   node_label = "hwt"
 )
@@ -554,7 +554,7 @@ results <- find_blocks(
 detections <- report_detections(results$bdat, fwer = FALSE) # FDR control
 
 # 5. Visualize results
-tree <- make_results_tree(results$bdat, block_id = "block_variable")
+tree <- make_results_tree(results, block_id = "block_variable")
 plot <- make_results_ggraph(tree$graph)
 ```
 

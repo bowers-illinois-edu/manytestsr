@@ -12,7 +12,9 @@ make_results_tree(
   block_id,
   node_label = NULL,
   return_what = "all",
-  truevar_name = NULL
+  truevar_name = NULL,
+  node_dat = NULL,
+  node_tracker = NULL
 )
 ```
 
@@ -22,7 +24,7 @@ make_results_tree(
 
   data.table from find_blocks(); must include elements such as
 
-  - biggrp (dot-sep lineage, may be truncated),
+  - node_id (node identifier, may be factorized),
 
   - p1,p2,… and a pfinal\*,
 
@@ -51,6 +53,80 @@ make_results_tree(
   block or node has a non-zero effect and FALSE if the block or node has
   a truly zero effect. So, truevar_name can be "nonnull"
 
+- node_dat:
+
+  optional node-level output from [`find_blocks()`](find_blocks.md).
+  When the full list returned by [`find_blocks()`](find_blocks.md) is
+  supplied as `orig_res` this argument is populated automatically. When
+  providing only the block-level data.table you must also pass
+  `node_dat` so that node identifiers can be matched without relying on
+  p-values.
+
+- node_tracker:
+
+  optional tracker returned by [`find_blocks()`](find_blocks.md). This
+  is not required for constructing the node table but is accepted for
+  compatibility.
+
 ## Value
 
 a list that can contain nodes, a tbl_graph object, and/or a test_summary
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# Complete workflow example
+data(example_dat, package = "manytestsr")
+library(data.table)
+library(dplyr)
+
+# Create block-level dataset
+example_bdat <- example_dat %>%
+  group_by(blockF) %>%
+  summarize(
+    nb = n(),
+    pb = mean(trt),
+    hwt = (nb / nrow(example_dat)) * (pb * (1 - pb)),
+    .groups = "drop"
+  ) %>%
+  as.data.table()
+
+# Run find_blocks
+results <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pOneway,
+  fmla = Y1 ~ trtF | blockF,
+  parallel = "no"
+)
+
+# Create tree structure (default returns all components)
+tree_results <- make_results_tree(results, block_id = "blockF")
+
+# Examine the components
+str(tree_results)
+
+# Look at node-level information
+head(tree_results$nodes)
+
+# Look at test summary
+print(tree_results$test_summary)
+
+# Get only the graph component
+tree_graph <- make_results_tree(results,
+  block_id = "blockF",
+  return_what = "graph"
+)
+print(tree_graph)
+
+# Get only node information
+tree_nodes <- make_results_tree(results,
+  block_id = "blockF",
+  return_what = "nodes"
+)
+head(tree_nodes)
+} # }
+```

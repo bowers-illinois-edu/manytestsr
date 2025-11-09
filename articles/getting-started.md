@@ -186,7 +186,7 @@ library(ggraph)
 library(ggplot2)
 
 # Create tree visualization
-tree_data <- make_results_tree(results$bdat, block_id = "blockF")
+tree_data <- make_results_tree(results, block_id = "blockF")
 tree_plot <- make_results_ggraph(tree_data$graph)
 
 # Display the tree
@@ -217,7 +217,6 @@ if(!is.null(summary_table) && is.data.frame(summary_table) && nrow(summary_table
 #>    depth     N
 #>    <int> <int>
 #> 1:     1     1
-#> 2:     2     2
 ```
 
 ## Best Practices
