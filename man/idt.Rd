@@ -3,12 +3,15 @@
 \docType{data}
 \name{idt}
 \alias{idt}
+\alias{bdt1}
 \title{Example tree-testing data}
 \format{
 \describe{
-\item{idt}{individual level data.table}
-\item{bt1}{block level data.table}
+\item{idt}{Individual-level data.table with outcomes and assignments.}
+\item{bdt1}{Block-level data.table containing summaries per block.}
 }
+
+An object of class \code{data.table} (inherits from \code{data.frame}) with 64 rows and 9 columns.
 }
 \source{
 See \file{data-raw/make_k_ary_tree_data.R}; produced with
@@ -16,6 +19,8 @@ See \file{data-raw/make_k_ary_tree_data.R}; produced with
 }
 \usage{
 idt
+
+bdt1
 }
 \description{
 Synthetic data used in examples and tests for \pkg{manytestsr}.

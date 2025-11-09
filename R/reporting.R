@@ -1,5 +1,7 @@
 # Functions for organizing and graphing results
 
+utils::globalVariables(c("num_blocks", "i.num_blocks"))
+
 #' Return detected blocks plus info
 #'
 #' Given the results of the splitting and testing algorithm, report on the

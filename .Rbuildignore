@@ -38,3 +38,9 @@ README.md
 ^vignettes/vignettes$
 ^_quarto\.yml\.backup$
 ^data-raw$
+CLAUDE\.md
+LICENSE\.md
+debug_block_structure\.R
+debug_depth2_hommel\.R
+debug_local_adj\.R
+debug_nodes\.R
