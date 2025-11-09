@@ -112,7 +112,7 @@ example_blocks_spec_fwer <- find_blocks(
 ## and leaves)
 
 example_hits_spec_fwer <- report_detections(example_blocks_spec_fwer$bdat, fwer = TRUE, only_hits = FALSE, blockid = "blockF")
-example_tree_spec_fwer <- make_results_tree(example_blocks_spec_fwer$bdat, block_id = "blockF")
+example_tree_spec_fwer <- make_results_tree(example_blocks_spec_fwer, block_id = "blockF")
 make_results_ggraph(example_tree_spec_fwer$graph)
 example_nodes_spec_fwer <- example_tree_spec_fwer$graph %>%
   activate(nodes) %>%
@@ -157,7 +157,7 @@ example_blocks_spec_fwer$bdat %>%
 ##  arrange(p) %>%
 ##  head()
 
-example_blocks_spec_fdr <- find_blocks(
+example_spec_fdr <- find_blocks(
   idat = example_dat, bdat = example_bdat, blockid = "blockF",
   pfn = pIndepDist, fmla = Y1 ~ trtF | blockF,
   splitfn = splitSpecifiedFactorMulti,
@@ -165,10 +165,10 @@ example_blocks_spec_fdr <- find_blocks(
   splitby = "place_year_block",
   blocksize = "nb", thealpha = .05, thew0 = .05 - .00000001,
   copydts = TRUE, ncores = 1, parallel = "no", trace = FALSE
-)$bdat
-example_hits_spec_fdr <- report_detections(example_blocks_spec_fdr, fwer = FALSE, alpha = .1, only_hits = FALSE, blockid = "blockF")
+)
+example_hits_spec_fdr <- report_detections(example_spec_fdr$bdat, fwer = FALSE, alpha = .1, only_hits = FALSE, blockid = "blockF")
 
-example_tree_spec_fdr <- make_results_tree(example_blocks_spec_fdr, block_id = "blockF")
+example_tree_spec_fdr <- make_results_tree(example_spec_fdr, block_id = "blockF")
 make_results_ggraph(example_tree_spec_fdr$graph)
 example_nodes_spec_fdr <- example_tree_spec_fdr$graph %>%
   activate(nodes) %>%
@@ -177,7 +177,7 @@ example_nodes_spec_fdr <- example_tree_spec_fdr$graph %>%
 ## That is, we learn (1) that we can reject the null of no effects overall
 ## (and that we have 5 splits from this first test)
 example_nodes_spec_fdr %>%
-  select(node_number, name, parent_name, p, a, depth, num_leaves)
+  select(node_number, name, parent_name, p, a, depth, num_blocks)
 ## See just two nodes where we can reject the null: (node 1 --- the overall node, and node 6)
 example_tree_spec_fdr$graph %>%
   activate(edges) %>%

@@ -189,8 +189,8 @@ test_that("splitCluster stops appropriately (i.e. doesn't just keep randomly spl
   )
   theres2_det <- report_detections(theres2$bdat, blockid = "bF")
 
-  theres1_tree <- make_results_tree(theres1$bdat, block_id = "bF", node_label = "hwt")
-  theres2_tree <- make_results_tree(theres2$bdat, block_id = "bF", node_label = "hwt")
+  theres1_tree <- make_results_tree(theres1, block_id = "bF", node_label = "hwt")
+  theres2_tree <- make_results_tree(theres2, block_id = "bF", node_label = "hwt")
 
   expect_equal(theres1_tree$test_summary, theres2_tree$test_summary)
   expect_equal(theres1_tree$nodes$p, theres2_tree$nodes$p)
@@ -299,7 +299,7 @@ test_that("Splitters work as expected given splitby variables
   with(blah2a_det, table(fin_grp, twosplits, exclude = c()))
   ## Again, just running code to see if they produce errors.
   ## The expectation is that there is no error here. But I don't see that in testthat
-  blah2_tree <- make_results_ggraph(make_results_tree(blah2$bdat, block_id = "bF")$graph)
+  blah2_tree <- make_results_ggraph(make_results_tree(blah2, block_id = "bF")$graph)
 
   ## 18:             splitLOO twosplitsF         FALSE
 

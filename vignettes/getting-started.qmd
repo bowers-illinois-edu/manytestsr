@@ -194,7 +194,7 @@ library(ggraph)
 library(ggplot2)
 
 # Create tree visualization
-tree_data <- make_results_tree(results$bdat, block_id = "blockF")
+tree_data <- make_results_tree(results, block_id = "blockF")
 tree_plot <- make_results_ggraph(tree_data$graph)
 
 # Display the tree

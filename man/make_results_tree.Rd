@@ -9,13 +9,15 @@ make_results_tree(
   block_id,
   node_label = NULL,
   return_what = "all",
-  truevar_name = NULL
+  truevar_name = NULL,
+  node_dat = NULL,
+  node_tracker = NULL
 )
 }
 \arguments{
 \item{orig_res}{data.table from find_blocks(); must include elements such as
 \itemize{
-\item biggrp    (dot-sep lineage, may be truncated),
+\item node_id    (node identifier, may be factorized),
 \item p1,p2,… and a pfinal*,
 \item alpha1, alpha2, …
 }}
@@ -34,6 +36,15 @@ treatment effect (used here to find blocks where the true effect is 0 or
 not). In some simulations we have a column called nonnull which is TRUE if
 that block or node has a non-zero effect and FALSE if the block or node has
 a truly zero effect. So, truevar_name can be "nonnull"}
+
+\item{node_dat}{optional node-level output from \code{\link[=find_blocks]{find_blocks()}}. When the
+full list returned by \code{find_blocks()} is supplied as \code{orig_res} this argument
+is populated automatically. When providing only the block-level data.table
+you must also pass \code{node_dat} so that node identifiers can be matched without
+relying on p-values.}
+
+\item{node_tracker}{optional tracker returned by \code{\link[=find_blocks]{find_blocks()}}. This is not
+required for constructing the node table but is accepted for compatibility.}
 }
 \value{
 a list that can contain nodes, a tbl_graph object, and/or a test_summary
@@ -42,4 +53,60 @@ a list that can contain nodes, a tbl_graph object, and/or a test_summary
 Given the results of the splitting and testing algorithm, make a node level
 data set for use in reporting results and as input to ggraph for
 visualization in terms of a tree graph.
+}
+\examples{
+\dontrun{
+# Complete workflow example
+data(example_dat, package = "manytestsr")
+library(data.table)
+library(dplyr)
+
+# Create block-level dataset
+example_bdat <- example_dat \%>\%
+  group_by(blockF) \%>\%
+  summarize(
+    nb = n(),
+    pb = mean(trt),
+    hwt = (nb / nrow(example_dat)) * (pb * (1 - pb)),
+    .groups = "drop"
+  ) \%>\%
+  as.data.table()
+
+# Run find_blocks
+results <- find_blocks(
+  idat = example_dat,
+  bdat = example_bdat,
+  blockid = "blockF",
+  splitfn = splitCluster,
+  pfn = pOneway,
+  fmla = Y1 ~ trtF | blockF,
+  parallel = "no"
+)
+
+# Create tree structure (default returns all components)
+tree_results <- make_results_tree(results, block_id = "blockF")
+
+# Examine the components
+str(tree_results)
+
+# Look at node-level information
+head(tree_results$nodes)
+
+# Look at test summary
+print(tree_results$test_summary)
+
+# Get only the graph component
+tree_graph <- make_results_tree(results,
+  block_id = "blockF",
+  return_what = "graph"
+)
+print(tree_graph)
+
+# Get only node information
+tree_nodes <- make_results_tree(results,
+  block_id = "blockF",
+  return_what = "nodes"
+)
+head(tree_nodes)
+}
 }

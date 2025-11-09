@@ -41,8 +41,8 @@ cat("Original:", nrow(orig_nodes), "nodes\n")
 cat("Hommel:", nrow(hommel_nodes), "nodes\n")
 
 # Get the reconstructed trees
-res_half_tree <- make_results_tree(res_half$bdat, block_id = "bF")
-res_half_hommel_tree <- make_results_tree(res_half_hommel$bdat, block_id = "bF")
+res_half_tree <- make_results_tree(res_half, block_id = "bF")
+res_half_hommel_tree <- make_results_tree(res_half_hommel, block_id = "bF")
 
 cat("\nReconstructed node count comparison:\n")
 cat("Original reconstructed:", nrow(res_half_tree$nodes), "nodes\n")

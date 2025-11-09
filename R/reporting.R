@@ -21,7 +21,7 @@
 #' data(example_dat, package = "manytestsr")
 #' library(data.table)
 #' library(dplyr)
-#' 
+#'
 #' # Create block-level dataset
 #' example_bdat <- example_dat %>%
 #'   group_by(blockF) %>%
@@ -32,7 +32,7 @@
 #'     .groups = "drop"
 #'   ) %>%
 #'   as.data.table()
-#' 
+#'
 #' # Run find_blocks
 #' results <- find_blocks(
 #'   idat = example_dat,
@@ -43,11 +43,11 @@
 #'   fmla = Y1 ~ trtF | blockF,
 #'   parallel = "no"
 #' )
-#' 
+#'
 #' # Report detections using FWER control
 #' detections_fwer <- report_detections(results$bdat, fwer = TRUE, alpha = 0.05)
 #' head(detections_fwer[, .(blockF, hit, pfinalb)])
-#' 
+#'
 #' # Report only significant blocks
 #' hits_only <- report_detections(results$bdat, fwer = TRUE, only_hits = TRUE)
 #' print(hits_only)
@@ -107,7 +107,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 
     ## So, record the minimum p for all descendents of the parents where the splitting has ended
     if (all(res$group_id == 1)) {
-      ## when there is a single group then fin_parent==0  
+      ## when there is a single group then fin_parent==0
       res[, desc_min_p := max_p]
     } else {
       res[, desc_min_p := {
@@ -165,7 +165,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 #' data(example_dat, package = "manytestsr")
 #' library(data.table)
 #' library(dplyr)
-#' 
+#'
 #' # Create block-level dataset
 #' example_bdat <- example_dat %>%
 #'   group_by(blockF) %>%
@@ -176,7 +176,7 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 #'     .groups = "drop"
 #'   ) %>%
 #'   as.data.table()
-#' 
+#'
 #' # Run find_blocks
 #' results <- find_blocks(
 #'   idat = example_dat,
@@ -187,20 +187,20 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 #'   fmla = Y1 ~ trtF | blockF,
 #'   parallel = "no"
 #' )
-#' 
+#'
 #' # Create tree structure
-#' tree_results <- make_results_tree(results$bdat, block_id = "blockF")
-#' 
+#' tree_results <- make_results_tree(results, block_id = "blockF")
+#'
 #' # Create ggraph visualization
 #' library(ggraph)
 #' library(ggplot2)
 #' graph_plot <- make_results_ggraph(tree_results$graph)
-#' 
+#'
 #' # Display the plot
 #' print(graph_plot)
-#' 
+#'
 #' # Customize the visualization
-#' graph_plot + 
+#' graph_plot +
 #'   labs(title = "Hierarchical Testing Results Tree") +
 #'   theme_void()
 #' }
@@ -217,7 +217,7 @@ make_results_ggraph <- function(res_graph, remove_na_p = TRUE) {
     geom_edge_diagonal(colour = "black") +
     geom_node_label(aes(label = label, colour = hit),
       repel = FALSE, show.legend = FALSE, label.r = unit(0.5, "lines"),
-      label.padding = unit(.01, "lines"), label.size = 0
+      label.padding = unit(.01, "lines"), size = 1
     ) +
     theme(legend.position = "none") +
     theme(
@@ -247,6 +247,13 @@ make_results_ggraph <- function(res_graph, remove_na_p = TRUE) {
 #' object with nodes and edges), "nodes" (a data.table with node level
 #' information), "test_summary" (a data.table object with one row indicating
 #' false and true discoveries, etc.)
+#' @param node_dat optional node-level output from [find_blocks()]. When the
+#' full list returned by `find_blocks()` is supplied as `orig_res` this argument
+#' is populated automatically. When providing only the block-level data.table
+#' you must also pass `node_dat` so that node identifiers can be matched without
+#' relying on p-values.
+#' @param node_tracker optional tracker returned by [find_blocks()]. This is not
+#' required for constructing the node table but is accepted for compatibility.
 #' @param truevar_name the optional name of a column recording the true
 #' treatment effect (used here to find blocks where the true effect is 0 or
 #' not). In some simulations we have a column called nonnull which is TRUE if
@@ -259,7 +266,7 @@ make_results_ggraph <- function(res_graph, remove_na_p = TRUE) {
 #' data(example_dat, package = "manytestsr")
 #' library(data.table)
 #' library(dplyr)
-#' 
+#'
 #' # Create block-level dataset
 #' example_bdat <- example_dat %>%
 #'   group_by(blockF) %>%
@@ -270,7 +277,7 @@ make_results_ggraph <- function(res_graph, remove_na_p = TRUE) {
 #'     .groups = "drop"
 #'   ) %>%
 #'   as.data.table()
-#' 
+#'
 #' # Run find_blocks
 #' results <- find_blocks(
 #'   idat = example_dat,
@@ -281,280 +288,159 @@ make_results_ggraph <- function(res_graph, remove_na_p = TRUE) {
 #'   fmla = Y1 ~ trtF | blockF,
 #'   parallel = "no"
 #' )
-#' 
+#'
 #' # Create tree structure (default returns all components)
-#' tree_results <- make_results_tree(results$bdat, block_id = "blockF")
-#' 
+#' tree_results <- make_results_tree(results, block_id = "blockF")
+#'
 #' # Examine the components
 #' str(tree_results)
-#' 
+#'
 #' # Look at node-level information
 #' head(tree_results$nodes)
-#' 
+#'
 #' # Look at test summary
 #' print(tree_results$test_summary)
-#' 
+#'
 #' # Get only the graph component
-#' tree_graph <- make_results_tree(results$bdat, block_id = "blockF", 
-#'                                 return_what = "graph")
+#' tree_graph <- make_results_tree(results,
+#'   block_id = "blockF",
+#'   return_what = "graph"
+#' )
 #' print(tree_graph)
-#' 
-#' # Get only node information  
-#' tree_nodes <- make_results_tree(results$bdat, block_id = "blockF", 
-#'                                 return_what = "nodes")
+#'
+#' # Get only node information
+#' tree_nodes <- make_results_tree(results,
+#'   block_id = "blockF",
+#'   return_what = "nodes"
+#' )
 #' head(tree_nodes)
 #' }
 #' @importFrom stringi stri_split_fixed stri_sub
 #' @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent activate
 #' @import tidygraph data.table
 #' @export
-make_results_tree <- function(orig_res, block_id, node_label = NULL, return_what = "all", truevar_name = NULL) {
-  res <- copy(orig_res)
-
-  # Key insight: Each node appears in node_dat exactly once, at the depth/batch where it was created
-  # The batch indicates when the node was first tested
-  
-  pnms <- sort(grep("^p[0-9]", names(res), value = TRUE))
-  anms <- sort(grep("^alpha[0-9]", names(res), value = TRUE))
-  max_depth <- length(pnms)
-  
-  # Strategy: Build the complete node tree by examining both current nodes and parent references
-  # Key insight: some nodes appear directly as nodenum_current, others only as nodenum_prev (parents)
-  
-  all_nodes <- list()
-  
-  # Build complete set of all node IDs that appear in the tree
-  all_node_ids <- unique(c(
-    1L,  # root node
-    res[!is.na(nodenum_current), nodenum_current],  # current/leaf nodes  
-    res[!is.na(nodenum_prev) & nodenum_prev != 0, nodenum_prev]  # parent nodes
-  ))
-  
-  # For each depth, determine which nodes were tested/created at that depth
-  for (d in 1:max_depth) {
-    p_col <- paste0("p", d)
-    a_col <- paste0("alpha", d)
-    
-    if (p_col %in% names(res) && a_col %in% names(res)) {
-      if (d == 1) {
-        # Root node: always node 1 at depth 1
-        node_data <- data.table(
-          nodenum = "1",
-          parent = 0L,
-          depth = 1L,
-          batch = "p1",
-          p = unique(res[!is.na(get(p_col)), get(p_col)]),
-          a = unique(res[!is.na(get(a_col)), get(a_col)]),
-          group_id = 1L,
-          node_id = factor("1"),
-          testable = TRUE,
-          nodesize = sum(res[!is.na(get(p_col)), nb], na.rm = TRUE)
-        )
-        all_nodes[[paste0("depth_", d)]] <- node_data
-      } else {
-        # For depth > 1: identify nodes that get their p-value from this depth
-        # These are nodes that appear as unique values in the p{d} column
-        
-        blocks_with_p <- res[!is.na(get(p_col))]
-        
-        if (nrow(blocks_with_p) > 0) {
-          # Method: Look at unique p-values at this depth and match them to node IDs
-          # Each unique p-value at depth d represents a node that was tested at depth d
-          
-          unique_p_values <- unique(blocks_with_p[[p_col]])
-          
-          nodes_at_depth <- data.table()
-          
-          for (pval in unique_p_values) {
-            # Find blocks that have this specific p-value at depth d
-            blocks_with_this_p <- blocks_with_p[get(p_col) == pval]
-            
-            # The node ID for this p-value could be:
-            # 1. A nodenum_current that appears in these blocks 
-            # 2. A nodenum_prev that these blocks refer to as parent
-            # 3. A common ancestor when multiple different nodenum_prev values share the same p-value
-            
-            # Determine which node this p-value belongs to
-            current_nodes <- unique(blocks_with_this_p$nodenum_current)
-            prev_nodes <- unique(blocks_with_this_p$nodenum_prev)
-            
-            if (length(current_nodes) == 1 && !is.na(current_nodes)) {
-              # Case 1: All blocks have the same nodenum_current - this p-value belongs to that node
-              node_id <- current_nodes
-              parent_id <- unique(blocks_with_this_p$nodenum_prev)
-              nodesize_val <- sum(blocks_with_this_p$nb, na.rm = TRUE)
-            } else if (length(prev_nodes) == 1 && prev_nodes != 0 && length(current_nodes) > 1) {
-              # Case 2: Multiple different nodenum_current but same nodenum_prev 
-              # This means the p-value belongs to the parent node (nodenum_prev)
-              node_id <- prev_nodes
-              # Find the parent of this parent node
-              parent_blocks <- res[nodenum_current == prev_nodes]
-              if (nrow(parent_blocks) > 0) {
-                parent_id <- unique(parent_blocks$nodenum_prev)
-                nodesize_val <- sum(parent_blocks$nb, na.rm = TRUE)
-              } else {
-                # This parent node doesn't appear as nodenum_current, so find its parent by looking at tree structure
-                # For depth 2 nodes, parent should be 1 (root)
-                parent_id <- if (d == 2) 1L else prev_nodes
-                nodesize_val <- sum(blocks_with_this_p$nb, na.rm = TRUE)
-              }
-            } else if (length(prev_nodes) > 1 && length(current_nodes) > 1) {
-              # Case 3: Multiple different nodenum_prev AND multiple different nodenum_current
-              # This means the p-value belongs to a common ancestor of the nodenum_prev values
-              
-              # For depth 2 nodes, we need to determine which node this p-value belongs to
-              # by looking at the unique pattern of nodenum_prev values
-              if (d == 2) {
-                sorted_prev_nodes <- sort(prev_nodes)
-                
-                # Map based on the unique combinations of prev_nodes rather than exact p-values
-                # This makes the logic robust to local adjustments that change p-values
-                prev_pattern <- paste(sorted_prev_nodes, collapse=",")
-                
-                if (prev_pattern %in% c("2,8,9")) {
-                  node_id <- 2L
-                } else if (prev_pattern %in% c("3,11,12,13")) {
-                  node_id <- 3L  
-                } else if (prev_pattern %in% c("14,15,16,17")) {
-                  node_id <- 4L
-                } else if (prev_pattern %in% c("5,18")) {
-                  node_id <- 5L
-                } else {
-                  # For other patterns, use the minimum prev_node as a fallback
-                  node_id <- min(sorted_prev_nodes)
-                }
-                
-                parent_id <- 1L  # All depth 2 nodes have root as parent
-                nodesize_val <- sum(blocks_with_this_p$nb, na.rm = TRUE)
-              } else {
-                # For other depths, skip for now
-                next
-              }
-            } else if (length(prev_nodes) == 1 && prev_nodes != 0) {
-              # Case 4: Single nodenum_prev - this p-value belongs to that parent node
-              node_id <- prev_nodes
-              parent_id <- if (d == 2) 1L else prev_nodes  # Depth 2 nodes have parent 1
-              nodesize_val <- sum(blocks_with_this_p$nb, na.rm = TRUE)
-            } else {
-              # Skip ambiguous cases
-              next
-            }
-            
-            node_entry <- data.table(
-              nodenum = as.character(node_id),
-              parent = as.integer(parent_id),
-              depth = as.integer(d),
-              batch = p_col,
-              p = pval,
-              a = unique(blocks_with_this_p[[a_col]]),
-              group_id = as.integer(node_id),
-              node_id = factor(node_id),
-              testable = NA,
-              nodesize = nodesize_val
-            )
-            
-            nodes_at_depth <- rbind(nodes_at_depth, node_entry, fill = TRUE)
-          }
-          
-          # Remove duplicates and add to all_nodes
-          if (nrow(nodes_at_depth) > 0) {
-            nodes_at_depth <- unique(nodes_at_depth, by = "nodenum")
-            all_nodes[[paste0("depth_", d)]] <- nodes_at_depth
-          }
-        }
-      }
+make_results_tree <- function(orig_res, block_id, node_label = NULL, return_what = "all",
+                              truevar_name = NULL, node_dat = NULL, node_tracker = NULL) {
+  if (data.table::is.data.table(orig_res)) {
+    res <- copy(orig_res)
+  } else if (is.list(orig_res)) {
+    if (!("bdat" %in% names(orig_res))) {
+      stop("When supplying a list to `make_results_tree()` it must contain a `bdat` element.")
     }
-  }
-  
-  # Combine all nodes from different depths
-  if (length(all_nodes) > 0) {
-    nodes_dt <- rbindlist(all_nodes, fill = TRUE)
+    res <- copy(orig_res$bdat)
+    if (is.null(node_dat) && "node_dat" %in% names(orig_res)) {
+      node_dat <- orig_res$node_dat
+    }
+    if (is.null(node_tracker) && "node_tracker" %in% names(orig_res)) {
+      node_tracker <- orig_res$node_tracker
+    }
   } else {
-    nodes_dt <- data.table()
+    stop("`orig_res` must be either the block-level data.table or the full object returned by `find_blocks()`.")
   }
-  
-  # Add additional columns needed for compatibility
-  if (nrow(nodes_dt) > 0) {
-    # Add nonnull information
-    if (!is.null(truevar_name)) {
-      block_nonnull <- res[, .(nonnull = any(get(truevar_name) != 0, na.rm = TRUE)), by = nodenum_current]
-      nodes_dt[block_nonnull, nonnull := i.nonnull, on = c("group_id" = "nodenum_current")]
+
+  if (is.null(node_dat)) {
+    stop("Node metadata (`node_dat`) is required. Pass the output of `find_blocks()` directly or supply `node_dat` via the `node_dat` argument.")
+  }
+
+  nodes_dt <- copy(node_dat)
+  setDT(nodes_dt)
+
+  if (!("nodenum" %in% names(nodes_dt))) {
+    if ("group_id" %in% names(nodes_dt)) {
+      nodes_dt[, nodenum := group_id]
     } else {
-      nodes_dt[, nonnull := NA]
+      stop("`node_dat` must include a `nodenum` column.")
     }
-    
-    # Add block information
-    block_info <- res[, .(
-      blocks = paste(sort(unique(get(block_id))), collapse = ","),
-      node_label_val = paste(sort(unique(ifelse(is.null(node_label), "NULL", get(node_label)))), collapse = ","),
-      num_leaves = .N
-    ), by = nodenum_current]
-    
-    nodes_dt[block_info, `:=`(
-      blocks = i.blocks,
-      node_label = i.node_label_val,
-      num_leaves = i.num_leaves
-    ), on = c("group_id" = "nodenum_current")]
-    
-    # Convert types and add missing columns
-    nodes_dt[, name := as.integer(nodenum)]
-    nodes_dt[, parent_name := as.integer(parent)]
-    nodes_dt[, node_number := name]
-    nodes_dt[, node_type := fifelse(depth == 1, "root", fifelse(num_leaves == 1, "leaf", "intermediate"))]
-    nodes_dt[, hit := p <= a]
-  } else {
-    # Empty case
-    nodes_dt <- data.table(
-      name = integer(0),
-      parent_name = integer(0),
-      p = numeric(0),
-      a = numeric(0),
-      depth = integer(0),
-      nonnull = logical(0),
-      blocks = character(0),
-      node_label = character(0),
-      num_leaves = integer(0),
-      node_number = integer(0),
-      node_type = character(0),
-      hit = logical(0)
-    )
+  }
+  if (!("parent" %in% names(nodes_dt))) {
+    stop("`node_dat` must include a `parent` column.")
+  }
+  if (!all(c("p", "a") %in% names(nodes_dt))) {
+    stop("`node_dat` must include `p` and `a` columns.")
   }
 
-  ## Can't calculate errors and discoveries without knowing the truth aka
-  ## having a variable that records whether a node/block is not null or not.
+  nodes_dt[, name := as.integer(nodenum)]
+  nodes_dt[, parent_name := as.integer(parent)]
+  nodes_dt[, node_number := name]
+  nodes_dt[, hit := p <= a]
+
+  nodes_with_children <- nodes_dt[!is.na(parent_name) & parent_name != 0, unique(parent_name)]
+  nodes_dt[, node_type := fifelse(
+    parent_name == 0, "root",
+    fifelse(name %in% nodes_with_children, "intermediate", "leaf")
+  )]
+
+  if (!("blocks" %in% names(nodes_dt))) {
+    nodes_dt[, blocks := NA_character_]
+  }
+  if (!("node_label" %in% names(nodes_dt))) {
+    nodes_dt[, node_label := NA_character_]
+  }
+  if (!("num_blocks" %in% names(nodes_dt))) {
+    nodes_dt[, num_blocks := NA_integer_]
+  }
+  if (!("nonnull" %in% names(nodes_dt))) {
+    nodes_dt[, nonnull := NA]
+  }
+
+  if (!is.null(res)) {
+    label_available <- !is.null(node_label) && node_label %in% names(res)
+    block_summary <- res[, .(
+      blocks = paste(sort(unique(get(block_id))), collapse = ","),
+      node_label_val = if (label_available) paste(sort(unique(as.character(get(node_label)))), collapse = ",") else NA_character_,
+      num_blocks = .N
+    ), by = nodenum_current]
+
+    nodes_dt[block_summary, `:=`(
+      blocks = i.blocks,
+      num_blocks = i.num_blocks
+    ), on = c("name" = "nodenum_current")]
+
+    if (label_available) {
+      nodes_dt[block_summary, node_label := i.node_label_val, on = c("name" = "nodenum_current")]
+    }
+
+    if (!is.null(truevar_name) && truevar_name %in% names(res)) {
+      block_nonnull <- res[, .(nonnull = any(get(truevar_name) != 0, na.rm = TRUE)), by = nodenum_current]
+      nodes_dt[block_nonnull, nonnull := i.nonnull, on = c("name" = "nodenum_current")]
+    }
+  }
+
+  nodes_dt[is.na(num_blocks) & node_type == "leaf", num_blocks := 1L]
+
+  max_depth <- suppressWarnings(max(nodes_dt$depth, na.rm = TRUE))
+  if (!is.finite(max_depth)) {
+    max_depth <- 1L
+  }
 
   if (any(!is.na(nodes_dt$nonnull))) {
-    # Record testing results
     num_nodes <- nrow(nodes_dt)
-    # the block level dataset has one row for each leaf or block
-    num_leaves <- nrow(dt)
+    num_leaves_total <- if (!is.null(res)) {
+      nrow(res)
+    } else {
+      NA_integer_
+    }
     num_nodes_tested <- sum(!is.na(nodes_dt$p))
-    num_nonnull_nodes_tested <- sum(!is.na(nodes_dt$p) & nodes_dt$nonnull)
-    ## A discovery is a rejection
+    num_nonnull_nodes_tested <- sum(!is.na(nodes_dt$p) & nodes_dt$nonnull, na.rm = TRUE)
     node_rejections <- nodes_dt[!is.na(p), sum(p <= a, na.rm = TRUE)]
-    ## Record rejections info
     node_any_false_rejection <- nodes_dt[nonnull == FALSE & !is.na(p), any(p <= a)]
     node_false_rejection_prop <- nodes_dt[nonnull == FALSE & !is.na(p), mean(p <= a)]
     node_num_false_rejections <- nodes_dt[nonnull == FALSE & !is.na(p), sum(p <= a)]
-    ## Now false discovery prop (element in FDR calc). Denominator is rejections.
     node_false_discovery_prop <- nodes_dt[nonnull == FALSE & !is.na(p), sum(p <= a) / max(1, node_rejections)]
-
-    ## prop of nodes (including leaves) where p should be less than or equal to a
-    ## prop of true discoveries among the possible true discoveries
     node_true_discoveries <- nodes_dt[nonnull == TRUE & !is.na(p), sum(p <= a)]
     node_power <- nodes_dt[nonnull == TRUE & !is.na(p), mean(p <= a)]
 
-    ## If max_depth=1, then we are only testing the root node
-    ## And we are excluding for now the idea that the root is the leaf --- that is just the case of a single test.
-    num_leaves_tested <- (max_depth > 1) * sum(nodes_dt[num_leaves == 1, !is.na(p)])
-    num_nonnull_leaves_tested <- (max_depth > 1) * sum(nodes_dt[num_leaves == 1 & nonnull == TRUE, !is.na(p)])
+    leaf_nodes <- nodes_dt[node_type == "leaf"]
+    num_leaves_tested <- sum(!is.na(leaf_nodes$p))
+    num_nonnull_leaves_tested <- sum(leaf_nodes$nonnull & !is.na(leaf_nodes$p), na.rm = TRUE)
+
     if (num_leaves_tested > 0) {
-      leaf_power <- nodes_dt[num_leaves == 1 & nonnull == TRUE & !is.na(p), mean(p <= a, na.rm = TRUE)]
-      leaf_rejections <- nodes_dt[num_leaves == 1 & !is.na(p), sum(p <= a, na.rm = TRUE)]
-      leaf_true_discoveries <- nodes_dt[num_leaves == 1 & nonnull == TRUE & !is.na(p), sum(p <= a, na.rm = TRUE)]
-      leaf_any_false_rejection <- nodes_dt[num_leaves == 1 & nonnull == FALSE & !is.na(p), any(p <= a)]
-      leaf_false_rejection_prop <- nodes_dt[num_leaves == 1 & nonnull == FALSE & !is.na(p), mean(p <= a, na.rm = TRUE)]
-      leaf_false_discovery_prop <- nodes_dt[num_leaves == 1 & nonnull == FALSE & !is.na(p), sum(p <= a, na.rm = TRUE) / max(1, leaf_rejections)]
+      leaf_power <- leaf_nodes[nonnull == TRUE & !is.na(p), mean(p <= a, na.rm = TRUE)]
+      leaf_rejections <- leaf_nodes[!is.na(p), sum(p <= a, na.rm = TRUE)]
+      leaf_true_discoveries <- leaf_nodes[nonnull == TRUE & !is.na(p), sum(p <= a, na.rm = TRUE)]
+      leaf_any_false_rejection <- leaf_nodes[nonnull == FALSE & !is.na(p), any(p <= a)]
+      leaf_false_rejection_prop <- leaf_nodes[nonnull == FALSE & !is.na(p), mean(p <= a, na.rm = TRUE)]
+      leaf_false_discovery_prop <- leaf_nodes[nonnull == FALSE & !is.na(p), sum(p <= a, na.rm = TRUE) / max(1, leaf_rejections)]
     } else {
       leaf_power <- 0
       leaf_rejections <- 0
@@ -566,7 +452,7 @@ make_results_tree <- function(orig_res, block_id, node_label = NULL, return_what
 
     test_summary <- data.table(
       num_nodes = num_nodes,
-      num_leaves = num_leaves,
+      num_blocks = num_leaves_total,
       num_nodes_tested = num_nodes_tested,
       num_nonnull_nodes_tested = num_nonnull_nodes_tested,
       node_rejections = node_rejections,
@@ -589,78 +475,76 @@ make_results_tree <- function(orig_res, block_id, node_label = NULL, return_what
     test_summary <- NA
   }
 
-  nodes_dt[, hit := p <= a]
-
-  if (any(c("all", "graph") %in% return_what)) {
-    ### set up the tidygraph style object
-    # Remap node IDs to be consecutive integers starting from 1 for tbl_graph compatibility
+  res_graph <- NULL
+  if (any(c("all", "graph") %in% return_what) && nrow(nodes_dt) > 0) {
     unique_node_ids <- sort(unique(nodes_dt$name))
     node_id_map <- setNames(seq_along(unique_node_ids), unique_node_ids)
-    
-    # Create a remapped nodes table
+
     nodes_for_graph <- copy(nodes_dt)
     nodes_for_graph[, original_name := name]
-    nodes_for_graph[, node_number := name]  # Keep original node_number for backward compatibility
+    nodes_for_graph[, node_number := name]
     nodes_for_graph[, name := node_id_map[as.character(original_name)]]
-    
-    # Create edges with remapped IDs
-    edges_dt <- nodes_for_graph[!is.na(parent_name), .(
-      from = node_id_map[as.character(parent_name)], 
-      to = name
+
+    edges_dt <- nodes_dt[!is.na(parent_name) & parent_name != 0, .(
+      from = node_id_map[as.character(parent_name)],
+      to = node_id_map[as.character(name)]
     )]
-    
-    # Remove any edges with missing mappings
     edges_dt <- edges_dt[!is.na(from) & !is.na(to)]
-    
+
     res_graph <- tbl_graph(nodes = nodes_for_graph, edges = edges_dt)
 
-    ## Abbreviate the block name string variable
     res_graph <- res_graph %>%
       activate(nodes) %>%
-      mutate(shortbf = ifelse(nchar(blocks) > 6, paste0(stri_sub(blocks, 1, 5), "..."), blocks))
-    ## Make names etc for ease in plotting later
+      mutate(shortbf = ifelse(!is.na(blocks) & nchar(blocks) > 6,
+        paste0(stri_sub(blocks, 1, 5), "..."),
+        blocks
+      ))
+
     if (length(unique(nodes_dt$a)) > 1) {
       res_graph <- res_graph %>%
         activate(nodes) %>%
-        mutate(label = paste("Node:", stri_sub(name, 1, 4), "\n Name:", shortbf,
-          "\n # Blocks=", num_leaves, "\n p=", round(p, 3), ",a=", round(a, 3),
+        mutate(label = paste(
+          "Node:", stri_sub(original_name, 1, 4),
+          "
+ Name:", shortbf,
+          "
+ # Blocks=", num_blocks,
+          "
+ p=", round(p, 3), ",a=", round(a, 3),
           sep = ""
         ))
     } else {
       res_graph <- res_graph %>%
         activate(nodes) %>%
-        mutate(label = paste("Node:", stri_sub(name, 1, 4), "\n Name:", shortbf,
-          "\n # Blocks=", num_leaves, "\n p=", round(p, 3),
+        mutate(label = paste(
+          "Node:", stri_sub(original_name, 1, 4),
+          "
+ Name:", shortbf,
+          "
+ # Blocks=", num_blocks,
+          "
+ p=", round(p, 3),
           sep = ""
         ))
     }
-  } else {
-    res_graph <- NULL
   }
 
-  results <- list(nodes = nodes_dt, graph = res_graph, test_summary = test_summary)
   if ("all" %in% return_what) {
-    return_what <- c("nodes", "graph", "test_summary")
+    return(list(nodes = nodes_dt, graph = res_graph, test_summary = test_summary))
   }
-  return(results[return_what])
+  out <- list()
+  if ("nodes" %in% return_what) {
+    out$nodes <- nodes_dt
+  }
+  if ("graph" %in% return_what) {
+    out$graph <- res_graph
+  }
+  if ("test_summary" %in% return_what) {
+    out$test_summary <- test_summary
+  }
+  return(out)
 }
 
-### DEPRECATING THE BELOW
-### #' Make a node level tree object of the results of nested testing
-### #'
-### #' Given the results of the splitting and testing algorithm, make a node level
-### #' data set for use in reporting results and as input to ggraph for
-### #' visualization in terms of a tree graph.
-### #'
-### #' @param orig_res a results data.table output from the \code{\link{find_blocks}} function.
-### #' @param blockid is a character name for the variable containing the block id information
-### #' @param node_label is a character name for a variable containing a descriptive label for the blocks.
-### #' @return A tbl_graph and igraph object with nodes and edges
-### #' @importFrom stringi stri_split_fixed stri_sub
-### #' @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent activate
-### #' @import tidygraph
-### #' @importFrom data.table melt
-### #' @export
 ### make_results_tree <- function(orig_res, blockid = "bF", node_label = NULL) {
 ###   # We have to make a node level data set and an edge level data set in order to define the graph
 ###   res <- copy(orig_res)

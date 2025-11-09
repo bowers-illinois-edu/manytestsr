@@ -25,7 +25,7 @@ print(orig_node_dat[, .N, by = depth])
 cat("Total original nodes with non-NA p:", sum(!is.na(orig_node_dat$p)), "\n")
 
 # Reconstructed from make_results_tree
-res_half_tree <- make_results_tree(res_half$bdat, block_id = "bF")
+res_half_tree <- make_results_tree(res_half, block_id = "bF")
 recon_nodes <- res_half_tree$nodes
 cat("\nReconstructed node structure:\n")
 print(recon_nodes[order(depth, name)])

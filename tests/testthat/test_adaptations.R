@@ -10,7 +10,7 @@ if (interactive) {
   library(data.table)
   library(dtplyr)
   # remotes::install_github("bowers-illinois-edu/TreeTestSim")
-  library(TreeTestSim)
+  # library(TreeTestSim)
   # load_all("~/repos/TreeTestSim")
   ## This next creates and loads different datasets that we use
   source(here("tests/testthat", "make_test_data.R"))
@@ -22,9 +22,10 @@ setDTthreads(1)
 options(digits = 4)
 
 test_that("find_blocks should give reasonable answers in the true null situation", {
-  #### First just see if find_blocks itself operates with no local adjustment or alpha adjustment and fixed block structure.
-  ### bdt1 and idt come from generate_tree(k=4,l=3)
-  ## and Y=y0 in that case
+  ## First just see if find_blocks itself operates with no local
+  ## adjustment or alpha adjustment and fixed block structure. bdt1
+  ## and idt come from generate_tree(k=4,l=3) and Y=y0 in that case
+
   expect_equal(unique(idt[, Y - y0]), 0)
   set.seed(12345)
   res_null <- find_blocks(
@@ -63,7 +64,7 @@ test_that("Unadjusted block finding produces sensible results", {
   ## make_results_tree tries to produce a row for every block but the node level
   ## results from find_blocks does not (at least for now)
 
-  res_half_tree <- make_results_tree(res_half$bdat, block_id = "bF")
+  res_half_tree <- make_results_tree(res_half, block_id = "bF")
   res_half_tree$nodes %>%
     select(-blocks) %>%
     arrange(depth, parent_name)
@@ -158,11 +159,11 @@ test_that("The local adjustment approaches produce sensible results", {
   expect_equal(res_half$bdat$pfinalb, res_half_unadj$bdat$pfinalb)
   expect_equal(res_half$node_dat$p, res_half_unadj$node_dat$p)
 
-  res_half_tree <- make_results_tree(res_half$bdat, block_id = "bF", return_what = "nodes")$nodes
-  res_half_hommel_tree <- make_results_tree(res_half_hommel$bdat, block_id = "bF", return_what = "nodes")$nodes
-  res_half_bh_tree <- make_results_tree(res_half_bh$bdat, block_id = "bF", return_what = "nodes")$nodes
-  res_half_simes_tree <- make_results_tree(res_half_simes$bdat, block_id = "bF", return_what = "nodes")$nodes
-  res_half_minp_tree <- make_results_tree(res_half_minp$bdat, block_id = "bF", return_what = "nodes")$nodes
+  res_half_tree <- make_results_tree(res_half, block_id = "bF", return_what = "nodes")$nodes
+  res_half_hommel_tree <- make_results_tree(res_half_hommel, block_id = "bF", return_what = "nodes")$nodes
+  res_half_bh_tree <- make_results_tree(res_half_bh, block_id = "bF", return_what = "nodes")$nodes
+  res_half_simes_tree <- make_results_tree(res_half_simes, block_id = "bF", return_what = "nodes")$nodes
+  res_half_minp_tree <- make_results_tree(res_half_minp, block_id = "bF", return_what = "nodes")$nodes
 
   setkey(res_half_tree, depth, node_number)
   setkey(res_half_hommel_tree, depth, node_number)
@@ -459,7 +460,7 @@ test_that("We have strong control of the FWER in some cases", {
     select(node, level, parent, nonnull, lvls_fac, node_id, starts_with("g"), starts_with("p")) %>%
     mutate(across(where(is.numeric), zapsmall))
 
-  res_half_tree <- make_results_tree(res_half$bdat, block_id = "bF", return_what = "all")
+  res_half_tree <- make_results_tree(res_half, block_id = "bF", return_what = "all")
   res_half_graph <- make_results_ggraph(res_half_tree$graph)
   res_half_graph
 
@@ -468,7 +469,7 @@ test_that("We have strong control of the FWER in some cases", {
   ## (where we may make an error or not for a hypothesis referring to multiple
   ## leaves). Currently this is still slow but keeping it slow for clarity.
   ## TODO make this change in padj_test_fn...
-  res_half_errs <- make_results_tree(res_half$bdat, block_id = "bF", return_what = "test_summary")
+  res_half_errs <- make_results_tree(res_half, block_id = "bF", return_what = "test_summary")
   res_half_errs
 })
 

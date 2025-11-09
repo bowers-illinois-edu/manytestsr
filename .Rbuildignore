@@ -37,3 +37,4 @@ README.md
 ^vignettes/\.quarto$
 ^vignettes/vignettes$
 ^_quarto\.yml\.backup$
+^data-raw$
