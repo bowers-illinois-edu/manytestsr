@@ -6,17 +6,22 @@ Synthetic data used in examples and tests for manytestsr.
 
 ``` r
 idt
+
+bdt1
 ```
 
 ## Format
 
 - idt:
 
-  individual level data.table
+  Individual-level data.table with outcomes and assignments.
 
-- bt1:
+- bdt1:
 
-  block level data.table
+  Block-level data.table containing summaries per block.
+
+An object of class `data.table` (inherits from `data.frame`) with 64
+rows and 9 columns.
 
 ## Source
 

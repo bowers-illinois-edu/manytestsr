@@ -91,7 +91,7 @@
   descendant nodes for a given node
 - [`hodges_lehmann_sensitivity_bounds()`](hodges_lehmann_sensitivity_bounds.md)
   : Hodges-Lehmann estimator sensitivity bounds
-- [`idt`](idt.md) : Example tree-testing data
+- [`idt`](idt.md) [`bdt1`](idt.md) : Example tree-testing data
 - [`integrate_meinshausen_find_blocks()`](integrate_meinshausen_find_blocks.md)
   : Integration function for find_blocks with Meinshausen testing
 - [`intersection_union_tests()`](intersection_union_tests.md) :
