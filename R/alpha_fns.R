@@ -14,6 +14,9 @@
 #' @param nodesize Is vector indicating the information used to create each p-value. For example, it could be the number of observations, or a weighted version.
 #' @param thealpha Is the overall error rate for a given test
 #' @param thew0 Is the starting "wealth" of the alpha investing procedure
+#' @param depth Integer vector of tree depths for each p-value (1 = root).
+#'   Accepted for interface compatibility with tree-structured alpha adjusters
+#'   but not used by this function.
 #' @return A vector of alpha values
 #' @examples
 #' # Example with hierarchical testing scenario
@@ -36,7 +39,7 @@
 #' @importFrom onlineFDR Alpha_investing
 #' @import data.table
 #' @export
-alpha_investing <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .001) {
+alpha_investing <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .001, depth = NULL) {
   stopifnot(length(pval) == length(nodesize))
   stopifnot(length(batch) == length(nodesize))
   # Later just use batch when we fork onlineFDR.
@@ -66,6 +69,9 @@ alpha_investing <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 -
 #' @param nodesize Is vector indicating the information used to create each p-value. For example, it could be the number of observations, or a weighted version.
 #' @param thealpha Is the overall error rate for a given test
 #' @param thew0 Is the starting "wealth" of the alpha investing procedure
+#' @param depth Integer vector of tree depths for each p-value (1 = root).
+#'   Accepted for interface compatibility with tree-structured alpha adjusters
+#'   but not used by this function.
 #' @return A vector of alpha values
 #' @examples
 #' # Example with SAFFRON procedure for hierarchical testing
@@ -86,7 +92,7 @@ alpha_investing <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 -
 #'
 #' @importFrom onlineFDR SAFFRON
 #' @export
-alpha_saffron <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .001) {
+alpha_saffron <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .001, depth = NULL) {
   stopifnot(length(pval) == length(nodesize))
   stopifnot(length(batch) == length(nodesize))
   # Later just use batch. For now the onlineFDR functions want dates to indicate batches
@@ -115,6 +121,9 @@ alpha_saffron <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .
 #' @param nodesize Is vector indicating the information used to create each p-value. For example, it could be the number of observations, or a weighted version.
 #' @param thealpha Is the overall error rate for a given test
 #' @param thew0 Is the starting "wealth" of the alpha investing procedure
+#' @param depth Integer vector of tree depths for each p-value (1 = root).
+#'   Accepted for interface compatibility with tree-structured alpha adjusters
+#'   but not used by this function.
 #' @return A vector of alpha values
 #' @examples
 #' # Example with ADDIS procedure for hierarchical testing
@@ -135,7 +144,7 @@ alpha_saffron <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .
 #'
 #' @importFrom onlineFDR ADDIS
 #' @export
-alpha_addis <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .001) {
+alpha_addis <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .001, depth = NULL) {
   stopifnot(length(pval) == length(nodesize))
   stopifnot(length(batch) == length(nodesize))
   # Later just use batch. For now the onlineFDR functions want dates to indicate batches

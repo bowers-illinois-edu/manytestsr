@@ -352,7 +352,8 @@ find_blocks <-
           batch = unique(g1),
           nodesize = sum(get(blocksize)),
           thealpha = thealpha,
-          thew0 = thew0
+          thew0 = thew0,
+          depth = 1L
         ),
         thealpha
       )]
@@ -521,7 +522,8 @@ find_blocks <-
             batch = batch,
             nodesize = nodesize,
             thealpha = thealpha,
-            thew0 = thew0
+            thew0 = thew0,
+            depth = depth
           )]
           node_dat[is.na(a), a := get(alphanm)]
         } else {
@@ -548,7 +550,8 @@ find_blocks <-
               batch = depth,
               nodesize = nodesize,
               thealpha = thealpha,
-              thew0 = thew0
+              thew0 = thew0,
+              depth = depth
             )]
           }
         }

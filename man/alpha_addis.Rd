@@ -4,7 +4,14 @@
 \alias{alpha_addis}
 \title{Alpha adjustment function: ADDIS}
 \usage{
-alpha_addis(pval, batch, nodesize, thealpha = 0.05, thew0 = 0.05 - 0.001)
+alpha_addis(
+  pval,
+  batch,
+  nodesize,
+  thealpha = 0.05,
+  thew0 = 0.05 - 0.001,
+  depth = NULL
+)
 }
 \arguments{
 \item{pval}{Is a numeric vector of p-values}
@@ -18,6 +25,10 @@ produced in the tree and the subsequent p-values should be produced on the child
 \item{thealpha}{Is the overall error rate for a given test}
 
 \item{thew0}{Is the starting "wealth" of the alpha investing procedure}
+
+\item{depth}{Integer vector of tree depths for each p-value (1 = root).
+Accepted for interface compatibility with tree-structured alpha adjusters
+but not used by this function.}
 }
 \value{
 A vector of alpha values
