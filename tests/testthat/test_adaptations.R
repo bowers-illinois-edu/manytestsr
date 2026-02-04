@@ -727,7 +727,7 @@ test_that("alphafns work across splitters for no effects", {
   names(tau_null_det) <- resnms
   ## No approach should detect anything, So we don't imagine any differences between approaches.
   anydetected <- sapply(tau_null_det, nrow)
-  expect(all(anydetected == 0), TRUE)
+  expect_true(all(anydetected == 0))
 })
 
 ## test_that("alphafns work across splitters for large and homogenous effects", {

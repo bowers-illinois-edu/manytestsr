@@ -39,6 +39,7 @@ README.md
 ^_quarto\.yml\.backup$
 ^data-raw$
 CLAUDE\.md
+CLAUDE_CODING\.md
 LICENSE\.md
 debug_block_structure\.R
 debug_depth2_hommel\.R
