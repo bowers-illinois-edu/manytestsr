@@ -6,7 +6,14 @@ of p-values It produces a vector of alpha values.
 ## Usage
 
 ``` r
-alpha_addis(pval, batch, nodesize, thealpha = 0.05, thew0 = 0.05 - 0.001)
+alpha_addis(
+  pval,
+  batch,
+  nodesize,
+  thealpha = 0.05,
+  thew0 = 0.05 - 0.001,
+  depth = NULL
+)
 ```
 
 ## Arguments
@@ -36,6 +43,12 @@ alpha_addis(pval, batch, nodesize, thealpha = 0.05, thew0 = 0.05 - 0.001)
 - thew0:
 
   Is the starting "wealth" of the alpha investing procedure
+
+- depth:
+
+  Integer vector of tree depths for each p-value (1 = root). Accepted
+  for interface compatibility with tree-structured alpha adjusters but
+  not used by this function.
 
 ## Value
 

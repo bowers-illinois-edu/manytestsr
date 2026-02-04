@@ -7,12 +7,12 @@
 
 ## Citation
 
-Bowers J (2025). *manytestsr: Testing to detect heterogeneous effects in
-block-randomized experiments*. R package version 0.0.3.0000.
+Bowers J (2026). *manytestsr: Testing to detect heterogeneous effects in
+block-randomized experiments*. R package version 0.0.4.0000.
 
     @Manual{,
       title = {manytestsr: Testing to detect heterogeneous effects in block-randomized experiments},
       author = {Jake Bowers},
-      year = {2025},
-      note = {R package version 0.0.3.0000},
+      year = {2026},
+      note = {R package version 0.0.4.0000},
     }

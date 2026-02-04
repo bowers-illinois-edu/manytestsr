@@ -11,7 +11,7 @@ based). It produces a p-value."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3.0000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.0000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,6 +26,7 @@ based). It produces a p-value."></head><body>
     <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with manytestsr</a></li>
     <li><a class="dropdown-item" href="../articles/hierarchical-testing-workflow.html">Hierarchical Testing with manytestsr</a></li>
   </ul></li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -113,7 +114,7 @@ each unit; and (3) the raw outcome.</p>
 <p>Although the distances are calculated by block, our profiling suggests that
 it is better to parallelize the distance creation <code>distfn</code> (done here in C++
 in the <code>fastfns.cpp</code> file) rather than use the <code>data.table</code> approach of
-<code><a href="https://rdatatable.gitlab.io/data.table/reference/openmp-utils.html" class="external-link">setDTthreads()</a></code>. So, here we assume that the threads for data.table are 1.</p>
+<code><a href="https://rdrr.io/pkg/data.table/man/openmp-utils.html" class="external-link">setDTthreads()</a></code>. So, here we assume that the threads for data.table are 1.</p>
     </div>
 
     <div class="section level2">
@@ -124,7 +125,7 @@ in the <code>fastfns.cpp</code> file) rather than use the <code>data.table</code
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Test for treatment effect using distance-based approach</span></span></span>
-<span class="r-in"><span><span class="va">single_block</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">example_dat</span>, <span class="va">blockF</span> <span class="op">==</span> <span class="st">"B080"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">single_block</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">example_dat</span>, <span class="va">blockF</span> <span class="op">==</span> <span class="st">"B080"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_val</span> <span class="op">&lt;-</span> <span class="fu">pIndepDist</span><span class="op">(</span><span class="va">single_block</span>, <span class="va">Y1</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>, parallel <span class="op">=</span> <span class="st">"no"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p_val</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.5394499</span>

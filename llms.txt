@@ -22,6 +22,8 @@ down when we have large number of observations.
   for e-values
 - [`adjust_pvalues_level()`](adjust_pvalues_level.md) : Adjust p-values
   at a given level using sequential rejection
+- [`alpha_adaptive()`](alpha_adaptive.md) : Adaptive Alpha Adjustment
+  Based on Power Decay
 - [`alpha_addis()`](alpha_addis.md) : Alpha adjustment function: ADDIS
 - [`alpha_investing()`](alpha_investing.md) : Alpha adjustment function:
   Alpha Investing
@@ -53,6 +55,8 @@ down when we have large number of observations.
   Traditional p-value combination (used in original Meinshausen)
 - [`combined_distances_tstat()`](combined_distances_tstat.md) : The
   combined distances test statistic
+- [`compute_adaptive_alphas()`](compute_adaptive_alphas.md) : Compute
+  Adaptive Alpha Levels by Tree Depth
 - [`compute_evalue()`](compute_evalue.md) : Compute e-value for a single
   test
 - [`compute_exact_wilcoxon_bound()`](compute_exact_wilcoxon_bound.md) :

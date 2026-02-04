@@ -74,7 +74,7 @@ Although the distances are calculated by block, our profiling suggests
 that it is better to parallelize the distance creation `distfn` (done
 here in C++ in the `fastfns.cpp` file) rather than use the `data.table`
 approach of
-[`setDTthreads()`](https://rdatatable.gitlab.io/data.table/reference/openmp-utils.html).
+[`setDTthreads()`](https://rdrr.io/pkg/data.table/man/openmp-utils.html).
 So, here we assume that the threads for data.table are 1.
 
 ## Examples
