@@ -49,8 +49,8 @@ when cumulative power exceeds \code{tau}, and \eqn{\alpha_\ell^{adj} = \alpha}
 otherwise.
 
 The FWER guarantee (Theorem in Appendix D) requires that power
-estimates are not overestimated. In practice this means using a
-conservatively large \code{delta_hat}.
+is not underestimated (i.e., \eqn{\hat\theta_j \geq \theta_j}).
+In practice this means using a conservatively large \code{delta_hat}.
 }
 \examples{
 # Alpha schedule for a 4-ary tree with moderate effect
