@@ -4,7 +4,8 @@
 # adjust the significance threshold to account for both the number of tests
 # (multiplicity) and the estimated power at that level. When cumulative
 # power is low, the probability of reaching a node by chance is already
-# small, so natural gating provides FWER control without further adjustment.
+# small, so natural gating may provide adequate FWER control in practice
+# (but the formal guarantee requires tau = 0; see Remark in Appendix D).
 
 
 #' Compute Adaptive Alpha Levels by Tree Depth
@@ -37,8 +38,8 @@
 #' otherwise.
 #'
 #' The FWER guarantee (Theorem in Appendix D) requires that power
-#' estimates are not overestimated. In practice this means using a
-#' conservatively large \code{delta_hat}.
+#' is not underestimated (i.e., \eqn{\hat\theta_j \geq \theta_j}).
+#' In practice this means using a conservatively large \code{delta_hat}.
 #'
 #' @examples
 #' # Alpha schedule for a 4-ary tree with moderate effect
