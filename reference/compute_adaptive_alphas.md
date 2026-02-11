@@ -61,9 +61,9 @@ The formula at level \\\ell\\ is: \$\$\alpha\_\ell^{adj} = \alpha /
 cumulative power exceeds `tau`, and \\\alpha\_\ell^{adj} = \alpha\\
 otherwise.
 
-The FWER guarantee (Theorem in Appendix D) requires that power estimates
-are not overestimated. In practice this means using a conservatively
-large `delta_hat`.
+The FWER guarantee (Theorem in Appendix D) requires that power is not
+underestimated (i.e., \\\hat\theta_j \geq \theta_j\\). In practice this
+means using a conservatively large `delta_hat`.
 
 ## Examples
 
