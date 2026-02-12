@@ -41,6 +41,8 @@
   combined distances test statistic
 - [`compute_adaptive_alphas()`](compute_adaptive_alphas.md) : Compute
   Adaptive Alpha Levels by Tree Depth
+- [`compute_error_load()`](compute_error_load.md) : Compute Error Load
+  for Natural Gating Assessment
 - [`compute_evalue()`](compute_evalue.md) : Compute e-value for a single
   test
 - [`compute_exact_wilcoxon_bound()`](compute_exact_wilcoxon_bound.md) :

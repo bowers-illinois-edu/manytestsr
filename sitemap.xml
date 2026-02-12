@@ -33,6 +33,7 @@
 <url><loc>/reference/combine_pvalues_traditional.html</loc></url>
 <url><loc>/reference/combined_distances_tstat.html</loc></url>
 <url><loc>/reference/compute_adaptive_alphas.html</loc></url>
+<url><loc>/reference/compute_error_load.html</loc></url>
 <url><loc>/reference/compute_evalue.html</loc></url>
 <url><loc>/reference/compute_exact_wilcoxon_bound.html</loc></url>
 <url><loc>/reference/compute_sensitivity_bounds.html</loc></url>
@@ -41,6 +42,7 @@
 <url><loc>/reference/create_node_tracker.html</loc></url>
 <url><loc>/reference/design_sensitivity_analysis.html</loc></url>
 <url><loc>/reference/dists_and_trans.html</loc></url>
+<url><loc>/reference/dot-error_load_from_tree.html</loc></url>
 <url><loc>/reference/edisti.html</loc></url>
 <url><loc>/reference/evalue_confidence_sequence.html</loc></url>
 <url><loc>/reference/evalue_sequential_test.html</loc></url>

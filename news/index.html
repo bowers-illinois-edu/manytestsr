@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.0000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,18 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.4.1000" id="manytestsr-0041000">manytestsr 0.0.4.1000<a class="anchor" aria-label="anchor" href="#manytestsr-0041000"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-0-4-1000">New features<a class="anchor" aria-label="anchor" href="#new-features-0-0-4-1000"></a></h3>
+<ul><li>New exported function <code><a href="../reference/compute_error_load.html">compute_error_load()</a></code> computes the error load at each tree level — the expected number of all-null sibling groups that the procedure tests. When the total error load is at most 1, the unadjusted procedure controls FWER via natural gating; when it exceeds 1, adaptive alpha adjustment is required. Supports both a parametric interface (regular k-ary trees with equal splits) and a tree interface (irregular trees with per-node sample sizes from <code><a href="../reference/find_blocks.html">find_blocks()</a></code>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changes-0-0-4-1000">Changes<a class="anchor" aria-label="anchor" href="#changes-0-0-4-1000"></a></h3>
+<ul><li><p><code><a href="../reference/compute_adaptive_alphas.html">compute_adaptive_alphas()</a></code> now checks the error load before computing adjusted alphas. When the total error load is at most 1 (natural gating suffices), nominal alpha is returned at every level without adjustment. The <code>tau</code> parameter has been removed; the error load check replaces it.</p></li>
+<li><p><code><a href="../reference/compute_adaptive_alphas.html">compute_adaptive_alphas()</a></code> gains an <code>"error_load"</code> attribute on its return value, so callers can inspect the error load diagnostics without a separate call to <code><a href="../reference/compute_error_load.html">compute_error_load()</a></code>.</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.4.0000" id="manytestsr-0040000">manytestsr 0.0.4.0000<a class="anchor" aria-label="anchor" href="#manytestsr-0040000"></a></h2>
 <div class="section level3">
