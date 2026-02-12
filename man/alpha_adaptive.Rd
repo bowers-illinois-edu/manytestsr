@@ -4,7 +4,7 @@
 \alias{alpha_adaptive}
 \title{Adaptive Alpha Adjustment Based on Power Decay}
 \usage{
-alpha_adaptive(k, delta_hat, N_total, tau = 0.1, max_depth = 20L)
+alpha_adaptive(k, delta_hat, N_total, max_depth = 20L)
 }
 \arguments{
 \item{k}{Branching factor. Either a scalar (constant k at all levels)
@@ -18,10 +18,6 @@ true effect size.}
 
 \item{N_total}{Total sample size at the root level.}
 
-\item{tau}{Cumulative power threshold (default 0.1). When cumulative
-power drops below \code{tau}, natural gating is deemed sufficient
-and nominal alpha is used.}
-
 \item{max_depth}{Maximum depth to compute (default 20).}
 }
 \value{
@@ -34,7 +30,7 @@ conforming to the \code{alphafn} interface used by
 Factory function that creates an alpha adjustment function for use
 with \code{\link{find_blocks}}. The returned function adjusts
 significance levels at each tree depth based on estimated power
-decay (Algorithm 1 from the adaptive alpha appendix).
+decay (Algorithm 1 from Appendix B of the supplement).
 }
 \details{
 The returned function uses the \code{depth} parameter (passed by
@@ -46,7 +42,8 @@ depends only on tree structure, not on observed p-values.
 
 Results are cached internally: the vector of adjusted alphas is
 computed once per unique value of \code{thealpha} and reused on
-subsequent calls.
+subsequent calls. When the error load is at most 1 (natural gating
+suffices), nominal alpha is returned at every level.
 }
 \examples{
 # Create an adaptive alpha function for a 4-ary tree

@@ -8,7 +8,6 @@ compute_adaptive_alphas(
   k,
   delta_hat,
   N_total,
-  tau = 0.1,
   max_depth = 20L,
   thealpha = 0.05
 )
@@ -25,10 +24,6 @@ true effect size.}
 
 \item{N_total}{Total sample size at the root level.}
 
-\item{tau}{Cumulative power threshold (default 0.1). When cumulative
-power drops below \code{tau}, natural gating is deemed sufficient
-and nominal alpha is used.}
-
 \item{max_depth}{Maximum depth to compute (default 20).}
 
 \item{thealpha}{Nominal significance level (default 0.05).}
@@ -36,28 +31,38 @@ and nominal alpha is used.}
 \value{
 Named numeric vector of adjusted alpha levels, one per depth
 (1 through \code{max_depth}). Names are depth levels as characters.
+Has attribute \code{"error_load"} containing the
+\code{\link{compute_error_load}} result, so the caller can inspect
+whether adjustment was needed.
 }
 \description{
-Implements Algorithm 1 from the adaptive alpha appendix. Computes
-adjusted significance levels for each tree level based on estimated
-power decay through the tree.
+Implements Algorithm 1 from Appendix B of the supplement. First checks
+whether natural gating suffices (total error load \eqn{\le 1}); if so,
+returns nominal alpha at every level. Otherwise, computes adjusted
+significance levels that compensate for the error load at each depth.
 }
 \details{
-The formula at level \eqn{\ell} is:
-\deqn{\alpha_\ell^{adj} = \alpha / (k^{(\ell-1)} \cdot \prod_{j=1}^{\ell-1} \hat\theta_j)}
-when cumulative power exceeds \code{tau}, and \eqn{\alpha_\ell^{adj} = \alpha}
-otherwise.
+The function first calls \code{\link{compute_error_load}} to assess
+whether natural gating suffices. When \eqn{\sum G_\ell \le 1}, no
+adjustment is needed and nominal \code{thealpha} is returned at every
+level.
 
-The FWER guarantee (Theorem in Appendix D) requires that power
+When adjustment is needed, the formula at level \eqn{\ell} is:
+\deqn{\alpha_\ell^{adj} = \min\left\{\alpha,\;
+  \frac{\alpha}{k^{(\ell-1)} \cdot \prod_{j=1}^{\ell-1} \hat\theta_j}
+  \right\}}
+
+The FWER guarantee (Theorem in the supplement) requires that power
 is not underestimated (i.e., \eqn{\hat\theta_j \geq \theta_j}).
 In practice this means using a conservatively large \code{delta_hat}.
 }
 \examples{
-# Alpha schedule for a 4-ary tree with moderate effect
-compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000)
+# Natural gating sufficient: all alphas = 0.05
+compute_adaptive_alphas(k = 3, delta_hat = 0.2, N_total = 100,
+                        max_depth = 4)
 
-# Binary tree with very high power — approaches Bonferroni
-compute_adaptive_alphas(k = 2, delta_hat = 0.5, N_total = 1e6,
-                        tau = 0, max_depth = 5)
+# Needs adjustment: alphas shrink at deeper levels
+compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000,
+                        max_depth = 5)
 
 }

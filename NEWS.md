@@ -1,3 +1,26 @@
+# manytestsr 0.0.4.1000
+
+## New features
+
+* New exported function `compute_error_load()` computes the error load at
+  each tree level — the expected number of all-null sibling groups that
+  the procedure tests. When the total error load is at most 1, the
+  unadjusted procedure controls FWER via natural gating; when it exceeds
+  1, adaptive alpha adjustment is required. Supports both a parametric
+  interface (regular k-ary trees with equal splits) and a tree interface
+  (irregular trees with per-node sample sizes from `find_blocks()`).
+
+## Changes
+
+* `compute_adaptive_alphas()` now checks the error load before computing
+  adjusted alphas. When the total error load is at most 1 (natural gating
+  suffices), nominal alpha is returned at every level without adjustment.
+  The `tau` parameter has been removed; the error load check replaces it.
+
+* `compute_adaptive_alphas()` gains an `"error_load"` attribute on its
+  return value, so callers can inspect the error load diagnostics without
+  a separate call to `compute_error_load()`.
+
 # manytestsr 0.0.4.0000
 
 ## New features
