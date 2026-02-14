@@ -1,6 +1,6 @@
-# Adaptive Alpha Adjustment Based on Power Decay
+# Adaptive Alpha Adjustment Based on Power Decay with [`find_blocks`](find_blocks.md). The returned function adjusts significance levels at each tree depth based on estimated power decay (Algorithm 1 from Appendix B of the supplement).
 
-Factory function that creates an alpha adjustment function for use with
+Adaptive Alpha Adjustment Based on Power Decay with
 [`find_blocks`](find_blocks.md). The returned function adjusts
 significance levels at each tree depth based on estimated power decay
 (Algorithm 1 from Appendix B of the supplement).

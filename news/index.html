@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,18 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.4.1001" id="manytestsr-0041001">manytestsr 0.0.4.1001<a class="anchor" aria-label="anchor" href="#manytestsr-0041001"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-0-4-1001">New features<a class="anchor" aria-label="anchor" href="#new-features-0-0-4-1001"></a></h3>
+<ul><li><p>New exported function <code><a href="../reference/compute_adaptive_alphas_tree.html">compute_adaptive_alphas_tree()</a></code> computes per-depth adjusted significance levels from an actual (possibly irregular) tree structure. Takes <code>node_dat</code> with per-node sample sizes (as returned by <code><a href="../reference/find_blocks.html">find_blocks()</a></code>) instead of assuming a regular k-ary tree. The algorithm divides alpha at each depth by the sum of path powers — the expected number of tests conducted at that depth. For regular k-ary trees, this produces identical results to the parametric <code><a href="../reference/compute_adaptive_alphas.html">compute_adaptive_alphas()</a></code>.</p></li>
+<li><p>New exported factory function <code><a href="../reference/alpha_adaptive_tree.html">alpha_adaptive_tree()</a></code> creates a closure for use with <code>find_blocks(alphafn = ...)</code>, using the tree-based alpha schedule from <code><a href="../reference/compute_adaptive_alphas_tree.html">compute_adaptive_alphas_tree()</a></code>. Drop-in replacement for <code><a href="../reference/alpha_adaptive.html">alpha_adaptive()</a></code> when the tree has irregular branching or unequal sample sizes across nodes.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-0-4-1001">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-0-4-1001"></a></h3>
+<ul><li>Fixed 11 test failures in <code>test_alpha_adaptive.R</code> that referenced the removed <code>tau</code> parameter. Two tests (“tau = 0” and “tau = 1”) were rewritten as error-load equivalents; the rest had <code>tau</code> arguments removed.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.4.1000" id="manytestsr-0041000">manytestsr 0.0.4.1000<a class="anchor" aria-label="anchor" href="#manytestsr-0041000"></a></h2>
 <div class="section level3">

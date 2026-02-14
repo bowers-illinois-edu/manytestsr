@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,7 +65,14 @@
           <code><a href="alpha_adaptive.html">alpha_adaptive()</a></code>
 
         </dt>
-        <dd>Adaptive Alpha Adjustment Based on Power Decay</dd>
+        <dd>Adaptive Alpha Adjustment Based on Power Decay with <code>find_blocks</code>. The returned function adjusts significance levels at each tree depth based on estimated power decay (Algorithm 1 from Appendix B of the supplement).</dd>
+
+        <dt>
+
+          <code><a href="alpha_adaptive_tree.html">alpha_adaptive_tree()</a></code>
+
+        </dt>
+        <dd>Adaptive Alpha from an Actual Tree Structure</dd>
 
         <dt>
 
@@ -185,6 +192,13 @@
 
         </dt>
         <dd>Compute Adaptive Alpha Levels by Tree Depth</dd>
+
+        <dt>
+
+          <code><a href="compute_adaptive_alphas_tree.html">compute_adaptive_alphas_tree()</a></code>
+
+        </dt>
+        <dd>Compute Adaptive Alpha Levels from an Actual Tree</dd>
 
         <dt>
 
