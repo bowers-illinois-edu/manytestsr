@@ -6,7 +6,7 @@
 #   1. The root always gets nominal alpha (no adjustment needed).
 #   2. When estimated power is high, deeper levels get stricter alpha
 #      to compensate for the multiplicity of tests that power enables.
-#   3. When cumulative power drops below threshold tau, natural gating
+#   3. When the total error load (sum_G) is at most 1, natural gating
 #      (the fact that low power makes rejection unlikely) suffices,
 #      so nominal alpha is used.
 #   4. The FWER guarantee holds when power estimates are conservative
@@ -44,17 +44,17 @@ test_that("level 2 alpha is more stringent when root power is high", {
   # The procedure should tighten alpha at level 2 to account for the
   # k children that high power enables us to test.
   alphas <- compute_adaptive_alphas(
-    k = 4, delta_hat = 0.5, N_total = 1000, tau = 0.1, thealpha = 0.05
+    k = 4, delta_hat = 0.5, N_total = 1000, thealpha = 0.05
   )
   expect_lt(alphas[[2]], 0.05)
 })
 
 test_that("deep levels revert to nominal alpha when power decays", {
-  # With moderate N and small effect, cumulative power eventually drops
-  # below tau. At that point, levels should get nominal alpha because
-  # the natural gating from low power is sufficient FWER control.
+  # With moderate N and small effect, power decays at deeper levels.
+  # The min(alpha, alpha/sum_pp) formula reverts to nominal alpha
+  # when sum_pp < 1 (few tests expected to reach that depth).
   alphas <- compute_adaptive_alphas(
-    k = 4, delta_hat = 0.2, N_total = 200, tau = 0.1,
+    k = 4, delta_hat = 0.2, N_total = 200,
     max_depth = 10, thealpha = 0.05
   )
   # At some deep level, alpha should revert to nominal
@@ -91,24 +91,29 @@ test_that("larger delta_hat produces more stringent adjustment", {
   expect_lte(alphas_large_d[[2]], alphas_small_d[[2]])
 })
 
-test_that("tau = 0 means always adjust (never rely on natural gating)", {
-  # When tau = 0, the cumulative power threshold is impossible to go below,
-  # so every level with positive power gets an adjustment.
+test_that("high error load means adjustment at deeper levels", {
+  # When error load > 1 (high power, wide tree), the procedure must
+  # adjust alphas at deeper levels to control FWER.
   alphas <- compute_adaptive_alphas(
-    k = 4, delta_hat = 0.5, N_total = 1000, tau = 0,
+    k = 4, delta_hat = 0.5, N_total = 1000,
     max_depth = 5, thealpha = 0.05
   )
+  el <- attr(alphas, "error_load")
+  expect_true(el$needs_adjustment)
   # All levels beyond root should be adjusted (less than or equal to nominal)
   expect_true(all(unname(alphas[2:5]) <= 0.05))
 })
 
-test_that("tau = 1 means never adjust (always rely on natural gating)", {
-  # When tau = 1, cumulative power is always below the threshold,
-  # so every level gets nominal alpha.
+test_that("low error load means nominal alpha everywhere", {
+  # When total error load <= 1 (low power), natural gating suffices
+  # and every level gets nominal alpha.
   alphas <- compute_adaptive_alphas(
-    k = 4, delta_hat = 0.5, N_total = 1000, tau = 1,
+    k = 3, delta_hat = 0.01, N_total = 50,
     max_depth = 5, thealpha = 0.05
   )
+  el <- attr(alphas, "error_load")
+  expect_true(!el$needs_adjustment,
+    info = paste("Expected sum_G <= 1 but got", el$sum_G))
   expect_true(all(unname(alphas) == 0.05))
 })
 
@@ -117,7 +122,7 @@ test_that("very large N approaches Bonferroni-like correction", {
   # Then alpha_ell ≈ alpha / k^(ell-1), which is the Bonferroni
   # correction for the number of tests at that level.
   alphas <- compute_adaptive_alphas(
-    k = 2, delta_hat = 0.5, N_total = 1e8, tau = 0,
+    k = 2, delta_hat = 0.5, N_total = 1e8,
     max_depth = 5, thealpha = 0.05
   )
   # With power ≈ 1, the formula gives alpha / (k^(ell-1) * 1) = alpha / k^(ell-1)
@@ -131,10 +136,10 @@ test_that("very large N approaches Bonferroni-like correction", {
 
 test_that("very small N gives nominal alpha at all levels", {
   # When N is tiny, power is near zero everywhere.
-  # Cumulative power drops below tau immediately, so natural gating
-  # suffices and all levels get nominal alpha.
+  # Error load is well below 1, so natural gating suffices
+  # and all levels get nominal alpha.
   alphas <- compute_adaptive_alphas(
-    k = 4, delta_hat = 0.1, N_total = 10, tau = 0.1,
+    k = 4, delta_hat = 0.1, N_total = 10,
     max_depth = 5, thealpha = 0.05
   )
   # Even level 2 should have nominal alpha because power is so low
@@ -146,7 +151,7 @@ test_that("adjusted alpha never exceeds nominal alpha", {
   # alpha than it would get without adjustment. This is important
   # for FWER control.
   alphas <- compute_adaptive_alphas(
-    k = 2, delta_hat = 0.5, N_total = 1000, tau = 0.1,
+    k = 2, delta_hat = 0.5, N_total = 1000,
     max_depth = 10, thealpha = 0.05
   )
   expect_true(all(unname(alphas) <= 0.05))
@@ -183,7 +188,6 @@ test_that("compute_adaptive_alphas validates inputs", {
   expect_error(compute_adaptive_alphas(k = 4, delta_hat = -1, N_total = 100))
   expect_error(compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = -10))
   expect_error(compute_adaptive_alphas(k = 1, delta_hat = 0.5, N_total = 100))
-  expect_error(compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 100, tau = 2))
   expect_error(compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 100, thealpha = 0))
   expect_error(compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 100, thealpha = 1))
 })
@@ -204,7 +208,7 @@ test_that("known-value check for a specific parameter set", {
   #            num_tests = 4, path_power ≈ 1.0
   #            alpha_3 = 0.05 / (4 * 1.0) = 0.0125
   alphas <- compute_adaptive_alphas(
-    k = 2, delta_hat = 0.5, N_total = 1000, tau = 0,
+    k = 2, delta_hat = 0.5, N_total = 1000,
     max_depth = 3, thealpha = 0.05
   )
   expect_equal(alphas[[1]], 0.05)
@@ -230,7 +234,7 @@ test_that("alpha_adaptive returns a function with the correct interface", {
 })
 
 test_that("alpha_adaptive uses depth to determine alpha levels", {
-  fn <- alpha_adaptive(k = 4, delta_hat = 0.5, N_total = 1000, tau = 0.1)
+  fn <- alpha_adaptive(k = 4, delta_hat = 0.5, N_total = 1000)
   # Root depth should get nominal alpha
   root_alpha <- fn(
     pval = 0.01, batch = factor("1"), nodesize = 1000,
@@ -265,9 +269,9 @@ test_that("alpha_adaptive gives consistent results with compute_adaptive_alphas"
   # compute_adaptive_alphas directly for matching depths.
   schedule <- compute_adaptive_alphas(
     k = 4, delta_hat = 0.5, N_total = 1000,
-    tau = 0.1, max_depth = 5, thealpha = 0.05
+    max_depth = 5, thealpha = 0.05
   )
-  fn <- alpha_adaptive(k = 4, delta_hat = 0.5, N_total = 1000, tau = 0.1)
+  fn <- alpha_adaptive(k = 4, delta_hat = 0.5, N_total = 1000)
 
   for (d in 1:5) {
     result <- fn(
@@ -281,10 +285,10 @@ test_that("alpha_adaptive gives consistent results with compute_adaptive_alphas"
 test_that("alpha_adaptive handles mixed depths in a single call", {
   # find_blocks passes ancestry paths at depth >= 3, which include
   # nodes at multiple depths. The function must handle this correctly.
-  fn <- alpha_adaptive(k = 2, delta_hat = 0.5, N_total = 1000, tau = 0)
+  fn <- alpha_adaptive(k = 2, delta_hat = 0.5, N_total = 1000)
   schedule <- compute_adaptive_alphas(
     k = 2, delta_hat = 0.5, N_total = 1000,
-    tau = 0, max_depth = 4, thealpha = 0.05
+    max_depth = 4, thealpha = 0.05
   )
 
   # Simulate an ancestry path: root, depth 2, depth 3
@@ -333,5 +337,4 @@ test_that("alpha_adaptive validates factory inputs", {
   expect_error(alpha_adaptive(k = 1, delta_hat = 0.5, N_total = 1000))
   expect_error(alpha_adaptive(k = 4, delta_hat = -0.5, N_total = 1000))
   expect_error(alpha_adaptive(k = 4, delta_hat = 0.5, N_total = -100))
-  expect_error(alpha_adaptive(k = 4, delta_hat = 0.5, N_total = 1000, tau = 2))
 })

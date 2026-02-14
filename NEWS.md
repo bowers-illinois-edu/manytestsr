@@ -1,3 +1,27 @@
+# manytestsr 0.0.4.1001
+
+## New features
+
+* New exported function `compute_adaptive_alphas_tree()` computes per-depth
+  adjusted significance levels from an actual (possibly irregular) tree
+  structure. Takes `node_dat` with per-node sample sizes (as returned by
+  `find_blocks()`) instead of assuming a regular k-ary tree. The algorithm
+  divides alpha at each depth by the sum of path powers — the expected
+  number of tests conducted at that depth. For regular k-ary trees, this
+  produces identical results to the parametric `compute_adaptive_alphas()`.
+
+* New exported factory function `alpha_adaptive_tree()` creates a closure
+  for use with `find_blocks(alphafn = ...)`, using the tree-based alpha
+  schedule from `compute_adaptive_alphas_tree()`. Drop-in replacement for
+  `alpha_adaptive()` when the tree has irregular branching or unequal
+  sample sizes across nodes.
+
+## Bug fixes
+
+* Fixed 11 test failures in `test_alpha_adaptive.R` that referenced the
+  removed `tau` parameter. Two tests ("tau = 0" and "tau = 1") were
+  rewritten as error-load equivalents; the rest had `tau` arguments removed.
+
 # manytestsr 0.0.4.1000
 
 ## New features

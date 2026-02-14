@@ -360,9 +360,106 @@ compute_adaptive_alphas <- function(k, delta_hat, N_total,
 }
 
 
-#' Adaptive Alpha Adjustment Based on Power Decay
+#' Compute Adaptive Alpha Levels from an Actual Tree
 #'
-#' Factory function that creates an alpha adjustment function for use
+#' Tree-mode counterpart to \code{\link{compute_adaptive_alphas}}. Instead
+#' of assuming a regular k-ary tree with equal splits, this function takes
+#' the actual tree structure (with per-node sample sizes) and computes
+#' per-depth adjusted significance levels. This handles irregular trees
+#' where branching factor and sample sizes vary across nodes.
+#'
+#' @param node_dat A data.frame or data.table with columns
+#'   \code{nodenum}, \code{parent}, \code{depth}, and \code{nodesize}.
+#'   Typically extracted from a \code{\link{find_blocks}} result.
+#'   The root node must have \code{parent = 0} and \code{depth = 1}.
+#' @param delta_hat Estimated standardized effect size (e.g., Cohen's d).
+#'   Conservative (larger) values produce more stringent adjustment,
+#'   which preserves the FWER guarantee.
+#' @param max_depth Maximum depth to compute. Defaults to the maximum
+#'   depth present in \code{node_dat}.
+#' @param thealpha Nominal significance level (default 0.05).
+#'
+#' @return Named numeric vector of adjusted alpha levels, one per depth
+#'   (1 through \code{max_depth}). Names are depth levels as characters.
+#'   Has attribute \code{"error_load"} containing the
+#'   \code{\link{compute_error_load}} result from the tree.
+#'
+#' @details
+#' The algorithm mirrors \code{\link{compute_adaptive_alphas}} but uses
+#' actual per-node power instead of the parametric assumption:
+#'
+#' \enumerate{
+#'   \item Compute per-node power \eqn{\theta} and path power
+#'     (product of ancestor thetas) via \code{compute_error_load}.
+#'   \item If total error load \eqn{\sum G_\ell \le 1}: natural gating
+#'     suffices, return nominal \code{thealpha} at every depth.
+#'   \item Otherwise, at depth \eqn{d}:
+#'     \deqn{\alpha_d = \min\left\{\alpha,\;
+#'       \frac{\alpha}{\sum_{\text{nodes at depth } d}
+#'         \text{path\_power}(\text{node})} \right\}}
+#' }
+#'
+#' The denominator at depth \eqn{d} is the sum of path powers over all
+#' nodes at that depth --- i.e., the expected number of tests the
+#' procedure conducts at depth \eqn{d}. For a regular k-ary tree with
+#' equal sample sizes, this reduces to
+#' \eqn{k^{d-1} \prod_{j=1}^{d-1} \theta_j}, matching the parametric
+#' formula in \code{\link{compute_adaptive_alphas}}.
+#'
+#' @examples
+#' # Build a small irregular tree
+#' nd <- data.frame(
+#'   nodenum  = 1:7,
+#'   parent   = c(0, 1, 1, 2, 2, 3, 3),
+#'   depth    = c(1, 2, 2, 3, 3, 3, 3),
+#'   nodesize = c(500, 250, 250, 125, 125, 100, 150)
+#' )
+#' compute_adaptive_alphas_tree(node_dat = nd, delta_hat = 0.5)
+#'
+#' @importFrom stats pnorm qnorm
+#' @export
+compute_adaptive_alphas_tree <- function(node_dat, delta_hat,
+                                         max_depth = NULL,
+                                         thealpha = 0.05) {
+  stopifnot(length(delta_hat) == 1, delta_hat > 0,
+            length(thealpha) == 1, thealpha > 0, thealpha < 1)
+
+  z_crit <- qnorm(1 - thealpha / 2)
+
+  # Compute per-node power and path_power via the existing tree helper
+  el <- .error_load_from_tree(node_dat, delta_hat, z_crit, thealpha)
+
+  if (is.null(max_depth)) {
+    max_depth <- max(el$node_detail$depth)
+  }
+
+  # If natural gating suffices, return nominal alpha everywhere
+  if (!el$needs_adjustment) {
+    alphas <- rep(thealpha, max_depth)
+    names(alphas) <- as.character(seq_len(max_depth))
+    attr(alphas, "error_load") <- el
+    return(alphas)
+  }
+
+  # Compute per-depth alpha from the sum of path_power at each depth.
+  # path_power for a node = product of ancestor thetas = probability
+  # that the testing procedure reaches this node.
+  nd <- el$node_detail
+  alphas <- numeric(max_depth)
+
+  for (d in seq_len(max_depth)) {
+    rows_at_d <- which(nd$depth == d)
+    sum_path_power <- sum(nd$path_power[rows_at_d])
+    alphas[d] <- min(thealpha, thealpha / sum_path_power)
+  }
+
+  names(alphas) <- as.character(seq_len(max_depth))
+  attr(alphas, "error_load") <- el
+  return(alphas)
+}
+
+
+#' Adaptive Alpha Adjustment Based on Power Decay
 #' with \code{\link{find_blocks}}. The returned function adjusts
 #' significance levels at each tree depth based on estimated power
 #' decay (Algorithm 1 from Appendix B of the supplement).
@@ -428,6 +525,88 @@ alpha_adaptive <- function(k, delta_hat, N_total, max_depth = 20L) {
 
     if (is.null(depth)) {
       warning("alpha_adaptive requires depth; returning nominal alpha")
+      return(rep(thealpha, length(pval)))
+    }
+
+    # Look up pre-computed alpha for each node's depth
+    depths <- as.integer(depth)
+    # Clamp to valid range
+    depths <- pmax(1L, pmin(depths, length(alpha_by_depth)))
+
+    return(alpha_by_depth[depths])
+  }
+}
+
+
+#' Adaptive Alpha from an Actual Tree Structure
+#'
+#' Factory function counterpart to \code{\link{alpha_adaptive}} for
+#' irregular trees. Creates an alpha adjustment function for use with
+#' \code{\link{find_blocks}}, using actual per-node sample sizes to
+#' compute the alpha schedule instead of assuming a regular k-ary tree.
+#'
+#' @inheritParams compute_adaptive_alphas_tree
+#'
+#' @return A function with signature
+#'   \code{function(pval, batch, nodesize, thealpha, thew0, depth)}
+#'   conforming to the \code{alphafn} interface used by
+#'   \code{\link{find_blocks}}.
+#'
+#' @details
+#' The returned function behaves identically to the closure from
+#' \code{\link{alpha_adaptive}}: it uses the \code{depth} parameter
+#' to look up pre-computed alphas, ignoring \code{pval}, \code{batch},
+#' and other arguments. The difference is that the alpha schedule comes
+#' from \code{\link{compute_adaptive_alphas_tree}} rather than the
+#' parametric formula, so it handles irregular branching correctly.
+#'
+#' Results are cached internally: the alpha schedule is computed once
+#' per unique value of \code{thealpha} and reused on subsequent calls.
+#'
+#' @examples
+#' # Build a tree template from the DPP design
+#' nd <- data.frame(
+#'   nodenum  = 1:7,
+#'   parent   = c(0, 1, 1, 2, 2, 3, 3),
+#'   depth    = c(1, 2, 2, 3, 3, 3, 3),
+#'   nodesize = c(500, 250, 250, 125, 125, 100, 150)
+#' )
+#' my_alpha <- alpha_adaptive_tree(node_dat = nd, delta_hat = 0.5)
+#'
+#' # Use with find_blocks
+#' # find_blocks(idat, bdat, ..., alphafn = my_alpha)
+#'
+#' @export
+alpha_adaptive_tree <- function(node_dat, delta_hat, max_depth = NULL) {
+  # Validate at factory time
+  stopifnot(delta_hat > 0)
+  nd <- as.data.frame(node_dat)
+  required_cols <- c("nodenum", "parent", "depth", "nodesize")
+  missing_cols <- setdiff(required_cols, names(nd))
+  if (length(missing_cols) > 0L) {
+    stop("node_dat must have columns: ", paste(missing_cols, collapse = ", "))
+  }
+
+  # Cache for computed alphas, keyed by thealpha
+  cache_env <- new.env(parent = emptyenv())
+  cache_env$alphas <- NULL
+  cache_env$thealpha <- NULL
+
+  # Return closure conforming to the alphafn interface
+  function(pval, batch, nodesize, thealpha = 0.05, thew0 = 0.05 - 0.001,
+           depth = NULL) {
+    # Lazy compute and cache the alpha schedule
+    if (is.null(cache_env$alphas) || !identical(thealpha, cache_env$thealpha)) {
+      cache_env$alphas <- compute_adaptive_alphas_tree(
+        node_dat = nd, delta_hat = delta_hat,
+        max_depth = max_depth, thealpha = thealpha
+      )
+      cache_env$thealpha <- thealpha
+    }
+    alpha_by_depth <- cache_env$alphas
+
+    if (is.null(depth)) {
+      warning("alpha_adaptive_tree requires depth; returning nominal alpha")
       return(rep(thealpha, length(pval)))
     }
 

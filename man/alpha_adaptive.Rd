@@ -2,7 +2,10 @@
 % Please edit documentation in R/alpha_adaptive.R
 \name{alpha_adaptive}
 \alias{alpha_adaptive}
-\title{Adaptive Alpha Adjustment Based on Power Decay}
+\title{Adaptive Alpha Adjustment Based on Power Decay
+with \code{\link{find_blocks}}. The returned function adjusts
+significance levels at each tree depth based on estimated power
+decay (Algorithm 1 from Appendix B of the supplement).}
 \usage{
 alpha_adaptive(k, delta_hat, N_total, max_depth = 20L)
 }
@@ -27,7 +30,7 @@ conforming to the \code{alphafn} interface used by
 \code{\link{find_blocks}}.
 }
 \description{
-Factory function that creates an alpha adjustment function for use
+Adaptive Alpha Adjustment Based on Power Decay
 with \code{\link{find_blocks}}. The returned function adjusts
 significance levels at each tree depth based on estimated power
 decay (Algorithm 1 from Appendix B of the supplement).
