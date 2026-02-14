@@ -3,7 +3,7 @@
 Makefile
 checkspelling.R
 lexicon.txt
-load.R
+^load\.R$
 inst/docs
 cran-comments.md
 matrixNotation.Rnw
@@ -45,3 +45,4 @@ debug_block_structure\.R
 debug_depth2_hommel\.R
 debug_local_adj\.R
 debug_nodes\.R
+^\.claude$
