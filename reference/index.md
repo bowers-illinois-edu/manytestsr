@@ -18,6 +18,9 @@
 - [`alpha_adaptive_tree()`](alpha_adaptive_tree.md) : Adaptive Alpha
   from an Actual Tree Structure
 
+- [`alpha_adaptive_tree_pruned()`](alpha_adaptive_tree_pruned.md) :
+  Adaptive Alpha with Branch Pruning
+
 - [`alpha_addis()`](alpha_addis.md) : Alpha adjustment function: ADDIS
 
 - [`alpha_investing()`](alpha_investing.md) : Alpha adjustment function:

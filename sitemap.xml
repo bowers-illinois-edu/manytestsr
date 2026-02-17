@@ -17,6 +17,7 @@
 <url><loc>/reference/adjust_pvalues_level.html</loc></url>
 <url><loc>/reference/alpha_adaptive.html</loc></url>
 <url><loc>/reference/alpha_adaptive_tree.html</loc></url>
+<url><loc>/reference/alpha_adaptive_tree_pruned.html</loc></url>
 <url><loc>/reference/alpha_addis.html</loc></url>
 <url><loc>/reference/alpha_investing.html</loc></url>
 <url><loc>/reference/alpha_saffron.html</loc></url>
@@ -46,6 +47,7 @@
 <url><loc>/reference/design_sensitivity_analysis.html</loc></url>
 <url><loc>/reference/dists_and_trans.html</loc></url>
 <url><loc>/reference/dot-error_load_from_tree.html</loc></url>
+<url><loc>/reference/dot-get_all_descendants.html</loc></url>
 <url><loc>/reference/edisti.html</loc></url>
 <url><loc>/reference/evalue_confidence_sequence.html</loc></url>
 <url><loc>/reference/evalue_sequential_test.html</loc></url>

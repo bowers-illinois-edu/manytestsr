@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.4.1002" id="manytestsr-0041002">manytestsr 0.0.4.1002<a class="anchor" aria-label="anchor" href="#manytestsr-0041002"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-0-4-1002">New features<a class="anchor" aria-label="anchor" href="#new-features-0-0-4-1002"></a></h3>
+<ul><li><p>New exported factory function <code><a href="../reference/alpha_adaptive_tree_pruned.html">alpha_adaptive_tree_pruned()</a></code> creates a branch-pruning adaptive alpha system for use with <code><a href="../reference/find_blocks.html">find_blocks()</a></code>. Unlike <code><a href="../reference/alpha_adaptive_tree.html">alpha_adaptive_tree()</a></code>, which pre-computes a fixed schedule, this version can recompute the schedule on the surviving subtree after each depth — giving more alpha to surviving branches when dead branches are removed. Returns a list with three components: <code>$alphafn</code> (standard closure), <code>$update</code> (recompute on pruned tree), and <code>$reset</code> (restore full tree).</p></li>
+<li><p><code><a href="../reference/find_blocks.html">find_blocks()</a></code> now supports list-valued <code>alphafn</code> parameters. When <code>alphafn</code> is a list (as returned by <code><a href="../reference/alpha_adaptive_tree_pruned.html">alpha_adaptive_tree_pruned()</a></code>), <code>find_blocks</code> extracts the <code>$alphafn</code>, <code>$update</code>, and <code>$reset</code> components, calls <code>reset</code> at the start of each run, and calls <code>update</code> after each depth’s testable decisions. Plain function <code>alphafn</code> values continue to work unchanged.</p></li>
+<li><p>New internal helper <code><a href="../reference/dot-get_all_descendants.html">.get_all_descendants()</a></code> performs BFS traversal on tree-structured <code>node_dat</code> to find all descendants of given nodes.</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.4.1001" id="manytestsr-0041001">manytestsr 0.0.4.1001<a class="anchor" aria-label="anchor" href="#manytestsr-0041001"></a></h2>
 <div class="section level3">
