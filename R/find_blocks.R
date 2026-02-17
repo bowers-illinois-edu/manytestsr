@@ -296,6 +296,18 @@ find_blocks <-
     ## Initialize numeric node tracking
     node_tracker <- create_node_tracker()
 
+    ## Support list-valued alphafn (from alpha_adaptive_tree_pruned).
+    ## Extract update/reset functions and unwrap alphafn to plain function.
+    alphafn_update <- NULL
+    alphafn_reset <- NULL
+    if (is.list(alphafn)) {
+      alphafn_update <- alphafn$update
+      alphafn_reset <- alphafn$reset
+      alphafn <- alphafn$alphafn
+      # Reset to full-tree schedule at the start of each run
+      alphafn_reset(thealpha)
+    }
+
     ## Should we always copy the data tables? And rename them?
     if (copydts) {
       bdat <- data.table::copy(bdat)
@@ -578,6 +590,31 @@ find_blocks <-
 
         bdat[, testable := fifelse(uniqueN(get(splitby)) == 1, FALSE, unique(testable)), by = group_id]
       }
+
+      ## Branch pruning: after testable flags are set, update the alpha
+      ## schedule on the surviving subtree. Failed nodes (testable=FALSE
+      ## at depth > 1) and their descendants are removed, giving more
+      ## alpha budget to surviving branches at deeper levels.
+      if (!is.null(alphafn_update)) {
+        # Sync testable flags from bdat back to node_dat for current depth
+        current_depth_nodes <- node_dat[depth == i, ]
+        if (nrow(current_depth_nodes) > 0L) {
+          # A node is alive if any of its blocks are testable
+          testable_groups <- unique(bdat[(testable), group_id])
+          node_dat[depth == i, testable := nodenum %in% testable_groups]
+        }
+
+        # Build pruned tree: remove failed nodes (depth > 1) and descendants
+        failed_nodes <- node_dat[depth > 1L & !testable, nodenum]
+        if (length(failed_nodes) > 0L) {
+          failed_and_desc <- c(failed_nodes,
+            .get_all_descendants(node_dat, failed_nodes))
+          pruned_nd <- node_dat[!nodenum %in% failed_and_desc,
+            .(nodenum, parent, depth, nodesize)]
+          alphafn_update(pruned_nd, thealpha)
+        }
+      }
+
       node_dat[is.na(a), a := get(alphanm)]
       setkeyv(bdat, "testable") # for binary search speed
       # message(paste(unique(signif(bdat$pfinalb,4)),collapse=' '),appendLF = TRUE)

@@ -618,3 +618,144 @@ alpha_adaptive_tree <- function(node_dat, delta_hat, max_depth = NULL) {
     return(alpha_by_depth[depths])
   }
 }
+
+
+#' Find All Descendants of Given Nodes in a Tree
+#'
+#' BFS traversal using the parent column to collect every node
+#' descended from the given starting nodes.
+#'
+#' @param node_dat data.frame with at least \code{nodenum} and
+#'   \code{parent} columns.
+#' @param nodenums Integer vector of node IDs whose descendants
+#'   to find.
+#' @return Integer vector of descendant node IDs (not including
+#'   the starting nodes themselves). Empty integer vector if no
+#'   descendants exist.
+#' @keywords internal
+.get_all_descendants <- function(node_dat, nodenums) {
+  nd <- as.data.frame(node_dat)
+  # BFS: start with children of the given nodes, then expand
+  descendants <- integer(0)
+  frontier <- nd$nodenum[nd$parent %in% nodenums]
+
+  while (length(frontier) > 0L) {
+    descendants <- c(descendants, frontier)
+    frontier <- nd$nodenum[nd$parent %in% frontier]
+  }
+
+  return(descendants)
+}
+
+
+#' Adaptive Alpha with Branch Pruning
+#'
+#' Factory function that creates an adaptive alpha adjustment system
+#' supporting branch pruning. Unlike \code{\link{alpha_adaptive_tree}},
+#' which pre-computes a fixed schedule, this version can recompute the
+#' schedule on a pruned subtree after each depth --- giving more alpha
+#' to surviving branches when dead branches are removed.
+#'
+#' @inheritParams alpha_adaptive_tree
+#'
+#' @return A list with three components:
+#' \describe{
+#'   \item{\code{alphafn}}{A function with the standard alphafn
+#'     interface: \code{function(pval, batch, nodesize, thealpha,
+#'     thew0, depth)}. Looks up the current alpha schedule by depth.}
+#'   \item{\code{update}}{A function
+#'     \code{function(pruned_node_dat, thealpha)} that recomputes
+#'     the alpha schedule on the given (pruned) tree. Called by
+#'     \code{find_blocks} after each depth's testable decisions.}
+#'   \item{\code{reset}}{A function \code{function(thealpha)} that
+#'     restores the alpha schedule to the full (unpruned) tree.
+#'     Called by \code{find_blocks} at the start of each run to
+#'     ensure independence across simulation iterations.}
+#' }
+#'
+#' @details
+#' The FWER guarantee follows from the same telescoping-sum argument
+#' as \code{\link{alpha_adaptive_tree}}, applied to the surviving
+#' subtree at each depth. Pruning decisions at depth \eqn{d} depend
+#' only on tests at depths \eqn{1, \ldots, d}, which are independent
+#' of tests at deeper levels (under data splitting or independent
+#' permutation tests), so the conditional FWER bound holds.
+#'
+#' When \code{find_blocks} detects a list-valued \code{alphafn},
+#' it extracts these three components and calls \code{reset} at
+#' the start of each run and \code{update} after each depth.
+#'
+#' @examples
+#' nd <- data.frame(
+#'   nodenum  = 1:7,
+#'   parent   = c(0, 1, 1, 2, 2, 3, 3),
+#'   depth    = c(1, 2, 2, 3, 3, 3, 3),
+#'   nodesize = c(500, 250, 250, 125, 125, 100, 150)
+#' )
+#' obj <- alpha_adaptive_tree_pruned(node_dat = nd, delta_hat = 0.5)
+#' # obj$alphafn — pass to find_blocks
+#' # obj$update(pruned_nd, 0.05) — recompute on surviving tree
+#' # obj$reset(0.05) — restore full-tree schedule
+#'
+#' @export
+alpha_adaptive_tree_pruned <- function(node_dat, delta_hat,
+                                       max_depth = NULL) {
+  # Validate at factory time
+  stopifnot(delta_hat > 0)
+  full_nd <- as.data.frame(node_dat)
+  required_cols <- c("nodenum", "parent", "depth", "nodesize")
+  missing_cols <- setdiff(required_cols, names(full_nd))
+  if (length(missing_cols) > 0L) {
+    stop("node_dat must have columns: ", paste(missing_cols, collapse = ", "))
+  }
+
+  # Shared environment: the alphafn closure reads from here,
+  # update() and reset() write to it.
+  state <- new.env(parent = emptyenv())
+  state$alphas <- NULL
+  state$thealpha <- NULL
+
+  # Compute schedule on a given tree and store in shared state
+  .compute_and_store <- function(nd, thealpha) {
+    state$alphas <- compute_adaptive_alphas_tree(
+      node_dat = nd, delta_hat = delta_hat,
+      max_depth = max_depth, thealpha = thealpha
+    )
+    state$thealpha <- thealpha
+  }
+
+  # --- alphafn: standard closure interface ---
+  alphafn <- function(pval, batch, nodesize, thealpha = 0.05,
+                      thew0 = 0.05 - 0.001, depth = NULL) {
+    # Lazy initialization on first call
+    if (is.null(state$alphas) || !identical(thealpha, state$thealpha)) {
+      .compute_and_store(full_nd, thealpha)
+    }
+    alpha_by_depth <- state$alphas
+
+    if (is.null(depth)) {
+      warning("alpha_adaptive_tree_pruned requires depth; returning nominal alpha")
+      return(rep(thealpha, length(pval)))
+    }
+
+    depths <- as.integer(depth)
+    depths <- pmax(1L, pmin(depths, length(alpha_by_depth)))
+    return(alpha_by_depth[depths])
+  }
+
+  # --- update: recompute schedule on pruned tree ---
+  update_fn <- function(pruned_node_dat, thealpha = 0.05) {
+    .compute_and_store(pruned_node_dat, thealpha)
+  }
+
+  # --- reset: restore full-tree schedule ---
+  reset_fn <- function(thealpha = 0.05) {
+    .compute_and_store(full_nd, thealpha)
+  }
+
+  return(list(
+    alphafn = alphafn,
+    update = update_fn,
+    reset = reset_fn
+  ))
+}

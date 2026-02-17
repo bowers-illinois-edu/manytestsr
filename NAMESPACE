@@ -2,6 +2,7 @@
 
 export(alpha_adaptive)
 export(alpha_adaptive_tree)
+export(alpha_adaptive_tree_pruned)
 export(alpha_addis)
 export(alpha_investing)
 export(alpha_saffron)
