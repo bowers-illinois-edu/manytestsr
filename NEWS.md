@@ -1,3 +1,25 @@
+# manytestsr 0.0.4.1002
+
+## New features
+
+* New exported factory function `alpha_adaptive_tree_pruned()` creates a
+  branch-pruning adaptive alpha system for use with `find_blocks()`. Unlike
+  `alpha_adaptive_tree()`, which pre-computes a fixed schedule, this version
+  can recompute the schedule on the surviving subtree after each depth ---
+  giving more alpha to surviving branches when dead branches are removed.
+  Returns a list with three components: `$alphafn` (standard closure),
+  `$update` (recompute on pruned tree), and `$reset` (restore full tree).
+
+* `find_blocks()` now supports list-valued `alphafn` parameters. When
+  `alphafn` is a list (as returned by `alpha_adaptive_tree_pruned()`),
+  `find_blocks` extracts the `$alphafn`, `$update`, and `$reset` components,
+  calls `reset` at the start of each run, and calls `update` after each
+  depth's testable decisions. Plain function `alphafn` values continue to
+  work unchanged.
+
+* New internal helper `.get_all_descendants()` performs BFS traversal on
+  tree-structured `node_dat` to find all descendants of given nodes.
+
 # manytestsr 0.0.4.1001
 
 ## New features
