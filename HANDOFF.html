@@ -39,54 +39,63 @@
 
 <div id="handoff-summary" class="section level1">
 
-<p><strong>Date:</strong> 2026-02-14 <strong>Branch:</strong> <code>main</code> <strong>Last commit:</strong> <code>f22bde8</code> — Fix .Rbuildignore regex that excluded compute_error_load.Rd from tarball</p>
+<p><strong>Date:</strong> 2026-02-24 <strong>Branch:</strong> <code>main</code> <strong>Last commit:</strong> <code>f5ec1df</code> — Update README and fix LICENSE.md to match MIT declaration</p>
 <hr><div class="section level2">
 <h2 id="id_1-key-decisions-made">1. Key Decisions Made<a class="anchor" aria-label="anchor" href="#id_1-key-decisions-made"></a></h2>
 <ul><li>
-<strong>No version bump</strong> for the <code>.Rbuildignore</code> fix. The change is build-config only — no code, API, or behavior changes. The current version remains <code>0.0.4.1001</code>.</li>
+<strong>License is MIT.</strong> The <code>DESCRIPTION</code> and <code>LICENSE</code> files already declared MIT. The <code>LICENSE.md</code> file contained GPL-2 text (likely from a project template). Replaced it with the MIT license text to resolve the inconsistency. User confirmed MIT is the intended license.</li>
 <li>
-<strong>Root cause over symptoms:</strong> Both R CMD check WARNINGs (undocumented <code>compute_error_load</code>, broken <code>\link{}</code> cross-references) shared a single root cause in <code>.Rbuildignore</code>, so one targeted fix resolved all three check issues (2 WARNINGs + 1 NOTE).</li>
+<strong>README rewritten for public-facing clarity.</strong> Added a development-stage warning, installation instructions, a public TODO checklist with done/open items, a key functions table, and updated development commands to reflect the Makefile workflow.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="id_2-files-changed-and-why">2. Files Changed and Why<a class="anchor" aria-label="anchor" href="#id_2-files-changed-and-why"></a></h2>
 <div class="section level3">
-<h3 id="rbuildignore-the-only-file-changed">
-<code>.Rbuildignore</code> (the only file changed)<a class="anchor" aria-label="anchor" href="#rbuildignore-the-only-file-changed"></a></h3>
-<p>Two edits:</p>
-<ol style="list-style-type: decimal"><li><p><strong><code>load.R</code> → <code>^load\.R$</code></strong> — The original unanchored regex <code>load.R</code> was a Perl regular expression that matched any file path containing the substring “load” + any char + “R”. This inadvertently matched <code>man/compute_error_load.Rd</code>, excluding it from the built tarball. The Rd file existed in the source <code>man/</code> directory and roxygen2 generated it correctly, but <code>R CMD build</code> silently dropped it. Anchoring the pattern to <code>^load\.R$</code> restricts it to the root-level <code>load.R</code> file (the interactive dev session loader).</p></li>
-<li><p><strong>Added <code>^\.claude$</code></strong> — The <code>.claude/</code> directory (Claude Code project config) was being included in the built package, triggering a NOTE about hidden files. This pattern excludes it from the tarball.</p></li>
-</ol></div>
+<h3 id="readmemd"><code>README.md</code><a class="anchor" aria-label="anchor" href="#readmemd"></a></h3>
+<p>Full rewrite. The previous README had a brief warning, a three-item TODO list, outdated <code>devtools::</code> commands, and an implementation note with a typo. Replaced with:</p>
+<ul><li>Package description with citation link to Bowers and Chen (2020)</li>
+<li>Bold development-stage warning placed before installation instructions</li>
+<li>
+<code><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">remotes::install_github()</a></code> installation instructions with C++ compiler note</li>
+<li>Public TODO checklist organized by category (alpha adjustment, local p-value adjustment, testing, documentation) using GitHub checkbox syntax</li>
+<li>Key functions reference table</li>
+<li>
+<code>make</code> commands for development</li>
+<li>Cleaned-up implementation notes on the C++ code paths</li>
+</ul></div>
+<div class="section level3">
+<h3 id="licensemd"><code>LICENSE.md</code><a class="anchor" aria-label="anchor" href="#licensemd"></a></h3>
+<p>Replaced GPL-2 full text with MIT license text (Copyright 2020 Jake Bowers). Now consistent with <code>DESCRIPTION</code> (<code>License: MIT + file LICENSE</code>) and the <code>LICENSE</code> file (YEAR/COPYRIGHT HOLDER format).</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="id_3-current-blockers-or-open-questions">3. Current Blockers or Open Questions<a class="anchor" aria-label="anchor" href="#id_3-current-blockers-or-open-questions"></a></h2>
 <ul><li>
-<strong>None.</strong> <code>make check</code> passes cleanly: 0 errors, 0 warnings, 0 notes.</li>
-<li>The <code>DESCRIPTION</code> says <code>License: MIT + file LICENSE</code> but <code>LICENSE.md</code> contains GPL-2 text. This was not flagged by R CMD check (a separate <code>LICENSE</code> file likely exists), but it may be worth verifying the intended license if questions arise.</li>
+<strong>None.</strong> All changes are committed and pushed to <code>origin/main</code>.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="id_4-important-context-to-preserve">4. Important Context to Preserve<a class="anchor" aria-label="anchor" href="#id_4-important-context-to-preserve"></a></h2>
 <ul><li>
 <strong><code>.Rbuildignore</code> is regex-based.</strong> Every line is a Perl regular expression, not a glob or literal path. Unanchored patterns can silently exclude files deep in the directory tree. When adding entries, always anchor with <code>^</code> and escape dots with <code>\.</code>.</li>
 <li>
-<strong>The <code>compute_error_load</code> function</strong> (in <code>R/alpha_adaptive.R</code>) is fully documented with roxygen2 and exported in NAMESPACE. The documentation was never missing — it was just excluded from the tarball by the build-ignore regex.</li>
+<strong>License files:</strong> Three files must stay in sync — <code>DESCRIPTION</code> (declares <code>MIT + file LICENSE</code>), <code>LICENSE</code> (short YEAR/COPYRIGHT HOLDER format for CRAN), and <code>LICENSE.md</code> (full text for GitHub display).</li>
 <li>
-<strong>Development workflow:</strong> <code>make document</code>, <code>make test</code>, <code>make check</code> are the core commands. The project uses <code>renv</code> for dependency management. Tests exclude profiling by default. See <code>CLAUDE.md</code> and <code>CLAUDE_CODING.md</code> for full conventions.</li>
+<strong>Development workflow:</strong> <code>make document</code>, <code>make test</code>, <code>make check</code> are the core commands. The project uses <code>renv</code> for dependency management. Tests exclude profiling by default. See <code>CLAUDE.md</code> for full conventions.</li>
 <li>
-<strong>Checkpoint workflow (from <code>CLAUDE_CODING.md</code>):</strong> Pause for user review (1) after writing tests, (2) after writing implementation, (3) at design decisions.</li>
+<strong>Package version:</strong> Currently <code>0.0.4.1002</code>. Recent additions include tree-based adaptive alpha (<code>alpha_adaptive_tree</code>), branch-pruning alpha (<code>alpha_adaptive_tree_pruned</code>), and error-load diagnostics (<code>compute_error_load</code>). See <code>NEWS.md</code> for full changelog.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="id_5-whats-done-vs-what-remains">5. What’s Done vs. What Remains<a class="anchor" aria-label="anchor" href="#id_5-whats-done-vs-what-remains"></a></h2>
 <div class="section level3">
 <h3 id="done">Done<a class="anchor" aria-label="anchor" href="#done"></a></h3>
-<ul><li>All R CMD check issues resolved (2 WARNINGs + 1 NOTE → 0/0/0)</li>
-<li>Changes committed to <code>main</code>
+<ul><li>README rewritten with development warning, TODO list, install instructions, and key functions</li>
+<li>LICENSE.md corrected from GPL-2 to MIT</li>
+<li>All changes committed and pushed to <code>origin/main</code>
 </li>
-<li>Read and understood all <code>*.md</code> files in the repository</li>
 </ul></div>
 <div class="section level3">
 <h3 id="remains">Remains<a class="anchor" aria-label="anchor" href="#remains"></a></h3>
 <ul><li>Nothing from this session is outstanding</li>
-<li>Not pushed to remote (user did not request a push)</li>
+<li>The public TODO items in README.md track ongoing package development work (not session tasks)</li>
 </ul></div>
 </div>
 </div>
