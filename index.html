@@ -54,18 +54,139 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="a-package-to-do-many-tests-to-localize-causal-effects-in-sets-of-experimental-blocks">A package to do many tests to localize causal effects in (sets of) experimental blocks<a class="anchor" aria-label="anchor" href="#a-package-to-do-many-tests-to-localize-causal-effects-in-sets-of-experimental-blocks"></a>
+<div class="page-header"><h1 id="manytestsr">manytestsr<a class="anchor" aria-label="anchor" href="#manytestsr"></a>
 </h1></div>
+<p>Testing to detect and localize heterogeneous effects in block-randomized experiments.</p>
+<p>This package implements the nesting (top-down) procedures detailed in <a href="https://doi.org/10.1093/pan/mpaa031" class="external-link">Bowers and Chen (2020)</a>. It recursively splits experimental blocks, tests for treatment effects at each node, and controls familywise error using adaptive alpha adjustment — so you can ask not just <em>whether</em> a treatment worked, but <em>where</em> it worked.</p>
 <div class="section level2">
-<h2 id="development-info">Development Info<a class="anchor" aria-label="anchor" href="#development-info"></a>
+<h2 id="warning-development-stage-package">Warning: development-stage package<a class="anchor" aria-label="anchor" href="#warning-development-stage-package"></a>
 </h2>
-<pre><code><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">document</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">check</a></span><span class="op">(</span><span class="op">)</span></span></code></pre>
+<p><strong>This package is under active development. The API may change without notice, and not all procedures have proven statistical properties yet.</strong> If you use it in applied work, pin a specific commit or version and check back for updates.</p>
+<p>Current version: <strong>0.0.4.1002</strong></p>
 </div>
 <div class="section level2">
-<h2 id="notes">Notes:<a class="anchor" aria-label="anchor" href="#notes"></a>
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>We are using three main C functions: <code>fast_dists_by_unit_arma2_par</code> if we are using openmp (<code>parallel="yes"</code>), <code>fast_dists_and_trans</code> for small n, and <code>fast_dists_and_trans_by_unit_arma</code> for N&gt;20. (Where 20 is chosen without a lot of profiling. Basic idea is not to hold large matrices in memory. Matrices are faster when N is not to large, but bog down when we have large number of observations.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"bowers-illinois-edu/manytestsr"</span><span class="op">)</span></span></code></pre></div>
+<p>The package includes C++ code (via Rcpp/RcppArmadillo) and requires a working C++ compiler. On macOS, install Xcode Command Line Tools; on Windows, install <a href="https://cran.r-project.org/bin/windows/Rtools/" class="external-link">Rtools</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="public-todo-list">Public TODO list<a class="anchor" aria-label="anchor" href="#public-todo-list"></a>
+</h2>
+<p>Items marked with a check are done. Items without a check are open — they represent known limitations or planned work.</p>
+<div class="section level3">
+<h3 id="alpha-adjustment-and-error-control">Alpha adjustment and error control<a class="anchor" aria-label="anchor" href="#alpha-adjustment-and-error-control"></a>
+</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked>Adaptive alpha adjustment for tree-structured testing (<code>compute_adaptive_alphas</code>, <code>alpha_adaptive</code>)</label></li>
+<li><label><input type="checkbox" checked>Tree-based alpha schedules for irregular trees (<code>compute_adaptive_alphas_tree</code>, <code>alpha_adaptive_tree</code>)</label></li>
+<li><label><input type="checkbox" checked>Branch-pruning adaptive alpha that reallocates alpha from dead branches (<code>alpha_adaptive_tree_pruned</code>)</label></li>
+<li><label><input type="checkbox" checked>Error-load diagnostics (<code>compute_error_load</code>)</label></li>
+<li><label><input type="checkbox">Remove or deprecate the sequential (stream-based) alpha procedures (<code>alpha_investing</code>, <code>alpha_saffron</code>, <code>alpha_addis</code>) from <code>onlineFDR</code>. These treat p-values as a flat stream and do not have provable FWER control properties for tree-structured testing.</label></li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="local-p-value-adjustment">Local p-value adjustment<a class="anchor" aria-label="anchor" href="#local-p-value-adjustment"></a>
+</h3>
+<ul class="task-list">
+<li><label><input type="checkbox">Modify the “local Hommel” style adjustments (<code>local_hommel_all_ps</code>) to operate level-by-level rather than node-by-node.</label></li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="testing">Testing<a class="anchor" aria-label="anchor" href="#testing"></a>
+</h3>
+<ul class="task-list">
+<li><label><input type="checkbox">Incorporate a test of the sharp null of no effect for any unit, from the <a href="https://github.com/bowers-illinois-edu/CMRSS" class="external-link">CMRSS</a> package.</label></li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="documentation-and-usability">Documentation and usability<a class="anchor" aria-label="anchor" href="#documentation-and-usability"></a>
+</h3>
+<ul class="task-list">
+<li><label><input type="checkbox">Complete the vignettes (<code>getting-started</code>, <code>hierarchical-testing-workflow</code>, <code>advanced-methodologies</code>).</label></li>
+<li><label><input type="checkbox">Add a worked example to this README.</label></li>
+</ul>
+</div>
+</div>
+<div class="section level2">
+<h2 id="key-functions">Key functions<a class="anchor" aria-label="anchor" href="#key-functions"></a>
+</h2>
+<table class="table">
+<colgroup>
+<col width="52%">
+<col width="47%">
+</colgroup>
+<thead><tr class="header">
+<th>Function</th>
+<th>Purpose</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code><a href="reference/find_blocks.html">find_blocks()</a></code></td>
+<td>Core recursive splitting and testing procedure</td>
+</tr>
+<tr class="even">
+<td><code><a href="reference/compute_adaptive_alphas.html">compute_adaptive_alphas()</a></code></td>
+<td>Depth-adjusted significance levels for regular trees</td>
+</tr>
+<tr class="odd">
+<td><code><a href="reference/alpha_adaptive_tree_pruned.html">alpha_adaptive_tree_pruned()</a></code></td>
+<td>Branch-pruning alpha for irregular trees</td>
+</tr>
+<tr class="even">
+<td><code><a href="reference/compute_error_load.html">compute_error_load()</a></code></td>
+<td>Diagnose whether natural gating controls FWER</td>
+</tr>
+<tr class="odd">
+<td>
+<code>splitCluster</code>, <code>splitEqualApprox</code>, <code>splitLOO</code>, <code>splitSpecifiedFactor</code>
+</td>
+<td>Splitting strategies</td>
+</tr>
+<tr class="even">
+<td>
+<code>pOneway</code>, <code>pWilcox</code>, <code>pIndepDist</code>, <code>pCombCauchyDist</code>
+</td>
+<td>P-value functions for different test statistics</td>
+</tr>
+<tr class="odd">
+<td>
+<code>local_hommel_all_ps</code>, <code>local_simes</code>, <code>local_bh_all_ps</code>
+</td>
+<td>Local p-value adjustment</td>
+</tr>
+<tr class="even">
+<td>
+<code>make_results_tree</code>, <code>make_results_ggraph</code>
+</td>
+<td>Visualization of results</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level2">
+<h2 id="development">Development<a class="anchor" aria-label="anchor" href="#development"></a>
+</h2>
+<pre><code>make document   # generate roxygen2 documentation
+make test       # run test suite
+make check      # R CMD check
+make build      # build the package</code></pre>
+<p>The project uses <a href="https://rstudio.github.io/renv/" class="external-link">renv</a> for dependency management. Run <code>make dependencies</code> to install required packages.</p>
+</div>
+<div class="section level2">
+<h2 id="implementation-notes">Implementation notes<a class="anchor" aria-label="anchor" href="#implementation-notes"></a>
+</h2>
+<p>Distance and transformation calculations use C++ (Rcpp/RcppArmadillo) with three code paths selected by dataset size:</p>
+<ul>
+<li>
+<code>fast_dists_by_unit_arma2_par</code> — OpenMP parallel processing (<code>parallel = "yes"</code>)</li>
+<li>
+<code>fast_dists_and_trans</code> — direct matrix computation for small N</li>
+<li>
+<code>fast_dists_and_trans_by_unit_arma</code> — unit-by-unit computation for N &gt; 20, avoiding large matrices in memory</li>
+</ul>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="license">
