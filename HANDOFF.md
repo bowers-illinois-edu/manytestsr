@@ -1,45 +1,52 @@
 # Handoff Summary
 
-**Date:** 2026-02-14
+**Date:** 2026-02-24
 **Branch:** `main`
-**Last commit:** `f22bde8` — Fix .Rbuildignore regex that excluded compute_error_load.Rd from tarball
+**Last commit:** `f5ec1df` — Update README and fix LICENSE.md to match MIT declaration
 
 ---
 
 ## 1. Key Decisions Made
 
-- **No version bump** for the `.Rbuildignore` fix. The change is build-config only — no code, API, or behavior changes. The current version remains `0.0.4.1001`.
-- **Root cause over symptoms:** Both R CMD check WARNINGs (undocumented `compute_error_load`, broken `\link{}` cross-references) shared a single root cause in `.Rbuildignore`, so one targeted fix resolved all three check issues (2 WARNINGs + 1 NOTE).
+- **License is MIT.** The `DESCRIPTION` and `LICENSE` files already declared MIT. The `LICENSE.md` file contained GPL-2 text (likely from a project template). Replaced it with the MIT license text to resolve the inconsistency. User confirmed MIT is the intended license.
+- **README rewritten for public-facing clarity.** Added a development-stage warning, installation instructions, a public TODO checklist with done/open items, a key functions table, and updated development commands to reflect the Makefile workflow.
 
 ## 2. Files Changed and Why
 
-### `.Rbuildignore` (the only file changed)
+### `README.md`
 
-Two edits:
+Full rewrite. The previous README had a brief warning, a three-item TODO list, outdated `devtools::` commands, and an implementation note with a typo. Replaced with:
 
-1. **`load.R` &rarr; `^load\.R$`** — The original unanchored regex `load.R` was a Perl regular expression that matched any file path containing the substring "load" + any char + "R". This inadvertently matched `man/compute_error_load.Rd`, excluding it from the built tarball. The Rd file existed in the source `man/` directory and roxygen2 generated it correctly, but `R CMD build` silently dropped it. Anchoring the pattern to `^load\.R$` restricts it to the root-level `load.R` file (the interactive dev session loader).
+- Package description with citation link to Bowers and Chen (2020)
+- Bold development-stage warning placed before installation instructions
+- `remotes::install_github()` installation instructions with C++ compiler note
+- Public TODO checklist organized by category (alpha adjustment, local p-value adjustment, testing, documentation) using GitHub checkbox syntax
+- Key functions reference table
+- `make` commands for development
+- Cleaned-up implementation notes on the C++ code paths
 
-2. **Added `^\.claude$`** — The `.claude/` directory (Claude Code project config) was being included in the built package, triggering a NOTE about hidden files. This pattern excludes it from the tarball.
+### `LICENSE.md`
+
+Replaced GPL-2 full text with MIT license text (Copyright 2020 Jake Bowers). Now consistent with `DESCRIPTION` (`License: MIT + file LICENSE`) and the `LICENSE` file (YEAR/COPYRIGHT HOLDER format).
 
 ## 3. Current Blockers or Open Questions
 
-- **None.** `make check` passes cleanly: 0 errors, 0 warnings, 0 notes.
-- The `DESCRIPTION` says `License: MIT + file LICENSE` but `LICENSE.md` contains GPL-2 text. This was not flagged by R CMD check (a separate `LICENSE` file likely exists), but it may be worth verifying the intended license if questions arise.
+- **None.** All changes are committed and pushed to `origin/main`.
 
 ## 4. Important Context to Preserve
 
 - **`.Rbuildignore` is regex-based.** Every line is a Perl regular expression, not a glob or literal path. Unanchored patterns can silently exclude files deep in the directory tree. When adding entries, always anchor with `^` and escape dots with `\.`.
-- **The `compute_error_load` function** (in `R/alpha_adaptive.R`) is fully documented with roxygen2 and exported in NAMESPACE. The documentation was never missing — it was just excluded from the tarball by the build-ignore regex.
-- **Development workflow:** `make document`, `make test`, `make check` are the core commands. The project uses `renv` for dependency management. Tests exclude profiling by default. See `CLAUDE.md` and `CLAUDE_CODING.md` for full conventions.
-- **Checkpoint workflow (from `CLAUDE_CODING.md`):** Pause for user review (1) after writing tests, (2) after writing implementation, (3) at design decisions.
+- **License files:** Three files must stay in sync — `DESCRIPTION` (declares `MIT + file LICENSE`), `LICENSE` (short YEAR/COPYRIGHT HOLDER format for CRAN), and `LICENSE.md` (full text for GitHub display).
+- **Development workflow:** `make document`, `make test`, `make check` are the core commands. The project uses `renv` for dependency management. Tests exclude profiling by default. See `CLAUDE.md` for full conventions.
+- **Package version:** Currently `0.0.4.1002`. Recent additions include tree-based adaptive alpha (`alpha_adaptive_tree`), branch-pruning alpha (`alpha_adaptive_tree_pruned`), and error-load diagnostics (`compute_error_load`). See `NEWS.md` for full changelog.
 
 ## 5. What's Done vs. What Remains
 
 ### Done
-- All R CMD check issues resolved (2 WARNINGs + 1 NOTE &rarr; 0/0/0)
-- Changes committed to `main`
-- Read and understood all `*.md` files in the repository
+- README rewritten with development warning, TODO list, install instructions, and key functions
+- LICENSE.md corrected from GPL-2 to MIT
+- All changes committed and pushed to `origin/main`
 
 ### Remains
 - Nothing from this session is outstanding
-- Not pushed to remote (user did not request a push)
+- The public TODO items in README.md track ongoing package development work (not session tasks)
