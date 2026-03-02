@@ -41,12 +41,18 @@ local_simes <- function(pvals_children, alpha = .05) {
 #' @param alpha Numeric scalar of alpha (not used in this function)
 #'
 #' @return A vector of adjusted p-values
-#' @importFrom hommel hommel
 #' @examples
 #' local_hommel_all_ps(c(0.01, 0.04, 0.10, 0.20))
 #' @export
 local_hommel_all_ps <- function(pvals_children, alpha = .05) {
-  adj_p_vals <- hommel(pvals_children)@adjusted
+  if (!requireNamespace("hommel", quietly = TRUE)) {
+    stop(
+      "Package 'hommel' is required for local_hommel_all_ps(). ",
+      "Install it with: install.packages('hommel')",
+      call. = FALSE
+    )
+  }
+  adj_p_vals <- hommel::hommel(pvals_children)@adjusted
   return(adj_p_vals)
 }
 

@@ -304,9 +304,15 @@ compute_sensitivity_summary <- function(sensitivity_results, alpha) {
 #' @param sensitivity_analysis Results from design_sensitivity_analysis
 #' @param blocks Vector of block IDs to plot (NULL for all)
 #' @return ggplot object
-#' @importFrom ggplot2 ggplot aes geom_ribbon geom_hline facet_wrap labs theme_minimal theme element_text
 #' @export
 plot_design_sensitivity <- function(sensitivity_analysis, blocks = NULL) {
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop(
+      "Package 'ggplot2' is required for plot_design_sensitivity(). ",
+      "Install it with: install.packages('ggplot2')",
+      call. = FALSE
+    )
+  }
   results <- sensitivity_analysis$sensitivity_results
 
   if (!is.null(blocks)) {
@@ -314,23 +320,23 @@ plot_design_sensitivity <- function(sensitivity_analysis, blocks = NULL) {
   }
 
   # Create the plot
-  p <- ggplot(results, aes(x = gamma)) +
-    geom_ribbon(aes(ymin = p_value_lower, ymax = p_value_upper, fill = block_id),
+  p <- ggplot2::ggplot(results, ggplot2::aes(x = gamma)) +
+    ggplot2::geom_ribbon(ggplot2::aes(ymin = p_value_lower, ymax = p_value_upper, fill = block_id),
       alpha = 0.3
     ) +
-    geom_hline(
+    ggplot2::geom_hline(
       yintercept = sensitivity_analysis$parameters$alpha,
       linetype = "dashed", color = "red"
     ) +
-    facet_wrap(~block_id, scales = "free_y") +
-    labs(
+    ggplot2::facet_wrap(~block_id, scales = "free_y") +
+    ggplot2::labs(
       x = "Sensitivity Parameter (Gamma)",
       y = "P-value Bounds",
       title = "Design Sensitivity Analysis",
       subtitle = paste("Red line indicates alpha =", sensitivity_analysis$parameters$alpha)
     ) +
-    theme_minimal() +
-    theme(legend.position = "none")
+    ggplot2::theme_minimal() +
+    ggplot2::theme(legend.position = "none")
 
   return(p)
 }

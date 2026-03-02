@@ -46,7 +46,7 @@ combined_distances_tstat <- function(fmla = Y ~ trtF | blockF, distfn = fast_dis
 
   # If one of the test statistics is constant, drop it.
   # https://stackoverflow.com/questions/15068981/removal-of-constant-columns-in-r
-  anyconstant_cols <- dataPreparation::which_are_constant(thedat[, .SD, .SDcols = outcome_names], verbose = FALSE)
+  anyconstant_cols <- which_are_constant(thedat[, .SD, .SDcols = outcome_names], verbose = FALSE)
   if (length(anyconstant_cols) > 0) {
     outcome_names <- outcome_names[-anyconstant_cols]
   }

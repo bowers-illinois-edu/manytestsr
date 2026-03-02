@@ -125,7 +125,7 @@ splitting criteria (splitby) and stopping criteria (stop_splitby_constant).
 \itemize{
 \item \code{\link[=splitCluster]{splitCluster()}} splits the blocks into groups that are as similar as
 possible to each other on splitby using the kmeans clustering algorithm
-(using a combination of \code{\link[=kmeans]{kmeans()}} or \code{\link[ClusterR:KMeans_rcpp]{ClusterR::KMeans_rcpp()}}). This will not work
+(using \code{\link[Ckmeans.1d.dp:Ckmeans.1d.dp]{Ckmeans.1d.dp::Ckmeans.1d.dp()}}). This will not work
 with factor variables. When the splitting criteria is constant, it will
 return random splits into roughly two equal sized groups of blocks if
 stop_splitby_constant=FALSE. If stop_splitby_constant=TRUE then

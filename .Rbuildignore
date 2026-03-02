@@ -47,3 +47,4 @@ debug_depth2_hommel\.R
 debug_local_adj\.R
 debug_nodes\.R
 ^\.claude$
+REFACTOR_PLAN\.md

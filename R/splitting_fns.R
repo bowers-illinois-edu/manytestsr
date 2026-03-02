@@ -20,8 +20,6 @@
 #' # View which blocks are in each group
 #' data.frame(block_id = block_ids, weight = block_weights, group = groups)
 #'
-#' @importFrom ClusterR KMeans_rcpp
-#' @importFrom Ckmeans.1d.dp Ckmeans.1d.dp
 #' @export
 splitCluster <- function(bid, x) {
   stopifnot("x must be numeric or integer" = is.numeric(x))
@@ -53,7 +51,14 @@ splitCluster <- function(bid, x) {
   ##    kmeans(x, centers = 2)$cluster})
 
   ## Approach 2:
-  clus <- Ckmeans.1d.dp(x, k = 2)$cluster
+  if (!requireNamespace("Ckmeans.1d.dp", quietly = TRUE)) {
+    stop(
+      "Package 'Ckmeans.1d.dp' is required for splitCluster(). ",
+      "Install it with: install.packages('Ckmeans.1d.dp')",
+      call. = FALSE
+    )
+  }
+  clus <- Ckmeans.1d.dp::Ckmeans.1d.dp(x, k = 2)$cluster
   group <- factor(as.numeric(clus == 1))
   # names(group) <- bid (no longer necessary)
   return(group)
@@ -150,11 +155,17 @@ splitLOO <- function(bid, x) {
 #' # Show the grouping
 #' data.frame(block = block_ids, hierarchy = hierarchical_factor, group = groups)
 #'
-#' @importFrom stringi stri_split_regex
 #' @export
 splitSpecifiedFactor <- function(bid, x) {
+  if (!requireNamespace("stringi", quietly = TRUE)) {
+    stop(
+      "Package 'stringi' is required for splitSpecifiedFactor(). ",
+      "Install it with: install.packages('stringi')",
+      call. = FALSE
+    )
+  }
   stopifnot("x must be a factor" = is.factor(x))
-  stopifnot("The factor must have categories separately by dots '.' and have at least one such separation." = stri_count_fixed(x, ".") > 0)
+  stopifnot("The factor must have categories separately by dots '.' and have at least one such separation." = stringi::stri_count_fixed(x, ".") > 0)
   if (length(unique(x)) == 1) {
     # Random splits used with stop_splitby_constant=FALSE otherwise find_blocks should stop before this
     group <- factor(sample(rep_len(c(0, 1), length.out = length(x))))
@@ -164,9 +175,8 @@ splitSpecifiedFactor <- function(bid, x) {
     group <- factor(c(0, 1))
     return(group)
   }
-  x_split <- stri_split_regex(x, "\\.", simplify = TRUE)
-  # Which  column varies (recalling that after previous splits some columns may have no variance).
-  # try dataPreparation::whichAreConstant() or grab that function's C code in the future since it is much faster than below
+  x_split <- stringi::stri_split_regex(x, "\\.", simplify = TRUE)
+  # Which column varies (recalling that after previous splits some columns may have no variance).
   which_varies <- apply(x_split, 2, function(x) {
     length(unique(x))
   })
@@ -194,11 +204,17 @@ splitSpecifiedFactor <- function(bid, x) {
 #'
 #' @param bid Block id
 #' @param x Is a a factor with levels like "state.district.school". The splits will occur from left to right depending on whether there is existing variation at that level
-#' @importFrom stringi stri_split_regex
 #' @export
 splitSpecifiedFactorMulti <- function(bid, x) {
+  if (!requireNamespace("stringi", quietly = TRUE)) {
+    stop(
+      "Package 'stringi' is required for splitSpecifiedFactorMulti(). ",
+      "Install it with: install.packages('stringi')",
+      call. = FALSE
+    )
+  }
   stopifnot(is.factor(x))
-  stopifnot("The factor must have categories separately by dots '.' and have at least one such separation." = stri_count_fixed(x, ".") > 0)
+  stopifnot("The factor must have categories separately by dots '.' and have at least one such separation." = stringi::stri_count_fixed(x, ".") > 0)
   if (length(unique(x)) == 1) {
     # Random splits used with stop_splitby_constant=FALSE otherwise find_blocks should stop before this
     group <- factor(sample(rep_len(c(0, 1), length.out = length(x))))
@@ -208,9 +224,8 @@ splitSpecifiedFactorMulti <- function(bid, x) {
     group <- factor(c(0, 1))
     return(group)
   }
-  x_split <- stri_split_regex(x, "\\.", simplify = TRUE)
-  # Which  column varies (recalling that after previous splits some columns may have no variance).
-  # try dataPreparation::whichAreConstant() or grab that function's C code in the future since it is much faster than below
+  x_split <- stringi::stri_split_regex(x, "\\.", simplify = TRUE)
+  # Which column varies (recalling that after previous splits some columns may have no variance).
   which_varies <- apply(x_split, 2, function(x) {
     length(unique(x))
   })

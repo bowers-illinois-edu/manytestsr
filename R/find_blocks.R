@@ -74,7 +74,7 @@
 #'
 #'  * [splitCluster()] splits the blocks into groups that are as similar as
 #' possible to each other on splitby using the kmeans clustering algorithm
-#' (using a combination of [kmeans()] or [KMeans_rcpp()]). This will not work
+#' (using [Ckmeans.1d.dp::Ckmeans.1d.dp()]). This will not work
 #' with factor variables. When the splitting criteria is constant, it will
 #' return random splits into roughly two equal sized groups of blocks if
 #' stop_splitby_constant=FALSE. If stop_splitby_constant=TRUE then
@@ -248,8 +248,6 @@
 #'   }
 #' }
 #' }
-#' @importFrom stringi stri_count_fixed stri_split_fixed stri_split stri_sub stri_replace_all stri_extract_last
-#' @importFrom digest digest getVDigest
 #' @export
 find_blocks <-
   function(idat,
@@ -745,9 +743,15 @@ build_numeric_ancestry <- function(tracker, node_id) {
 #'
 #' @param d A vector
 #' @return a vector of hashes
-#' @importFrom digest digest getVDigest
 #' @export
 nodeidfn <- function(d) {
-  crc32hash <- getVDigest(algo = "crc32")
+  if (!requireNamespace("digest", quietly = TRUE)) {
+    stop(
+      "Package 'digest' is required for nodeidfn(). ",
+      "Install it with: install.packages('digest')",
+      call. = FALSE
+    )
+  }
+  crc32hash <- digest::getVDigest(algo = "crc32")
   crc32hash(d)
 }

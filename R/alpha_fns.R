@@ -36,10 +36,16 @@
 #'   significant = pvals <= alpha_vals
 #' )
 #'
-#' @importFrom onlineFDR Alpha_investing
 #' @import data.table
 #' @export
 alpha_investing <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .001, depth = NULL) {
+  if (!requireNamespace("onlineFDR", quietly = TRUE)) {
+    stop(
+      "Package 'onlineFDR' is required for alpha_investing(). ",
+      "Install it with: remotes::install_github('dsrobertson/onlineFDR')",
+      call. = FALSE
+    )
+  }
   stopifnot(length(pval) == length(nodesize))
   stopifnot(length(batch) == length(nodesize))
   # Later just use batch when we fork onlineFDR.
@@ -53,7 +59,7 @@ alpha_investing <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 -
   thedf <- data.table(id = seq(1, length(pval)), pval = pval, date = batchuniq, nodesize = nodesize)
   # Order tests by nodesize within batch: bigger nodes come first, they should have more power and thus smaller alpha
   thedf <- thedf[order(date, -nodesize), ]
-  res <- Alpha_investing(d = thedf[, .(id, date, pval)], alpha = thealpha, w0 = thew0, random = FALSE)
+  res <- onlineFDR::Alpha_investing(d = thedf[, .(id, date, pval)], alpha = thealpha, w0 = thew0, random = FALSE)
   return(res$alphai[thedf$id])
 }
 
@@ -90,9 +96,15 @@ alpha_investing <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 -
 #'   significant = pvals <= alpha_vals
 #' )
 #'
-#' @importFrom onlineFDR SAFFRON
 #' @export
 alpha_saffron <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .001, depth = NULL) {
+  if (!requireNamespace("onlineFDR", quietly = TRUE)) {
+    stop(
+      "Package 'onlineFDR' is required for alpha_saffron(). ",
+      "Install it with: remotes::install_github('dsrobertson/onlineFDR')",
+      call. = FALSE
+    )
+  }
   stopifnot(length(pval) == length(nodesize))
   stopifnot(length(batch) == length(nodesize))
   # Later just use batch. For now the onlineFDR functions want dates to indicate batches
@@ -105,7 +117,7 @@ alpha_saffron <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .
   # Order tests by nodesize within batch: bigger nodes come first, they should have more power and thus smaller alpha
   thedf <- thedf[order(date, -nodesize), ]
   ## For now, say that we will never reject a hypothesis with p>=.2 (lambda below)
-  res <- SAFFRON(d = thedf[, .(id, pval, date)], alpha = thealpha, w0 = thew0, lambda = .2, random = FALSE)
+  res <- onlineFDR::SAFFRON(d = thedf[, .(id, pval, date)], alpha = thealpha, w0 = thew0, lambda = .2, random = FALSE)
   return(res$alphai[thedf$id])
 }
 
@@ -142,9 +154,15 @@ alpha_saffron <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .
 #'   significant = pvals <= alpha_vals
 #' )
 #'
-#' @importFrom onlineFDR ADDIS
 #' @export
 alpha_addis <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .001, depth = NULL) {
+  if (!requireNamespace("onlineFDR", quietly = TRUE)) {
+    stop(
+      "Package 'onlineFDR' is required for alpha_addis(). ",
+      "Install it with: remotes::install_github('dsrobertson/onlineFDR')",
+      call. = FALSE
+    )
+  }
   stopifnot(length(pval) == length(nodesize))
   stopifnot(length(batch) == length(nodesize))
   # Later just use batch. For now the onlineFDR functions want dates to indicate batches
@@ -157,6 +175,6 @@ alpha_addis <- function(pval, batch, nodesize, thealpha = .05, thew0 = .05 - .00
   # Order tests by nodesize within batch: bigger nodes come first, they should have more power and thus smaller alpha
   ## For now, say that we will never reject a hypothesis with p>=.2 (lambda below)
   thedf <- thedf[order(decision.times, -nodesize), ]
-  res <- ADDIS(d = thedf[, .(id, pval, decision.times)], alpha = thealpha, w0 = thew0, lambda = .2, random = FALSE)
+  res <- onlineFDR::ADDIS(d = thedf[, .(id, pval, decision.times)], alpha = thealpha, w0 = thew0, lambda = .2, random = FALSE)
   return(res$alphai[thedf$id])
 }

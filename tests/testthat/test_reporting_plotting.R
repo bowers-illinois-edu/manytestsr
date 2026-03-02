@@ -114,18 +114,16 @@ example_blocks_spec_fwer <- find_blocks(
 example_hits_spec_fwer <- report_detections(example_blocks_spec_fwer$bdat, fwer = TRUE, only_hits = FALSE, blockid = "blockF")
 example_tree_spec_fwer <- make_results_tree(example_blocks_spec_fwer, block_id = "blockF")
 make_results_ggraph(example_tree_spec_fwer$graph)
-example_nodes_spec_fwer <- example_tree_spec_fwer$graph %>%
-  activate(nodes) %>%
-  as.data.frame()
+example_nodes_spec_fwer <- as.data.frame(
+  tidygraph::activate(example_tree_spec_fwer$graph, "nodes")
+)
 ## In this case we want to know the place and year and block info for nodes below the first overall test.
 ## That is, we learn (1) that we can reject the null of no effects overall
 ## (and that we have 5 splits from this first test)
-## example_nodes_spec_fwer %>%
-##  select(nodenum, name, parent_name, p, a, depth, out_degree, num_blocks, leaf_hit, group_hit, hit)
 #### See just two nodes where we can reject the null: (node 1 --- the overall node, and node 6)
-example_tree_spec_fwer$graph %>%
-  activate(edges) %>%
-  as.data.frame()
+as.data.frame(
+  tidygraph::activate(example_tree_spec_fwer$graph, "edges")
+)
 
 example_hits_spec_fwer[, .(hit, hit_grp, fin_grp, fin_nodenum, fin_parent, fin_parent_p, max_p)]
 
@@ -170,18 +168,18 @@ example_hits_spec_fdr <- report_detections(example_spec_fdr$bdat, fwer = FALSE, 
 
 example_tree_spec_fdr <- make_results_tree(example_spec_fdr, block_id = "blockF")
 make_results_ggraph(example_tree_spec_fdr$graph)
-example_nodes_spec_fdr <- example_tree_spec_fdr$graph %>%
-  activate(nodes) %>%
-  as.data.frame()
+example_nodes_spec_fdr <- as.data.frame(
+  tidygraph::activate(example_tree_spec_fdr$graph, "nodes")
+)
 ## In this case we want to know the place and year and block info for nodes below the first overall test.
 ## That is, we learn (1) that we can reject the null of no effects overall
 ## (and that we have 5 splits from this first test)
 example_nodes_spec_fdr %>%
   select(node_number, name, parent_name, p, a, depth, num_blocks)
 ## See just two nodes where we can reject the null: (node 1 --- the overall node, and node 6)
-example_tree_spec_fdr$graph %>%
-  activate(edges) %>%
-  as.data.frame()
+as.data.frame(
+  tidygraph::activate(example_tree_spec_fdr$graph, "edges")
+)
 
 node_info_leaves <- example_hits_spec_fdr[, .(
   nodesize = sum(unique(nodesize)),

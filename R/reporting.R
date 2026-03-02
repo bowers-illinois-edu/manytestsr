@@ -54,7 +54,6 @@ utils::globalVariables(c("num_blocks", "i.num_blocks"))
 #' hits_only <- report_detections(results$bdat, fwer = TRUE, only_hits = TRUE)
 #' print(hits_only)
 #' }
-#' @importFrom stringi stri_count_fixed stri_split_fixed
 #' @import data.table
 #' @export
 report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FALSE, blockid = "blockF") {
@@ -206,29 +205,35 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
 #'   labs(title = "Hierarchical Testing Results Tree") +
 #'   theme_void()
 #' }
-#' @import ggraph
-#' @import ggplot2
 #' @export
 make_results_ggraph <- function(res_graph, remove_na_p = TRUE) {
-  if (remove_na_p) {
-    res_graph <- res_graph %>%
-      activate(nodes) %>%
-      filter(!is.na(p))
+  for (pkg in c("ggraph", "ggplot2", "tidygraph")) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      stop(
+        "Package '", pkg, "' is required for make_results_ggraph(). ",
+        "Install it with: install.packages('", pkg, "')",
+        call. = FALSE
+      )
+    }
   }
-  res_g <- ggraph(res_graph, layout = "tree") +
-    geom_edge_diagonal(colour = "black") +
-    geom_node_label(aes(label = label, colour = hit),
-      repel = FALSE, show.legend = FALSE, label.r = unit(0.5, "lines"),
-      label.padding = unit(.01, "lines"), size = 1
+  if (remove_na_p) {
+    res_graph <- tidygraph::activate(res_graph, "nodes")
+    res_graph <- dplyr::filter(res_graph, !is.na(p))
+  }
+  res_g <- ggraph::ggraph(res_graph, layout = "tree") +
+    ggraph::geom_edge_diagonal(colour = "black") +
+    ggraph::geom_node_label(ggplot2::aes(label = label, colour = hit),
+      repel = FALSE, show.legend = FALSE, label.r = grid::unit(0.5, "lines"),
+      label.padding = grid::unit(.01, "lines"), size = 1
     ) +
-    theme(legend.position = "none") +
-    theme(
-      panel.background = element_rect(fill = "transparent"), # bg of the panel
-      plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
-      panel.grid.major = element_blank(), # get rid of major grid
-      panel.grid.minor = element_blank(), # get rid of minor grid
-      legend.background = element_rect(fill = "transparent"), # get rid of legend bg
-      legend.box.background = element_rect(fill = "transparent") # get rid of legend panel bg
+    ggplot2::theme(legend.position = "none") +
+    ggplot2::theme(
+      panel.background = ggplot2::element_rect(fill = "transparent"),
+      plot.background = ggplot2::element_rect(fill = "transparent", color = NA),
+      panel.grid.major = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank(),
+      legend.background = ggplot2::element_rect(fill = "transparent"),
+      legend.box.background = ggplot2::element_rect(fill = "transparent")
     )
   return(res_g)
 }
@@ -317,12 +322,22 @@ make_results_ggraph <- function(res_graph, remove_na_p = TRUE) {
 #' )
 #' head(tree_nodes)
 #' }
-#' @importFrom stringi stri_split_fixed stri_sub
-#' @importFrom tidygraph tbl_graph centrality_degree node_is_adjacent activate
-#' @import tidygraph data.table
+#' @import data.table
 #' @export
 make_results_tree <- function(orig_res, block_id, node_label = NULL, return_what = "all",
                               truevar_name = NULL, node_dat = NULL, node_tracker = NULL) {
+  # Guard optional dependencies — tidygraph/stringi needed for graph construction
+  if (any(c("all", "graph") %in% return_what)) {
+    for (pkg in c("tidygraph", "stringi")) {
+      if (!requireNamespace(pkg, quietly = TRUE)) {
+        stop(
+          "Package '", pkg, "' is required for make_results_tree() with graph output. ",
+          "Install it with: install.packages('", pkg, "')",
+          call. = FALSE
+        )
+      }
+    }
+  }
   if (data.table::is.data.table(orig_res)) {
     res <- copy(orig_res)
   } else if (is.list(orig_res)) {
@@ -493,41 +508,38 @@ make_results_tree <- function(orig_res, block_id, node_label = NULL, return_what
     )]
     edges_dt <- edges_dt[!is.na(from) & !is.na(to)]
 
-    res_graph <- tbl_graph(nodes = nodes_for_graph, edges = edges_dt)
+    res_graph <- tidygraph::tbl_graph(nodes = nodes_for_graph, edges = edges_dt)
 
-    res_graph <- res_graph %>%
-      activate(nodes) %>%
-      mutate(shortbf = ifelse(!is.na(blocks) & nchar(blocks) > 6,
-        paste0(stri_sub(blocks, 1, 5), "..."),
+    res_graph <- tidygraph::activate(res_graph, "nodes")
+    res_graph <- dplyr::mutate(res_graph,
+      shortbf = ifelse(!is.na(blocks) & nchar(blocks) > 6,
+        paste0(stringi::stri_sub(blocks, 1, 5), "..."),
         blocks
-      ))
+      )
+    )
 
     if (length(unique(nodes_dt$a)) > 1) {
-      res_graph <- res_graph %>%
-        activate(nodes) %>%
-        mutate(label = paste(
-          "Node:", stri_sub(original_name, 1, 4),
-          "
- Name:", shortbf,
-          "
- # Blocks=", num_blocks,
-          "
- p=", round(p, 3), ",a=", round(a, 3),
+      res_graph <- tidygraph::activate(res_graph, "nodes")
+      res_graph <- dplyr::mutate(res_graph,
+        label = paste(
+          "Node:", stringi::stri_sub(original_name, 1, 4),
+          "\n Name:", shortbf,
+          "\n # Blocks=", num_blocks,
+          "\n p=", round(p, 3), ",a=", round(a, 3),
           sep = ""
-        ))
+        )
+      )
     } else {
-      res_graph <- res_graph %>%
-        activate(nodes) %>%
-        mutate(label = paste(
-          "Node:", stri_sub(original_name, 1, 4),
-          "
- Name:", shortbf,
-          "
- # Blocks=", num_blocks,
-          "
- p=", round(p, 3),
+      res_graph <- tidygraph::activate(res_graph, "nodes")
+      res_graph <- dplyr::mutate(res_graph,
+        label = paste(
+          "Node:", stringi::stri_sub(original_name, 1, 4),
+          "\n Name:", shortbf,
+          "\n # Blocks=", num_blocks,
+          "\n p=", round(p, 3),
           sep = ""
-        ))
+        )
+      )
     }
   }
 

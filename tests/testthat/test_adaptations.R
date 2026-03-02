@@ -721,7 +721,7 @@ test_that("alphafns work across splitters for no effects", {
 
   tau_null_det <- lapply(seq_along(tau_null), function(i) {
     # message(i)
-    fwer <- stri_sub(names(tau_null)[[i]], 1, 4) == "NULL"
+    fwer <- substr(names(tau_null)[[i]], 1, 4) == "NULL"
     report_detections(tau_null[[i]], fwer = fwer, only_hits = TRUE)
   })
   names(tau_null_det) <- resnms

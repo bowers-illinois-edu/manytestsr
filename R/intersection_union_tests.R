@@ -334,9 +334,15 @@ check_iu_consistency <- function(iu_results) {
 #' @param iu_results Results from intersection_union_tests
 #' @param highlight_inconsistencies Logical, whether to highlight inconsistencies
 #' @return ggplot object
-#' @importFrom ggplot2 ggplot aes geom_point geom_abline geom_hline geom_vline labs scale_size_manual theme_minimal theme element_text
 #' @export
 plot_intersection_union_results <- function(iu_results, highlight_inconsistencies = TRUE) {
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop(
+      "Package 'ggplot2' is required for plot_intersection_union_results(). ",
+      "Install it with: install.packages('ggplot2')",
+      call. = FALSE
+    )
+  }
   node_dat <- iu_results$node_dat
 
   # Check for inconsistencies if requested
@@ -368,19 +374,19 @@ plot_intersection_union_results <- function(iu_results, highlight_inconsistencie
   }
 
   # Create the plot
-  p <- ggplot(plot_data, aes(x = p_intersection, y = p_union)) +
-    geom_point(
-      aes(
+  p <- ggplot2::ggplot(plot_data, ggplot2::aes(x = p_intersection, y = p_union)) +
+    ggplot2::geom_point(
+      ggplot2::aes(
         color = factor(depth),
         shape = ifelse(consistent, "Consistent", "Inconsistent"),
         size = ifelse(reject_intersection | reject_union, "Rejected", "Not Rejected")
       ),
       alpha = 0.7
     ) +
-    geom_abline(slope = 1, intercept = 0, linetype = "dashed", alpha = 0.5) +
-    geom_hline(yintercept = 0.05, linetype = "dashed", color = "red", alpha = 0.7) +
-    geom_vline(xintercept = 0.05, linetype = "dashed", color = "red", alpha = 0.7) +
-    labs(
+    ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed", alpha = 0.5) +
+    ggplot2::geom_hline(yintercept = 0.05, linetype = "dashed", color = "red", alpha = 0.7) +
+    ggplot2::geom_vline(xintercept = 0.05, linetype = "dashed", color = "red", alpha = 0.7) +
+    ggplot2::labs(
       x = "P-value for Intersection Null",
       y = "P-value for Union Alternative",
       title = "Intersection-Union Test Results",
@@ -389,11 +395,11 @@ plot_intersection_union_results <- function(iu_results, highlight_inconsistencie
       shape = "Consistency",
       size = "Decision"
     ) +
-    scale_size_manual(values = c("Rejected" = 3, "Not Rejected" = 1.5)) +
-    theme_minimal() +
-    theme(
-      plot.title = element_text(hjust = 0.5),
-      plot.subtitle = element_text(hjust = 0.5)
+    ggplot2::scale_size_manual(values = c("Rejected" = 3, "Not Rejected" = 1.5)) +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(hjust = 0.5),
+      plot.subtitle = ggplot2::element_text(hjust = 0.5)
     )
 
   return(p)
