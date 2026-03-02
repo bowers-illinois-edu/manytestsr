@@ -199,10 +199,16 @@
 - [`pCombCauchyDist()`](pCombCauchyDist.md) : P-value function: Cauchy
   Combined Indepence Test
 
+- [`pCombStephenson()`](pCombStephenson.md) : P-value function: Combined
+  Stephenson Rank Test
+
 - [`pIndepDist()`](pIndepDist.md) : P-value function: Independence
   Treatment Distance Test
 
 - [`pOneway()`](pOneway.md) : P-value function: T-test
+
+- [`pPolyRank()`](pPolyRank.md) : P-value function: Polynomial Rank
+  Score Test
 
 - [`pTestTwice()`](pTestTwice.md) : P-value function: Testing twice
 

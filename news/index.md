@@ -1,5 +1,49 @@
 # Changelog
 
+## manytestsr 0.0.4.1003
+
+### New features
+
+- New exported function [`pPolyRank()`](../reference/pPolyRank.md) tests
+  Fisher’s sharp null of no effects using multiple polynomial rank score
+  functions simultaneously via
+  [`coin::independence_test()`](https://rdrr.io/pkg/coin/man/IndependenceTest.html).
+  Computes within-block polynomial scores at multiple r values (default
+  r = 2, 6, 10) and passes them as a multivariate response, providing
+  adaptive sensitivity to treatment effects without pre-committing to a
+  single rank scoring.
+
+- New exported function
+  [`pCombStephenson()`](../reference/pCombStephenson.md) provides a
+  formula-based wrapper around
+  [`CMRSS::pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.html),
+  the combined Stephenson rank test of Kim, Li, and Bowers. Tests
+  quantile-of-effects hypotheses (whether the k-th largest individual
+  effect exceeds a threshold); defaults to k = n, c = 0 for the sharp
+  null. CMRSS is a Suggests dependency installed from GitHub
+  (`bowers-illinois-edu/CMRSS`).
+
+### Dependency changes
+
+- Moved 8 packages from Imports to Suggests: `stringi`, `tidygraph`,
+  `ggraph`, `digest`, `ggplot2`, `Ckmeans.1d.dp`, `onlineFDR`, `hommel`.
+  Core test statistic functions (`pIndepDist`, `pTestTwice`,
+  `pCombCauchyDist`, `pOneway`, `pWilcox`) now install without pulling
+  in heavy tree-testing and visualization libraries. Functions that need
+  the moved packages check with
+  [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html) and give a
+  clear error message if the package is missing.
+
+- Removed `ClusterR` from Imports (unused; the code that called it was
+  already commented out).
+
+- Replaced `dataPreparation` dependency with an internal
+  `which_are_constant()` helper (a one-liner that checks for columns
+  with fewer than 2 unique values). `dataPreparation` remains in
+  Suggests for cross-validation testing only.
+
+- Added `CMRSS` to Suggests (GitHub-only: `bowers-illinois-edu/CMRSS`).
+
 ## manytestsr 0.0.4.1002
 
 ### New features

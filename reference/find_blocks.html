@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -222,7 +222,7 @@ data.table of nodes "nodes", or default both c("blocks","nodes").</p></dd>
     <p>Some notes about the splitting functions and how they relate to
 splitting criteria (splitby) and stopping criteria (stop_splitby_constant).</p><ul><li><p><code><a href="splitCluster.html">splitCluster()</a></code> splits the blocks into groups that are as similar as
 possible to each other on splitby using the kmeans clustering algorithm
-(using a combination of <code><a href="https://rdrr.io/r/stats/kmeans.html" class="external-link">kmeans()</a></code> or <code><a href="https://mlampros.github.io/ClusterR/reference/KMeans_rcpp.html" class="external-link">ClusterR::KMeans_rcpp()</a></code>). This will not work
+(using <code><a href="https://rdrr.io/pkg/Ckmeans.1d.dp/man/Ckmeans.1d.dp.html" class="external-link">Ckmeans.1d.dp::Ckmeans.1d.dp()</a></code>). This will not work
 with factor variables. When the splitting criteria is constant, it will
 return random splits into roughly two equal sized groups of blocks if
 stop_splitby_constant=FALSE. If stop_splitby_constant=TRUE then

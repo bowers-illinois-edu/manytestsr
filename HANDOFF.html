@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,63 +39,168 @@
 
 <div id="handoff-summary" class="section level1">
 
-<p><strong>Date:</strong> 2026-02-24 <strong>Branch:</strong> <code>main</code> <strong>Last commit:</strong> <code>f5ec1df</code> — Update README and fix LICENSE.md to match MIT declaration</p>
+<p><strong>Date:</strong> 2026-03-01 <strong>Branch:</strong> <code>main</code> <strong>Last commit:</strong> <code>64af89e</code> — Update HANDOFF.md for current session <strong>Package version:</strong> <code>0.0.4.1003</code> (uncommitted — all changes pass <code><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">devtools::check()</a></code> with 0 errors, 0 warnings, 0 notes)</p>
 <hr><div class="section level2">
 <h2 id="id_1-key-decisions-made">1. Key Decisions Made<a class="anchor" aria-label="anchor" href="#id_1-key-decisions-made"></a></h2>
+<div class="section level3">
+<h3 id="dependency-lightening-refactor_planmd-steps-14">Dependency lightening (REFACTOR_PLAN.md Steps 1–4)<a class="anchor" aria-label="anchor" href="#dependency-lightening-refactor_planmd-steps-14"></a></h3>
 <ul><li>
-<strong>License is MIT.</strong> The <code>DESCRIPTION</code> and <code>LICENSE</code> files already declared MIT. The <code>LICENSE.md</code> file contained GPL-2 text (likely from a project template). Replaced it with the MIT license text to resolve the inconsistency. User confirmed MIT is the intended license.</li>
+<strong>8 packages moved from Imports to Suggests:</strong> <code>stringi</code>, <code>tidygraph</code>, <code>ggraph</code>, <code>digest</code>, <code>ggplot2</code>, <code>Ckmeans.1d.dp</code>, <code>onlineFDR</code>, <code>hommel</code>. Each is now guarded with <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code> and called via <code>pkg::fn()</code>.</li>
 <li>
-<strong>README rewritten for public-facing clarity.</strong> Added a development-stage warning, installation instructions, a public TODO checklist with done/open items, a key functions table, and updated development commands to reflect the Makefile workflow.</li>
+<strong><code>ClusterR</code> removed entirely.</strong> The code that called <code>KMeans_rcpp</code> was already commented out; only the <code>@importFrom</code> tag remained.</li>
+<li>
+<strong><code>dataPreparation</code> replaced</strong> with an internal <code>which_are_constant()</code> helper in <code>R/utils.R</code>. A one-liner: <code>which(vapply(df, function(x) length(unique(x)) &lt; 2, logical(1)))</code>. Returns named integer indices. The only difference from <code><a href="https://rdrr.io/pkg/dataPreparation/man/which_are_constant.html" class="external-link">dataPreparation::which_are_constant()</a></code> is that ours returns named indices (via <code><a href="https://rdrr.io/r/base/which.html" class="external-link">which()</a></code>); tests use <code><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname()</a></code> for cross-validation.</li>
+<li>
+<strong>Pipe and re-export breakage.</strong> Removing <code>@import ggplot2</code> and <code>@import tidygraph</code> broke re-exports of <code>%&gt;%</code>, <code><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter()</a></code>, <code>mutate()</code>, and <code><a href="https://rdrr.io/r/grid/unit.html" class="external-link">grid::unit()</a></code>. Fixed by replacing pipe chains with sequential explicit calls (<code>tidygraph::activate(g, "nodes"); g &lt;- dplyr::mutate(g, ...)</code>) and prefixing <code><a href="https://rdrr.io/r/grid/unit.html" class="external-link">grid::unit()</a></code>.</li>
 </ul></div>
+<div class="section level3">
+<h3 id="new-functions-ppolyrank-and-pcombstephenson">New functions: pPolyRank and pCombStephenson<a class="anchor" aria-label="anchor" href="#new-functions-ppolyrank-and-pcombstephenson"></a></h3>
+<ul><li><p><strong><code><a href="reference/pPolyRank.html">pPolyRank()</a></code></strong> — Tests Fisher’s sharp null using multiple polynomial rank scores simultaneously via <code><a href="https://rdrr.io/pkg/coin/man/IndependenceTest.html" class="external-link">coin::independence_test()</a></code>. Computes within-block polynomial scores <code>(rank(Y) / (n_b + 1))^(r-1)</code> for each r in <code>r_vec</code> (default 2, 6, 10), passes them as a multivariate response. No new dependencies (uses existing <code>coin</code> import). Fast (~0.02s). Follows the exact same pattern as <code>pIndepDist</code>: builds <code>score1 + score2 + score3 ~ treatment | block</code> formula, uses <code>teststat = "quadratic"</code> by default.</p></li>
+<li><p><strong><code><a href="reference/pCombStephenson.html">pCombStephenson()</a></code></strong> — Wraps <code><a href="https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.html" class="external-link">CMRSS::pval_comb_block()</a></code> for quantile-of-effects hypotheses. Default <code>k = n, c = 0</code> tests the sharp null (same as <code>pPolyRank</code> but via permutation-max combination, ~0.5s). For <code>k &lt; n</code>, tests whether the k-th largest individual effect exceeds <code>c</code>. CMRSS is a Suggests dependency from GitHub.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="cmrss-k-parameter-semantics-critical-for-future-work">CMRSS k parameter semantics (critical for future work)<a class="anchor" aria-label="anchor" href="#cmrss-k-parameter-semantics-critical-for-future-work"></a></h3>
+<p>The <code>k</code> parameter in CMRSS indexes the k-th <em>largest</em> effect τ_(k) across all N units. Internally, the top <code>min(m, n-k)</code> treated units’ adjusted outcomes are set to infinity. <strong>The test is degenerate when <code>k ≤ n - m</code></strong> (all treated units get infinity → test statistic is constant across permutations → p = 1 always). The wrapper warns on degenerate k. At <code>k = n</code>, no units get infinity and the test reduces to a standard stratified rank-sum.</p>
+</div>
+<div class="section level3">
+<h3 id="ppolyrank-as-the-preferred-sharp-null-test">pPolyRank as the preferred sharp-null test<a class="anchor" aria-label="anchor" href="#ppolyrank-as-the-preferred-sharp-null-test"></a></h3>
+<p>For the sharp null of no effects (which is what the tree-testing procedure needs), <code>pPolyRank</code> is preferred over <code>pCombStephenson</code> because: - 25x faster (asymptotic multivariate normal vs permutation null) - No extra dependency (uses <code>coin</code>, already in Imports) - Produces the same rank-sum statistics with polynomial scores - The “combined” benefit (adaptive across r values) comes from coin’s multivariate test infrastructure, which accounts for the correlation structure among score functions via the joint covariance matrix</p>
+<p><code>pCombStephenson</code> remains valuable for quantile-of-effects hypotheses (k &lt; n), where the CMRSS optimization over effect assignments is the core contribution.</p>
+</div>
+</div>
 <div class="section level2">
 <h2 id="id_2-files-changed-and-why">2. Files Changed and Why<a class="anchor" aria-label="anchor" href="#id_2-files-changed-and-why"></a></h2>
 <div class="section level3">
-<h3 id="readmemd"><code>README.md</code><a class="anchor" aria-label="anchor" href="#readmemd"></a></h3>
-<p>Full rewrite. The previous README had a brief warning, a three-item TODO list, outdated <code>devtools::</code> commands, and an implementation note with a typo. Replaced with:</p>
-<ul><li>Package description with citation link to Bowers and Chen (2020)</li>
-<li>Bold development-stage warning placed before installation instructions</li>
-<li>
-<code><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">remotes::install_github()</a></code> installation instructions with C++ compiler note</li>
-<li>Public TODO checklist organized by category (alpha adjustment, local p-value adjustment, testing, documentation) using GitHub checkbox syntax</li>
-<li>Key functions reference table</li>
-<li>
-<code>make</code> commands for development</li>
-<li>Cleaned-up implementation notes on the C++ code paths</li>
-</ul></div>
+<h3 id="new-files">New files<a class="anchor" aria-label="anchor" href="#new-files"></a></h3>
+<table class="table"><colgroup><col width="40%"><col width="60%"></colgroup><thead><tr class="header"><th>File</th>
+<th>Purpose</th>
+</tr></thead><tbody><tr class="odd"><td><code>R/utils.R</code></td>
+<td>Internal <code>which_are_constant()</code> replacing <code>dataPreparation</code>
+</td>
+</tr><tr class="even"><td><code>tests/testthat/test_utils.R</code></td>
+<td>6 tests for <code>which_are_constant()</code>
+</td>
+</tr><tr class="odd"><td><code>tests/testthat/test_stephenson.R</code></td>
+<td>8 tests for <code><a href="reference/pCombStephenson.html">pCombStephenson()</a></code> (skip if CMRSS not installed)</td>
+</tr><tr class="even"><td><code>tests/testthat/test_polyrank.R</code></td>
+<td>7 tests for <code><a href="reference/pPolyRank.html">pPolyRank()</a></code>
+</td>
+</tr><tr class="odd"><td><code>man/pCombStephenson.Rd</code></td>
+<td>Generated by roxygen2</td>
+</tr><tr class="even"><td><code>man/pPolyRank.Rd</code></td>
+<td>Generated by roxygen2</td>
+</tr></tbody></table></div>
 <div class="section level3">
-<h3 id="licensemd"><code>LICENSE.md</code><a class="anchor" aria-label="anchor" href="#licensemd"></a></h3>
-<p>Replaced GPL-2 full text with MIT license text (Copyright 2020 Jake Bowers). Now consistent with <code>DESCRIPTION</code> (<code>License: MIT + file LICENSE</code>) and the <code>LICENSE</code> file (YEAR/COPYRIGHT HOLDER format).</p>
-</div>
+<h3 id="modified-files">Modified files<a class="anchor" aria-label="anchor" href="#modified-files"></a></h3>
+<table class="table"><colgroup><col width="31%"><col width="68%"></colgroup><thead><tr class="header"><th>File</th>
+<th>What changed</th>
+</tr></thead><tbody><tr class="odd"><td><code>DESCRIPTION</code></td>
+<td>Version 0.0.4.1002 → 0.0.4.1003. Imports reduced to <code>Rcpp</code>, <code>Rfast</code>. Suggests gained <code>CMRSS</code>, <code>stringi</code>, <code>tidygraph</code>, <code>ggraph</code>, <code>digest</code>, <code>ggplot2</code>, <code>Ckmeans.1d.dp</code>, <code>onlineFDR</code>, <code>dataPreparation</code>, <code>hommel</code>. Remotes gained <code>bowers-illinois-edu/CMRSS</code>.</td>
+</tr><tr class="even"><td><code>NAMESPACE</code></td>
+<td>Regenerated. Reduced from ~125 to ~93 lines. Added <code>export(pCombStephenson)</code>, <code>export(pPolyRank)</code>. Removed all <code>importFrom</code> entries for moved packages.</td>
+</tr><tr class="odd"><td><code>NEWS.md</code></td>
+<td>Added 0.0.4.1003 entry documenting both new functions and dependency changes.</td>
+</tr><tr class="even"><td><code>.Rbuildignore</code></td>
+<td>Added <code>REFACTOR_PLAN\.md</code>
+</td>
+</tr><tr class="odd"><td><code>R/pval_fns.R</code></td>
+<td>Removed 3 <code>@importFrom dataPreparation</code> tags, replaced 6 calls with internal helper. Added <code><a href="reference/pPolyRank.html">pPolyRank()</a></code> (~100 lines) and <code><a href="reference/pCombStephenson.html">pCombStephenson()</a></code> (~90 lines).</td>
+</tr><tr class="even"><td><code>R/test_statistics.R</code></td>
+<td>Replaced 1 <code><a href="https://rdrr.io/pkg/dataPreparation/man/which_are_constant.html" class="external-link">dataPreparation::which_are_constant()</a></code> call.</td>
+</tr><tr class="odd"><td><code>R/splitting_fns.R</code></td>
+<td>Removed <code>@importFrom ClusterR</code>, <code>@importFrom Ckmeans.1d.dp</code>, <code>@importFrom stringi</code>. Added <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code> guards. Prefixed all calls with <code>pkg::</code>.</td>
+</tr><tr class="even"><td><code>R/find_blocks.R</code></td>
+<td>Removed <code>@importFrom stringi</code>, <code>@importFrom digest</code>. Added <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code> guards. Fixed dead <code>[KMeans_rcpp()]</code> doc link → <code>[Ckmeans.1d.dp::Ckmeans.1d.dp()]</code>.</td>
+</tr><tr class="odd"><td><code>R/reporting.R</code></td>
+<td>Removed <code>@import ggplot2</code>, <code>@import ggraph</code>, <code>@import tidygraph</code>, <code>@importFrom stringi</code>. Added <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code> guards. Replaced all <code>%&gt;%</code> pipes with sequential explicit calls. Replaced <code>unit()</code> with <code><a href="https://rdrr.io/r/grid/unit.html" class="external-link">grid::unit()</a></code>. Prefixed all calls with <code>pkg::</code>. Most complex changes in the session.</td>
+</tr><tr class="even"><td><code>R/alpha_fns.R</code></td>
+<td>Removed 3 <code>@importFrom onlineFDR</code>. Added <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code> guards. Prefixed <code>Alpha_investing</code>, <code>SAFFRON</code>, <code>ADDIS</code> with <code>onlineFDR::</code>.</td>
+</tr><tr class="odd"><td><code>R/p_adjustment.R</code></td>
+<td>Removed <code>@importFrom hommel</code>. Added <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code> guard. Prefixed <code>hommel()</code> with <code>hommel::</code>.</td>
+</tr><tr class="even"><td><code>R/design_sensitivity.R</code></td>
+<td>Removed <code>@importFrom ggplot2</code>. Added <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code> guard. Prefixed all ggplot2 calls.</td>
+</tr><tr class="odd"><td><code>R/intersection_union_tests.R</code></td>
+<td>Removed <code>@importFrom ggplot2</code>. Added <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code> guard. Prefixed all ggplot2 calls.</td>
+</tr><tr class="even"><td><code>man/find_blocks.Rd</code></td>
+<td>Regenerated (doc link fix).</td>
+</tr><tr class="odd"><td><code>tests/testthat/test_adaptations.R</code></td>
+<td>Line 724: <code>stri_sub()</code> → <code><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr()</a></code> (stringi no longer imported in NAMESPACE).</td>
+</tr><tr class="even"><td><code>tests/testthat/test_reporting_plotting.R</code></td>
+<td>Lines 117–128, 171–182: Replaced bare <code>activate()</code> and <code>%&gt;%</code> with <code><a href="https://tidygraph.data-imaginist.com/reference/activate.html" class="external-link">tidygraph::activate()</a></code> explicit calls.</td>
+</tr></tbody></table></div>
 </div>
 <div class="section level2">
 <h2 id="id_3-current-blockers-or-open-questions">3. Current Blockers or Open Questions<a class="anchor" aria-label="anchor" href="#id_3-current-blockers-or-open-questions"></a></h2>
 <ul><li>
-<strong>None.</strong> All changes are committed and pushed to <code>origin/main</code>.</li>
+<strong>No blockers.</strong> All changes pass <code><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">devtools::check()</a></code> with 0/0/0. Changes are uncommitted.</li>
+<li>
+<strong>Open question: Should <code>pPolyRank</code> be the default <code>pfn</code> in <code><a href="reference/find_blocks.html">find_blocks()</a></code>?</strong> Currently <code><a href="reference/find_blocks.html">find_blocks()</a></code> defaults to <code>pfn = pIndepDist</code>. The user may want to try <code>pfn = pPolyRank</code> for the tree search. This is a user decision, not a code issue.</li>
+<li>
+<strong>Open question: Speed of <code>pCombStephenson</code> inside <code><a href="reference/find_blocks.html">find_blocks()</a></code>.</strong> If <code>pCombStephenson</code> is used as <code>pfn</code> inside the tree search (hundreds of calls), the ~0.5s per call adds up. <code>pPolyRank</code> at ~0.02s per call is 25x faster for the sharp null. For quantile-of-effects hypotheses, there’s no fast alternative yet.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="id_4-important-context-to-preserve">4. Important Context to Preserve<a class="anchor" aria-label="anchor" href="#id_4-important-context-to-preserve"></a></h2>
-<ul><li>
-<strong><code>.Rbuildignore</code> is regex-based.</strong> Every line is a Perl regular expression, not a glob or literal path. Unanchored patterns can silently exclude files deep in the directory tree. When adding entries, always anchor with <code>^</code> and escape dots with <code>\.</code>.</li>
-<li>
-<strong>License files:</strong> Three files must stay in sync — <code>DESCRIPTION</code> (declares <code>MIT + file LICENSE</code>), <code>LICENSE</code> (short YEAR/COPYRIGHT HOLDER format for CRAN), and <code>LICENSE.md</code> (full text for GitHub display).</li>
-<li>
-<strong>Development workflow:</strong> <code>make document</code>, <code>make test</code>, <code>make check</code> are the core commands. The project uses <code>renv</code> for dependency management. Tests exclude profiling by default. See <code>CLAUDE.md</code> for full conventions.</li>
-<li>
-<strong>Package version:</strong> Currently <code>0.0.4.1002</code>. Recent additions include tree-based adaptive alpha (<code>alpha_adaptive_tree</code>), branch-pruning alpha (<code>alpha_adaptive_tree_pruned</code>), and error-load diagnostics (<code>compute_error_load</code>). See <code>NEWS.md</code> for full changelog.</li>
-</ul></div>
+<div class="section level3">
+<h3 id="cmrss-k-parameter-critical-footgun">CMRSS k parameter (critical footgun)<a class="anchor" aria-label="anchor" href="#cmrss-k-parameter-critical-footgun"></a></h3>
+<p>The <code>k</code> parameter in <code><a href="https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.html" class="external-link">CMRSS::pval_comb_block()</a></code> indexes the k-th <em>largest</em> effect out of all N units. The test is <strong>degenerate</strong> when <code>k ≤ n - m</code> because all treated units receive <code>xi = Inf</code> internally, making the test statistic constant across permutations (p = 1 always). The wrapper warns on this. At <code>k = n</code>, no units get infinity and the test is a standard rank-sum.</p>
+</div>
+<div class="section level3">
+<h3 id="pipe-removal-pattern">Pipe removal pattern<a class="anchor" aria-label="anchor" href="#pipe-removal-pattern"></a></h3>
+<p>When <code>@import tidygraph</code> / <code>@import ggplot2</code> provided <code>%&gt;%</code>, removing those imports required replacing all pipe chains in <code>R/reporting.R</code> with sequential explicit calls. The pattern used:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Before:</span></span>
+<span><span class="va">res_graph</span> <span class="op">%&gt;%</span> <span class="fu">activate</span><span class="op">(</span><span class="va">nodes</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu">mutate</span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">y</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># After:</span></span>
+<span><span class="va">res_graph</span> <span class="op">&lt;-</span> <span class="fu">tidygraph</span><span class="fu">::</span><span class="fu"><a href="https://tidygraph.data-imaginist.com/reference/activate.html" class="external-link">activate</a></span><span class="op">(</span><span class="va">res_graph</span>, <span class="st">"nodes"</span><span class="op">)</span></span>
+<span><span class="va">res_graph</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span><span class="va">res_graph</span>, x <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">res_graph</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">res_graph</span>, <span class="va">y</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<p>The same pattern was applied in <code>tests/testthat/test_reporting_plotting.R</code>.</p>
+</div>
+<div class="section level3">
+<h3 id="polynomial-rank-scores">Polynomial rank scores<a class="anchor" aria-label="anchor" href="#polynomial-rank-scores"></a></h3>
+<p>The scores used by both <code>pPolyRank</code> and <code>pCombStephenson</code> are <code>(rank(Y) / (n + 1))^(r-1)</code>: - r = 2: nearly linear in rank (Wilcoxon-like, sensitive to location shifts) - r = 6, 10: increasingly emphasize high ranks (sensitive to upper-tail effects)</p>
+</div>
+<div class="section level3">
+<h3 id="test-data-outcomes">Test data outcomes<a class="anchor" aria-label="anchor" href="#test-data-outcomes"></a></h3>
+<p><code>make_test_data.R</code> creates three outcomes: - <code>Y</code>: heterogeneous/canceling effects (positive in some blocks, negative in others) - <code>Yhomog</code>: strong uniform positive effects across all blocks - <code>Ynull</code>: no treatment effects</p>
+</div>
+<div class="section level3">
+<h3 id="development-workflow-claude_codingmd">Development workflow (CLAUDE_CODING.md)<a class="anchor" aria-label="anchor" href="#development-workflow-claude_codingmd"></a></h3>
+<p>Checkpoints: (1) write tests first, pause for review; (2) after implementation, pause before running check; (3) after passing check, pause for review.</p>
+</div>
+</div>
 <div class="section level2">
 <h2 id="id_5-whats-done-vs-what-remains">5. What’s Done vs. What Remains<a class="anchor" aria-label="anchor" href="#id_5-whats-done-vs-what-remains"></a></h2>
 <div class="section level3">
 <h3 id="done">Done<a class="anchor" aria-label="anchor" href="#done"></a></h3>
-<ul><li>README rewritten with development warning, TODO list, install instructions, and key functions</li>
-<li>LICENSE.md corrected from GPL-2 to MIT</li>
-<li>All changes committed and pushed to <code>origin/main</code>
-</li>
+<ul><li>All 11 steps of REFACTOR_PLAN.md implemented</li>
+<li>
+<code>which_are_constant()</code> internal helper created and tested</li>
+<li>8 packages moved from Imports to Suggests with <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code> guards</li>
+<li>
+<code>ClusterR</code> removed, <code>dataPreparation</code> replaced</li>
+<li>
+<code><a href="reference/pCombStephenson.html">pCombStephenson()</a></code> wrapper created with correct <code>k = n</code> default for sharp null</li>
+<li>
+<code><a href="reference/pPolyRank.html">pPolyRank()</a></code> created as fast coin-based alternative using polynomial rank scores</li>
+<li>Tests for all new functions (test_utils.R, test_stephenson.R, test_polyrank.R)</li>
+<li>All existing tests fixed for removed imports (pipes, activate, stri_sub, unit)</li>
+<li>Version bumped to 0.0.4.1003, NEWS.md updated</li>
+<li>
+<code><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">devtools::check()</a></code> passes with 0 errors, 0 warnings, 0 notes</li>
+<li>REFACTOR_PLAN.md added to .Rbuildignore</li>
 </ul></div>
 <div class="section level3">
-<h3 id="remains">Remains<a class="anchor" aria-label="anchor" href="#remains"></a></h3>
-<ul><li>Nothing from this session is outstanding</li>
-<li>The public TODO items in README.md track ongoing package development work (not session tasks)</li>
+<h3 id="remains-not-started">Remains (not started)<a class="anchor" aria-label="anchor" href="#remains-not-started"></a></h3>
+<ul><li>
+<strong>Commit the changes.</strong> All work is uncommitted. The user has not yet requested a commit.</li>
+<li>
+<strong>Consider whether <code>pPolyRank</code> should be integrated into <code><a href="reference/find_blocks.html">find_blocks()</a></code> as a <code>pfn</code> option</strong> or documented as such in the vignette.</li>
+<li>
+<strong>REFACTOR_PLAN.md cleanup.</strong> The plan file is still in the repo root (ignored by .Rbuildignore). Could be deleted or moved once the user confirms the refactor is complete.</li>
+<li>
+<strong>Potential future work:</strong> A coin-based fast alternative for quantile-of-effects hypotheses (k &lt; n) if <code>pCombStephenson</code> speed becomes a bottleneck in tree search.</li>
 </ul></div>
 </div>
 </div>

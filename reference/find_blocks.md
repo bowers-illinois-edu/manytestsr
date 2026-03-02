@@ -195,9 +195,8 @@ splitting criteria (splitby) and stopping criteria
 
 - [`splitCluster()`](splitCluster.md) splits the blocks into groups that
   are as similar as possible to each other on splitby using the kmeans
-  clustering algorithm (using a combination of
-  [`kmeans()`](https://rdrr.io/r/stats/kmeans.html) or
-  [`ClusterR::KMeans_rcpp()`](https://mlampros.github.io/ClusterR/reference/KMeans_rcpp.html)).
+  clustering algorithm (using
+  [`Ckmeans.1d.dp::Ckmeans.1d.dp()`](https://rdrr.io/pkg/Ckmeans.1d.dp/man/Ckmeans.1d.dp.html)).
   This will not work with factor variables. When the splitting criteria
   is constant, it will return random splits into roughly two equal sized
   groups of blocks if stop_splitby_constant=FALSE. If
