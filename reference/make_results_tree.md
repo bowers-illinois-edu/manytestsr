@@ -55,18 +55,21 @@ make_results_tree(
 
 - node_dat:
 
-  optional node-level output from [`find_blocks()`](find_blocks.md).
-  When the full list returned by [`find_blocks()`](find_blocks.md) is
-  supplied as `orig_res` this argument is populated automatically. When
-  providing only the block-level data.table you must also pass
+  optional node-level output from
+  [`find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md).
+  When the full list returned by
+  [`find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)
+  is supplied as `orig_res` this argument is populated automatically.
+  When providing only the block-level data.table you must also pass
   `node_dat` so that node identifiers can be matched without relying on
   p-values.
 
 - node_tracker:
 
-  optional tracker returned by [`find_blocks()`](find_blocks.md). This
-  is not required for constructing the node table but is accepted for
-  compatibility.
+  optional tracker returned by
+  [`find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md).
+  This is not required for constructing the node table but is accepted
+  for compatibility.
 
 ## Value
 

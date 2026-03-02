@@ -1,11 +1,12 @@
 # Compute Adaptive Alpha Levels from an Actual Tree
 
 Tree-mode counterpart to
-[`compute_adaptive_alphas`](compute_adaptive_alphas.md). Instead of
-assuming a regular k-ary tree with equal splits, this function takes the
-actual tree structure (with per-node sample sizes) and computes
-per-depth adjusted significance levels. This handles irregular trees
-where branching factor and sample sizes vary across nodes.
+[`compute_adaptive_alphas`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_adaptive_alphas.md).
+Instead of assuming a regular k-ary tree with equal splits, this
+function takes the actual tree structure (with per-node sample sizes)
+and computes per-depth adjusted significance levels. This handles
+irregular trees where branching factor and sample sizes vary across
+nodes.
 
 ## Usage
 
@@ -24,8 +25,8 @@ compute_adaptive_alphas_tree(
 
   A data.frame or data.table with columns `nodenum`, `parent`, `depth`,
   and `nodesize`. Typically extracted from a
-  [`find_blocks`](find_blocks.md) result. The root node must have
-  `parent = 0` and `depth = 1`.
+  [`find_blocks`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)
+  result. The root node must have `parent = 0` and `depth = 1`.
 
 - delta_hat:
 
@@ -47,13 +48,14 @@ compute_adaptive_alphas_tree(
 Named numeric vector of adjusted alpha levels, one per depth (1 through
 `max_depth`). Names are depth levels as characters. Has attribute
 `"error_load"` containing the
-[`compute_error_load`](compute_error_load.md) result from the tree.
+[`compute_error_load`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_error_load.md)
+result from the tree.
 
 ## Details
 
 The algorithm mirrors
-[`compute_adaptive_alphas`](compute_adaptive_alphas.md) but uses actual
-per-node power instead of the parametric assumption:
+[`compute_adaptive_alphas`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_adaptive_alphas.md)
+but uses actual per-node power instead of the parametric assumption:
 
 1.  Compute per-node power \\\theta\\ and path power (product of
     ancestor thetas) via `compute_error_load`.
@@ -70,7 +72,7 @@ at that depth — i.e., the expected number of tests the procedure
 conducts at depth \\d\\. For a regular k-ary tree with equal sample
 sizes, this reduces to \\k^{d-1} \prod\_{j=1}^{d-1} \theta_j\\, matching
 the parametric formula in
-[`compute_adaptive_alphas`](compute_adaptive_alphas.md).
+[`compute_adaptive_alphas`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_adaptive_alphas.md).
 
 ## Examples
 

@@ -90,7 +90,7 @@ Two interfaces are provided. The **parametric** interface (`k`,
 splitting: sample size at level ell is \\N / k^{ell-1}\\. The **tree**
 interface (`node_dat`) accepts per-node sample sizes from an actual
 (possibly irregular) tree, as returned by
-[`find_blocks`](find_blocks.md).
+[`find_blocks`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md).
 
 In **parametric mode**, the error load at level ell is: \$\$G\_\ell =
 k^{\ell-1} \prod\_{j=0}^{\ell-1} \theta_j\$\$ where \\\theta_j =

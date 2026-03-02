@@ -48,12 +48,13 @@ compute_adaptive_alphas(
 Named numeric vector of adjusted alpha levels, one per depth (1 through
 `max_depth`). Names are depth levels as characters. Has attribute
 `"error_load"` containing the
-[`compute_error_load`](compute_error_load.md) result, so the caller can
-inspect whether adjustment was needed.
+[`compute_error_load`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_error_load.md)
+result, so the caller can inspect whether adjustment was needed.
 
 ## Details
 
-The function first calls [`compute_error_load`](compute_error_load.md)
+The function first calls
+[`compute_error_load`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_error_load.md)
 to assess whether natural gating suffices. When \\\sum G\_\ell \le 1\\,
 no adjustment is needed and nominal `thealpha` is returned at every
 level.

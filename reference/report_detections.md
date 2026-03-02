@@ -22,7 +22,8 @@ report_detections(
 
 - orig_res:
 
-  results data.table output from the [`find_blocks`](find_blocks.md)
+  results data.table output from the
+  [`find_blocks`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)
   function.
 
 - fwer:

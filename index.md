@@ -73,16 +73,16 @@ Add a worked example to this README.
 
 ## Key functions
 
-| Function                                                                  | Purpose                                              |
-|---------------------------------------------------------------------------|------------------------------------------------------|
-| [`find_blocks()`](reference/find_blocks.md)                               | Core recursive splitting and testing procedure       |
-| [`compute_adaptive_alphas()`](reference/compute_adaptive_alphas.md)       | Depth-adjusted significance levels for regular trees |
-| [`alpha_adaptive_tree_pruned()`](reference/alpha_adaptive_tree_pruned.md) | Branch-pruning alpha for irregular trees             |
-| [`compute_error_load()`](reference/compute_error_load.md)                 | Diagnose whether natural gating controls FWER        |
-| `splitCluster`, `splitEqualApprox`, `splitLOO`, `splitSpecifiedFactor`    | Splitting strategies                                 |
-| `pOneway`, `pWilcox`, `pIndepDist`, `pCombCauchyDist`                     | P-value functions for different test statistics      |
-| `local_hommel_all_ps`, `local_simes`, `local_bh_all_ps`                   | Local p-value adjustment                             |
-| `make_results_tree`, `make_results_ggraph`                                | Visualization of results                             |
+| Function                                                                                                                   | Purpose                                              |
+|----------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|
+| [`find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)                               | Core recursive splitting and testing procedure       |
+| [`compute_adaptive_alphas()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_adaptive_alphas.md)       | Depth-adjusted significance levels for regular trees |
+| [`alpha_adaptive_tree_pruned()`](https://bowers-illinois-edu.github.io/manytestsr/reference/alpha_adaptive_tree_pruned.md) | Branch-pruning alpha for irregular trees             |
+| [`compute_error_load()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_error_load.md)                 | Diagnose whether natural gating controls FWER        |
+| `splitCluster`, `splitEqualApprox`, `splitLOO`, `splitSpecifiedFactor`                                                     | Splitting strategies                                 |
+| `pOneway`, `pWilcox`, `pIndepDist`, `pCombCauchyDist`                                                                      | P-value functions for different test statistics      |
+| `local_hommel_all_ps`, `local_simes`, `local_bh_all_ps`                                                                    | Local p-value adjustment                             |
+| `make_results_tree`, `make_results_ggraph`                                                                                 | Visualization of results                             |
 
 ## Development
 

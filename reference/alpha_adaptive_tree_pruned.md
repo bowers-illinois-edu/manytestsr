@@ -2,10 +2,10 @@
 
 Factory function that creates an adaptive alpha adjustment system
 supporting branch pruning. Unlike
-[`alpha_adaptive_tree`](alpha_adaptive_tree.md), which pre-computes a
-fixed schedule, this version can recompute the schedule on a pruned
-subtree after each depth — giving more alpha to surviving branches when
-dead branches are removed.
+[`alpha_adaptive_tree`](https://bowers-illinois-edu.github.io/manytestsr/reference/alpha_adaptive_tree.md),
+which pre-computes a fixed schedule, this version can recompute the
+schedule on a pruned subtree after each depth — giving more alpha to
+surviving branches when dead branches are removed.
 
 ## Usage
 
@@ -19,8 +19,8 @@ alpha_adaptive_tree_pruned(node_dat, delta_hat, max_depth = NULL)
 
   A data.frame or data.table with columns `nodenum`, `parent`, `depth`,
   and `nodesize`. Typically extracted from a
-  [`find_blocks`](find_blocks.md) result. The root node must have
-  `parent = 0` and `depth = 1`.
+  [`find_blocks`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)
+  result. The root node must have `parent = 0` and `depth = 1`.
 
 - delta_hat:
 
@@ -58,11 +58,11 @@ A list with three components:
 ## Details
 
 The FWER guarantee follows from the same telescoping-sum argument as
-[`alpha_adaptive_tree`](alpha_adaptive_tree.md), applied to the
-surviving subtree at each depth. Pruning decisions at depth \\d\\ depend
-only on tests at depths \\1, \ldots, d\\, which are independent of tests
-at deeper levels (under data splitting or independent permutation
-tests), so the conditional FWER bound holds.
+[`alpha_adaptive_tree`](https://bowers-illinois-edu.github.io/manytestsr/reference/alpha_adaptive_tree.md),
+applied to the surviving subtree at each depth. Pruning decisions at
+depth \\d\\ depend only on tests at depths \\1, \ldots, d\\, which are
+independent of tests at deeper levels (under data splitting or
+independent permutation tests), so the conditional FWER bound holds.
 
 When `find_blocks` detects a list-valued `alphafn`, it extracts these
 three components and calls `reset` at the start of each run and `update`

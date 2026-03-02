@@ -58,8 +58,9 @@ with adaptive splitting procedures to localize causal effects.
       transformations
 3.  **Block Finding and Splitting** (`R/find_blocks.R`,
     `R/splitting_fns.R`)
-    - Core [`find_blocks()`](reference/find_blocks.md) function
-      implements the adaptive testing procedure
+    - Core
+      [`find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)
+      function implements the adaptive testing procedure
     - Various splitting strategies (equal, LOO, specified,
       cluster-based)
     - Tree-based approach with block identification and testing

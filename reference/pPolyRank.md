@@ -82,12 +82,14 @@ r values place increasing weight on observations with high ranks,
 providing sensitivity to treatment effects concentrated in the upper
 tail of the outcome distribution.
 
-This function tests the same sharp null as [`pOneway`](pOneway.md) and
-[`pIndepDist`](pIndepDist.md) but uses polynomial rank scores from the
-combined Stephenson rank test framework (Kim, Li, and Bowers). For
-quantile-of-effects hypotheses (whether the k-th largest individual
-effect exceeds a threshold), see
-[`pCombStephenson`](pCombStephenson.md).
+This function tests the same sharp null as
+[`pOneway`](https://bowers-illinois-edu.github.io/manytestsr/reference/pOneway.md)
+and
+[`pIndepDist`](https://bowers-illinois-edu.github.io/manytestsr/reference/pIndepDist.md)
+but uses polynomial rank scores from the combined Stephenson rank test
+framework (Kim, Li, and Bowers). For quantile-of-effects hypotheses
+(whether the k-th largest individual effect exceeds a threshold), see
+[`pCombStephenson`](https://bowers-illinois-edu.github.io/manytestsr/reference/pCombStephenson.md).
 
 ## Examples
 

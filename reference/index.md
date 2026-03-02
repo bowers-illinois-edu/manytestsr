@@ -2,272 +2,285 @@
 
 ## All functions
 
-- [`adaptive_evalue()`](adaptive_evalue.md) : Adaptive betting strategy
-  for e-values
+- [`adaptive_evalue()`](https://bowers-illinois-edu.github.io/manytestsr/reference/adaptive_evalue.md)
+  : Adaptive betting strategy for e-values
 
-- [`adjust_pvalues_level()`](adjust_pvalues_level.md) : Adjust p-values
-  at a given level using sequential rejection
+- [`adjust_pvalues_level()`](https://bowers-illinois-edu.github.io/manytestsr/reference/adjust_pvalues_level.md)
+  : Adjust p-values at a given level using sequential rejection
 
-- [`alpha_adaptive()`](alpha_adaptive.md) :
+- [`alpha_adaptive()`](https://bowers-illinois-edu.github.io/manytestsr/reference/alpha_adaptive.md)
+  :
 
   Adaptive Alpha Adjustment Based on Power Decay with `find_blocks`. The
   returned function adjusts significance levels at each tree depth based
   on estimated power decay (Algorithm 1 from Appendix B of the
   supplement).
 
-- [`alpha_adaptive_tree()`](alpha_adaptive_tree.md) : Adaptive Alpha
-  from an Actual Tree Structure
+- [`alpha_adaptive_tree()`](https://bowers-illinois-edu.github.io/manytestsr/reference/alpha_adaptive_tree.md)
+  : Adaptive Alpha from an Actual Tree Structure
 
-- [`alpha_adaptive_tree_pruned()`](alpha_adaptive_tree_pruned.md) :
-  Adaptive Alpha with Branch Pruning
+- [`alpha_adaptive_tree_pruned()`](https://bowers-illinois-edu.github.io/manytestsr/reference/alpha_adaptive_tree_pruned.md)
+  : Adaptive Alpha with Branch Pruning
 
-- [`alpha_addis()`](alpha_addis.md) : Alpha adjustment function: ADDIS
+- [`alpha_addis()`](https://bowers-illinois-edu.github.io/manytestsr/reference/alpha_addis.md)
+  : Alpha adjustment function: ADDIS
 
-- [`alpha_investing()`](alpha_investing.md) : Alpha adjustment function:
-  Alpha Investing
+- [`alpha_investing()`](https://bowers-illinois-edu.github.io/manytestsr/reference/alpha_investing.md)
+  : Alpha adjustment function: Alpha Investing
 
-- [`alpha_saffron()`](alpha_saffron.md) : Alpha adjustment function:
-  SAFFRON
+- [`alpha_saffron()`](https://bowers-illinois-edu.github.io/manytestsr/reference/alpha_saffron.md)
+  : Alpha adjustment function: SAFFRON
 
-- [`analyze_violation_patterns()`](analyze_violation_patterns.md) :
-  Analyze violation patterns
+- [`analyze_violation_patterns()`](https://bowers-illinois-edu.github.io/manytestsr/reference/analyze_violation_patterns.md)
+  : Analyze violation patterns
 
-- [`apply_closed_testing_principle()`](apply_closed_testing_principle.md)
+- [`apply_closed_testing_principle()`](https://bowers-illinois-edu.github.io/manytestsr/reference/apply_closed_testing_principle.md)
   : Apply closed testing principle to determine valid rejections
 
-- [`apply_consonance_correction()`](apply_consonance_correction.md) :
-  Apply consonance correction to test results
+- [`apply_consonance_correction()`](https://bowers-illinois-edu.github.io/manytestsr/reference/apply_consonance_correction.md)
+  : Apply consonance correction to test results
 
-- [`apply_sequential_rejection_meinshausen()`](apply_sequential_rejection_meinshausen.md)
+- [`apply_sequential_rejection_meinshausen()`](https://bowers-illinois-edu.github.io/manytestsr/reference/apply_sequential_rejection_meinshausen.md)
   : Apply Sequential Rejection Principle (Goeman-Solari enhancement)
 
-- [`apply_traditional_meinshausen()`](apply_traditional_meinshausen.md)
+- [`apply_traditional_meinshausen()`](https://bowers-illinois-edu.github.io/manytestsr/reference/apply_traditional_meinshausen.md)
   : Apply Traditional Meinshausen Procedure
 
-- [`build_hierarchy_structure()`](build_hierarchy_structure.md) : Build
-  hierarchy structure from node data and tracker
+- [`build_hierarchy_structure()`](https://bowers-illinois-edu.github.io/manytestsr/reference/build_hierarchy_structure.md)
+  : Build hierarchy structure from node data and tracker
 
-- [`check_consonance_property()`](check_consonance_property.md) :
-  Consonance Property Checking for Hierarchical Testing
+- [`check_consonance_property()`](https://bowers-illinois-edu.github.io/manytestsr/reference/check_consonance_property.md)
+  : Consonance Property Checking for Hierarchical Testing
 
-- [`check_iu_consistency()`](check_iu_consistency.md) : Check
-  consistency of intersection-union test results
+- [`check_iu_consistency()`](https://bowers-illinois-edu.github.io/manytestsr/reference/check_iu_consistency.md)
+  : Check consistency of intersection-union test results
 
-- [`check_stopping_rule()`](check_stopping_rule.md) : Check stopping
-  rule
+- [`check_stopping_rule()`](https://bowers-illinois-edu.github.io/manytestsr/reference/check_stopping_rule.md)
+  : Check stopping rule
 
-- [`closed_testing_procedure()`](closed_testing_procedure.md) : Proper
-  Closed Testing Procedure for Hierarchical Hypotheses
+- [`closed_testing_procedure()`](https://bowers-illinois-edu.github.io/manytestsr/reference/closed_testing_procedure.md)
+  : Proper Closed Testing Procedure for Hierarchical Hypotheses
 
-- [`combine_pvalues()`](combine_pvalues.md) : Combine p-values using
-  specified method
+- [`combine_pvalues()`](https://bowers-illinois-edu.github.io/manytestsr/reference/combine_pvalues.md)
+  : Combine p-values using specified method
 
-- [`combine_pvalues_traditional()`](combine_pvalues_traditional.md) :
-  Traditional p-value combination (used in original Meinshausen)
+- [`combine_pvalues_traditional()`](https://bowers-illinois-edu.github.io/manytestsr/reference/combine_pvalues_traditional.md)
+  : Traditional p-value combination (used in original Meinshausen)
 
-- [`combined_distances_tstat()`](combined_distances_tstat.md) : The
-  combined distances test statistic
+- [`combined_distances_tstat()`](https://bowers-illinois-edu.github.io/manytestsr/reference/combined_distances_tstat.md)
+  : The combined distances test statistic
 
-- [`compute_adaptive_alphas()`](compute_adaptive_alphas.md) : Compute
-  Adaptive Alpha Levels by Tree Depth
+- [`compute_adaptive_alphas()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_adaptive_alphas.md)
+  : Compute Adaptive Alpha Levels by Tree Depth
 
-- [`compute_adaptive_alphas_tree()`](compute_adaptive_alphas_tree.md) :
-  Compute Adaptive Alpha Levels from an Actual Tree
+- [`compute_adaptive_alphas_tree()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_adaptive_alphas_tree.md)
+  : Compute Adaptive Alpha Levels from an Actual Tree
 
-- [`compute_error_load()`](compute_error_load.md) : Compute Error Load
-  for Natural Gating Assessment
+- [`compute_error_load()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_error_load.md)
+  : Compute Error Load for Natural Gating Assessment
 
-- [`compute_evalue()`](compute_evalue.md) : Compute e-value for a single
-  test
+- [`compute_evalue()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_evalue.md)
+  : Compute e-value for a single test
 
-- [`compute_exact_wilcoxon_bound()`](compute_exact_wilcoxon_bound.md) :
-  Exact Wilcoxon bound computation (simplified)
+- [`compute_exact_wilcoxon_bound()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_exact_wilcoxon_bound.md)
+  : Exact Wilcoxon bound computation (simplified)
 
-- [`compute_sensitivity_bounds()`](compute_sensitivity_bounds.md) :
-  Compute sensitivity bounds for a single block
+- [`compute_sensitivity_bounds()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_sensitivity_bounds.md)
+  : Compute sensitivity bounds for a single block
 
-- [`compute_sensitivity_summary()`](compute_sensitivity_summary.md) :
-  Compute summary statistics for sensitivity analysis
+- [`compute_sensitivity_summary()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_sensitivity_summary.md)
+  : Compute summary statistics for sensitivity analysis
 
-- [`compute_t_statistic()`](compute_t_statistic.md) : Compute
-  t-statistic for two-sample test
+- [`compute_t_statistic()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_t_statistic.md)
+  : Compute t-statistic for two-sample test
 
-- [`design_sensitivity_analysis()`](design_sensitivity_analysis.md) :
-  Design Sensitivity Analysis for Hierarchical Testing
+- [`design_sensitivity_analysis()`](https://bowers-illinois-edu.github.io/manytestsr/reference/design_sensitivity_analysis.md)
+  : Design Sensitivity Analysis for Hierarchical Testing
 
-- [`dists_and_trans()`](dists_and_trans.md) : Outcome distances and
-  transformations
+- [`dists_and_trans()`](https://bowers-illinois-edu.github.io/manytestsr/reference/dists_and_trans.md)
+  : Outcome distances and transformations
 
-- [`edisti()`](edisti.md) : Outcome e-distances between treatment arms
+- [`edisti()`](https://bowers-illinois-edu.github.io/manytestsr/reference/edisti.md)
+  : Outcome e-distances between treatment arms
 
-- [`evalue_confidence_sequence()`](evalue_confidence_sequence.md) :
-  E-value based confidence sequences
+- [`evalue_confidence_sequence()`](https://bowers-illinois-edu.github.io/manytestsr/reference/evalue_confidence_sequence.md)
+  : E-value based confidence sequences
 
-- [`evalue_sequential_test()`](evalue_sequential_test.md) : E-value
-  Based Sequential Testing
+- [`evalue_sequential_test()`](https://bowers-illinois-edu.github.io/manytestsr/reference/evalue_sequential_test.md)
+  : E-value Based Sequential Testing
 
-- [`evalue_to_pvalue()`](evalue_to_pvalue.md) : Convert e-value to
-  p-value
+- [`evalue_to_pvalue()`](https://bowers-illinois-edu.github.io/manytestsr/reference/evalue_to_pvalue.md)
+  : Convert e-value to p-value
 
-- [`example_dat`](example_dat.md) : Example Data for Block-Randomized
-  Experiment
+- [`example_dat`](https://bowers-illinois-edu.github.io/manytestsr/reference/example_dat.md)
+  : Example Data for Block-Randomized Experiment
 
-- [`extract_hierarchy_relationships()`](extract_hierarchy_relationships.md)
+- [`extract_hierarchy_relationships()`](https://bowers-illinois-edu.github.io/manytestsr/reference/extract_hierarchy_relationships.md)
   : Extract hierarchy relationships
 
-- [`fast_dists_and_trans_hybrid()`](fast_dists_and_trans_hybrid.md) :
-  Fast per-unit distance summaries (scalar outcome)
+- [`fast_dists_and_trans_hybrid()`](https://bowers-illinois-edu.github.io/manytestsr/reference/fast_dists_and_trans_hybrid.md)
+  : Fast per-unit distance summaries (scalar outcome)
 
-- [`fast_dists_and_trans_new_parallel()`](fast_dists_and_trans_new_parallel.md)
+- [`fast_dists_and_trans_new_parallel()`](https://bowers-illinois-edu.github.io/manytestsr/reference/fast_dists_and_trans_new_parallel.md)
   : Outcome distances and transformations: C++ OpenMP Parallel version
 
-- [`find_all_descendants()`](find_all_descendants.md) : Find all
-  descendants of a node
+- [`find_all_descendants()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_all_descendants.md)
+  : Find all descendants of a node
 
-- [`find_blocks()`](find_blocks.md) : Test, Split, Repeat
+- [`find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)
+  : Test, Split, Repeat
 
-- [`find_consonance_violations()`](find_consonance_violations.md) : Find
-  consonance violations
+- [`find_consonance_violations()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_consonance_violations.md)
+  : Find consonance violations
 
-- [`find_containing_intersections()`](find_containing_intersections.md)
+- [`find_containing_intersections()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_containing_intersections.md)
   : Find all intersection results containing a specific node
 
-- [`find_leaf_descendants()`](find_leaf_descendants.md) : Find leaf
-  descendants of a node
+- [`find_leaf_descendants()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_leaf_descendants.md)
+  : Find leaf descendants of a node
 
-- [`find_leaf_nodes()`](find_leaf_nodes.md) : Find leaf nodes in the
-  hierarchy
+- [`find_leaf_nodes()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_leaf_nodes.md)
+  : Find leaf nodes in the hierarchy
 
-- [`fixed_evalue()`](fixed_evalue.md) : Fixed betting strategy for
-  e-values
+- [`fixed_evalue()`](https://bowers-illinois-edu.github.io/manytestsr/reference/fixed_evalue.md)
+  : Fixed betting strategy for e-values
 
-- [`generate_all_intersections()`](generate_all_intersections.md) :
-  Generate all possible intersection hypotheses
+- [`generate_all_intersections()`](https://bowers-illinois-edu.github.io/manytestsr/reference/generate_all_intersections.md)
+  : Generate all possible intersection hypotheses
 
-- [`generate_corrective_actions()`](generate_corrective_actions.md) :
-  Generate corrective actions for consonance violations
+- [`generate_corrective_actions()`](https://bowers-illinois-edu.github.io/manytestsr/reference/generate_corrective_actions.md)
+  : Generate corrective actions for consonance violations
 
-- [`generate_meinshausen_hierarchy()`](generate_meinshausen_hierarchy.md)
+- [`generate_meinshausen_hierarchy()`](https://bowers-illinois-edu.github.io/manytestsr/reference/generate_meinshausen_hierarchy.md)
   : Generate Meinshausen hierarchical clustering for variables
 
-- [`get_children_nodes()`](get_children_nodes.md) : Get children nodes
-  from tracker
+- [`get_children_nodes()`](https://bowers-illinois-edu.github.io/manytestsr/reference/get_children_nodes.md)
+  : Get children nodes from tracker
 
-- [`get_descendant_nodes()`](get_descendant_nodes.md) : Get all
-  descendant nodes for a given node
+- [`get_descendant_nodes()`](https://bowers-illinois-edu.github.io/manytestsr/reference/get_descendant_nodes.md)
+  : Get all descendant nodes for a given node
 
-- [`hodges_lehmann_sensitivity_bounds()`](hodges_lehmann_sensitivity_bounds.md)
+- [`hodges_lehmann_sensitivity_bounds()`](https://bowers-illinois-edu.github.io/manytestsr/reference/hodges_lehmann_sensitivity_bounds.md)
   : Hodges-Lehmann estimator sensitivity bounds
 
-- [`idt`](idt.md) [`bdt1`](idt.md) : Example tree-testing data
+- [`idt`](https://bowers-illinois-edu.github.io/manytestsr/reference/idt.md)
+  [`bdt1`](https://bowers-illinois-edu.github.io/manytestsr/reference/idt.md)
+  : Example tree-testing data
 
-- [`integrate_meinshausen_find_blocks()`](integrate_meinshausen_find_blocks.md)
+- [`integrate_meinshausen_find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/integrate_meinshausen_find_blocks.md)
   : Integration function for find_blocks with Meinshausen testing
 
-- [`intersection_union_tests()`](intersection_union_tests.md) :
-  Intersection-Union Tests for Hierarchical Hypotheses
+- [`intersection_union_tests()`](https://bowers-illinois-edu.github.io/manytestsr/reference/intersection_union_tests.md)
+  : Intersection-Union Tests for Hierarchical Hypotheses
 
-- [`kelly_evalue()`](kelly_evalue.md) : Kelly optimal betting for
-  e-values
+- [`kelly_evalue()`](https://bowers-illinois-edu.github.io/manytestsr/reference/kelly_evalue.md)
+  : Kelly optimal betting for e-values
 
-- [`local_bh_all_ps()`](local_bh_all_ps.md) : BH local adjustment
+- [`local_bh_all_ps()`](https://bowers-illinois-edu.github.io/manytestsr/reference/local_bh_all_ps.md)
+  : BH local adjustment
 
-- [`local_hommel_all_ps()`](local_hommel_all_ps.md) : Compute local
-  Hommel p-value for a Vector of Child p-values
+- [`local_hommel_all_ps()`](https://bowers-illinois-edu.github.io/manytestsr/reference/local_hommel_all_ps.md)
+  : Compute local Hommel p-value for a Vector of Child p-values
 
-- [`local_min_p()`](local_min_p.md) : Unadjusted local minimal p-value
+- [`local_min_p()`](https://bowers-illinois-edu.github.io/manytestsr/reference/local_min_p.md)
+  : Unadjusted local minimal p-value
 
-- [`local_simes()`](local_simes.md) : Compute local Simes p-value for a
-  Vector of Child p-values
+- [`local_simes()`](https://bowers-illinois-edu.github.io/manytestsr/reference/local_simes.md)
+  : Compute local Simes p-value for a Vector of Child p-values
 
-- [`local_unadj_all_ps()`](local_unadj_all_ps.md) : Unadjusted local
-  step (pass-through)
+- [`local_unadj_all_ps()`](https://bowers-illinois-edu.github.io/manytestsr/reference/local_unadj_all_ps.md)
+  : Unadjusted local step (pass-through)
 
-- [`make_results_ggraph()`](make_results_ggraph.md) : Make a plot of the
-  nodes
+- [`make_results_ggraph()`](https://bowers-illinois-edu.github.io/manytestsr/reference/make_results_ggraph.md)
+  : Make a plot of the nodes
 
-- [`make_results_tree()`](make_results_tree.md) : Make a node-level
-  dataset from a block-level dataset
+- [`make_results_tree()`](https://bowers-illinois-edu.github.io/manytestsr/reference/make_results_tree.md)
+  : Make a node-level dataset from a block-level dataset
 
-- [`meinshausen_hierarchical_test()`](meinshausen_hierarchical_test.md)
+- [`meinshausen_hierarchical_test()`](https://bowers-illinois-edu.github.io/manytestsr/reference/meinshausen_hierarchical_test.md)
   : Meinshausen's Hierarchical Testing with Sequential Rejection
   Principle
 
-- [`nodeidfn()`](nodeidfn.md) : Use hashing to make a node id
-  (DEPRECATED)
+- [`nodeidfn()`](https://bowers-illinois-edu.github.io/manytestsr/reference/nodeidfn.md)
+  : Use hashing to make a node id (DEPRECATED)
 
-- [`pCombCauchyDist()`](pCombCauchyDist.md) : P-value function: Cauchy
-  Combined Indepence Test
+- [`pCombCauchyDist()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pCombCauchyDist.md)
+  : P-value function: Cauchy Combined Indepence Test
 
-- [`pCombStephenson()`](pCombStephenson.md) : P-value function: Combined
-  Stephenson Rank Test
+- [`pCombStephenson()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pCombStephenson.md)
+  : P-value function: Combined Stephenson Rank Test
 
-- [`pIndepDist()`](pIndepDist.md) : P-value function: Independence
-  Treatment Distance Test
+- [`pIndepDist()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pIndepDist.md)
+  : P-value function: Independence Treatment Distance Test
 
-- [`pOneway()`](pOneway.md) : P-value function: T-test
+- [`pOneway()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pOneway.md)
+  : P-value function: T-test
 
-- [`pPolyRank()`](pPolyRank.md) : P-value function: Polynomial Rank
-  Score Test
+- [`pPolyRank()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pPolyRank.md)
+  : P-value function: Polynomial Rank Score Test
 
-- [`pTestTwice()`](pTestTwice.md) : P-value function: Testing twice
+- [`pTestTwice()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pTestTwice.md)
+  : P-value function: Testing twice
 
-- [`pWilcox()`](pWilcox.md) : P-value function: Wilcox Test
+- [`pWilcox()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pWilcox.md)
+  : P-value function: Wilcox Test
 
-- [`parse_formula()`](parse_formula.md) : Parse formula to extract
-  components
+- [`parse_formula()`](https://bowers-illinois-edu.github.io/manytestsr/reference/parse_formula.md)
+  : Parse formula to extract components
 
-- [`parse_formula_components()`](parse_formula_components.md) : Parse
-  formula components
+- [`parse_formula_components()`](https://bowers-illinois-edu.github.io/manytestsr/reference/parse_formula_components.md)
+  : Parse formula components
 
-- [`plot_design_sensitivity()`](plot_design_sensitivity.md) : Plot
-  sensitivity analysis results
+- [`plot_design_sensitivity()`](https://bowers-illinois-edu.github.io/manytestsr/reference/plot_design_sensitivity.md)
+  : Plot sensitivity analysis results
 
-- [`plot_intersection_union_results()`](plot_intersection_union_results.md)
+- [`plot_intersection_union_results()`](https://bowers-illinois-edu.github.io/manytestsr/reference/plot_intersection_union_results.md)
   : Visualize intersection-union test results
 
-- [`report_detections()`](report_detections.md) : Return detected blocks
-  plus info
+- [`report_detections()`](https://bowers-illinois-edu.github.io/manytestsr/reference/report_detections.md)
+  : Return detected blocks plus info
 
-- [`sign_test_sensitivity_bounds()`](sign_test_sensitivity_bounds.md) :
-  Sign test sensitivity bounds
+- [`sign_test_sensitivity_bounds()`](https://bowers-illinois-edu.github.io/manytestsr/reference/sign_test_sensitivity_bounds.md)
+  : Sign test sensitivity bounds
 
-- [`splitCluster()`](splitCluster.md) : Splitting function: K-Means
-  Clustering
+- [`splitCluster()`](https://bowers-illinois-edu.github.io/manytestsr/reference/splitCluster.md)
+  : Splitting function: K-Means Clustering
 
-- [`splitEqualApprox()`](splitEqualApprox.md) : Splitting function:
-  Approx Equal Splits
+- [`splitEqualApprox()`](https://bowers-illinois-edu.github.io/manytestsr/reference/splitEqualApprox.md)
+  : Splitting function: Approx Equal Splits
 
-- [`splitLOO()`](splitLOO.md) : Splitting function: Leave One Out
+- [`splitLOO()`](https://bowers-illinois-edu.github.io/manytestsr/reference/splitLOO.md)
+  : Splitting function: Leave One Out
 
-- [`splitSpecified()`](splitSpecified.md) : A set of pre-specified
-  splits using a data.table object (Deprecate)
+- [`splitSpecified()`](https://bowers-illinois-edu.github.io/manytestsr/reference/splitSpecified.md)
+  : A set of pre-specified splits using a data.table object (Deprecate)
 
-- [`splitSpecifiedFactor()`](splitSpecifiedFactor.md) : A set of
-  pre-specified splits
+- [`splitSpecifiedFactor()`](https://bowers-illinois-edu.github.io/manytestsr/reference/splitSpecifiedFactor.md)
+  : A set of pre-specified splits
 
-- [`splitSpecifiedFactorMulti()`](splitSpecifiedFactorMulti.md) : A set
-  of pre-specified splits
+- [`splitSpecifiedFactorMulti()`](https://bowers-illinois-edu.github.io/manytestsr/reference/splitSpecifiedFactorMulti.md)
+  : A set of pre-specified splits
 
-- [`test_children_recursive_meinshausen()`](test_children_recursive_meinshausen.md)
+- [`test_children_recursive_meinshausen()`](https://bowers-illinois-edu.github.io/manytestsr/reference/test_children_recursive_meinshausen.md)
   : Recursive testing of children in Meinshausen procedure
 
-- [`test_intersection_null()`](test_intersection_null.md) : Test
-  intersection null hypothesis
+- [`test_intersection_null()`](https://bowers-illinois-edu.github.io/manytestsr/reference/test_intersection_null.md)
+  : Test intersection null hypothesis
 
-- [`test_intersections()`](test_intersections.md) : Test intersection
-  hypotheses
+- [`test_intersections()`](https://bowers-illinois-edu.github.io/manytestsr/reference/test_intersections.md)
+  : Test intersection hypotheses
 
-- [`test_union_alternative()`](test_union_alternative.md) : Test union
-  alternative hypothesis
+- [`test_union_alternative()`](https://bowers-illinois-edu.github.io/manytestsr/reference/test_union_alternative.md)
+  : Test union alternative hypothesis
 
-- [`update_wealth()`](update_wealth.md) : Update wealth using e-value
+- [`update_wealth()`](https://bowers-illinois-edu.github.io/manytestsr/reference/update_wealth.md)
+  : Update wealth using e-value
 
-- [`validate_fwer_control()`](validate_fwer_control.md) : Validate
-  closed testing procedure maintains FWER control
+- [`validate_fwer_control()`](https://bowers-illinois-edu.github.io/manytestsr/reference/validate_fwer_control.md)
+  : Validate closed testing procedure maintains FWER control
 
-- [`validate_logical_hierarchy()`](validate_logical_hierarchy.md) :
-  Validate logical hierarchy structure
+- [`validate_logical_hierarchy()`](https://bowers-illinois-edu.github.io/manytestsr/reference/validate_logical_hierarchy.md)
+  : Validate logical hierarchy structure
 
-- [`wilcoxon_sensitivity_bounds()`](wilcoxon_sensitivity_bounds.md) :
-  Wilcoxon test sensitivity bounds
+- [`wilcoxon_sensitivity_bounds()`](https://bowers-illinois-edu.github.io/manytestsr/reference/wilcoxon_sensitivity_bounds.md)
+  : Wilcoxon test sensitivity bounds

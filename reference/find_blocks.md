@@ -193,9 +193,9 @@ Some notes about the splitting functions and how they relate to
 splitting criteria (splitby) and stopping criteria
 (stop_splitby_constant).
 
-- [`splitCluster()`](splitCluster.md) splits the blocks into groups that
-  are as similar as possible to each other on splitby using the kmeans
-  clustering algorithm (using
+- [`splitCluster()`](https://bowers-illinois-edu.github.io/manytestsr/reference/splitCluster.md)
+  splits the blocks into groups that are as similar as possible to each
+  other on splitby using the kmeans clustering algorithm (using
   [`Ckmeans.1d.dp::Ckmeans.1d.dp()`](https://rdrr.io/pkg/Ckmeans.1d.dp/man/Ckmeans.1d.dp.html)).
   This will not work with factor variables. When the splitting criteria
   is constant, it will return random splits into roughly two equal sized
@@ -203,11 +203,11 @@ splitting criteria (splitby) and stopping criteria
   stop_splitby_constant=TRUE then `find_blocks()` will stop and return
   groups of blocks as detected or not.
 
-- [`splitSpecifiedFactor()`](splitSpecifiedFactor.md) will split the
-  blocks into two groups following prespecified pattern encoded into the
-  labels for the levels of the factor. For example, if we imagine three
-  nested levels of splitting (like states, districts, neighborhoods),
-  the factor would have labels like
+- [`splitSpecifiedFactor()`](https://bowers-illinois-edu.github.io/manytestsr/reference/splitSpecifiedFactor.md)
+  will split the blocks into two groups following prespecified pattern
+  encoded into the labels for the levels of the factor. For example, if
+  we imagine three nested levels of splitting (like states, districts,
+  neighborhoods), the factor would have labels like
   `category1_level1.category2_level1.category3_level1` and where splits
   will occur from left to right depending on whether there is existing
   variation at that level. When the factor is constant and
@@ -217,8 +217,8 @@ splitting criteria (splitby) and stopping criteria
   if it can. When stop_splitby_constant=FALSE, then it uses random
   splits.
 
-- [`splitSpecifiedFactorMulti()`](splitSpecifiedFactorMulti.md) will
-  split the blocks into two or more groups following prespecified
+- [`splitSpecifiedFactorMulti()`](https://bowers-illinois-edu.github.io/manytestsr/reference/splitSpecifiedFactorMulti.md)
+  will split the blocks into two or more groups following prespecified
   pattern encoded into the labels for the levels of the factor. For
   example, if we imagine three nested levels of splitting (like states,
   districts, neighborhoods), the factor would have labels like
@@ -230,33 +230,35 @@ splitting criteria (splitby) and stopping criteria
   factor is constant and stop_splitby_constant=TRUE splitting stops.
   When stop_splitby_constant=FALSE, then it uses random splits.
 
-- [`splitEqualApprox()`](splitEqualApprox.md) splits the sets of blocks
-  into two groups where the sum of the splitby vector is approximately
-  the same in each split. For example, if splitby is number of units in
-  a block, then this splitting function makes two groups of blocks, each
-  group having the same total number of units. This splitting function
-  will work with discrete or factors but will do:
-  `rank_splitby <- rank(splitby)` and then divide the blocks into groups
-  based on taking every other rank. So, for factors variables with few
-  categories that are ordered, this will allocate every other category
-  to one or another group.
+- [`splitEqualApprox()`](https://bowers-illinois-edu.github.io/manytestsr/reference/splitEqualApprox.md)
+  splits the sets of blocks into two groups where the sum of the splitby
+  vector is approximately the same in each split. For example, if
+  splitby is number of units in a block, then this splitting function
+  makes two groups of blocks, each group having the same total number of
+  units. This splitting function will work with discrete or factors but
+  will do: `rank_splitby <- rank(splitby)` and then divide the blocks
+  into groups based on taking every other rank. So, for factors
+  variables with few categories that are ordered, this will allocate
+  every other category to one or another group.
 
-- [`splitLOO()`](splitLOO.md) chooses the blocks largest on the splitby
-  vector one at a time so that we have two tests, one focusing on the
-  highest ranked block and one on all of the rest of the blocks (for
-  example, the block with the most units in it versus the rest of the
-  blocks). When the splitby vector has ties, it chooses one block at
-  random among those tied for the first or largest rank. When the split
-  vector has few values, for example, only two values, it will still
-  split assuming that the vector is numeric (so, 1 is ranked higher
-  than 0) and then randomly among ties. If stop_splitby_constant=TRUE,
-  then the algorithm will stop after exhausting the blocks in the higher
-  ranked category (thinking about the binary splitby case). For this
-  reason we advise against using splitLOO with a factor splitby vector
-  with few categories. [`splitLOO()`](splitLOO.md) is best used with a
-  splitby vector like block-size — which could be constant and thus just
-  create a random choice of a single block or could vary and thus focus
-  the testing on the largest/highest ranked blocks.
+- [`splitLOO()`](https://bowers-illinois-edu.github.io/manytestsr/reference/splitLOO.md)
+  chooses the blocks largest on the splitby vector one at a time so that
+  we have two tests, one focusing on the highest ranked block and one on
+  all of the rest of the blocks (for example, the block with the most
+  units in it versus the rest of the blocks). When the splitby vector
+  has ties, it chooses one block at random among those tied for the
+  first or largest rank. When the split vector has few values, for
+  example, only two values, it will still split assuming that the vector
+  is numeric (so, 1 is ranked higher than 0) and then randomly among
+  ties. If stop_splitby_constant=TRUE, then the algorithm will stop
+  after exhausting the blocks in the higher ranked category (thinking
+  about the binary splitby case). For this reason we advise against
+  using splitLOO with a factor splitby vector with few categories.
+  [`splitLOO()`](https://bowers-illinois-edu.github.io/manytestsr/reference/splitLOO.md)
+  is best used with a splitby vector like block-size — which could be
+  constant and thus just create a random choice of a single block or
+  could vary and thus focus the testing on the largest/highest ranked
+  blocks.
 
 ## Examples
 

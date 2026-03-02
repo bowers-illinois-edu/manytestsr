@@ -1,10 +1,11 @@
 # Make a plot of the nodes
 
 Given the results of the splitting and testing algorithm in the form of
-a graph from [make_results_tree](make_results_tree.md), make a node
-level data set for use in reporting results in terms of a binary tree
-graph. This does not print or plot the graph. You'll need to do that
-with the resulting object.
+a graph from
+[make_results_tree](https://bowers-illinois-edu.github.io/manytestsr/reference/make_results_tree.md),
+make a node level data set for use in reporting results in terms of a
+binary tree graph. This does not print or plot the graph. You'll need to
+do that with the resulting object.
 
 ## Usage
 

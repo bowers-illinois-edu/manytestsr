@@ -1,9 +1,10 @@
-# Adaptive Alpha Adjustment Based on Power Decay with [`find_blocks`](find_blocks.md). The returned function adjusts significance levels at each tree depth based on estimated power decay (Algorithm 1 from Appendix B of the supplement).
+# Adaptive Alpha Adjustment Based on Power Decay with [`find_blocks`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md). The returned function adjusts significance levels at each tree depth based on estimated power decay (Algorithm 1 from Appendix B of the supplement).
 
 Adaptive Alpha Adjustment Based on Power Decay with
-[`find_blocks`](find_blocks.md). The returned function adjusts
-significance levels at each tree depth based on estimated power decay
-(Algorithm 1 from Appendix B of the supplement).
+[`find_blocks`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md).
+The returned function adjusts significance levels at each tree depth
+based on estimated power decay (Algorithm 1 from Appendix B of the
+supplement).
 
 ## Usage
 
@@ -37,7 +38,8 @@ alpha_adaptive(k, delta_hat, N_total, max_depth = 20L)
 
 A function with signature
 `function(pval, batch, nodesize, thealpha, thew0, depth)` conforming to
-the `alphafn` interface used by [`find_blocks`](find_blocks.md).
+the `alphafn` interface used by
+[`find_blocks`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md).
 
 ## Details
 

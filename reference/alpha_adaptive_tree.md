@@ -1,9 +1,11 @@
 # Adaptive Alpha from an Actual Tree Structure
 
-Factory function counterpart to [`alpha_adaptive`](alpha_adaptive.md)
+Factory function counterpart to
+[`alpha_adaptive`](https://bowers-illinois-edu.github.io/manytestsr/reference/alpha_adaptive.md)
 for irregular trees. Creates an alpha adjustment function for use with
-[`find_blocks`](find_blocks.md), using actual per-node sample sizes to
-compute the alpha schedule instead of assuming a regular k-ary tree.
+[`find_blocks`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md),
+using actual per-node sample sizes to compute the alpha schedule instead
+of assuming a regular k-ary tree.
 
 ## Usage
 
@@ -17,8 +19,8 @@ alpha_adaptive_tree(node_dat, delta_hat, max_depth = NULL)
 
   A data.frame or data.table with columns `nodenum`, `parent`, `depth`,
   and `nodesize`. Typically extracted from a
-  [`find_blocks`](find_blocks.md) result. The root node must have
-  `parent = 0` and `depth = 1`.
+  [`find_blocks`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)
+  result. The root node must have `parent = 0` and `depth = 1`.
 
 - delta_hat:
 
@@ -35,16 +37,18 @@ alpha_adaptive_tree(node_dat, delta_hat, max_depth = NULL)
 
 A function with signature
 `function(pval, batch, nodesize, thealpha, thew0, depth)` conforming to
-the `alphafn` interface used by [`find_blocks`](find_blocks.md).
+the `alphafn` interface used by
+[`find_blocks`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md).
 
 ## Details
 
 The returned function behaves identically to the closure from
-[`alpha_adaptive`](alpha_adaptive.md): it uses the `depth` parameter to
-look up pre-computed alphas, ignoring `pval`, `batch`, and other
-arguments. The difference is that the alpha schedule comes from
-[`compute_adaptive_alphas_tree`](compute_adaptive_alphas_tree.md) rather
-than the parametric formula, so it handles irregular branching
+[`alpha_adaptive`](https://bowers-illinois-edu.github.io/manytestsr/reference/alpha_adaptive.md):
+it uses the `depth` parameter to look up pre-computed alphas, ignoring
+`pval`, `batch`, and other arguments. The difference is that the alpha
+schedule comes from
+[`compute_adaptive_alphas_tree`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_adaptive_alphas_tree.md)
+rather than the parametric formula, so it handles irregular branching
 correctly.
 
 Results are cached internally: the alpha schedule is computed once per
