@@ -15,7 +15,7 @@ where branching factor and sample sizes vary across nodes."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,8 @@ where branching factor and sample sizes vary across nodes.</p>
 <span>  <span class="va">node_dat</span>,</span>
 <span>  <span class="va">delta_hat</span>,</span>
 <span>  max_depth <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  thealpha <span class="op">=</span> <span class="fl">0.05</span></span>
+<span>  thealpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  budget_weights <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -88,6 +89,30 @@ depth present in <code>node_dat</code>.</p></dd>
 
 <dt id="arg-thealpha">thealpha<a class="anchor" aria-label="anchor" href="#arg-thealpha"></a></dt>
 <dd><p>Nominal significance level (default 0.05).</p></dd>
+
+
+<dt id="arg-budget-weights">budget_weights<a class="anchor" aria-label="anchor" href="#arg-budget-weights"></a></dt>
+<dd><p>Controls how the error budget is allocated across
+depths (Theorems B.3 and B.5 in the supplement). Options:</p><dl><dt><code>NULL</code></dt>
+<dd><p>(default) No budget weights — use the
+telescoping formula \(\alpha_\ell = \alpha / G_\ell\). This
+is the tightest bound for regular k-ary trees (Theorem B.2).</p></dd>
+
+<dt><code>"equal"</code></dt>
+<dd><p>Equal weights: \(w_\ell = 1/(L-1)\) for
+all depths \(\ell \ge 2\).</p></dd>
+
+<dt><code>"proportional"</code></dt>
+<dd><p>Error-load-proportional:
+\(w_\ell = G_\ell / \sum G\), giving a uniform adjusted
+alpha of \(\alpha / \sum G\) at every depth.</p></dd>
+
+<dt>numeric vector</dt>
+<dd><p>Custom weights for depths 2 through L.
+Must have length \(L - 1\) and sum to at most 1.</p></dd>
+
+
+</dl></dd>
 
 </dl></div>
     <div class="section level2">

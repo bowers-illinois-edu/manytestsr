@@ -10,7 +10,12 @@ of assuming a regular k-ary tree.
 ## Usage
 
 ``` r
-alpha_adaptive_tree(node_dat, delta_hat, max_depth = NULL)
+alpha_adaptive_tree(
+  node_dat,
+  delta_hat,
+  max_depth = NULL,
+  budget_weights = NULL
+)
 ```
 
 ## Arguments
@@ -32,6 +37,32 @@ alpha_adaptive_tree(node_dat, delta_hat, max_depth = NULL)
 
   Maximum depth to compute. Defaults to the maximum depth present in
   `node_dat`.
+
+- budget_weights:
+
+  Controls how the error budget is allocated across depths (Theorems B.3
+  and B.5 in the supplement). Options:
+
+  `NULL`
+
+  :   (default) No budget weights — use the telescoping formula
+      \\\alpha\_\ell = \alpha / G\_\ell\\. This is the tightest bound
+      for regular k-ary trees (Theorem B.2).
+
+  `"equal"`
+
+  :   Equal weights: \\w\_\ell = 1/(L-1)\\ for all depths \\\ell \ge
+      2\\.
+
+  `"proportional"`
+
+  :   Error-load-proportional: \\w\_\ell = G\_\ell / \sum G\\, giving a
+      uniform adjusted alpha of \\\alpha / \sum G\\ at every depth.
+
+  numeric vector
+
+  :   Custom weights for depths 2 through L. Must have length \\L - 1\\
+      and sum to at most 1.
 
 ## Value
 

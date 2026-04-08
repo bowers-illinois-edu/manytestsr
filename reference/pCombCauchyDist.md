@@ -76,4 +76,5 @@ of the preceding test statistics. Inspired by Rizzo and Székely's work
 on Euclidean distance based testing and by Liu and Xie (2020) on the
 Cauchy Combination Test and Hansen and Bowers (2008) on omnibus tests.
 Distance and ranks and other transformations are all calculated by block
-when block is supplied in the formula.
+when block is supplied in the formula. Any of these scores that are
+constant are dropped from the test.
