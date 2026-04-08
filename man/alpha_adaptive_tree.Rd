@@ -4,7 +4,12 @@
 \alias{alpha_adaptive_tree}
 \title{Adaptive Alpha from an Actual Tree Structure}
 \usage{
-alpha_adaptive_tree(node_dat, delta_hat, max_depth = NULL)
+alpha_adaptive_tree(
+  node_dat,
+  delta_hat,
+  max_depth = NULL,
+  budget_weights = NULL
+)
 }
 \arguments{
 \item{node_dat}{A data.frame or data.table with columns
@@ -18,6 +23,21 @@ which preserves the FWER guarantee.}
 
 \item{max_depth}{Maximum depth to compute. Defaults to the maximum
 depth present in \code{node_dat}.}
+
+\item{budget_weights}{Controls how the error budget is allocated across
+depths (Theorems B.3 and B.5 in the supplement). Options:
+\describe{
+\item{\code{NULL}}{(default) No budget weights --- use the
+telescoping formula \eqn{\alpha_\ell = \alpha / G_\ell}. This
+is the tightest bound for regular k-ary trees (Theorem B.2).}
+\item{\code{"equal"}}{Equal weights: \eqn{w_\ell = 1/(L-1)} for
+all depths \eqn{\ell \ge 2}.}
+\item{\code{"proportional"}}{Error-load-proportional:
+\eqn{w_\ell = G_\ell / \sum G}, giving a uniform adjusted
+alpha of \eqn{\alpha / \sum G} at every depth.}
+\item{numeric vector}{Custom weights for depths 2 through L.
+Must have length \eqn{L - 1} and sum to at most 1.}
+}}
 }
 \value{
 A function with signature

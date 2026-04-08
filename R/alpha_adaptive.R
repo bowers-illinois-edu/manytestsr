@@ -416,11 +416,27 @@ compute_adaptive_alphas <- function(k, delta_hat, N_total,
 #' )
 #' compute_adaptive_alphas_tree(node_dat = nd, delta_hat = 0.5)
 #'
+#' @param budget_weights Controls how the error budget is allocated across
+#'   depths (Theorems B.3 and B.5 in the supplement). Options:
+#'   \describe{
+#'     \item{\code{NULL}}{(default) No budget weights --- use the
+#'       telescoping formula \eqn{\alpha_\ell = \alpha / G_\ell}. This
+#'       is the tightest bound for regular k-ary trees (Theorem B.2).}
+#'     \item{\code{"equal"}}{Equal weights: \eqn{w_\ell = 1/(L-1)} for
+#'       all depths \eqn{\ell \ge 2}.}
+#'     \item{\code{"proportional"}}{Error-load-proportional:
+#'       \eqn{w_\ell = G_\ell / \sum G}, giving a uniform adjusted
+#'       alpha of \eqn{\alpha / \sum G} at every depth.}
+#'     \item{numeric vector}{Custom weights for depths 2 through L.
+#'       Must have length \eqn{L - 1} and sum to at most 1.}
+#'   }
+#'
 #' @importFrom stats pnorm qnorm
 #' @export
 compute_adaptive_alphas_tree <- function(node_dat, delta_hat,
                                          max_depth = NULL,
-                                         thealpha = 0.05) {
+                                         thealpha = 0.05,
+                                         budget_weights = NULL) {
   stopifnot(length(delta_hat) == 1, delta_hat > 0,
             length(thealpha) == 1, thealpha > 0, thealpha < 1)
 
@@ -434,6 +450,7 @@ compute_adaptive_alphas_tree <- function(node_dat, delta_hat,
   }
 
   # If natural gating suffices, return nominal alpha everywhere
+  # (budget weights are irrelevant when the tree protects itself)
   if (!el$needs_adjustment) {
     alphas <- rep(thealpha, max_depth)
     names(alphas) <- as.character(seq_len(max_depth))
@@ -441,21 +458,84 @@ compute_adaptive_alphas_tree <- function(node_dat, delta_hat,
     return(alphas)
   }
 
-  # Compute per-depth alpha from the sum of path_power at each depth.
-  # path_power for a node = product of ancestor thetas = probability
-  # that the testing procedure reaches this node.
+  # Compute per-depth error loads G_ell for weight resolution
   nd <- el$node_detail
-  alphas <- numeric(max_depth)
-
+  G_by_depth <- numeric(max_depth)
   for (d in seq_len(max_depth)) {
     rows_at_d <- which(nd$depth == d)
-    sum_path_power <- sum(nd$path_power[rows_at_d])
-    alphas[d] <- min(thealpha, thealpha / sum_path_power)
+    G_by_depth[d] <- sum(nd$path_power[rows_at_d])
+  }
+
+  # Resolve budget weights into a numeric vector (NULL = telescoping)
+  weights <- .resolve_budget_weights(budget_weights, G_by_depth, max_depth)
+
+  # Compute per-depth alpha.
+  # With weights: alpha_ell = min(alpha, w_ell * alpha / G_ell)
+  # Without (NULL): alpha_ell = min(alpha, alpha / G_ell) --- telescoping
+  alphas <- numeric(max_depth)
+  for (d in seq_len(max_depth)) {
+    if (d == 1L || G_by_depth[d] == 0) {
+      # Root always gets nominal alpha; zero error load needs no shrinkage
+      alphas[d] <- thealpha
+    } else if (is.null(weights)) {
+      alphas[d] <- min(thealpha, thealpha / G_by_depth[d])
+    } else {
+      alphas[d] <- min(thealpha, weights[d] * thealpha / G_by_depth[d])
+    }
   }
 
   names(alphas) <- as.character(seq_len(max_depth))
   attr(alphas, "error_load") <- el
   return(alphas)
+}
+
+
+# Resolve user-facing budget_weights argument into a numeric vector.
+# Returns NULL when budget_weights is NULL (caller uses telescoping).
+# Otherwise returns a numeric vector of length max_depth where
+# weights[1] = 0 (root gets nominal alpha) and sum(weights[2:L]) <= 1.
+.resolve_budget_weights <- function(budget_weights, G_by_depth, max_depth) {
+  if (is.null(budget_weights)) {
+    return(NULL)
+  }
+
+  L <- max_depth
+  n_depths <- L - 1L  # depths 2 through L
+
+  if (is.character(budget_weights)) {
+    budget_weights <- match.arg(budget_weights, c("equal", "proportional"))
+
+    if (budget_weights == "equal") {
+      w <- rep(1 / n_depths, n_depths)
+    } else {
+      # Proportional: w_ell = G_ell / sum(G), so alpha_ell = alpha / sum(G)
+      G_sub <- G_by_depth[2:L]
+      total_G <- sum(G_sub)
+      if (total_G <= 0) {
+        w <- rep(1 / n_depths, n_depths)
+      } else {
+        w <- G_sub / total_G
+      }
+    }
+    return(c(0, w))
+  }
+
+  if (is.numeric(budget_weights)) {
+    if (length(budget_weights) != n_depths) {
+      stop("budget_weights must have length ", n_depths,
+           " (one weight per depth from 2 to ", L, ")")
+    }
+    if (any(budget_weights < 0)) {
+      stop("budget_weights must be non-negative")
+    }
+    if (sum(budget_weights) > 1 + 1e-10) {
+      stop("budget_weights must sum to at most 1 (got ",
+           round(sum(budget_weights), 4), ")")
+    }
+    return(c(0, budget_weights))
+  }
+
+  stop("budget_weights must be NULL, 'equal', 'proportional', or a numeric vector")
 }
 
 
@@ -576,8 +656,10 @@ alpha_adaptive <- function(k, delta_hat, N_total, max_depth = 20L) {
 #' # Use with find_blocks
 #' # find_blocks(idat, bdat, ..., alphafn = my_alpha)
 #'
+#' @inheritParams compute_adaptive_alphas_tree
 #' @export
-alpha_adaptive_tree <- function(node_dat, delta_hat, max_depth = NULL) {
+alpha_adaptive_tree <- function(node_dat, delta_hat, max_depth = NULL,
+                                budget_weights = NULL) {
   # Validate at factory time
   stopifnot(delta_hat > 0)
   nd <- as.data.frame(node_dat)
@@ -599,7 +681,8 @@ alpha_adaptive_tree <- function(node_dat, delta_hat, max_depth = NULL) {
     if (is.null(cache_env$alphas) || !identical(thealpha, cache_env$thealpha)) {
       cache_env$alphas <- compute_adaptive_alphas_tree(
         node_dat = nd, delta_hat = delta_hat,
-        max_depth = max_depth, thealpha = thealpha
+        max_depth = max_depth, thealpha = thealpha,
+        budget_weights = budget_weights
       )
       cache_env$thealpha <- thealpha
     }
@@ -657,6 +740,22 @@ alpha_adaptive_tree <- function(node_dat, delta_hat, max_depth = NULL) {
 #' to surviving branches when dead branches are removed.
 #'
 #' @inheritParams alpha_adaptive_tree
+#' @param budget_weights Controls depth-wise budget allocation. Accepts
+#'   the same values as \code{\link{compute_adaptive_alphas_tree}}, plus
+#'   \code{"remaining"}: a sequential spending process where a fraction
+#'   \code{spending_fraction} of the remaining budget is spent at each
+#'   depth. See Details.
+#' @param budget_total Initial error budget (default 1.0). The constraint
+#'   \eqn{\sum w_\ell \le} \code{budget_total} guarantees FWER control.
+#' @param spending_fraction Fraction of remaining budget to spend at each
+#'   depth when \code{budget_weights = "remaining"} (default 0.5). At
+#'   depth \eqn{\ell}, the weight is
+#'   \eqn{w_\ell = f \times B_\ell} where \eqn{f} is the spending
+#'   fraction and \eqn{B_\ell} is the remaining budget.
+#' @param switching Logical (default \code{FALSE}). When \code{TRUE},
+#'   implements the switching corollary (Corollary B.1): after each
+#'   update, if the remaining pruned error load fits within the
+#'   remaining budget, all deeper depths revert to nominal alpha.
 #'
 #' @return A list with three components:
 #' \describe{
@@ -674,12 +773,19 @@ alpha_adaptive_tree <- function(node_dat, delta_hat, max_depth = NULL) {
 #' }
 #'
 #' @details
-#' The FWER guarantee follows from the same telescoping-sum argument
-#' as \code{\link{alpha_adaptive_tree}}, applied to the surviving
-#' subtree at each depth. Pruning decisions at depth \eqn{d} depend
-#' only on tests at depths \eqn{1, \ldots, d}, which are independent
-#' of tests at deeper levels (under data splitting or independent
-#' permutation tests), so the conditional FWER bound holds.
+#' The FWER guarantee follows from Theorem B.5 in the supplement:
+#' predictable budget weights with data-dependent denominators. The
+#' weights are "predictable" because \eqn{w_\ell} depends only on the
+#' testing history through depth \eqn{\ell - 1}, not on depth-\eqn{\ell}
+#' outcomes. The union bound across depths gives FWER \eqn{\le \alpha}
+#' whenever \eqn{\sum w_\ell \le 1}.
+#'
+#' The \strong{switching corollary} (when \code{switching = TRUE}):
+#' after pruning narrows the surviving tree, if the remaining error load
+#' \eqn{\sum_{\ell \ge s} D_\ell \le B_s} (remaining budget), then
+#' \eqn{\alpha_\ell = \alpha} for all \eqn{\ell \ge s}. This works
+#' by setting \eqn{w_\ell = D_\ell}, so the \eqn{D_\ell} in numerator
+#' and denominator cancel, leaving nominal alpha.
 #'
 #' When \code{find_blocks} detects a list-valued \code{alphafn},
 #' it extracts these three components and calls \code{reset} at
@@ -693,15 +799,21 @@ alpha_adaptive_tree <- function(node_dat, delta_hat, max_depth = NULL) {
 #'   nodesize = c(500, 250, 250, 125, 125, 100, 150)
 #' )
 #' obj <- alpha_adaptive_tree_pruned(node_dat = nd, delta_hat = 0.5)
-#' # obj$alphafn — pass to find_blocks
-#' # obj$update(pruned_nd, 0.05) — recompute on surviving tree
-#' # obj$reset(0.05) — restore full-tree schedule
+#' # obj$alphafn -- pass to find_blocks
+#' # obj$update(pruned_nd, 0.05) -- recompute on surviving tree
+#' # obj$reset(0.05) -- restore full-tree schedule
 #'
 #' @export
 alpha_adaptive_tree_pruned <- function(node_dat, delta_hat,
-                                       max_depth = NULL) {
+                                       max_depth = NULL,
+                                       budget_weights = NULL,
+                                       budget_total = 1.0,
+                                       spending_fraction = 0.5,
+                                       switching = FALSE) {
   # Validate at factory time
-  stopifnot(delta_hat > 0)
+  stopifnot(delta_hat > 0, budget_total > 0, budget_total <= 1,
+            spending_fraction > 0, spending_fraction <= 1,
+            is.logical(switching))
   full_nd <- as.data.frame(node_dat)
   required_cols <- c("nodenum", "parent", "depth", "nodesize")
   missing_cols <- setdiff(required_cols, names(full_nd))
@@ -709,17 +821,88 @@ alpha_adaptive_tree_pruned <- function(node_dat, delta_hat,
     stop("node_dat must have columns: ", paste(missing_cols, collapse = ", "))
   }
 
-  # Shared environment: the alphafn closure reads from here,
-  # update() and reset() write to it.
+  # Determine whether to use the remaining-budget sequential process
+  use_remaining <- identical(budget_weights, "remaining")
+  # For non-"remaining" budget_weights, pass through to compute function
+  bw_for_compute <- if (use_remaining) NULL else budget_weights
+
+  # Shared environment: alphafn reads, update/reset write.
   state <- new.env(parent = emptyenv())
   state$alphas <- NULL
   state$thealpha <- NULL
+  state$budget_remaining <- budget_total
 
-  # Compute schedule on a given tree and store in shared state
-  .compute_and_store <- function(nd, thealpha) {
+  # Compute schedule on a given tree and store in shared state.
+  # When use_remaining = TRUE, the budget-weight for this depth is
+  # spending_fraction * budget_remaining, and budget_remaining is
+  # decremented. When switching = TRUE, check if the remaining error
+  # load fits within the remaining budget.
+  .compute_and_store <- function(nd, thealpha, is_update = FALSE) {
+    z_crit <- stats::qnorm(1 - thealpha / 2)
+    el <- .error_load_from_tree(nd, delta_hat, z_crit, thealpha)
+    cur_max_depth <- if (is.null(max_depth)) max(el$node_detail$depth) else max_depth
+
+    # --- Switching corollary check ---
+    # If remaining error load fits within remaining budget,
+    # all remaining depths get nominal alpha
+    if (switching && is_update && !el$needs_adjustment) {
+      # Pruned error load < 1 means natural gating on surviving tree
+      alphas <- rep(thealpha, cur_max_depth)
+      names(alphas) <- as.character(seq_len(cur_max_depth))
+      attr(alphas, "error_load") <- el
+      state$alphas <- alphas
+      state$thealpha <- thealpha
+      return(invisible(NULL))
+    }
+
+    if (switching && is_update && el$sum_G <= state$budget_remaining) {
+      # Remaining error load fits in remaining budget: switch to nominal
+      alphas <- rep(thealpha, cur_max_depth)
+      names(alphas) <- as.character(seq_len(cur_max_depth))
+      attr(alphas, "error_load") <- el
+      state$alphas <- alphas
+      state$thealpha <- thealpha
+      return(invisible(NULL))
+    }
+
+    # --- Remaining-budget sequential spending ---
+    if (use_remaining && is_update) {
+      # Spend a fraction of the remaining budget at this update
+      c_ell <- spending_fraction * state$budget_remaining
+      state$budget_remaining <- state$budget_remaining - c_ell
+
+      # Build a single-depth weight vector: c_ell for the current
+      # shallowest untested depth, then distribute remaining budget
+      # evenly across deeper depths as a conservative default
+      nd_detail <- el$node_detail
+      G_by_depth <- numeric(cur_max_depth)
+      for (d in seq_len(cur_max_depth)) {
+        rows_at_d <- which(nd_detail$depth == d)
+        G_by_depth[d] <- sum(nd_detail$path_power[rows_at_d])
+      }
+
+      # Compute alphas using the current spending amount
+      alphas <- numeric(cur_max_depth)
+      for (d in seq_len(cur_max_depth)) {
+        if (d == 1L || G_by_depth[d] == 0) {
+          alphas[d] <- thealpha
+        } else {
+          # Use c_ell as the weight for all remaining depths
+          alphas[d] <- min(thealpha, c_ell * thealpha / G_by_depth[d])
+        }
+      }
+      names(alphas) <- as.character(seq_len(cur_max_depth))
+      attr(alphas, "error_load") <- el
+      state$alphas <- alphas
+      state$thealpha <- thealpha
+      return(invisible(NULL))
+    }
+
+    # --- Default: pass through to compute_adaptive_alphas_tree ---
     state$alphas <- compute_adaptive_alphas_tree(
       node_dat = nd, delta_hat = delta_hat,
-      max_depth = max_depth, thealpha = thealpha
+      max_depth = max_depth, thealpha = thealpha,
+      budget_weights = bw_for_compute
     )
     state$thealpha <- thealpha
   }
@@ -729,7 +912,7 @@ alpha_adaptive_tree_pruned <- function(node_dat, delta_hat,
                       thew0 = 0.05 - 0.001, depth = NULL) {
     # Lazy initialization on first call
     if (is.null(state$alphas) || !identical(thealpha, state$thealpha)) {
-      .compute_and_store(full_nd, thealpha)
+      .compute_and_store(full_nd, thealpha, is_update = FALSE)
     }
     alpha_by_depth <- state$alphas
 
@@ -745,12 +928,13 @@ alpha_adaptive_tree_pruned <- function(node_dat, delta_hat,
 
   # --- update: recompute schedule on pruned tree ---
   update_fn <- function(pruned_node_dat, thealpha = 0.05) {
-    .compute_and_store(pruned_node_dat, thealpha)
+    .compute_and_store(pruned_node_dat, thealpha, is_update = TRUE)
   }
 
-  # --- reset: restore full-tree schedule ---
+  # --- reset: restore full-tree schedule and budget ---
   reset_fn <- function(thealpha = 0.05) {
-    .compute_and_store(full_nd, thealpha)
+    state$budget_remaining <- budget_total
+    .compute_and_store(full_nd, thealpha, is_update = FALSE)
   }
 
   return(list(

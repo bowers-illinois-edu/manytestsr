@@ -4,7 +4,15 @@
 \alias{alpha_adaptive_tree_pruned}
 \title{Adaptive Alpha with Branch Pruning}
 \usage{
-alpha_adaptive_tree_pruned(node_dat, delta_hat, max_depth = NULL)
+alpha_adaptive_tree_pruned(
+  node_dat,
+  delta_hat,
+  max_depth = NULL,
+  budget_weights = NULL,
+  budget_total = 1,
+  spending_fraction = 0.5,
+  switching = FALSE
+)
 }
 \arguments{
 \item{node_dat}{A data.frame or data.table with columns
@@ -18,6 +26,26 @@ which preserves the FWER guarantee.}
 
 \item{max_depth}{Maximum depth to compute. Defaults to the maximum
 depth present in \code{node_dat}.}
+
+\item{budget_weights}{Controls depth-wise budget allocation. Accepts
+the same values as \code{\link{compute_adaptive_alphas_tree}}, plus
+\code{"remaining"}: a sequential spending process where a fraction
+\code{spending_fraction} of the remaining budget is spent at each
+depth. See Details.}
+
+\item{budget_total}{Initial error budget (default 1.0). The constraint
+\eqn{\sum w_\ell \le} \code{budget_total} guarantees FWER control.}
+
+\item{spending_fraction}{Fraction of remaining budget to spend at each
+depth when \code{budget_weights = "remaining"} (default 0.5). At
+depth \eqn{\ell}, the weight is
+\eqn{w_\ell = f \times B_\ell} where \eqn{f} is the spending
+fraction and \eqn{B_\ell} is the remaining budget.}
+
+\item{switching}{Logical (default \code{FALSE}). When \code{TRUE},
+implements the switching corollary (Corollary B.1): after each
+update, if the remaining pruned error load fits within the
+remaining budget, all deeper depths revert to nominal alpha.}
 }
 \value{
 A list with three components:
@@ -43,12 +71,19 @@ schedule on a pruned subtree after each depth --- giving more alpha
 to surviving branches when dead branches are removed.
 }
 \details{
-The FWER guarantee follows from the same telescoping-sum argument
-as \code{\link{alpha_adaptive_tree}}, applied to the surviving
-subtree at each depth. Pruning decisions at depth \eqn{d} depend
-only on tests at depths \eqn{1, \ldots, d}, which are independent
-of tests at deeper levels (under data splitting or independent
-permutation tests), so the conditional FWER bound holds.
+The FWER guarantee follows from Theorem B.5 in the supplement:
+predictable budget weights with data-dependent denominators. The
+weights are "predictable" because \eqn{w_\ell} depends only on the
+testing history through depth \eqn{\ell - 1}, not on depth-\eqn{\ell}
+outcomes. The union bound across depths gives FWER \eqn{\le \alpha}
+whenever \eqn{\sum w_\ell \le 1}.
+
+The \strong{switching corollary} (when \code{switching = TRUE}):
+after pruning narrows the surviving tree, if the remaining error load
+\eqn{\sum_{\ell \ge s} D_\ell \le B_s} (remaining budget), then
+\eqn{\alpha_\ell = \alpha} for all \eqn{\ell \ge s}. This works
+by setting \eqn{w_\ell = D_\ell}, so the \eqn{D_\ell} in numerator
+and denominator cancel, leaving nominal alpha.
 
 When \code{find_blocks} detects a list-valued \code{alphafn},
 it extracts these three components and calls \code{reset} at
@@ -62,8 +97,8 @@ nd <- data.frame(
   nodesize = c(500, 250, 250, 125, 125, 100, 150)
 )
 obj <- alpha_adaptive_tree_pruned(node_dat = nd, delta_hat = 0.5)
-# obj$alphafn — pass to find_blocks
-# obj$update(pruned_nd, 0.05) — recompute on surviving tree
-# obj$reset(0.05) — restore full-tree schedule
+# obj$alphafn -- pass to find_blocks
+# obj$update(pruned_nd, 0.05) -- recompute on surviving tree
+# obj$reset(0.05) -- restore full-tree schedule
 
 }

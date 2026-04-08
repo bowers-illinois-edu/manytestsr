@@ -40,8 +40,14 @@
 #' @importFrom coin oneway_test pvalue approximate exact asymptotic
 #' @importFrom parallel detectCores
 #' @export
-pOneway <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
-                    parallel = "no", ncpu = NULL) {
+pOneway <- function(
+  dat,
+  fmla = YContNorm ~ trtF | blockF,
+  simthresh = 20,
+  sims = 1000,
+  parallel = "no",
+  ncpu = NULL
+) {
   theresponse <- all.vars(fmla)[attr(terms(fmla), "response")]
   # if we get a constant outcome, then p=1.
   # no evidence against the null of no effects.
@@ -55,7 +61,12 @@ pOneway <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(
+      object,
+      nresample = sims,
+      parallel = parallel,
+      ncpus = ncpu
+    )
   }
 
   thep <- pvalue(oneway_test(fmla, data = dat, distribution = thedist))[[1]]
@@ -102,8 +113,14 @@ pOneway <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 #' @importFrom coin wilcox_test pvalue approximate exact asymptotic
 #' @importFrom parallel detectCores
 #' @export
-pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
-                    parallel = "no", ncpu = NULL) {
+pWilcox <- function(
+  dat,
+  fmla = YContNorm ~ trtF | blockF,
+  simthresh = 20,
+  sims = 1000,
+  parallel = "no",
+  ncpu = NULL
+) {
   theresponse <- all.vars(fmla)[attr(terms(fmla), "response")]
   # if we get a constant outcome, then p=1.
   # no evidence against the null of no effects.
@@ -117,7 +134,12 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(
+      object,
+      nresample = sims,
+      parallel = parallel,
+      ncpus = ncpu
+    )
   }
 
   thep <- pvalue(wilcox_test(fmla, data = dat, distribution = thedist))[[1]]
@@ -180,8 +202,15 @@ pWilcox <- function(dat, fmla = YContNorm ~ trtF | blockF, simthresh = 20, sims 
 #' print(p_val2)
 #' }
 #' @export
-pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
-                       parallel = "yes", ncpu = NULL, distfn = fast_dists_and_trans_hybrid) {
+pIndepDist <- function(
+  dat,
+  fmla = YcontNorm ~ trtF | blockF,
+  simthresh = 20,
+  sims = 1000,
+  parallel = "yes",
+  ncpu = NULL,
+  distfn = fast_dists_and_trans_hybrid
+) {
   force(distfn)
   stopifnot(inherits(dat, "data.table"))
   fmla_vars <- all.vars(fmla)
@@ -203,28 +232,53 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
   thedat <- copy(dat)
 
   ### These must match the names of the functions used in src/dists_and_trans.cpp
-  outcome_names <- c(theresponse, "mean_dist", "mean_rank_dist", "max_dist", "rankY", "tanhY")
+  outcome_names <- c(
+    theresponse,
+    "mean_dist",
+    "mean_rank_dist",
+    "max_dist",
+    "rankY",
+    "tanhY"
+  )
 
   if (length(fmla_vars) == 3) {
     theblock <- fmla_vars[[3]]
     thedat[, outcome_names[-1] := distfn(get(theresponse)), by = get(theblock)]
     # If one of the test statistics is constant, drop it.
     # https://stackoverflow.com/questions/15068981/removal-of-constant-columns-in-r
-    anyconstant_cols <- which_are_constant(thedat[, .SD, .SDcols = outcome_names], verbose = FALSE)
+    anyconstant_cols <- which_are_constant(
+      thedat[, .SD, .SDcols = outcome_names],
+      verbose = FALSE
+    )
     if (length(anyconstant_cols) > 0) {
       outcome_names <- outcome_names[-anyconstant_cols]
     }
-    newfmla_text <- paste(paste(outcome_names, collapse = "+"), "~", thetreat, "|", theblock, sep = "")
+    newfmla_text <- paste(
+      paste(outcome_names, collapse = "+"),
+      "~",
+      thetreat,
+      "|",
+      theblock,
+      sep = ""
+    )
   } else {
     theblock <- NULL
     # This next is faster than doing it in two lines
     thedat[, outcome_names[-1] := distfn(get(theresponse))]
     # If one of the test statistics is constant, drop it.
-    anyconstant_cols <- which_are_constant(thedat[, .SD, .SDcols = outcome_names], verbose = FALSE)
+    anyconstant_cols <- which_are_constant(
+      thedat[, .SD, .SDcols = outcome_names],
+      verbose = FALSE
+    )
     if (length(anyconstant_cols) > 0) {
       outcome_names <- outcome_names[-anyconstant_cols]
     }
-    newfmla_text <- paste(paste(outcome_names, collapse = "+"), "~", thetreat, sep = "")
+    newfmla_text <- paste(
+      paste(outcome_names, collapse = "+"),
+      "~",
+      thetreat,
+      sep = ""
+    )
   }
   newfmla <- as.formula(newfmla_text)
 
@@ -234,14 +288,24 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(
+      object,
+      nresample = sims,
+      parallel = parallel,
+      ncpus = ncpu
+    )
   }
 
   ## Quadratic combination is best when most/all of the test statistics move in
   ## the same direction. Gains power from combining. maxT is best when we think
   ## that perhaps only one of the set of scores will show an effect
 
-  thep <- pvalue(independence_test(newfmla, data = thedat, teststat = "quadratic", distribution = thedist))[[1]]
+  thep <- pvalue(independence_test(
+    newfmla,
+    data = thedat,
+    teststat = "quadratic",
+    distribution = thedist
+  ))[[1]]
   return(as.numeric(thep))
 }
 
@@ -274,8 +338,15 @@ pIndepDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
 #' @importFrom Rfast Rank
 #' @importFrom parallel detectCores
 #' @export
-pTestTwice <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
-                       parallel = "yes", ncpu = NULL, groups = NULL) {
+pTestTwice <- function(
+  dat,
+  fmla = YcontNorm ~ trtF | blockF,
+  simthresh = 20,
+  sims = 1000,
+  parallel = "yes",
+  ncpu = NULL,
+  groups = NULL
+) {
   fmla_vars <- all.vars(fmla)
   theresponse <- fmla_vars[attr(terms(fmla), "response")]
   thetreat <- fmla_vars[[2]]
@@ -301,20 +372,38 @@ pTestTwice <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
     thedat[, rankY := frank(get(theresponse)), by = get(theblock)]
     # If one of the test statistics is constant, drop it.
     # https://stackoverflow.com/questions/15068981/removal-of-constant-columns-in-r
-    anyconstant_cols <- which_are_constant(thedat[, .SD, .SDcols = outcome_names], verbose = FALSE)
+    anyconstant_cols <- which_are_constant(
+      thedat[, .SD, .SDcols = outcome_names],
+      verbose = FALSE
+    )
     if (length(anyconstant_cols) > 0) {
       outcome_names <- outcome_names[-anyconstant_cols]
     }
-    newfmla_text <- paste(paste(outcome_names, collapse = "+"), "~", thetreat, "|", theblock, sep = "")
+    newfmla_text <- paste(
+      paste(outcome_names, collapse = "+"),
+      "~",
+      thetreat,
+      "|",
+      theblock,
+      sep = ""
+    )
   } else {
     theblock <- NULL
     thedat[, rankY := frank(get(theresponse))]
     # If one of the test statistics is constant, drop it.
-    anyconstant_cols <- which_are_constant(thedat[, .SD, .SDcols = outcome_names], verbose = FALSE)
+    anyconstant_cols <- which_are_constant(
+      thedat[, .SD, .SDcols = outcome_names],
+      verbose = FALSE
+    )
     if (length(anyconstant_cols) > 0) {
       outcome_names <- outcome_names[-anyconstant_cols]
     }
-    newfmla_text <- paste(paste(outcome_names, collapse = "+"), "~", thetreat, sep = "")
+    newfmla_text <- paste(
+      paste(outcome_names, collapse = "+"),
+      "~",
+      thetreat,
+      sep = ""
+    )
   }
   newfmla <- as.formula(newfmla_text)
   if (is.null(simthresh) || nrow(dat) > simthresh) {
@@ -323,10 +412,20 @@ pTestTwice <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(
+      object,
+      nresample = sims,
+      parallel = parallel,
+      ncpus = ncpu
+    )
   }
 
-  thep <- pvalue(independence_test(newfmla, data = thedat, distribution = thedist, teststat = "quadratic"))[[1]]
+  thep <- pvalue(independence_test(
+    newfmla,
+    data = thedat,
+    distribution = thedist,
+    teststat = "quadratic"
+  ))[[1]]
   return(as.numeric(thep))
 }
 
@@ -344,7 +443,7 @@ pTestTwice <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
 #' based testing and by Liu and Xie (2020) on the Cauchy Combination Test and
 #' Hansen and Bowers (2008) on omnibus tests. Distance and ranks and other
 #' transformations are all calculated by block when block is supplied in the
-#' formula.
+#' formula. Any of these scores that are constant are dropped from the test.
 
 #' @param dat An object inheriting from class data.frame
 #' @param fmla  A formula  appropriate to the function. Here it should  be something like outcome~treatment|block
@@ -371,8 +470,15 @@ pTestTwice <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, si
 #' @importFrom Rfast Rank
 #' @importFrom parallel detectCores
 #' @export
-pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 20, sims = 1000,
-                            parallel = "no", ncpu = NULL, distfn = fast_dists_and_trans_nomax_hybrid) {
+pCombCauchyDist <- function(
+  dat,
+  fmla = YcontNorm ~ trtF | blockF,
+  simthresh = 20,
+  sims = 1000,
+  parallel = "no",
+  ncpu = NULL,
+  distfn = fast_dists_and_trans_nomax_hybrid
+) {
   force(distfn)
   fmla_vars <- all.vars(fmla)
   theresponse <- fmla_vars[attr(terms(fmla), "response")]
@@ -392,7 +498,13 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
 
   thedat <- copy(dat)
 
-  outcome_names <- c(theresponse, "mean_dist", "mean_rank_dist", "rankY", "tanhY")
+  outcome_names <- c(
+    theresponse,
+    "mean_dist",
+    "mean_rank_dist",
+    "rankY",
+    "tanhY"
+  )
 
   ## To enable the use of this function without a `|block` --- basically to
   ## make it easier to compare with the bottom-up approaches where we just test
@@ -403,7 +515,10 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
     thedat[, outcome_names[-1] := distfn(get(theresponse)), by = get(theblock)]
     # If one of the test statistics is constant, drop it.
     # https://stackoverflow.com/questions/15068981/removal-of-constant-columns-in-r
-    anyconstant_cols <- which_are_constant(thedat[, .SD, .SDcols = outcome_names], verbose = FALSE)
+    anyconstant_cols <- which_are_constant(
+      thedat[, .SD, .SDcols = outcome_names],
+      verbose = FALSE
+    )
     if (length(anyconstant_cols) > 0) {
       outcome_names <- outcome_names[-anyconstant_cols]
     }
@@ -411,21 +526,36 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
     the_fmlas <- lapply(outcome_names, function(ynm) {
       return(paste(ynm, "~", thetreat, "|", theblock, sep = ""))
     })
-    the_fmlas[[5]] <- paste(paste(outcome_names, collapse = "+"), "~", thetreat, "|", theblock, sep = "")
+    the_fmlas[[length(the_fmlas)]] <- paste(
+      paste(outcome_names, collapse = "+"),
+      "~",
+      thetreat,
+      "|",
+      theblock,
+      sep = ""
+    )
   } else {
     theblock <- NULL
     ### If there is no block in the formula and this is a test that will be
     ### done within each block and not aggregated across them
     thedat[, outcome_names[-1] := distfn(get(theresponse))]
     # If one of the test statistics is constant, drop it.
-    anyconstant_cols <- which_are_constant(thedat[, .SD, .SDcols = outcome_names], verbose = FALSE)
+    anyconstant_cols <- which_are_constant(
+      thedat[, .SD, .SDcols = outcome_names],
+      verbose = FALSE
+    )
     if (length(anyconstant_cols) > 0) {
       outcome_names <- outcome_names[-anyconstant_cols]
     }
     the_fmlas <- lapply(outcome_names, function(ynm) {
       return(paste(ynm, "~", thetreat, sep = ""))
     })
-    the_fmlas[[5]] <- paste(paste(outcome_names, collapse = "+"), "~", thetreat, sep = "")
+    the_fmlas[[length(the_fmlas)]] <- paste(
+      paste(outcome_names, collapse = "+"),
+      "~",
+      thetreat,
+      sep = ""
+    )
   }
 
   ## Add a combined version in case the signal is only detectable this way
@@ -436,11 +566,21 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin::approximate(object, nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(
+      object,
+      nresample = sims,
+      parallel = parallel,
+      ncpus = ncpu
+    )
   }
 
   p_vals <- sapply(the_fmlas, function(thefmla) {
-    p_tmp <- pvalue(independence_test(as.formula(thefmla), data = thedat, teststat = "quadratic", distribution = thedist))[[1]]
+    p_tmp <- pvalue(independence_test(
+      as.formula(thefmla),
+      data = thedat,
+      teststat = "quadratic",
+      distribution = thedist
+    ))[[1]]
     return(p_tmp)
   })
 
@@ -529,11 +669,16 @@ pCombCauchyDist <- function(dat, fmla = YcontNorm ~ trtF | blockF, simthresh = 2
 #'
 #' @importFrom coin independence_test pvalue approximate asymptotic
 #' @export
-pPolyRank <- function(dat, fmla = Y ~ trtF | blockF,
-                      r_vec = c(2, 6, 10),
-                      teststat = "quadratic",
-                      simthresh = 20, sims = 1000,
-                      parallel = "no", ncpu = NULL) {
+pPolyRank <- function(
+  dat,
+  fmla = Y ~ trtF | blockF,
+  r_vec = c(2, 6, 10),
+  teststat = "quadratic",
+  simthresh = 20,
+  sims = 1000,
+  parallel = "no",
+  ncpu = NULL
+) {
   stopifnot(inherits(dat, "data.frame"))
 
   fmla_vars <- all.vars(fmla)
@@ -552,26 +697,35 @@ pPolyRank <- function(dat, fmla = Y ~ trtF | blockF,
     theblock <- fmla_vars[[3]]
     for (i in seq_along(r_vec)) {
       r <- r_vec[i]
-      thedat[, (score_names[i]) := {
-        rk <- rank(get(theresponse), ties.method = "average")
-        nb <- .N
-        (rk / (nb + 1))^(r - 1)
-      }, by = get(theblock)]
+      thedat[,
+        (score_names[i]) := {
+          rk <- rank(get(theresponse), ties.method = "average")
+          nb <- .N
+          (rk / (nb + 1))^(r - 1)
+        },
+        by = get(theblock)
+      ]
     }
   } else {
     theblock <- NULL
     for (i in seq_along(r_vec)) {
       r <- r_vec[i]
-      thedat[, (score_names[i]) := {
-        rk <- rank(get(theresponse), ties.method = "average")
-        nb <- .N
-        (rk / (nb + 1))^(r - 1)
-      }]
+      thedat[
+        ,
+        (score_names[i]) := {
+          rk <- rank(get(theresponse), ties.method = "average")
+          nb <- .N
+          (rk / (nb + 1))^(r - 1)
+        }
+      ]
     }
   }
 
   # Drop constant score columns
-  anyconstant_cols <- which_are_constant(thedat[, .SD, .SDcols = score_names], verbose = FALSE)
+  anyconstant_cols <- which_are_constant(
+    thedat[, .SD, .SDcols = score_names],
+    verbose = FALSE
+  )
   if (length(anyconstant_cols) > 0) {
     score_names <- score_names[-anyconstant_cols]
   }
@@ -581,7 +735,13 @@ pPolyRank <- function(dat, fmla = Y ~ trtF | blockF,
 
   # Build formula: poly_r2 + poly_r6 + poly_r10 ~ treatment | block
   if (!is.null(theblock)) {
-    newfmla_text <- paste(paste(score_names, collapse = "+"), "~", thetreat, "|", theblock)
+    newfmla_text <- paste(
+      paste(score_names, collapse = "+"),
+      "~",
+      thetreat,
+      "|",
+      theblock
+    )
   } else {
     newfmla_text <- paste(paste(score_names, collapse = "+"), "~", thetreat)
   }
@@ -593,11 +753,19 @@ pPolyRank <- function(dat, fmla = Y ~ trtF | blockF,
     if (parallel == "no") {
       ncpu <- 1
     }
-    thedist <- coin::approximate(nresample = sims, parallel = parallel, ncpus = ncpu)
+    thedist <- coin::approximate(
+      nresample = sims,
+      parallel = parallel,
+      ncpus = ncpu
+    )
   }
 
-  thep <- pvalue(independence_test(newfmla, data = thedat,
-    teststat = teststat, distribution = thedist))[[1]]
+  thep <- pvalue(independence_test(
+    newfmla,
+    data = thedat,
+    teststat = teststat,
+    distribution = thedist
+  ))[[1]]
   return(as.numeric(thep))
 }
 
@@ -677,13 +845,17 @@ pPolyRank <- function(dat, fmla = Y ~ trtF | blockF,
 #' }
 #'
 #' @export
-pCombStephenson <- function(dat, fmla = Y ~ trtF | blockF,
-                            k = NULL, c = 0,
-                            r_vec = c(2, 6, 10),
-                            weight_name = "asymp.opt",
-                            null_max = 10^5,
-                            opt_method = "ILP_auto",
-                            comb_method = 1) {
+pCombStephenson <- function(
+  dat,
+  fmla = Y ~ trtF | blockF,
+  k = NULL,
+  c = 0,
+  r_vec = c(2, 6, 10),
+  weight_name = "asymp.opt",
+  null_max = 10^5,
+  opt_method = "ILP_auto",
+  comb_method = 1
+) {
   if (!requireNamespace("CMRSS", quietly = TRUE)) {
     stop(
       "Package 'CMRSS' is required for this function. ",
@@ -698,8 +870,11 @@ pCombStephenson <- function(dat, fmla = Y ~ trtF | blockF,
 
   # Block is required — the combined Stephenson test aggregates across strata
   if (length(fmla_vars) < 3) {
-    stop("pCombStephenson requires a block variable in the formula ",
-         "(e.g., Y ~ trt | block).", call. = FALSE)
+    stop(
+      "pCombStephenson requires a block variable in the formula ",
+      "(e.g., Y ~ trt | block).",
+      call. = FALSE
+    )
   }
   theblock <- fmla_vars[[3]]
 
@@ -726,9 +901,14 @@ pCombStephenson <- function(dat, fmla = Y ~ trtF | blockF,
   }
   if (k <= n - m) {
     warning(
-      "k = ", k, " is at most n - m = ", n - m,
+      "k = ",
+      k,
+      " is at most n - m = ",
+      n - m,
       ". The test statistic will be degenerate (all treated units ",
-      "receive xi = Inf). Set k > ", n - m, " for a non-trivial test.",
+      "receive xi = Inf). Set k > ",
+      n - m,
+      " for a non-trivial test.",
       call. = FALSE
     )
   }
@@ -743,7 +923,10 @@ pCombStephenson <- function(dat, fmla = Y ~ trtF | blockF,
   })
 
   result <- CMRSS::pval_comb_block(
-    Z = Z, Y = Y, k = k, c = c,
+    Z = Z,
+    Y = Y,
+    k = k,
+    c = c,
     block = block,
     methods.list.all = methods.list.all,
     weight.name = weight_name,
