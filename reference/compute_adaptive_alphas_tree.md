@@ -112,6 +112,7 @@ nd <- data.frame(
   nodesize = c(500, 250, 250, 125, 125, 100, 150)
 )
 compute_adaptive_alphas_tree(node_dat = nd, delta_hat = 0.5)
+#> Warning: Tree is irregular and total error load exceeds 1: per-depth telescoping (alpha_ell = alpha / G_ell) may under-protect FWER on irregular trees. Consider passing budget_weights = 'equal' or 'proportional' for the budget-weighted FWER guarantee.
 #>      1      2      3 
 #> 0.0500 0.0250 0.0125 
 #> attr(,"error_load")

@@ -1,183 +1,260 @@
 # Handoff Summary
 
-**Date:** 2026-03-01 **Branch:** `main` **Last commit:** `64af89e` —
-Update HANDOFF.md for current session **Package version:** `0.0.4.1003`
-(uncommitted — all changes pass
-[`devtools::check()`](https://devtools.r-lib.org/reference/check.html)
-with 0 errors, 0 warnings, 0 notes)
+**Date:** 2026-05-18 **Branch:** `main` (1 commit ahead of
+`origin/main`, not pushed) **Last commit:** `cb3604e` — Fix
+pCombStephenson for CMRSS 0.2.6+ and switch deps to pak **Package
+version:** `0.0.4.1005` **Working tree:** Pre-existing alpha-adaptive
+changes still uncommitted (see section 2) **`make check` status:** **0
+errors, 0 warnings, 0 notes** (clean, ~1m 37s, vignettes built)
 
 ------------------------------------------------------------------------
 
 ## 1. Key Decisions Made
 
-### Dependency lightening (REFACTOR_PLAN.md Steps 1–4)
+### Switched Makefile dependency install from devtools to pak
 
-- **8 packages moved from Imports to Suggests:** `stringi`, `tidygraph`,
-  `ggraph`, `digest`, `ggplot2`, `Ckmeans.1d.dp`, `onlineFDR`, `hommel`.
-  Each is now guarded with
-  [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html) and called
-  via `pkg::fn()`.
-- **`ClusterR` removed entirely.** The code that called `KMeans_rcpp`
-  was already commented out; only the `@importFrom` tag remained.
-- **`dataPreparation` replaced** with an internal `which_are_constant()`
-  helper in `R/utils.R`. A one-liner:
-  `which(vapply(df, function(x) length(unique(x)) < 2, logical(1)))`.
-  Returns named integer indices. The only difference from
-  [`dataPreparation::which_are_constant()`](https://rdrr.io/pkg/dataPreparation/man/which_are_constant.html)
-  is that ours returns named indices (via
-  [`which()`](https://rdrr.io/r/base/which.html)); tests use
-  [`unname()`](https://rdrr.io/r/base/unname.html) for cross-validation.
-- **Pipe and re-export breakage.** Removing `@import ggplot2` and
-  `@import tidygraph` broke re-exports of `%>%`,
-  [`filter()`](https://rdrr.io/r/stats/filter.html), `mutate()`, and
-  [`grid::unit()`](https://rdrr.io/r/grid/unit.html). Fixed by replacing
-  pipe chains with sequential explicit calls
-  (`tidygraph::activate(g, "nodes"); g <- dplyr::mutate(g, ...)`) and
-  prefixing [`grid::unit()`](https://rdrr.io/r/grid/unit.html).
+User asked whether pak is the new recommended install approach.
+Confirmed: pak is developed at Posit by Gabor Csardi — complement, not
+competitor, to devtools. *R Packages* 2nd ed. teaches pak first for
+installation. pak’s advantages here: parallel downloads, native handling
+of `Remotes:` (the three GitHub deps in this package), better
+system-requirement messaging, faster solver. Fully compatible with
+Makefile workflows — pak is just a function call replacing
+[`devtools::install_deps`](https://devtools.r-lib.org/reference/install_deps.html).
 
-### New functions: pPolyRank and pCombStephenson
+User chose: pak for the `dependencies` target; devtools stays for
+`check`, `test`, `document`, `build`.
 
-- **[`pPolyRank()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pPolyRank.md)**
-  — Tests Fisher’s sharp null using multiple polynomial rank scores
-  simultaneously via
-  [`coin::independence_test()`](https://rdrr.io/pkg/coin/man/IndependenceTest.html).
-  Computes within-block polynomial scores `(rank(Y) / (n_b + 1))^(r-1)`
-  for each r in `r_vec` (default 2, 6, 10), passes them as a
-  multivariate response. No new dependencies (uses existing `coin`
-  import). Fast (~0.02s). Follows the exact same pattern as
-  `pIndepDist`: builds `score1 + score2 + score3 ~ treatment | block`
-  formula, uses `teststat = "quadratic"` by default.
+### Made `pCombStephenson` compatible with CMRSS 0.2.6+
 
-- **[`pCombStephenson()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pCombStephenson.md)**
-  — Wraps
-  [`CMRSS::pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.html)
-  for quantile-of-effects hypotheses. Default `k = n, c = 0` tests the
-  sharp null (same as `pPolyRank` but via permutation-max combination,
-  ~0.5s). For `k < n`, tests whether the k-th largest individual effect
-  exceeds `c`. CMRSS is a Suggests dependency from GitHub.
+Diagnosed 6 test failures in `test_stephenson.R` as a CMRSS upstream API
+change. Confirmed by reading
+[`CMRSS::pval_comb_block`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.html)
+source. Two distinct changes upstream:
 
-### CMRSS k parameter semantics (critical for future work)
+1.  **CMRSS internal `k` is now constrained to 1..m (not 1..n).**
+    Source: `p <- m - k; if (k < 1 || k > m) stop(...)`. The internal LP
+    coverage constraint is `p = m - k` where `p` is the number of
+    treated units whose adjusted outcomes get set to Inf.
+2.  **CMRSS now always calls `solve_optimization()`** even for the
+    sharp-null path. Requires `highs` (open-source) or `gurobi`.
 
-The `k` parameter in CMRSS indexes the k-th *largest* effect τ\_(k)
-across all N units. Internally, the top `min(m, n-k)` treated units’
-adjusted outcomes are set to infinity. **The test is degenerate when
-`k ≤ n - m`** (all treated units get infinity → test statistic is
-constant across permutations → p = 1 always). The wrapper warns on
-degenerate k. At `k = n`, no units get infinity and the test reduces to
-a standard stratified rank-sum.
+Semantic translation table:
 
-### pPolyRank as the preferred sharp-null test
+| Concept | Old CMRSS (paper notation) | New CMRSS 0.2.6+ |
+|----|----|----|
+| Rank index range | k in 1..n | k in 1..m |
+| Number of treated set to Inf | min(m, n - k) | m - k |
+| Sharp null (no Inf) | k = n | k = m |
+| Degenerate (all Inf, p = 1) | k \<= n - m | unreachable (k \>= 1) |
+| Mapping new \<- old | — | `cmrss_k = k - (n - m)` |
 
-For the sharp null of no effects (which is what the tree-testing
-procedure needs), `pPolyRank` is preferred over `pCombStephenson`
-because: - 25x faster (asymptotic multivariate normal vs permutation
-null) - No extra dependency (uses `coin`, already in Imports) - Produces
-the same rank-sum statistics with polynomial scores - The “combined”
-benefit (adaptive across r values) comes from coin’s multivariate test
-infrastructure, which accounts for the correlation structure among score
-functions via the joint covariance matrix
+User chose: keep paper-notation `k` in 1..n at the wrapper’s user-facing
+API (preserves existing call sites and paper conventions), translate
+internally to `cmrss_k = k - (n - m)` before calling CMRSS. The
+degeneracy path (`k <= n - m`) now warns and returns `p = 1` *without*
+calling CMRSS, avoiding the LP-solver requirement on that branch.
+Installed `highs` and added to Suggests.
 
-`pCombStephenson` remains valuable for quantile-of-effects hypotheses (k
-\< n), where the CMRSS optimization over effect assignments is the core
-contribution.
+### Vignettes on by default
+
+Quarto CLI is installed locally (`/usr/local/bin/quarto`, v1.9.37), so
+the default `make check` builds vignettes. Added `make check-fast` as an
+escape hatch (skips vignettes and manual). Added `make check-cran` for
+stricter pre-submission checking.
+
+### Versioning and commit scope
+
+This session’s work claimed the existing `0.0.4.1005` version bump
+(already in the working tree from the prior uncommitted session) and
+added a NEWS entry for 1005 covering the CMRSS-compat fix and `highs`
+dependency. The alpha-adaptive uncommitted work, when it eventually gets
+committed, will need to bump to `0.0.4.1006` and add its own NEWS
+section.
+
+Commit `cb3604e` staged only this session’s files. The pre-existing
+alpha-adaptive working-tree changes were left untouched.
 
 ## 2. Files Changed and Why
 
-### New files
+### Committed this session (`cb3604e`)
 
-| File                               | Purpose                                                                                                                                        |
-|------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
-| `R/utils.R`                        | Internal `which_are_constant()` replacing `dataPreparation`                                                                                    |
-| `tests/testthat/test_utils.R`      | 6 tests for `which_are_constant()`                                                                                                             |
-| `tests/testthat/test_stephenson.R` | 8 tests for [`pCombStephenson()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pCombStephenson.md) (skip if CMRSS not installed) |
-| `tests/testthat/test_polyrank.R`   | 7 tests for [`pPolyRank()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pPolyRank.md)                                           |
-| `man/pCombStephenson.Rd`           | Generated by roxygen2                                                                                                                          |
-| `man/pPolyRank.Rd`                 | Generated by roxygen2                                                                                                                          |
+| File | What changed |
+|----|----|
+| `Makefile` | \(1\) Rewrote `dependencies` target to use `pak::pkg_install('.', dependencies = TRUE, upgrade = FALSE, ask = FALSE)`. (2) Added `check-fast` target (`vignettes = FALSE, manual = FALSE, --no-build-vignettes --no-manual`). (3) Added `check-cran` target (`cran = TRUE, remote = TRUE, manual = TRUE`). (4) Added header comment noting first-time setup needs `make dependencies`. Other targets (`interactive`, `test`, `check`, `document`, `build`, `clean`, `spell-check-DESCRIPTION`) unchanged. |
+| `R/pval_fns.R` | Patched [`pCombStephenson()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pCombStephenson.md). (a) Added `if (k > n) stop(...)` validation. (b) Degenerate path (`k <= n - m`) now warns *and returns `p = 1`* without calling CMRSS. (c) Added the translation `cmrss_k <- k - (n - m)` before the CMRSS call, and passes `cmrss_k` instead of `k`. (d) Updated `@details` text to describe the new internal mapping and the `highs`/`gurobi` LP-solver requirement. Default `k = n` (sharp null) unchanged at the user-facing API. |
+| `tests/testthat/test_stephenson.R` | Added `skip_if_not_installed("highs")` to the 4 tests that exercise the LP path. The “warns on degenerate k” test is unchanged because the wrapper now short-circuits before CMRSS. Updated the “matches direct CMRSS call” test to compute `cmrss_k = m` instead of `k = n` for the direct call. |
+| `DESCRIPTION` | Added `highs` to `Suggests:` between `CMRSS` and `stringi`. Version `0.0.4.1005` was already bumped from `1004` in the pre-existing working tree; this commit claims that bump for the CMRSS-compat work. |
+| `NEWS.md` | Added `# manytestsr 0.0.4.1005` section above the existing `1003` section. Covers the CMRSS 0.2.6+ compatibility bug fix and the new `highs` Suggests. |
+| `HANDOFF.md` | This file. |
+| `MEMORY.md` (auto-memory, not in repo) | Updated `pCombStephenson` description with new CMRSS API and `highs` requirement. |
 
-### Modified files
+### Still uncommitted (pre-existing, NOT touched this session)
 
-| File                                       | What changed                                                                                                                                                                                                                                                                                                                                                                 |
-|--------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `DESCRIPTION`                              | Version 0.0.4.1002 → 0.0.4.1003. Imports reduced to `Rcpp`, `Rfast`. Suggests gained `CMRSS`, `stringi`, `tidygraph`, `ggraph`, `digest`, `ggplot2`, `Ckmeans.1d.dp`, `onlineFDR`, `dataPreparation`, `hommel`. Remotes gained `bowers-illinois-edu/CMRSS`.                                                                                                                  |
-| `NAMESPACE`                                | Regenerated. Reduced from ~125 to ~93 lines. Added `export(pCombStephenson)`, `export(pPolyRank)`. Removed all `importFrom` entries for moved packages.                                                                                                                                                                                                                      |
-| `NEWS.md`                                  | Added 0.0.4.1003 entry documenting both new functions and dependency changes.                                                                                                                                                                                                                                                                                                |
-| `.Rbuildignore`                            | Added `REFACTOR_PLAN\.md`                                                                                                                                                                                                                                                                                                                                                    |
-| `R/pval_fns.R`                             | Removed 3 `@importFrom dataPreparation` tags, replaced 6 calls with internal helper. Added [`pPolyRank()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pPolyRank.md) (~100 lines) and [`pCombStephenson()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pCombStephenson.md) (~90 lines).                                                       |
-| `R/test_statistics.R`                      | Replaced 1 [`dataPreparation::which_are_constant()`](https://rdrr.io/pkg/dataPreparation/man/which_are_constant.html) call.                                                                                                                                                                                                                                                  |
-| `R/splitting_fns.R`                        | Removed `@importFrom ClusterR`, `@importFrom Ckmeans.1d.dp`, `@importFrom stringi`. Added [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html) guards. Prefixed all calls with `pkg::`.                                                                                                                                                                               |
-| `R/find_blocks.R`                          | Removed `@importFrom stringi`, `@importFrom digest`. Added [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html) guards. Fixed dead `[KMeans_rcpp()]` doc link → `[Ckmeans.1d.dp::Ckmeans.1d.dp()]`.                                                                                                                                                                   |
-| `R/reporting.R`                            | Removed `@import ggplot2`, `@import ggraph`, `@import tidygraph`, `@importFrom stringi`. Added [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html) guards. Replaced all `%>%` pipes with sequential explicit calls. Replaced `unit()` with [`grid::unit()`](https://rdrr.io/r/grid/unit.html). Prefixed all calls with `pkg::`. Most complex changes in the session. |
-| `R/alpha_fns.R`                            | Removed 3 `@importFrom onlineFDR`. Added [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html) guards. Prefixed `Alpha_investing`, `SAFFRON`, `ADDIS` with `onlineFDR::`.                                                                                                                                                                                              |
-| `R/p_adjustment.R`                         | Removed `@importFrom hommel`. Added [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html) guard. Prefixed `hommel()` with `hommel::`.                                                                                                                                                                                                                                  |
-| `R/design_sensitivity.R`                   | Removed `@importFrom ggplot2`. Added [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html) guard. Prefixed all ggplot2 calls.                                                                                                                                                                                                                                          |
-| `R/intersection_union_tests.R`             | Removed `@importFrom ggplot2`. Added [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html) guard. Prefixed all ggplot2 calls.                                                                                                                                                                                                                                          |
-| `man/find_blocks.Rd`                       | Regenerated (doc link fix).                                                                                                                                                                                                                                                                                                                                                  |
-| `tests/testthat/test_adaptations.R`        | Line 724: `stri_sub()` → [`substr()`](https://rdrr.io/r/base/substr.html) (stringi no longer imported in NAMESPACE).                                                                                                                                                                                                                                                         |
-| `tests/testthat/test_reporting_plotting.R` | Lines 117–128, 171–182: Replaced bare `activate()` and `%>%` with [`tidygraph::activate()`](https://tidygraph.data-imaginist.com/reference/activate.html) explicit calls.                                                                                                                                                                                                    |
+These were modified/untracked before this session began (since the
+2026-04-08 handoff, which incorrectly claimed the tree was clean). Their
+content and intent are not documented anywhere. **The next session
+should read these diffs and the two new test files to understand intent
+before committing.**
+
+    M R/alpha_adaptive.R
+    M man/alpha_adaptive.Rd
+    M man/alpha_adaptive_tree_pruned.Rd
+    M man/compute_adaptive_alphas.Rd
+    M tests/testthat/test_alpha_adaptive.R
+    M tests/testthat/test_alpha_adaptive_pruned.R
+    M tests/testthat/test_alpha_adaptive_tree.R
+    ?? tests/testthat/test_irregular_tree_warning.R
+    ?? tests/testthat/test_weak_fwer_global_null.R
+
+All of these pass `make check` cleanly (verified after `cb3604e`), so
+the prior work is at least internally consistent. But the intent is
+undocumented and they have not been committed.
+
+### Recent commits
+
+| Commit | What |
+|----|----|
+| `cb3604e` | **This session.** Fix `pCombStephenson` for CMRSS 0.2.6+ and switch deps to pak. |
+| `3463e0c` | Added `test_budget_weights.R` (18 tests) and `test_switching_corollary.R` (5 tests) |
+| `1abff53` | Extended `R/alpha_adaptive.R` and `R/pval_fns.R` with budget-weight and switching corollary support |
+| `9abeb8e` | Dependency lightening, `pPolyRank`, `pCombStephenson` |
 
 ## 3. Current Blockers or Open Questions
 
-- **No blockers.** All changes pass
-  [`devtools::check()`](https://devtools.r-lib.org/reference/check.html)
-  with 0/0/0. Changes are uncommitted.
-- **Open question: Should `pPolyRank` be the default `pfn` in
+### Resolved this session
+
+- `make check` failure due to missing `Rfast`, `RcppDist`, and Suggests
+  — fixed by `make dependencies` (pak).
+- `make check` failure due to CMRSS API change — fixed by translation in
+  `pCombStephenson` (commit `cb3604e`).
+- LP-solver missing — installed `highs` 1.12.0-3 and added to Suggests.
+
+### Still open
+
+- **Uncommitted `alpha_adaptive.R` work** (see section 2). Decide
+  whether to commit, revise, or revert. Two new untracked tests describe
+  their intent in the filenames (`test_irregular_tree_warning.R`,
+  `test_weak_fwer_global_null.R`) but are not mentioned in any prior
+  handoff.
+- **Push `cb3604e` to `origin/main`?** Currently 1 commit ahead,
+  unpushed.
+- **Roxygen-version mismatch.** `make check` no longer warns (clean),
+  but `DESCRIPTION` declares `RoxygenNote: 7.3.3` while installed
+  roxygen2 is 8.0.0. If `make document` is ever re-run, it will bump
+  `RoxygenNote` and regenerate the three modified `.Rd` files. Don’t run
+  `make document` until the uncommitted `alpha_adaptive.R` changes are
+  reviewed — regen would obscure deliberate edits.
+- **`pPolyRank` as default `pfn` in
   [`find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)?**
-  Currently
-  [`find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)
-  defaults to `pfn = pIndepDist`. The user may want to try
-  `pfn = pPolyRank` for the tree search. This is a user decision, not a
-  code issue.
-- **Open question: Speed of `pCombStephenson` inside
-  [`find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md).**
-  If `pCombStephenson` is used as `pfn` inside the tree search (hundreds
-  of calls), the ~0.5s per call adds up. `pPolyRank` at ~0.02s per call
-  is 25x faster for the sharp null. For quantile-of-effects hypotheses,
-  there’s no fast alternative yet.
+  Currently `pIndepDist`. User decision, inherited from prior handoff.
+- **`pCombStephenson` speed in tree search.** ~0.5s per call;
+  potentially a bottleneck for large trees. No fast alternative for
+  quantile-of-effects hypotheses (`k < n`) yet. Inherited.
+- **`REFACTOR_PLAN.md` cleanup.** Still in repo root
+  (`.Rbuildignore`-ed). Inherited.
 
 ## 4. Important Context to Preserve
 
-### CMRSS k parameter (critical footgun)
+### CMRSS 0.2.6+ k semantics (supersedes any older “footgun” note)
 
-The `k` parameter in
-[`CMRSS::pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.html)
-indexes the k-th *largest* effect out of all N units. The test is
-**degenerate** when `k ≤ n - m` because all treated units receive
-`xi = Inf` internally, making the test statistic constant across
-permutations (p = 1 always). The wrapper warns on this. At `k = n`, no
-units get infinity and the test is a standard rank-sum.
+The user-facing `k` argument of `pCombStephenson` is paper-notation
+(1..n, indexing the rank of `tau` among all units). The CMRSS internal
+argument is now 1..m where `m = sum(Z)`. The wrapper computes
+`cmrss_k = k - (n - m)` before calling CMRSS. The hypothesis being
+tested is unchanged; only the parameterization moved.
 
-### Pipe removal pattern
+Concrete numerics with `idat` (n = 1000, m = 500):
 
-When `@import tidygraph` / `@import ggplot2` provided `%>%`, removing
-those imports required replacing all pipe chains in `R/reporting.R` with
-sequential explicit calls. The pattern used:
+- Sharp null: user passes `k = 1000` (or omits) → `cmrss_k = 500 = m` →
+  no treated unit gets Inf → standard stratified rank-sum.
+- Degenerate: user passes any `k <= 500` → wrapper warns, returns
+  `p = 1`, never calls CMRSS.
+- Quantile-of-effects (`k = 501..999`) → `cmrss_k = 1..499` → LP solves
+  the optimal set of `m - cmrss_k` treated units to mask.
 
-``` r
-# Before:
-res_graph %>% activate(nodes) %>% mutate(x = 1) %>% filter(y > 0)
+### LP solver is now mandatory for non-degenerate CMRSS calls
 
-# After:
-res_graph <- tidygraph::activate(res_graph, "nodes")
-res_graph <- dplyr::mutate(res_graph, x = 1)
-res_graph <- dplyr::filter(res_graph, y > 0)
+CMRSS 0.2.6+ calls `solve_optimization()` unconditionally inside
+`pval_comb_block`, even when `p = 0`. So *every* non-degenerate call now
+needs `highs` or `gurobi`. The 4 CMRSS tests that hit the LP path are
+guarded with `skip_if_not_installed("highs")`.
+
+### Makefile structure
+
+The Makefile uses a pattern where targets set `FUNC` (and optionally
+`DEVTOOLSARG`) and depend on `.devtools`, which executes
+`devtools:::$(FUNC)($(DEVTOOLSARG))`. Adding a new devtools-backed
+target:
+
+``` makefile
+.PHONY: newtarget
+newtarget: FUNC=devtools_function_name
+newtarget: DEVTOOLSARG=arg1 = 'value', arg2 = TRUE
+test check check-fast check-cran document build newtarget: .devtools
 ```
 
-The same pattern was applied in
-`tests/testthat/test_reporting_plotting.R`.
+The `dependencies` target is the lone outlier — it runs pak directly
+rather than routing through `.devtools`.
 
-### Polynomial rank scores
+### Quarto vignettes
 
-The scores used by both `pPolyRank` and `pCombStephenson` are
-`(rank(Y) / (n + 1))^(r-1)`: - r = 2: nearly linear in rank
-(Wilcoxon-like, sensitive to location shifts) - r = 6, 10: increasingly
-emphasize high ranks (sensitive to upper-tail effects)
+`DESCRIPTION` declares `VignetteBuilder: quarto`. The Quarto CLI is at
+`/usr/local/bin/quarto` (v1.9.37). Sources in `vignettes/`:
+`getting-started.qmd`, `advanced-methodologies.qmd`,
+`hierarchical-testing-workflow.qmd`. On a machine without Quarto, use
+`make check-fast`.
 
-### Test data outcomes
+### Test data
 
-`make_test_data.R` creates three outcomes: - `Y`:
-heterogeneous/canceling effects (positive in some blocks, negative in
-others) - `Yhomog`: strong uniform positive effects across all blocks -
-`Ynull`: no treatment effects
+`make_test_data.R` creates `idat` with `n = 1000`, `m = 500`, and three
+outcomes:
+
+- `Y`: heterogeneous/canceling effects (positive in some blocks,
+  negative in others)
+- `Yhomog`: strong uniform positive effects across all blocks
+- `Ynull`: no treatment effects
+
+### Prior-session context (preserved)
+
+#### Dependency lightening (v0.0.4.1003)
+
+Eight packages moved from Imports to Suggests, guarded with
+[`requireNamespace()`](https://rdrr.io/r/base/ns-load.html). `ClusterR`
+removed entirely. `dataPreparation` replaced with internal
+`which_are_constant()` in `R/utils.R`. Imports is now only `Rcpp`,
+`Rfast`. Suggests now also includes `CMRSS` and (as of `cb3604e`)
+`highs`.
+
+#### Polynomial rank functions
+
+- [`pPolyRank()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pPolyRank.md):
+  [`coin::independence_test()`](https://rdrr.io/pkg/coin/man/IndependenceTest.html)
+  with multivariate polynomial rank scores (r=2, 6, 10). Fast (~0.02s).
+  Tests sharp null. Follows `pIndepDist` pattern. 25x faster than
+  `pCombStephenson`.
+- [`pCombStephenson()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pCombStephenson.md):
+  wraps
+  [`CMRSS::pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.html)
+  with the `cmrss_k = k - (n - m)` translation. ~0.5s per call.
+- Polynomial scores: `(rank(Y) / (n + 1))^(r - 1)`. r = 2 is
+  Wilcoxon-like; larger r emphasizes upper-tail effects.
+
+#### Budget weights and switching corollary
+
+`R/alpha_adaptive.R` supports budget-weighted alpha allocation
+(`budget_weights` parameter in `compute_adaptive_alphas_tree` and
+`alpha_adaptive_tree_pruned`) and a switching corollary
+(`switching = TRUE` in `alpha_adaptive_tree_pruned`) that reverts to
+nominal alpha when the pruned error load fits within the remaining
+budget. Tests in `test_budget_weights.R` and
+`test_switching_corollary.R`.
+
+#### prune_tree infinite-loop pattern
+
+The `prune_tree()` helper in `tests/testthat/test_switching_corollary.R`
+had a bug where descendants were re-discovered every iteration. Fixed by
+adding `& !(node_dat$nodenum %in% to_remove)`. Test-only helper.
 
 ### Development workflow (CLAUDE_CODING.md)
 
@@ -187,36 +264,45 @@ pause for review.
 
 ## 5. What’s Done vs. What Remains
 
-### Done
+### Done this session
 
-- All 11 steps of REFACTOR_PLAN.md implemented
-- `which_are_constant()` internal helper created and tested
-- 8 packages moved from Imports to Suggests with
-  [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html) guards
-- `ClusterR` removed, `dataPreparation` replaced
-- [`pCombStephenson()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pCombStephenson.md)
-  wrapper created with correct `k = n` default for sharp null
-- [`pPolyRank()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pPolyRank.md)
-  created as fast coin-based alternative using polynomial rank scores
-- Tests for all new functions (test_utils.R, test_stephenson.R,
-  test_polyrank.R)
-- All existing tests fixed for removed imports (pipes, activate,
-  stri_sub, unit)
-- Version bumped to 0.0.4.1003, NEWS.md updated
-- [`devtools::check()`](https://devtools.r-lib.org/reference/check.html)
-  passes with 0 errors, 0 warnings, 0 notes
-- REFACTOR_PLAN.md added to .Rbuildignore
+- Switched `make dependencies` to pak via
+  `pak::pkg_install('.', dependencies = TRUE, upgrade = FALSE, ask = FALSE)`.
+- Added `make check-fast` and `make check-cran` targets.
+- Ran `make dependencies` end-to-end and installed all CRAN deps, the
+  three GitHub Remotes (`dsrobertson/onlineFDR`,
+  `bowers-illinois-edu/TreeTestSim`, `bowers-illinois-edu/CMRSS`), and
+  `Rfast`/`RcppDist`.
+- Diagnosed 6 test failures in `test_stephenson.R` as a CMRSS 0.2.6+ API
+  change. Confirmed by reading CMRSS source.
+- Patched `pCombStephenson` with `cmrss_k = k - (n - m)` translation,
+  validation, and short-circuit return for degenerate `k`.
+- Updated `pCombStephenson` docstring.
+- Updated `test_stephenson.R` direct-CMRSS comparison and added
+  `skip_if_not_installed("highs")` guards.
+- Installed `highs` 1.12.0-3 (open-source LP solver) via pak.
+- Added `highs` to `DESCRIPTION` Suggests.
+- Added `# manytestsr 0.0.4.1005` section to `NEWS.md`.
+- Updated `MEMORY.md` `pCombStephenson` description.
+- Committed all session changes as `cb3604e`. Pre-existing
+  alpha-adaptive work was left uncommitted.
+- Verified `make check` passes clean: **0 errors, 0 warnings, 0 notes,
+  ~1m 37s, vignettes built, 920 + 10 tests passing, 10 expected skips.**
 
-### Remains (not started)
+### Remains
 
-- **Commit the changes.** All work is uncommitted. The user has not yet
-  requested a commit.
-- **Consider whether `pPolyRank` should be integrated into
-  [`find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)
-  as a `pfn` option** or documented as such in the vignette.
-- **REFACTOR_PLAN.md cleanup.** The plan file is still in the repo root
-  (ignored by .Rbuildignore). Could be deleted or moved once the user
-  confirms the refactor is complete.
-- **Potential future work:** A coin-based fast alternative for
-  quantile-of-effects hypotheses (k \< n) if `pCombStephenson` speed
-  becomes a bottleneck in tree search.
+1.  **Decide what to do about the uncommitted `alpha_adaptive.R` changes
+    and the two untracked test files.** Read the diffs first; the prior
+    handoff incorrectly claimed the tree was clean, so the intent of
+    these changes is undocumented. They pass `make check`, but that
+    doesn’t tell us whether they reflect the user’s final intent.
+2.  **Push `cb3604e` to `origin/main`** if and when ready.
+3.  **Consider running `make document`** once the alpha-adaptive review
+    is done, to sync `RoxygenNote:` and any stale `.Rd` files. Don’t do
+    this before reviewing the uncommitted `.Rd` changes.
+4.  **Decide on `pPolyRank` as default `pfn`** in
+    [`find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md).
+5.  **Delete `REFACTOR_PLAN.md`** if the refactor is confirmed complete.
+6.  **Optional: address `pCombStephenson` speed** as tree-search
+    bottleneck (no concrete plan yet; would need a fast alternative for
+    quantile-of-effects hypotheses).

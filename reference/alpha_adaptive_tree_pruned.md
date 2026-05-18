@@ -45,9 +45,15 @@ alpha_adaptive_tree_pruned(
 
   Controls depth-wise budget allocation. Accepts the same values as
   [`compute_adaptive_alphas_tree`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_adaptive_alphas_tree.md),
-  plus `"remaining"`: a sequential spending process where a fraction
-  `spending_fraction` of the remaining budget is spent at each depth.
-  See Details.
+  plus `"remaining"`: a sequential spending process where a fixed
+  fraction `spending_fraction` of the remaining budget is spent at each
+  depth. The spending fraction is set in advance, so the resulting
+  weights \\w\_\ell\\ depend only on the testing history through depth
+  \\\ell - 1\\ — they are predictable in the sense required by the
+  budget-weighted FWER theorem with predictable denominators (Theorem
+  B.5 in the supplement). This is the theoretical justification for the
+  `"remaining"` mode itself, distinct from the switching corollary
+  controlled by the `switching` argument below.
 
 - budget_total:
 
@@ -64,9 +70,10 @@ alpha_adaptive_tree_pruned(
 - switching:
 
   Logical (default `FALSE`). When `TRUE`, implements the switching
-  corollary (Corollary B.1): after each update, if the remaining pruned
-  error load fits within the remaining budget, all deeper depths revert
-  to nominal alpha.
+  corollary: after each update, if the remaining pruned error load fits
+  within the remaining budget, all deeper depths revert to nominal
+  alpha. This is a separate FWER guarantee from the predictable-weights
+  mechanism that justifies `"remaining"` mode.
 
 ## Value
 

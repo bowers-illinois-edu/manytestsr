@@ -23,6 +23,7 @@ clustered/blocked experimental units
 ### Load Package and Data
 
 ``` r
+
 library(manytestsr)
 library(data.table)
 library(dplyr)
@@ -51,6 +52,7 @@ print(paste("Data:", nrow(idat), "individuals in", nrow(bdat), "blocks"))
 ### Run Hierarchical Testing
 
 ``` r
+
 # Basic hierarchical testing
 results <- find_blocks(
   idat = idat,                    # Individual-level data
@@ -71,6 +73,7 @@ print(paste("Testing created", nrow(results$node_dat), "nodes in the tree"))
 ### Find Significant Effects
 
 ``` r
+
 # Identify blocks with significant treatment effects
 detections <- report_detections(results$bdat, fwer = TRUE, alpha = 0.05)
 
@@ -99,6 +102,7 @@ if(sum(detections$hit, na.rm = TRUE) > 0) {
 Choose how to divide blocks at each step:
 
 ``` r
+
 # Cluster-based splitting (most common)
 splitCluster      # Groups similar blocks using k-means
 
@@ -117,6 +121,7 @@ splitEqualApprox  # Balances total size/weight across groups
 Choose the statistical test:
 
 ``` r
+
 pOneway       # T-tests (assumes normality)
 pIndepDist    # Distance-based tests (robust, recommended)
 pWilcox       # Wilcoxon rank-sum tests (ordinal outcomes)
@@ -139,6 +144,7 @@ alphafn = alpha_investing, thealpha = 0.05, thew0 = 0.049
 ### Approach 1: Robust Distance-Based Testing
 
 ``` r
+
 results_robust <- find_blocks(
   idat = idat,
   bdat = bdat,
@@ -158,6 +164,7 @@ cat("Robust approach detections:", sum(robust_detections$hit, na.rm = TRUE), "\n
 ### Approach 2: Sequential FDR Control
 
 ``` r
+
 results_fdr <- find_blocks(
   idat = idat,
   bdat = bdat, 
@@ -182,6 +189,7 @@ cat("FDR approach detections:", sum(fdr_detections$hit, na.rm = TRUE), "\n")
 ### Tree Structure
 
 ``` r
+
 library(ggraph)
 library(ggplot2)
 
@@ -200,6 +208,7 @@ tree_plot +
 ### Results Summary
 
 ``` r
+
 # Create summary table
 summary_table <- tree_data$test_summary
 if(!is.null(summary_table) && is.data.frame(summary_table) && nrow(summary_table) > 0) {
@@ -249,6 +258,7 @@ from leading researchers:
 ### Goeman’s Closed Testing
 
 ``` r
+
 # Enhanced FWER control with improved power
 results_goeman <- find_blocks(
   idat = idat, bdat = bdat,
@@ -263,6 +273,7 @@ results_goeman <- find_blocks(
 ### Meinshausen’s Hierarchical Testing
 
 ``` r
+
 # Hierarchical variable importance testing with sequential rejection
 results_meinshausen <- find_blocks(
   idat = idat, bdat = bdat,
@@ -278,6 +289,7 @@ results_meinshausen <- find_blocks(
 ### E-values for Sequential Testing
 
 ``` r
+
 # Always-valid inference for sequential data collection
 results_evalues <- find_blocks(
   idat = idat, bdat = bdat,

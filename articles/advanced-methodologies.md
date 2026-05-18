@@ -19,6 +19,7 @@ complex hierarchical testing scenarios.
 ## Setup and Data Preparation
 
 ``` r
+
 library(manytestsr)
 library(data.table)
 library(dplyr)
@@ -65,6 +66,7 @@ hypotheses are rejected.
 ### Implementation
 
 ``` r
+
 # Run hierarchical testing with Goeman's closed testing
 result_goeman <- find_blocks(
   idat = idat,
@@ -101,6 +103,7 @@ if ("closed_testing_reject" %in% names(result_goeman$node_dat)) {
 ### Key Features of Closed Testing
 
 ``` r
+
 # Compare traditional vs closed testing power
 traditional_detections <- report_detections(result_goeman$bdat, fwer = TRUE)
 traditional_hits <- sum(traditional_detections$hit, na.rm = TRUE)
@@ -128,6 +131,7 @@ Meinshausen (2008) addresses high-dimensional variable selection by:
 ### Implementation
 
 ``` r
+
 # Apply Meinshausen's hierarchical testing with sequential rejection
 result_meinshausen <- find_blocks(
   idat = idat,
@@ -165,6 +169,7 @@ if ("meinshausen_reject" %in% names(result_meinshausen$node_dat)) {
 ### Sequential vs Traditional Meinshausen
 
 ``` r
+
 # Compare sequential vs traditional Meinshausen
 result_meinshausen_trad <- find_blocks(
   idat = idat,
@@ -211,6 +216,7 @@ E-values (Ramdas et al.) provide a modern framework for:
 ### Implementation
 
 ``` r
+
 # Apply e-value methodology (currently experimental)
 result_evalues <- find_blocks(
   idat = idat,
@@ -248,6 +254,7 @@ Rosenbaum’s design sensitivity analysis evaluates:
 ### Simulated Example
 
 ``` r
+
 # Create simulated data with potential confounding structure
 set.seed(123)
 n_blocks <- 20
@@ -284,6 +291,7 @@ cat("- Gamma sensitivity parameters can assess robustness\n")
 ### Power and Error Control Comparison
 
 ``` r
+
 # Compare all methods on same outcome
 methods_comparison <- data.frame(
   Method = character(),
@@ -330,6 +338,7 @@ print(methods_comparison)
 ### Visualization of Method Performance
 
 ``` r
+
 if (nrow(methods_comparison) > 1) {
   # Create comparison plot
   ggplot(methods_comparison, aes(x = Method, y = Rejections, fill = Conservative_Level)) +
@@ -352,16 +361,17 @@ if (nrow(methods_comparison) > 1) {
 
 ### When to Use Each Method
 
-| Method                     | Best For                                            | Key Advantage                        | Considerations                           |
-|----------------------------|-----------------------------------------------------|--------------------------------------|------------------------------------------|
-| **Goeman Closed Testing**  | Hierarchical hypotheses with logical structure      | Strong FWER control with power gains | Computational complexity                 |
-| **Meinshausen Sequential** | High-dimensional problems with correlated variables | Excellent power for group testing    | Requires hierarchical clustering         |
-| **Ramdas E-values**        | Sequential data collection                          | Always-valid inference               | Still experimental in package            |
-| **Rosenbaum Sensitivity**  | Causal inference with confounding concerns          | Robustness assessment                | Requires sensitivity parameter selection |
+| Method | Best For | Key Advantage | Considerations |
+|----|----|----|----|
+| **Goeman Closed Testing** | Hierarchical hypotheses with logical structure | Strong FWER control with power gains | Computational complexity |
+| **Meinshausen Sequential** | High-dimensional problems with correlated variables | Excellent power for group testing | Requires hierarchical clustering |
+| **Ramdas E-values** | Sequential data collection | Always-valid inference | Still experimental in package |
+| **Rosenbaum Sensitivity** | Causal inference with confounding concerns | Robustness assessment | Requires sensitivity parameter selection |
 
 ### Implementation Workflow
 
 ``` r
+
 # Step 1: Prepare data with appropriate block-level covariates
 bdat <- prepare_block_data(idat, block_vars = c("size", "location", "time"))
 
@@ -406,6 +416,7 @@ property** - if a hypothesis is rejected, all more specific hypotheses
 should be testable.
 
 ``` r
+
 # Check logical consistency of hierarchical rejections
 consonance_check <- check_consonance_property(
   result_goeman$node_dat,
@@ -421,6 +432,7 @@ if (!consonance_check$is_consonant) {
 ### Multiple Outcome Testing
 
 ``` r
+
 # Test multiple outcomes with joint error control
 outcomes <- c("Y1", "Y2")
 joint_results <- lapply(outcomes, function(outcome) {

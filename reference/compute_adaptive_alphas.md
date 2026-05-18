@@ -1,9 +1,11 @@
 # Compute Adaptive Alpha Levels by Tree Depth
 
-Implements Algorithm 1 from Appendix B of the supplement. First checks
-whether natural gating suffices (total error load \\\le 1\\); if so,
-returns nominal alpha at every level. Otherwise, computes adjusted
-significance levels that compensate for the error load at each depth.
+Computes the per-depth significance levels for a regular k-ary tree
+under the adaptive-alpha framework of Appendix B of the supplement.
+First checks whether natural gating suffices (total error load \\\le
+1\\); if so, returns nominal alpha at every level. Otherwise, computes
+adjusted significance levels that compensate for the error load at each
+depth, optionally with user-supplied depth-wise budget weights.
 
 ## Usage
 
@@ -13,7 +15,8 @@ compute_adaptive_alphas(
   delta_hat,
   N_total,
   max_depth = 20L,
-  thealpha = 0.05
+  thealpha = 0.05,
+  budget_weights = NULL
 )
 ```
 
@@ -43,6 +46,14 @@ compute_adaptive_alphas(
 
   Nominal significance level (default 0.05).
 
+- budget_weights:
+
+  Controls how the error budget is allocated across depths. Same options
+  as in
+  [`compute_adaptive_alphas_tree`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_adaptive_alphas_tree.md):
+  `NULL` (default, telescoping), `"equal"`, `"proportional"`, or a
+  numeric vector of length `max_depth - 1` that sums to at most 1.
+
 ## Value
 
 Named numeric vector of adjusted alpha levels, one per depth (1 through
@@ -57,15 +68,22 @@ The function first calls
 [`compute_error_load`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_error_load.md)
 to assess whether natural gating suffices. When \\\sum G\_\ell \le 1\\,
 no adjustment is needed and nominal `thealpha` is returned at every
-level.
+level (and `budget_weights` is ignored, since the tree protects itself).
 
-When adjustment is needed, the formula at level \\\ell\\ is:
-\$\$\alpha\_\ell^{adj} = \min\left\\\alpha,\\ \frac{\alpha}{k^{(\ell-1)}
-\cdot \prod\_{j=1}^{\ell-1} \hat\theta_j} \right\\\$\$
+When adjustment is needed and `budget_weights = NULL` (per-depth
+telescoping), the formula at level \\\ell\\ is: \$\$\alpha\_\ell^{adj} =
+\min\left\\\alpha,\\ \frac{\alpha}{k^{(\ell-1)} \cdot
+\prod\_{j=1}^{\ell-1} \hat\theta_j} \right\\\$\$
 
-The FWER guarantee (Theorem in the supplement) requires that power is
-not underestimated (i.e., \\\hat\theta_j \geq \theta_j\\). In practice
-this means using a conservatively large `delta_hat`.
+When `budget_weights` is supplied, the formula becomes
+\\\alpha\_\ell^{adj} = \min\\\alpha, w\_\ell \alpha / G\_\ell\\\\, where
+\\w\_\ell\\ is the resolved weight at depth \\\ell\\. The constraint
+\\\sum w\_\ell \le 1\\ is what gives the FWER guarantee via the
+budget-weighted theorem in the supplement.
+
+The FWER guarantee requires that power is not underestimated (i.e.,
+\\\hat\theta_j \geq \theta_j\\). In practice this means using a
+conservatively large `delta_hat`.
 
 ## Examples
 
@@ -103,6 +121,34 @@ compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000,
                         max_depth = 5)
 #>            1            2            3            4            5 
 #> 0.0500000000 0.0125000000 0.0031250000 0.0007997540 0.0003946938 
+#> attr(,"error_load")
+#> attr(,"error_load")$G
+#>        1        2        3        4        5 
+#>  1.00000  4.00000 15.62981 31.67012 20.97663 
+#> 
+#> attr(,"error_load")$sum_G
+#> [1] 73.27656
+#> 
+#> attr(,"error_load")$needs_adjustment
+#> [1] TRUE
+#> 
+#> attr(,"error_load")$thetas
+#>         1         2         3         4         5 
+#> 1.0000000 1.0000000 0.9768629 0.5065661 0.1655869 
+#> 
+#> attr(,"error_load")$critical_level
+#> [1] 5
+#> 
+#> attr(,"error_load")$n_by_level
+#>          1          2          3          4          5 
+#> 1000.00000  250.00000   62.50000   15.62500    3.90625 
+#> 
+
+# Budget-weighted: equal allocation across depths 2..max_depth
+compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000,
+                        max_depth = 5, budget_weights = "equal")
+#>            1            2            3            4            5 
+#> 5.000000e-02 3.125000e-03 7.812500e-04 1.999385e-04 9.867345e-05 
 #> attr(,"error_load")
 #> attr(,"error_load")$G
 #>        1        2        3        4        5 

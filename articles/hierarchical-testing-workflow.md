@@ -19,6 +19,7 @@ to results interpretation.
 ## Loading the Package and Data
 
 ``` r
+
 library(manytestsr)
 library(data.table)
 library(dplyr)
@@ -54,6 +55,7 @@ The hierarchical testing approach requires both individual-level data
 (`idat`) and block-level summaries (`bdat`):
 
 ``` r
+
 # Individual-level data is already in the right format
 idat <- as.data.table(example_dat)
 print(paste("Number of individuals:", nrow(idat)))
@@ -106,6 +108,7 @@ The most common approach uses clustering to split blocks based on a
 continuous variable:
 
 ``` r
+
 # Run hierarchical testing with cluster-based splitting
 results_cluster <- find_blocks(
   idat = idat,
@@ -124,15 +127,16 @@ results_cluster <- find_blocks(
 str(results_cluster, max.level = 1)
 #> List of 2
 #>  $ bdat    :Classes 'data.table' and 'data.frame':   44 obs. of  17 variables:
-#>   ..- attr(*, ".internal.selfref")=<externalptr> 
+#>   ..- attr(*, ".internal.selfref")=<pointer: 0x55de93c29b00> 
 #>   ..- attr(*, "sorted")= chr "testable"
 #>  $ node_dat:Classes 'data.table' and 'data.frame':   1 obs. of  10 variables:
-#>   ..- attr(*, ".internal.selfref")=<externalptr>
+#>   ..- attr(*, ".internal.selfref")=<pointer: 0x55de93c29b00>
 ```
 
 ### Results Overview
 
 ``` r
+
 # Block-level results
 cat("Block-level results structure:\n")
 #> Block-level results structure:
@@ -158,6 +162,7 @@ When you have natural hierarchical structure, use factor-based
 splitting:
 
 ``` r
+
 # Use pre-specified hierarchical splits
 results_hierarchical <- find_blocks(
   idat = idat,
@@ -184,6 +189,7 @@ print(paste(
 Focus testing on largest blocks first:
 
 ``` r
+
 # Leave-one-out approach
 results_loo <- find_blocks(
   idat = idat,
@@ -211,6 +217,7 @@ print(paste(
 For more powerful testing with FDR control:
 
 ``` r
+
 # Use alpha investing for sequential FDR control
 results_fdr <- find_blocks(
   idat = idat,
@@ -251,6 +258,7 @@ head(alpha_comparison)
 ### Using FWER Control
 
 ``` r
+
 # Detect significant blocks using FWER control
 detections_fwer <- report_detections(
   results_cluster$bdat,
@@ -286,6 +294,7 @@ if (sum(detections_fwer$hit, na.rm = TRUE) > 0) {
 ### Using FDR Control
 
 ``` r
+
 # Detect using FDR control
 detections_fdr <- report_detections(
   results_fdr$bdat,
@@ -309,6 +318,7 @@ cat(
 ### Tree Structure Visualization
 
 ``` r
+
 # Create tree structure for visualization
 tree_results <- make_results_tree(
   results_cluster,
@@ -341,6 +351,7 @@ print(tree_plot_styled)
 ### Detection Summary Plot
 
 ``` r
+
 # Compare detection rates across methods
 detection_summary <- data.frame(
   Method = c("FWER (Cluster)", "FDR (Alpha Investing)", "FWER (Hierarchical)", "FWER (LOO)"),
@@ -386,6 +397,7 @@ ggplot(detection_summary, aes(x = Method, y = Detection_Rate, fill = Method)) +
 ### P-value Progression Through Tree
 
 ``` r
+
 # Examine p-value patterns
 pvalue_data <- results_cluster$node_dat[, .(
   nodenum,
@@ -415,6 +427,7 @@ print(pvalue_summary)
 ### Statistical Power Analysis
 
 ``` r
+
 # Analyze relationship between block characteristics and detection
 power_data <- merge(
   detections_fwer[, .(blockF, hit, pfinalb)],
@@ -458,6 +471,7 @@ p1 + p2 + plot_layout(ncol = 2)
 ### Testing Multiple Outcomes
 
 ``` r
+
 # Test both outcomes with local p-value adjustment
 results_multi_Y1 <- find_blocks(
   idat = idat,
@@ -526,6 +540,7 @@ print(multi_comparison)
 ### Recommended Workflow
 
 ``` r
+
 # 1. Prepare data
 idat <- your_individual_data
 bdat <- create_block_summary(idat)

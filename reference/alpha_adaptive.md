@@ -1,15 +1,15 @@
-# Adaptive Alpha Adjustment Based on Power Decay with [`find_blocks`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md). The returned function adjusts significance levels at each tree depth based on estimated power decay (Algorithm 1 from Appendix B of the supplement).
+# Adaptive Alpha Adjustment Based on Power Decay
 
-Adaptive Alpha Adjustment Based on Power Decay with
+Factory function that returns a closure for use with
 [`find_blocks`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md).
 The returned function adjusts significance levels at each tree depth
-based on estimated power decay (Algorithm 1 from Appendix B of the
-supplement).
+based on estimated power decay, using the adaptive-alpha framework of
+Appendix B of the supplement.
 
 ## Usage
 
 ``` r
-alpha_adaptive(k, delta_hat, N_total, max_depth = 20L)
+alpha_adaptive(k, delta_hat, N_total, max_depth = 20L, budget_weights = NULL)
 ```
 
 ## Arguments
@@ -33,6 +33,14 @@ alpha_adaptive(k, delta_hat, N_total, max_depth = 20L)
 - max_depth:
 
   Maximum depth to compute (default 20).
+
+- budget_weights:
+
+  Controls how the error budget is allocated across depths. Same options
+  as in
+  [`compute_adaptive_alphas_tree`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_adaptive_alphas_tree.md):
+  `NULL` (default, telescoping), `"equal"`, `"proportional"`, or a
+  numeric vector of length `max_depth - 1` that sums to at most 1.
 
 ## Value
 

@@ -121,8 +121,6 @@ if (requireNamespace("CMRSS", quietly = TRUE)) {
   p <- pCombStephenson(idat, Y1 ~ trtF | blockF)
   print(p)
 }
-#> Error in get_default_solver(): No solver available. Please install either 'highs' (recommended, open-source) or 'gurobi'.
-#> To install highs: install.packages('highs')
-#> For gurobi, see: https://www.gurobi.com/documentation/current/quickstart_mac/r_ins_the_r_package.html
+#> [1] 0.01091
 # }
 ```
