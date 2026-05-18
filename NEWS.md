@@ -1,3 +1,29 @@
+# manytestsr 0.0.4.1005
+
+## Bug fixes
+
+* `pCombStephenson()` is now compatible with `CMRSS` 0.2.6+, which
+  constrains its internal `k` argument to `1..m` (where `m = sum(Z)` is
+  the number of treated units) rather than `1..n`. The wrapper's
+  user-facing `k` argument remains paper-notation in `1..n` (the rank
+  index of tau among all units), and the wrapper now translates
+  internally as `cmrss_k = k - (n - m)` before calling
+  `CMRSS::pval_comb_block()`. The default `k = n` still tests Fisher's
+  sharp null. The degenerate path (`k <= n - m`) now warns and returns
+  `p = 1` without calling CMRSS, avoiding the LP solver on a branch
+  whose test statistic is constant across permutations anyway.
+
+* `pCombStephenson()` now validates `k <= n` and stops with a clear
+  error if `k` exceeds the total number of units.
+
+## Dependency changes
+
+* Added `highs` to Suggests. `CMRSS` 0.2.6+ requires an LP solver
+  (`highs` or `gurobi`) for the non-degenerate path of
+  `pval_comb_block()`. `highs` is open-source and the recommended
+  solver. Install with `install.packages('highs')` or via the
+  GitHub-only CMRSS GitHub remote.
+
 # manytestsr 0.0.4.1003
 
 ## New features

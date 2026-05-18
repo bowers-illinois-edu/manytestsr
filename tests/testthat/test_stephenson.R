@@ -22,6 +22,7 @@ test_that("pCombStephenson requires a block variable in the formula", {
 
 test_that("pCombStephenson returns a numeric scalar between 0 and 1", {
   skip_if_not_installed("CMRSS")
+  skip_if_not_installed("highs")
   set.seed(42)
   # Default k = n tests the sharp null (standard rank-sum combined across scores)
   p <- pCombStephenson(idat, Y ~ ZF | bF, null_max = 1000)
@@ -32,6 +33,7 @@ test_that("pCombStephenson returns a numeric scalar between 0 and 1", {
 
 test_that("pCombStephenson rejects on data with known effects", {
   skip_if_not_installed("CMRSS")
+  skip_if_not_installed("highs")
   # Yhomog has homogeneous positive effects across all blocks.
   # Default k = n tests the sharp null of no effects.
   # With uniformly large positive effects, the p-value should be small.
@@ -42,6 +44,7 @@ test_that("pCombStephenson rejects on data with known effects", {
 
 test_that("pCombStephenson does not reject on null data", {
   skip_if_not_installed("CMRSS")
+  skip_if_not_installed("highs")
   set.seed(42)
   p_null <- pCombStephenson(idat, Ynull ~ ZF | bF, null_max = 1000)
   # Under the null, p should generally be above alpha
@@ -62,20 +65,24 @@ test_that("pCombStephenson warns on degenerate k", {
 
 test_that("pCombStephenson result matches direct CMRSS call", {
   skip_if_not_installed("CMRSS")
+  skip_if_not_installed("highs")
   set.seed(42)
   p_wrapper <- pCombStephenson(idat, Y ~ ZF | bF,
     r_vec = c(2, 6),
     null_max = 1000
   )
 
-  # Now call CMRSS directly with the same configuration
+  # Now call CMRSS directly with the same configuration.
+  # CMRSS 0.2.6+ requires k in 1..m; the wrapper translates the
+  # paper-notation k (1..n) to cmrss_k = k - (n - m). Sharp null is
+  # k = n in paper notation, which is cmrss_k = m here.
   set.seed(42)
   Z <- as.numeric(levels(idat$ZF)[idat$ZF])
   Y_vec <- idat$Y
   block <- factor(idat$bF)
   B <- nlevels(block)
-  n <- length(Z)
-  k <- n # matches wrapper default: sharp null
+  m <- sum(Z)
+  cmrss_k <- m
 
   methods.list.all <- lapply(c(2, 6), function(r) {
     lapply(seq_len(B), function(b) {
@@ -84,7 +91,7 @@ test_that("pCombStephenson result matches direct CMRSS call", {
   })
 
   p_direct <- as.numeric(CMRSS::pval_comb_block(
-    Z = Z, Y = Y_vec, k = k, c = 0,
+    Z = Z, Y = Y_vec, k = cmrss_k, c = 0,
     block = block,
     methods.list.all = methods.list.all,
     weight.name = "asymp.opt",
@@ -99,6 +106,7 @@ test_that("pCombStephenson result matches direct CMRSS call", {
 
 test_that("pCombStephenson handles factor treatment with levels '0' and '1'", {
   skip_if_not_installed("CMRSS")
+  skip_if_not_installed("highs")
   # idat already has ZF as a factor — just verify it works
   set.seed(42)
   p <- pCombStephenson(idat, Y ~ ZF | bF, null_max = 500)

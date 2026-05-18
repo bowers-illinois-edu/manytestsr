@@ -785,12 +785,17 @@ pPolyRank <- function(
 #'
 #' The \code{k} parameter indexes the k-th largest treatment effect,
 #' where tau_(1) >= tau_(2) >= ... >= tau_(n). The test asks whether
-#' tau_(k) exceeds \code{c}. Internally, CMRSS sets the top
-#' \code{min(m, n-k)} treated units' adjusted outcomes to infinity.
+#' tau_(k) exceeds \code{c}. Internally, CMRSS sets \code{p = m - cmrss_k}
+#' of the treated units' adjusted outcomes to infinity, where
+#' \code{cmrss_k = k - (n - m)} is the CMRSS-internal rank index.
 #' The test is non-trivial only when \code{k > n - m} (where n is
 #' total units and m is number treated), because otherwise all
 #' treated units receive infinity and the test statistic is constant
-#' across all permutations.
+#' across all permutations. The wrapper returns p = 1 in that
+#' degenerate case without calling CMRSS.
+#'
+#' Requires an LP solver. Install the open-source HiGHS solver with
+#' \code{install.packages('highs')}, or Gurobi with a license.
 #'
 #' The default \code{k = n} and \code{c = 0} tests Fisher's sharp
 #' null of no effects for any unit. At k = n no treated units receive
@@ -899,6 +904,9 @@ pCombStephenson <- function(
   if (is.null(k)) {
     k <- n
   }
+  if (k > n) {
+    stop("k = ", k, " exceeds n = ", n, ".", call. = FALSE)
+  }
   if (k <= n - m) {
     warning(
       "k = ",
@@ -906,12 +914,21 @@ pCombStephenson <- function(
       " is at most n - m = ",
       n - m,
       ". The test statistic will be degenerate (all treated units ",
-      "receive xi = Inf). Set k > ",
+      "receive xi = Inf). Returning p = 1. Set k > ",
       n - m,
       " for a non-trivial test.",
       call. = FALSE
     )
+    return(1)
   }
+
+  # CMRSS 0.2.6+ requires the internal k argument in 1..m, where the LP
+  # coverage constraint is p = m - cmrss_k. The paper notation has k in
+  # 1..n indexing the rank of tau among all units; the mapping that
+  # preserves the same hypothesis is cmrss_k = k - (n - m). At k = n
+  # (sharp null) cmrss_k = m so p = 0 and no treated unit's adjusted
+  # outcome is set to Inf.
+  cmrss_k <- k - (n - m)
 
   # Build methods.list.all: H tuning parameters x B blocks
   # Each entry specifies a polynomial rank score configuration
@@ -925,7 +942,7 @@ pCombStephenson <- function(
   result <- CMRSS::pval_comb_block(
     Z = Z,
     Y = Y,
-    k = k,
+    k = cmrss_k,
     c = c,
     block = block,
     methods.list.all = methods.list.all,
