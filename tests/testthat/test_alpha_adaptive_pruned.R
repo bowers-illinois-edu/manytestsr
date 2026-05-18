@@ -325,9 +325,12 @@ test_that("pruned: DPP-like 5x gain when 4 of 5 colleges die", {
   # With pruning, only the surviving branch's tests matter, giving
   # roughly 5x more alpha at depth 3.
   dpp <- make_dpp_tree()
-  static_alphas <- compute_adaptive_alphas_tree(
+  # Suppress the irregular-telescoping warning: the DPP tree is irregular
+  # by design and this test is checking the prune-vs-static gain, not
+  # warning behavior.
+  static_alphas <- suppressWarnings(compute_adaptive_alphas_tree(
     node_dat = dpp, delta_hat = 0.5, thealpha = 0.05
-  )
+  ))
   obj <- alpha_adaptive_tree_pruned(node_dat = dpp, delta_hat = 0.5)
 
   # Keep only college 1 (node 2), kill colleges 2-5 (nodes 3-6)
@@ -336,7 +339,7 @@ test_that("pruned: DPP-like 5x gain when 4 of 5 colleges die", {
     manytestsr:::.get_all_descendants(dpp, failed_colleges))
   pruned_dpp <- dpp[!dpp$nodenum %in% failed_and_desc, ]
 
-  obj$update(pruned_dpp, thealpha = 0.05)
+  suppressWarnings(obj$update(pruned_dpp, thealpha = 0.05))
 
   pruned_alpha3 <- obj$alphafn(
     pval = 0.01, batch = 1, nodesize = 100,

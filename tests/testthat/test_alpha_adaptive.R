@@ -338,3 +338,190 @@ test_that("alpha_adaptive validates factory inputs", {
   expect_error(alpha_adaptive(k = 4, delta_hat = -0.5, N_total = 1000))
   expect_error(alpha_adaptive(k = 4, delta_hat = 0.5, N_total = -100))
 })
+
+
+# ============================================================================
+# Tests for compute_adaptive_alphas(budget_weights = ...) (parametric)
+#
+# Symmetry with compute_adaptive_alphas_tree: the parametric interface
+# should accept the same budget_weights argument and produce a schedule
+# that matches the tree-mode result on a regular k-ary tree.
+# ============================================================================
+
+test_that("budget_weights = NULL matches the original telescoping schedule", {
+  # Statistical principle: when budget_weights is unset, the function
+  # must return exactly what it returned before the parameter existed
+  # --- that is, the telescoping formula alpha_ell = alpha / G_ell from
+  # Theorem B.2. Backwards compatibility is the contract.
+  alphas_old <- compute_adaptive_alphas(
+    k = 4, delta_hat = 0.5, N_total = 1000, max_depth = 5
+  )
+  alphas_new <- compute_adaptive_alphas(
+    k = 4, delta_hat = 0.5, N_total = 1000, max_depth = 5,
+    budget_weights = NULL
+  )
+  expect_equal(alphas_new, alphas_old)
+})
+
+test_that("budget_weights = 'equal' rescales telescoping by 1/(L-1)", {
+  # Statistical principle: equal weights give w_ell = 1/(L-1) for every
+  # depth >= 2. Since the denominator is the same as in telescoping
+  # (alpha_ell = alpha / denom_ell), turning on equal weights just
+  # rescales every non-root alpha by 1/(L-1). This is the cleanest
+  # check that does not rely on the internal G_ell vs denom_ell
+  # convention.
+  L <- 5L
+  alphas_null <- compute_adaptive_alphas(
+    k = 4, delta_hat = 0.5, N_total = 1000, max_depth = L
+  )
+  alphas_eq <- compute_adaptive_alphas(
+    k = 4, delta_hat = 0.5, N_total = 1000, max_depth = L,
+    budget_weights = "equal"
+  )
+  # Root is unchanged
+  expect_equal(unname(alphas_eq[[1]]), 0.05)
+  # Non-root: alpha_eq = (1/(L-1)) * alpha_null, capped at thealpha
+  for (d in 2:L) {
+    expected <- min(0.05, (1 / (L - 1)) * unname(alphas_null[[d]]))
+    expect_equal(unname(alphas_eq[[d]]), expected, tolerance = 1e-10,
+      info = sprintf("depth %d", d))
+  }
+})
+
+test_that("budget_weights matches tree-mode on a regular k-ary tree", {
+  # Statistical principle: the parametric and tree-mode interfaces must
+  # agree on regular k-ary trees with equal splits. This is the
+  # consistency check the documentation already implies for
+  # budget_weights = NULL; we extend it to all the named-weight modes.
+  k <- 4
+  delta_hat <- 0.5
+  N_total <- 1000
+  L <- 5L
+
+  nd <- data.frame(
+    nodenum = integer(0), parent = integer(0),
+    depth = integer(0), nodesize = numeric(0)
+  )
+  nd <- rbind(nd, data.frame(nodenum = 1L, parent = 0L, depth = 1L,
+                             nodesize = N_total))
+  next_id <- 2L
+  for (d in 2:L) {
+    parents_at_prev <- nd$nodenum[nd$depth == d - 1L]
+    n_at_d <- N_total / k^(d - 1L)
+    for (p in parents_at_prev) {
+      for (j in seq_len(k)) {
+        nd <- rbind(nd, data.frame(nodenum = next_id, parent = p,
+                                   depth = d, nodesize = n_at_d))
+        next_id <- next_id + 1L
+      }
+    }
+  }
+
+  for (bw in list(NULL, "equal", "proportional")) {
+    a_param <- compute_adaptive_alphas(
+      k = k, delta_hat = delta_hat, N_total = N_total, max_depth = L,
+      budget_weights = bw
+    )
+    a_tree <- compute_adaptive_alphas_tree(
+      node_dat = nd, delta_hat = delta_hat, max_depth = L,
+      budget_weights = bw
+    )
+    # Compare alpha values only; the error_load attribute differs
+    # between modes (tree mode includes node_detail, parametric does
+    # not), but that is a diagnostic-only field, not part of the
+    # contract.
+    expect_equal(
+      as.numeric(a_param), as.numeric(a_tree), tolerance = 1e-8,
+      info = sprintf("budget_weights = %s",
+                     ifelse(is.null(bw), "NULL", bw))
+    )
+  }
+})
+
+test_that("budget_weights numeric vector is honored", {
+  # Statistical principle: the budget framework requires only that
+  # w_2 + ... + w_L <= 1 with each w_ell >= 0. Custom weights are
+  # permitted as long as they obey this. We check honoring by
+  # comparing the weighted result to the telescoping result: the
+  # weight just rescales the non-root alphas.
+  L <- 4L
+  custom_w <- c(0.1, 0.4, 0.5)  # sums to 1, length L-1
+  alphas_null <- compute_adaptive_alphas(
+    k = 3, delta_hat = 0.5, N_total = 500, max_depth = L
+  )
+  alphas <- compute_adaptive_alphas(
+    k = 3, delta_hat = 0.5, N_total = 500, max_depth = L,
+    budget_weights = custom_w
+  )
+  for (d in 2:L) {
+    expected <- min(0.05, custom_w[d - 1L] * unname(alphas_null[[d]]))
+    expect_equal(unname(alphas[[d]]), expected, tolerance = 1e-10,
+      info = sprintf("depth %d", d))
+  }
+})
+
+test_that("budget_weights validates: negative, oversized, wrong length all error", {
+  expect_error(
+    compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000,
+                            max_depth = 5,
+                            budget_weights = c(-0.1, 0.4, 0.4, 0.3)),
+    "non-negative"
+  )
+  expect_error(
+    compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000,
+                            max_depth = 5,
+                            budget_weights = c(0.5, 0.5, 0.5, 0.5)),
+    "sum"
+  )
+  expect_error(
+    compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000,
+                            max_depth = 5,
+                            budget_weights = c(0.5, 0.5)),
+    "length"
+  )
+})
+
+test_that("budget_weights bypassed when natural gating suffices", {
+  # Statistical principle: when sum_G <= 1, no adjustment is needed at
+  # all (Theorem B.1). The budget weights become moot because the
+  # procedure returns nominal alpha at every depth. We test that any
+  # budget_weights argument is silently ignored in that regime.
+  alphas_null <- compute_adaptive_alphas(
+    k = 3, delta_hat = 0.2, N_total = 100, max_depth = 4,
+    budget_weights = NULL
+  )
+  alphas_equal <- compute_adaptive_alphas(
+    k = 3, delta_hat = 0.2, N_total = 100, max_depth = 4,
+    budget_weights = "equal"
+  )
+  alphas_custom <- compute_adaptive_alphas(
+    k = 3, delta_hat = 0.2, N_total = 100, max_depth = 4,
+    budget_weights = c(0.5, 0.3, 0.2)
+  )
+  expect_true(all(alphas_null == 0.05))
+  expect_equal(alphas_null, alphas_equal)
+  expect_equal(alphas_null, alphas_custom)
+})
+
+
+# ============================================================================
+# Tests for alpha_adaptive(budget_weights = ...) factory
+# ============================================================================
+
+test_that("alpha_adaptive accepts budget_weights and produces matching schedule", {
+  # Statistical principle: the factory should expose the same
+  # budget_weights argument as the underlying compute function. The
+  # closure must look up alphas from the matching schedule.
+  fn <- alpha_adaptive(k = 4, delta_hat = 0.5, N_total = 1000,
+                      max_depth = 5, budget_weights = "equal")
+  expected <- compute_adaptive_alphas(
+    k = 4, delta_hat = 0.5, N_total = 1000, max_depth = 5,
+    budget_weights = "equal"
+  )
+  for (d in 1:5) {
+    val <- fn(pval = 0.01, batch = 1, nodesize = 100,
+              thealpha = 0.05, thew0 = 0.049, depth = d)
+    expect_equal(unname(val), unname(expected[[d]]),
+      info = sprintf("depth %d", d))
+  }
+})

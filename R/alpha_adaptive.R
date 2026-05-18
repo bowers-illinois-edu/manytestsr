@@ -5,7 +5,11 @@
 # expected number of all-null sibling groups that the procedure tests.
 # When the total error load sum(G_ell) <= 1, the unadjusted procedure
 # controls FWER at level alpha ("natural gating"). When it exceeds 1,
-# we adjust alpha at each level to compensate (Algorithm 1).
+# we adjust alpha at each level to compensate. Two adjustment families
+# are supported: per-depth telescoping (alpha_ell = alpha / G_ell), which
+# is the tightest bound for regular k-ary trees, and budget-weighted
+# allocation (alpha_ell = w_ell * alpha / G_ell with sum(w_ell) <= 1),
+# which extends to irregular trees and pruned procedures.
 
 
 #' Compute Error Load for Natural Gating Assessment
@@ -242,12 +246,49 @@ compute_error_load <- function(k = NULL, delta_hat, N_total = NULL,
 }
 
 
+# Detect whether a tree is irregular.
+#
+# A tree is regular when (i) every parent at the same depth has the
+# same number of children and (ii) every node at the same depth has
+# the same nodesize. Per-depth telescoping (alpha_ell = alpha / G_ell)
+# is the tight bound for regular trees; on irregular trees it can
+# under-protect FWER unless paired with budget weights.
+.tree_is_irregular <- function(node_dat) {
+  nd <- as.data.frame(node_dat)
+
+  parents <- nd$parent[nd$parent > 0]
+  if (length(parents) > 0L) {
+    child_counts <- table(parents)
+    parent_ids <- as.integer(names(child_counts))
+    parent_depths <- nd$depth[match(parent_ids, nd$nodenum)]
+    for (d in unique(parent_depths)) {
+      counts_at_d <- as.integer(child_counts[parent_depths == d])
+      if (length(unique(counts_at_d)) > 1L) {
+        return(TRUE)
+      }
+    }
+  }
+
+  for (d in unique(nd$depth)) {
+    sizes_at_d <- nd$nodesize[nd$depth == d]
+    if (length(unique(sizes_at_d)) > 1L) {
+      return(TRUE)
+    }
+  }
+
+  return(FALSE)
+}
+
+
 #' Compute Adaptive Alpha Levels by Tree Depth
 #'
-#' Implements Algorithm 1 from Appendix B of the supplement. First checks
-#' whether natural gating suffices (total error load \eqn{\le 1}); if so,
-#' returns nominal alpha at every level. Otherwise, computes adjusted
-#' significance levels that compensate for the error load at each depth.
+#' Computes the per-depth significance levels for a regular k-ary tree
+#' under the adaptive-alpha framework of Appendix B of the supplement.
+#' First checks whether natural gating suffices (total error load
+#' \eqn{\le 1}); if so, returns nominal alpha at every level. Otherwise,
+#' computes adjusted significance levels that compensate for the error
+#' load at each depth, optionally with user-supplied depth-wise budget
+#' weights.
 #'
 #' @param k Branching factor. Either a scalar (constant k at all levels)
 #'   or an integer vector of length \code{max_depth} where \code{k[ell]}
@@ -259,6 +300,11 @@ compute_error_load <- function(k = NULL, delta_hat, N_total = NULL,
 #' @param N_total Total sample size at the root level.
 #' @param max_depth Maximum depth to compute (default 20).
 #' @param thealpha Nominal significance level (default 0.05).
+#' @param budget_weights Controls how the error budget is allocated across
+#'   depths. Same options as in \code{\link{compute_adaptive_alphas_tree}}:
+#'   \code{NULL} (default, telescoping), \code{"equal"}, \code{"proportional"},
+#'   or a numeric vector of length \code{max_depth - 1} that sums to at
+#'   most 1.
 #'
 #' @return Named numeric vector of adjusted alpha levels, one per depth
 #'   (1 through \code{max_depth}). Names are depth levels as characters.
@@ -270,16 +316,24 @@ compute_error_load <- function(k = NULL, delta_hat, N_total = NULL,
 #' The function first calls \code{\link{compute_error_load}} to assess
 #' whether natural gating suffices. When \eqn{\sum G_\ell \le 1}, no
 #' adjustment is needed and nominal \code{thealpha} is returned at every
-#' level.
+#' level (and \code{budget_weights} is ignored, since the tree protects
+#' itself).
 #'
-#' When adjustment is needed, the formula at level \eqn{\ell} is:
+#' When adjustment is needed and \code{budget_weights = NULL} (per-depth
+#' telescoping), the formula at level \eqn{\ell} is:
 #' \deqn{\alpha_\ell^{adj} = \min\left\{\alpha,\;
 #'   \frac{\alpha}{k^{(\ell-1)} \cdot \prod_{j=1}^{\ell-1} \hat\theta_j}
 #'   \right\}}
 #'
-#' The FWER guarantee (Theorem in the supplement) requires that power
-#' is not underestimated (i.e., \eqn{\hat\theta_j \geq \theta_j}).
-#' In practice this means using a conservatively large \code{delta_hat}.
+#' When \code{budget_weights} is supplied, the formula becomes
+#' \eqn{\alpha_\ell^{adj} = \min\{\alpha, w_\ell \alpha / G_\ell\}},
+#' where \eqn{w_\ell} is the resolved weight at depth \eqn{\ell}. The
+#' constraint \eqn{\sum w_\ell \le 1} is what gives the FWER guarantee
+#' via the budget-weighted theorem in the supplement.
+#'
+#' The FWER guarantee requires that power is not underestimated
+#' (i.e., \eqn{\hat\theta_j \geq \theta_j}). In practice this means
+#' using a conservatively large \code{delta_hat}.
 #'
 #' @examples
 #' # Natural gating sufficient: all alphas = 0.05
@@ -290,10 +344,15 @@ compute_error_load <- function(k = NULL, delta_hat, N_total = NULL,
 #' compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000,
 #'                         max_depth = 5)
 #'
+#' # Budget-weighted: equal allocation across depths 2..max_depth
+#' compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000,
+#'                         max_depth = 5, budget_weights = "equal")
+#'
 #' @importFrom stats pnorm qnorm
 #' @export
 compute_adaptive_alphas <- function(k, delta_hat, N_total,
-                                     max_depth = 20L, thealpha = 0.05) {
+                                     max_depth = 20L, thealpha = 0.05,
+                                     budget_weights = NULL) {
   stopifnot(length(delta_hat) == 1, delta_hat > 0,
             length(N_total) == 1, N_total > 0,
             length(thealpha) == 1, thealpha > 0, thealpha < 1)
@@ -319,38 +378,42 @@ compute_adaptive_alphas <- function(k, delta_hat, N_total,
   }
 
   z_crit <- qnorm(1 - thealpha / 2)
-  alphas <- numeric(max_depth)
 
-  # Running products tracking the path from root to current level:
-  # path_power = product of theta_j for j = 1..(ell-1)
-  # cum_n_divisor = product of k_j for j = 1..(ell-1), used for sample size
-  # num_tests = product of k_j for j = 1..(ell-1), the multiplicity at level ell
-  # All doubles to avoid integer overflow at large depth
+  # Build the per-depth denominator
+  #   denom[ell] = k^{ell-1} * prod_{j=1}^{ell-1} theta_j
+  # which is the expected number of nodes the procedure reaches at depth
+  # ell under the regular-tree parametric assumption. This matches
+  # G_by_depth in compute_adaptive_alphas_tree (sum of path_power over
+  # nodes at each depth), so the two functions agree on regular k-ary
+  # trees.
+  denom <- numeric(max_depth)
   path_power <- 1.0
   cum_n_divisor <- 1.0
   num_tests <- 1.0
-
   for (ell in seq_len(max_depth)) {
-    # Sample size at this level under equal splitting
     n_ell <- N_total / cum_n_divisor
-    # Estimated power at this level
     theta_ell <- pnorm(delta_hat * sqrt(n_ell) - z_crit)
     theta_ell <- max(min(theta_ell, 1), 0)
 
-    if (ell == 1L) {
-      # Root: single test, no adjustment
-      alphas[ell] <- thealpha
-    } else {
-      # Adjust for multiplicity and cumulative power.
-      # The min() guard ensures we never exceed nominal alpha.
-      alphas[ell] <- min(thealpha, thealpha / (num_tests * path_power))
-    }
+    denom[ell] <- num_tests * path_power
 
-    # Update running products for next level
     path_power <- path_power * theta_ell
     cum_n_divisor <- cum_n_divisor * k_vec[ell]
     if (ell < max_depth) {
       num_tests <- num_tests * k_vec[ell]
+    }
+  }
+
+  weights <- .resolve_budget_weights(budget_weights, denom, max_depth)
+
+  alphas <- numeric(max_depth)
+  for (ell in seq_len(max_depth)) {
+    if (ell == 1L || denom[ell] == 0) {
+      alphas[ell] <- thealpha
+    } else if (is.null(weights)) {
+      alphas[ell] <- min(thealpha, thealpha / denom[ell])
+    } else {
+      alphas[ell] <- min(thealpha, weights[ell] * thealpha / denom[ell])
     }
   }
 
@@ -458,8 +521,23 @@ compute_adaptive_alphas_tree <- function(node_dat, delta_hat,
     return(alphas)
   }
 
-  # Compute per-depth error loads G_ell for weight resolution
   nd <- el$node_detail
+
+  # Per-depth telescoping (alpha_ell = alpha / G_ell) is the tight bound
+  # for regular k-ary trees, but on irregular trees with sum_G > 1 it can
+  # under-protect FWER. The supported safe path is budget_weights = "equal"
+  # / "proportional" / a numeric vector. Warn so a user accidentally
+  # relying on telescoping in the unsafe regime notices.
+  if (is.null(budget_weights) && .tree_is_irregular(nd)) {
+    warning(
+      "Tree is irregular and total error load exceeds 1: per-depth ",
+      "telescoping (alpha_ell = alpha / G_ell) may under-protect FWER ",
+      "on irregular trees. Consider passing budget_weights = 'equal' ",
+      "or 'proportional' for the budget-weighted FWER guarantee."
+    )
+  }
+
+  # Compute per-depth error loads G_ell for weight resolution
   G_by_depth <- numeric(max_depth)
   for (d in seq_len(max_depth)) {
     rows_at_d <- which(nd$depth == d)
@@ -540,9 +618,11 @@ compute_adaptive_alphas_tree <- function(node_dat, delta_hat,
 
 
 #' Adaptive Alpha Adjustment Based on Power Decay
-#' with \code{\link{find_blocks}}. The returned function adjusts
-#' significance levels at each tree depth based on estimated power
-#' decay (Algorithm 1 from Appendix B of the supplement).
+#'
+#' Factory function that returns a closure for use with
+#' \code{\link{find_blocks}}. The returned function adjusts significance
+#' levels at each tree depth based on estimated power decay, using the
+#' adaptive-alpha framework of Appendix B of the supplement.
 #'
 #' @inheritParams compute_adaptive_alphas
 #'
@@ -556,7 +636,7 @@ compute_adaptive_alphas_tree <- function(node_dat, delta_hat,
 #' \code{find_blocks}) to look up the pre-computed alpha for each
 #' node's tree depth. The \code{pval}, \code{batch}, \code{nodesize},
 #' and \code{thew0} parameters are accepted for interface compatibility
-#' but are not used — unlike online FDR methods, the adaptive alpha
+#' but are not used --- unlike online FDR methods, the adaptive alpha
 #' depends only on tree structure, not on observed p-values.
 #'
 #' Results are cached internally: the vector of adjusted alphas is
@@ -575,7 +655,8 @@ compute_adaptive_alphas_tree <- function(node_dat, delta_hat,
 #' compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000)
 #'
 #' @export
-alpha_adaptive <- function(k, delta_hat, N_total, max_depth = 20L) {
+alpha_adaptive <- function(k, delta_hat, N_total, max_depth = 20L,
+                           budget_weights = NULL) {
   # Validate at factory time so errors surface early, not deep
   # inside a find_blocks run
   stopifnot(delta_hat > 0, N_total > 0)
@@ -597,7 +678,8 @@ alpha_adaptive <- function(k, delta_hat, N_total, max_depth = 20L) {
     if (is.null(cache_env$alphas) || !identical(thealpha, cache_env$thealpha)) {
       cache_env$alphas <- compute_adaptive_alphas(
         k = k, delta_hat = delta_hat, N_total = N_total,
-        max_depth = max_depth, thealpha = thealpha
+        max_depth = max_depth, thealpha = thealpha,
+        budget_weights = budget_weights
       )
       cache_env$thealpha <- thealpha
     }
@@ -742,9 +824,16 @@ alpha_adaptive_tree <- function(node_dat, delta_hat, max_depth = NULL,
 #' @inheritParams alpha_adaptive_tree
 #' @param budget_weights Controls depth-wise budget allocation. Accepts
 #'   the same values as \code{\link{compute_adaptive_alphas_tree}}, plus
-#'   \code{"remaining"}: a sequential spending process where a fraction
-#'   \code{spending_fraction} of the remaining budget is spent at each
-#'   depth. See Details.
+#'   \code{"remaining"}: a sequential spending process where a fixed
+#'   fraction \code{spending_fraction} of the remaining budget is spent
+#'   at each depth. The spending fraction is set in advance, so the
+#'   resulting weights \eqn{w_\ell} depend only on the testing history
+#'   through depth \eqn{\ell - 1} --- they are predictable in the sense
+#'   required by the budget-weighted FWER theorem with predictable
+#'   denominators (Theorem B.5 in the supplement). This is the
+#'   theoretical justification for the \code{"remaining"} mode itself,
+#'   distinct from the switching corollary controlled by the
+#'   \code{switching} argument below.
 #' @param budget_total Initial error budget (default 1.0). The constraint
 #'   \eqn{\sum w_\ell \le} \code{budget_total} guarantees FWER control.
 #' @param spending_fraction Fraction of remaining budget to spend at each
@@ -753,9 +842,11 @@ alpha_adaptive_tree <- function(node_dat, delta_hat, max_depth = NULL,
 #'   \eqn{w_\ell = f \times B_\ell} where \eqn{f} is the spending
 #'   fraction and \eqn{B_\ell} is the remaining budget.
 #' @param switching Logical (default \code{FALSE}). When \code{TRUE},
-#'   implements the switching corollary (Corollary B.1): after each
-#'   update, if the remaining pruned error load fits within the
-#'   remaining budget, all deeper depths revert to nominal alpha.
+#'   implements the switching corollary: after each update, if the
+#'   remaining pruned error load fits within the remaining budget, all
+#'   deeper depths revert to nominal alpha. This is a separate FWER
+#'   guarantee from the predictable-weights mechanism that justifies
+#'   \code{"remaining"} mode.
 #'
 #' @return A list with three components:
 #' \describe{

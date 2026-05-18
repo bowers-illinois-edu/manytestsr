@@ -2,12 +2,9 @@
 % Please edit documentation in R/alpha_adaptive.R
 \name{alpha_adaptive}
 \alias{alpha_adaptive}
-\title{Adaptive Alpha Adjustment Based on Power Decay
-with \code{\link{find_blocks}}. The returned function adjusts
-significance levels at each tree depth based on estimated power
-decay (Algorithm 1 from Appendix B of the supplement).}
+\title{Adaptive Alpha Adjustment Based on Power Decay}
 \usage{
-alpha_adaptive(k, delta_hat, N_total, max_depth = 20L)
+alpha_adaptive(k, delta_hat, N_total, max_depth = 20L, budget_weights = NULL)
 }
 \arguments{
 \item{k}{Branching factor. Either a scalar (constant k at all levels)
@@ -22,6 +19,12 @@ true effect size.}
 \item{N_total}{Total sample size at the root level.}
 
 \item{max_depth}{Maximum depth to compute (default 20).}
+
+\item{budget_weights}{Controls how the error budget is allocated across
+depths. Same options as in \code{\link{compute_adaptive_alphas_tree}}:
+\code{NULL} (default, telescoping), \code{"equal"}, \code{"proportional"},
+or a numeric vector of length \code{max_depth - 1} that sums to at
+most 1.}
 }
 \value{
 A function with signature
@@ -30,17 +33,17 @@ conforming to the \code{alphafn} interface used by
 \code{\link{find_blocks}}.
 }
 \description{
-Adaptive Alpha Adjustment Based on Power Decay
-with \code{\link{find_blocks}}. The returned function adjusts
-significance levels at each tree depth based on estimated power
-decay (Algorithm 1 from Appendix B of the supplement).
+Factory function that returns a closure for use with
+\code{\link{find_blocks}}. The returned function adjusts significance
+levels at each tree depth based on estimated power decay, using the
+adaptive-alpha framework of Appendix B of the supplement.
 }
 \details{
 The returned function uses the \code{depth} parameter (passed by
 \code{find_blocks}) to look up the pre-computed alpha for each
 node's tree depth. The \code{pval}, \code{batch}, \code{nodesize},
 and \code{thew0} parameters are accepted for interface compatibility
-but are not used — unlike online FDR methods, the adaptive alpha
+but are not used --- unlike online FDR methods, the adaptive alpha
 depends only on tree structure, not on observed p-values.
 
 Results are cached internally: the vector of adjusted alphas is

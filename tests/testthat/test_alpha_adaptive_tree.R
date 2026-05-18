@@ -130,11 +130,12 @@ test_that("tree: root alpha is always nominal regardless of tree shape", {
       info = paste("regular tree k =", k)
     )
   }
-  # Also for the irregular DPP tree
+  # Also for the irregular DPP tree (suppress the irregular-telescoping
+  # warning --- this test is checking root alpha, not warning behavior)
   dpp <- make_dpp_tree()
-  alphas_dpp <- compute_adaptive_alphas_tree(
+  alphas_dpp <- suppressWarnings(compute_adaptive_alphas_tree(
     node_dat = dpp, delta_hat = 0.5, thealpha = 0.05
-  )
+  ))
   expect_equal(alphas_dpp[[1]], 0.05, info = "DPP tree")
 })
 
@@ -163,19 +164,21 @@ test_that("tree: matches parametric for regular k-ary trees", {
 
 test_that("tree: adjusted alpha never exceeds nominal alpha", {
   # The min(thealpha, ...) guard ensures we never give a level MORE
-  # alpha than nominal. This preserves FWER control.
+  # alpha than nominal. This preserves FWER control. Suppress the
+  # irregular-telescoping warning --- this test exists to verify the
+  # min() guard, not warning behavior.
   dpp <- make_dpp_tree()
-  alphas <- compute_adaptive_alphas_tree(
+  alphas <- suppressWarnings(compute_adaptive_alphas_tree(
     node_dat = dpp, delta_hat = 0.8, thealpha = 0.05
-  )
+  ))
   expect_true(all(unname(alphas) <= 0.05))
 })
 
 test_that("tree: all alphas are positive", {
   dpp <- make_dpp_tree()
-  alphas <- compute_adaptive_alphas_tree(
+  alphas <- suppressWarnings(compute_adaptive_alphas_tree(
     node_dat = dpp, delta_hat = 0.5, thealpha = 0.05
-  )
+  ))
   expect_true(all(alphas > 0))
 })
 
@@ -197,12 +200,15 @@ test_that("tree: natural gating bypass when sum_G <= 1", {
 })
 
 test_that("tree: irregular tree differs from parametric approximation", {
-  # The DPP tree is irregular — using k=3 as an approximation should
+  # The DPP tree is irregular --- using k=3 as an approximation should
   # give different alphas than using the actual tree structure.
+  # Suppress the irregular-telescoping warning that the new safeguard
+  # raises; this test is about parametric-vs-tree divergence, not the
+  # warning itself.
   dpp <- make_dpp_tree()
-  tree_alphas <- compute_adaptive_alphas_tree(
+  tree_alphas <- suppressWarnings(compute_adaptive_alphas_tree(
     node_dat = dpp, delta_hat = 0.8, thealpha = 0.05
-  )
+  ))
   param_alphas <- compute_adaptive_alphas(
     k = 3, delta_hat = 0.8, N_total = 2200,
     max_depth = length(tree_alphas), thealpha = 0.05

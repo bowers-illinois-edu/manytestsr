@@ -29,9 +29,16 @@ depth present in \code{node_dat}.}
 
 \item{budget_weights}{Controls depth-wise budget allocation. Accepts
 the same values as \code{\link{compute_adaptive_alphas_tree}}, plus
-\code{"remaining"}: a sequential spending process where a fraction
-\code{spending_fraction} of the remaining budget is spent at each
-depth. See Details.}
+\code{"remaining"}: a sequential spending process where a fixed
+fraction \code{spending_fraction} of the remaining budget is spent
+at each depth. The spending fraction is set in advance, so the
+resulting weights \eqn{w_\ell} depend only on the testing history
+through depth \eqn{\ell - 1} --- they are predictable in the sense
+required by the budget-weighted FWER theorem with predictable
+denominators (Theorem B.5 in the supplement). This is the
+theoretical justification for the \code{"remaining"} mode itself,
+distinct from the switching corollary controlled by the
+\code{switching} argument below.}
 
 \item{budget_total}{Initial error budget (default 1.0). The constraint
 \eqn{\sum w_\ell \le} \code{budget_total} guarantees FWER control.}
@@ -43,9 +50,11 @@ depth \eqn{\ell}, the weight is
 fraction and \eqn{B_\ell} is the remaining budget.}
 
 \item{switching}{Logical (default \code{FALSE}). When \code{TRUE},
-implements the switching corollary (Corollary B.1): after each
-update, if the remaining pruned error load fits within the
-remaining budget, all deeper depths revert to nominal alpha.}
+implements the switching corollary: after each update, if the
+remaining pruned error load fits within the remaining budget, all
+deeper depths revert to nominal alpha. This is a separate FWER
+guarantee from the predictable-weights mechanism that justifies
+\code{"remaining"} mode.}
 }
 \value{
 A list with three components:

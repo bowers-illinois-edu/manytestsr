@@ -9,7 +9,8 @@ compute_adaptive_alphas(
   delta_hat,
   N_total,
   max_depth = 20L,
-  thealpha = 0.05
+  thealpha = 0.05,
+  budget_weights = NULL
 )
 }
 \arguments{
@@ -27,6 +28,12 @@ true effect size.}
 \item{max_depth}{Maximum depth to compute (default 20).}
 
 \item{thealpha}{Nominal significance level (default 0.05).}
+
+\item{budget_weights}{Controls how the error budget is allocated across
+depths. Same options as in \code{\link{compute_adaptive_alphas_tree}}:
+\code{NULL} (default, telescoping), \code{"equal"}, \code{"proportional"},
+or a numeric vector of length \code{max_depth - 1} that sums to at
+most 1.}
 }
 \value{
 Named numeric vector of adjusted alpha levels, one per depth
@@ -36,25 +43,36 @@ Has attribute \code{"error_load"} containing the
 whether adjustment was needed.
 }
 \description{
-Implements Algorithm 1 from Appendix B of the supplement. First checks
-whether natural gating suffices (total error load \eqn{\le 1}); if so,
-returns nominal alpha at every level. Otherwise, computes adjusted
-significance levels that compensate for the error load at each depth.
+Computes the per-depth significance levels for a regular k-ary tree
+under the adaptive-alpha framework of Appendix B of the supplement.
+First checks whether natural gating suffices (total error load
+\eqn{\le 1}); if so, returns nominal alpha at every level. Otherwise,
+computes adjusted significance levels that compensate for the error
+load at each depth, optionally with user-supplied depth-wise budget
+weights.
 }
 \details{
 The function first calls \code{\link{compute_error_load}} to assess
 whether natural gating suffices. When \eqn{\sum G_\ell \le 1}, no
 adjustment is needed and nominal \code{thealpha} is returned at every
-level.
+level (and \code{budget_weights} is ignored, since the tree protects
+itself).
 
-When adjustment is needed, the formula at level \eqn{\ell} is:
+When adjustment is needed and \code{budget_weights = NULL} (per-depth
+telescoping), the formula at level \eqn{\ell} is:
 \deqn{\alpha_\ell^{adj} = \min\left\{\alpha,\;
   \frac{\alpha}{k^{(\ell-1)} \cdot \prod_{j=1}^{\ell-1} \hat\theta_j}
   \right\}}
 
-The FWER guarantee (Theorem in the supplement) requires that power
-is not underestimated (i.e., \eqn{\hat\theta_j \geq \theta_j}).
-In practice this means using a conservatively large \code{delta_hat}.
+When \code{budget_weights} is supplied, the formula becomes
+\eqn{\alpha_\ell^{adj} = \min\{\alpha, w_\ell \alpha / G_\ell\}},
+where \eqn{w_\ell} is the resolved weight at depth \eqn{\ell}. The
+constraint \eqn{\sum w_\ell \le 1} is what gives the FWER guarantee
+via the budget-weighted theorem in the supplement.
+
+The FWER guarantee requires that power is not underestimated
+(i.e., \eqn{\hat\theta_j \geq \theta_j}). In practice this means
+using a conservatively large \code{delta_hat}.
 }
 \examples{
 # Natural gating sufficient: all alphas = 0.05
@@ -64,5 +82,9 @@ compute_adaptive_alphas(k = 3, delta_hat = 0.2, N_total = 100,
 # Needs adjustment: alphas shrink at deeper levels
 compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000,
                         max_depth = 5)
+
+# Budget-weighted: equal allocation across depths 2..max_depth
+compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000,
+                        max_depth = 5, budget_weights = "equal")
 
 }
