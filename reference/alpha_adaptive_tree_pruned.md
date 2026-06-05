@@ -45,15 +45,17 @@ alpha_adaptive_tree_pruned(
 
   Controls depth-wise budget allocation. Accepts the same values as
   [`compute_adaptive_alphas_tree`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_adaptive_alphas_tree.md),
-  plus `"remaining"`: a sequential spending process where a fixed
+  plus `"depth-sequential"`: a sequential spending process where a fixed
   fraction `spending_fraction` of the remaining budget is spent at each
   depth. The spending fraction is set in advance, so the resulting
   weights \\w\_\ell\\ depend only on the testing history through depth
   \\\ell - 1\\ — they are predictable in the sense required by the
   budget-weighted FWER theorem with predictable denominators (Theorem
   B.5 in the supplement). This is the theoretical justification for the
-  `"remaining"` mode itself, distinct from the switching corollary
-  controlled by the `switching` argument below.
+  `"depth-sequential"` mode itself, distinct from the switching
+  corollary controlled by the `switching` argument below. `"remaining"`
+  is accepted as a deprecated alias for `"depth-sequential"` and emits a
+  warning.
 
 - budget_total:
 
@@ -63,9 +65,9 @@ alpha_adaptive_tree_pruned(
 - spending_fraction:
 
   Fraction of remaining budget to spend at each depth when
-  `budget_weights = "remaining"` (default 0.5). At depth \\\ell\\, the
-  weight is \\w\_\ell = f \times B\_\ell\\ where \\f\\ is the spending
-  fraction and \\B\_\ell\\ is the remaining budget.
+  `budget_weights = "depth-sequential"` (default 0.5). At depth
+  \\\ell\\, the weight is \\w\_\ell = f \times B\_\ell\\ where \\f\\ is
+  the spending fraction and \\B\_\ell\\ is the remaining budget.
 
 - switching:
 
@@ -73,7 +75,7 @@ alpha_adaptive_tree_pruned(
   corollary: after each update, if the remaining pruned error load fits
   within the remaining budget, all deeper depths revert to nominal
   alpha. This is a separate FWER guarantee from the predictable-weights
-  mechanism that justifies `"remaining"` mode.
+  mechanism that justifies `"depth-sequential"` mode.
 
 ## Value
 

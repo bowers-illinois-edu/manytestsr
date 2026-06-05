@@ -15,7 +15,7 @@ to surviving branches when dead branches are removed."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1005</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,16 +92,17 @@ depth present in <code>node_dat</code>.</p></dd>
 <dt id="arg-budget-weights">budget_weights<a class="anchor" aria-label="anchor" href="#arg-budget-weights"></a></dt>
 <dd><p>Controls depth-wise budget allocation. Accepts
 the same values as <code><a href="compute_adaptive_alphas_tree.html">compute_adaptive_alphas_tree</a></code>, plus
-<code>"remaining"</code>: a sequential spending process where a fixed
+<code>"depth-sequential"</code>: a sequential spending process where a fixed
 fraction <code>spending_fraction</code> of the remaining budget is spent
 at each depth. The spending fraction is set in advance, so the
 resulting weights \(w_\ell\) depend only on the testing history
 through depth \(\ell - 1\) — they are predictable in the sense
 required by the budget-weighted FWER theorem with predictable
 denominators (Theorem B.5 in the supplement). This is the
-theoretical justification for the <code>"remaining"</code> mode itself,
+theoretical justification for the <code>"depth-sequential"</code> mode itself,
 distinct from the switching corollary controlled by the
-<code>switching</code> argument below.</p></dd>
+<code>switching</code> argument below. <code>"remaining"</code> is accepted as a
+deprecated alias for <code>"depth-sequential"</code> and emits a warning.</p></dd>
 
 
 <dt id="arg-budget-total">budget_total<a class="anchor" aria-label="anchor" href="#arg-budget-total"></a></dt>
@@ -111,7 +112,7 @@ distinct from the switching corollary controlled by the
 
 <dt id="arg-spending-fraction">spending_fraction<a class="anchor" aria-label="anchor" href="#arg-spending-fraction"></a></dt>
 <dd><p>Fraction of remaining budget to spend at each
-depth when <code>budget_weights = "remaining"</code> (default 0.5). At
+depth when <code>budget_weights = "depth-sequential"</code> (default 0.5). At
 depth \(\ell\), the weight is
 \(w_\ell = f \times B_\ell\) where \(f\) is the spending
 fraction and \(B_\ell\) is the remaining budget.</p></dd>
@@ -123,7 +124,7 @@ implements the switching corollary: after each update, if the
 remaining pruned error load fits within the remaining budget, all
 deeper depths revert to nominal alpha. This is a separate FWER
 guarantee from the predictable-weights mechanism that justifies
-<code>"remaining"</code> mode.</p></dd>
+<code>"depth-sequential"</code> mode.</p></dd>
 
 </dl></div>
     <div class="section level2">

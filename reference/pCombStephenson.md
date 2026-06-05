@@ -94,11 +94,16 @@ expects.
 
 The `k` parameter indexes the k-th largest treatment effect, where
 tau\_(1) \>= tau\_(2) \>= ... \>= tau\_(n). The test asks whether
-tau\_(k) exceeds `c`. Internally, CMRSS sets the top `min(m, n-k)`
-treated units' adjusted outcomes to infinity. The test is non-trivial
-only when `k > n - m` (where n is total units and m is number treated),
-because otherwise all treated units receive infinity and the test
-statistic is constant across all permutations.
+tau\_(k) exceeds `c`. Internally, CMRSS sets `p = m - cmrss_k` of the
+treated units' adjusted outcomes to infinity, where
+`cmrss_k = k - (n - m)` is the CMRSS-internal rank index. The test is
+non-trivial only when `k > n - m` (where n is total units and m is
+number treated), because otherwise all treated units receive infinity
+and the test statistic is constant across all permutations. The wrapper
+returns p = 1 in that degenerate case without calling CMRSS.
+
+Requires an LP solver. Install the open-source HiGHS solver with
+`install.packages('highs')`, or Gurobi with a license.
 
 The default `k = n` and `c = 0` tests Fisher's sharp null of no effects
 for any unit. At k = n no treated units receive infinity, so the test

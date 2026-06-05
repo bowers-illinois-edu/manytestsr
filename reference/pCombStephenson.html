@@ -13,7 +13,7 @@ the k-th largest individual treatment effect exceeds a threshold c."></head><bod
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1005</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -137,12 +137,16 @@ tuning parameter. This wrapper builds the <code>methods.list.all</code>
 configuration that <code><a href="https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.html" class="external-link">CMRSS::pval_comb_block()</a></code> expects.</p>
 <p>The <code>k</code> parameter indexes the k-th largest treatment effect,
 where tau_(1) &gt;= tau_(2) &gt;= ... &gt;= tau_(n). The test asks whether
-tau_(k) exceeds <code>c</code>. Internally, CMRSS sets the top
-<code>min(m, n-k)</code> treated units' adjusted outcomes to infinity.
+tau_(k) exceeds <code>c</code>. Internally, CMRSS sets <code>p = m - cmrss_k</code>
+of the treated units' adjusted outcomes to infinity, where
+<code>cmrss_k = k - (n - m)</code> is the CMRSS-internal rank index.
 The test is non-trivial only when <code>k &gt; n - m</code> (where n is
 total units and m is number treated), because otherwise all
 treated units receive infinity and the test statistic is constant
-across all permutations.</p>
+across all permutations. The wrapper returns p = 1 in that
+degenerate case without calling CMRSS.</p>
+<p>Requires an LP solver. Install the open-source HiGHS solver with
+<code>install.packages('highs')</code>, or Gurobi with a license.</p>
 <p>The default <code>k = n</code> and <code>c = 0</code> tests Fisher's sharp
 null of no effects for any unit. At k = n no treated units receive
 infinity, so the test statistic reduces to a standard stratified
