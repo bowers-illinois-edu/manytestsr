@@ -79,7 +79,7 @@ test_that("switching to nominal alpha when pruned error load <= remaining budget
   # Create pruned factory with switching enabled and remaining-budget process
   obj <- alpha_adaptive_tree_pruned(
     node_dat = nd, delta_hat = 0.5,
-    budget_weights = "remaining", switching = TRUE
+    budget_weights = "depth-sequential", switching = TRUE
   )
 
   # Simulate heavy pruning: only 1 of 3 children survives at depth 2
@@ -126,7 +126,7 @@ test_that("remaining budget decreases as depths are processed", {
 
   obj <- alpha_adaptive_tree_pruned(
     node_dat = nd, delta_hat = 0.5,
-    budget_weights = "remaining", spending_fraction = 0.5,
+    budget_weights = "depth-sequential", spending_fraction = 0.5,
     budget_total = 1.0
   )
 
@@ -156,7 +156,7 @@ test_that("reset restores budget to initial value", {
 
   obj <- alpha_adaptive_tree_pruned(
     node_dat = nd, delta_hat = 0.5,
-    budget_weights = "remaining", spending_fraction = 0.5,
+    budget_weights = "depth-sequential", spending_fraction = 0.5,
     budget_total = 1.0
   )
 
@@ -193,7 +193,7 @@ test_that("adjusted alphas under switching never exceed nominal", {
 
   obj <- alpha_adaptive_tree_pruned(
     node_dat = nd, delta_hat = 0.5,
-    budget_weights = "remaining", switching = TRUE
+    budget_weights = "depth-sequential", switching = TRUE
   )
 
   # Even after switching fires, no alpha should exceed nominal
@@ -246,5 +246,51 @@ test_that("alpha_adaptive_tree_pruned with defaults matches current behavior", {
 
   expect_equal(as.numeric(alphas_old), as.numeric(alphas_new),
     info = "Default new parameters must reproduce old behavior exactly"
+  )
+})
+
+
+# ============================================================================
+# Deprecated alias: budget_weights = "remaining" warns and matches the new name
+# ============================================================================
+
+test_that('budget_weights = "remaining" is a deprecated alias for "depth-sequential"', {
+  nd <- make_regular_tree(k = 3, max_depth = 3, N_total = 1500)
+  depth2_nodes <- nd$nodenum[nd$depth == 2L]
+  pruned_nd <- prune_tree(nd, depth2_nodes[2:3])
+
+  # The deprecated name must emit a warning at factory time
+  expect_warning(
+    obj_old_name <- alpha_adaptive_tree_pruned(
+      node_dat = nd, delta_hat = 0.5,
+      budget_weights = "remaining", switching = TRUE
+    ),
+    regexp = "deprecated"
+  )
+
+  # The new name must not warn
+  expect_silent(
+    obj_new_name <- alpha_adaptive_tree_pruned(
+      node_dat = nd, delta_hat = 0.5,
+      budget_weights = "depth-sequential", switching = TRUE
+    )
+  )
+
+  # Both must produce identical alpha schedules after the same pruning history
+  obj_old_name$update(pruned_nd, 0.05)
+  obj_new_name$update(pruned_nd, 0.05)
+
+  args <- list(
+    pval = rep(0.01, nrow(pruned_nd)),
+    batch = seq_len(nrow(pruned_nd)),
+    nodesize = pruned_nd$nodesize,
+    thealpha = 0.05,
+    depth = pruned_nd$depth
+  )
+  alphas_old_name <- do.call(obj_old_name$alphafn, args)
+  alphas_new_name <- do.call(obj_new_name$alphafn, args)
+
+  expect_equal(as.numeric(alphas_old_name), as.numeric(alphas_new_name),
+    info = 'Deprecated "remaining" must behave identically to "depth-sequential"'
   )
 })

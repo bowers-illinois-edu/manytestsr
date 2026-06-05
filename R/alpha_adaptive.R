@@ -824,20 +824,21 @@ alpha_adaptive_tree <- function(node_dat, delta_hat, max_depth = NULL,
 #' @inheritParams alpha_adaptive_tree
 #' @param budget_weights Controls depth-wise budget allocation. Accepts
 #'   the same values as \code{\link{compute_adaptive_alphas_tree}}, plus
-#'   \code{"remaining"}: a sequential spending process where a fixed
+#'   \code{"depth-sequential"}: a sequential spending process where a fixed
 #'   fraction \code{spending_fraction} of the remaining budget is spent
 #'   at each depth. The spending fraction is set in advance, so the
 #'   resulting weights \eqn{w_\ell} depend only on the testing history
 #'   through depth \eqn{\ell - 1} --- they are predictable in the sense
 #'   required by the budget-weighted FWER theorem with predictable
 #'   denominators (Theorem B.5 in the supplement). This is the
-#'   theoretical justification for the \code{"remaining"} mode itself,
+#'   theoretical justification for the \code{"depth-sequential"} mode itself,
 #'   distinct from the switching corollary controlled by the
-#'   \code{switching} argument below.
+#'   \code{switching} argument below. \code{"remaining"} is accepted as a
+#'   deprecated alias for \code{"depth-sequential"} and emits a warning.
 #' @param budget_total Initial error budget (default 1.0). The constraint
 #'   \eqn{\sum w_\ell \le} \code{budget_total} guarantees FWER control.
 #' @param spending_fraction Fraction of remaining budget to spend at each
-#'   depth when \code{budget_weights = "remaining"} (default 0.5). At
+#'   depth when \code{budget_weights = "depth-sequential"} (default 0.5). At
 #'   depth \eqn{\ell}, the weight is
 #'   \eqn{w_\ell = f \times B_\ell} where \eqn{f} is the spending
 #'   fraction and \eqn{B_\ell} is the remaining budget.
@@ -846,7 +847,7 @@ alpha_adaptive_tree <- function(node_dat, delta_hat, max_depth = NULL,
 #'   remaining pruned error load fits within the remaining budget, all
 #'   deeper depths revert to nominal alpha. This is a separate FWER
 #'   guarantee from the predictable-weights mechanism that justifies
-#'   \code{"remaining"} mode.
+#'   \code{"depth-sequential"} mode.
 #'
 #' @return A list with three components:
 #' \describe{
@@ -912,10 +913,19 @@ alpha_adaptive_tree_pruned <- function(node_dat, delta_hat,
     stop("node_dat must have columns: ", paste(missing_cols, collapse = ", "))
   }
 
-  # Determine whether to use the remaining-budget sequential process
-  use_remaining <- identical(budget_weights, "remaining")
-  # For non-"remaining" budget_weights, pass through to compute function
-  bw_for_compute <- if (use_remaining) NULL else budget_weights
+  # Determine whether to use the depth-sequential (predictable
+  # remaining-budget) spending process. "remaining" is the deprecated former
+  # name for "depth-sequential"; accept it as an alias with a warning.
+  if (identical(budget_weights, "remaining")) {
+    warning(
+      'budget_weights = "remaining" is deprecated; use "depth-sequential" instead.',
+      call. = FALSE
+    )
+    budget_weights <- "depth-sequential"
+  }
+  use_depth_sequential <- identical(budget_weights, "depth-sequential")
+  # For other budget_weights values, pass through to the compute function
+  bw_for_compute <- if (use_depth_sequential) NULL else budget_weights
 
   # Shared environment: alphafn reads, update/reset write.
   state <- new.env(parent = emptyenv())
@@ -924,7 +934,7 @@ alpha_adaptive_tree_pruned <- function(node_dat, delta_hat,
   state$budget_remaining <- budget_total
 
   # Compute schedule on a given tree and store in shared state.
-  # When use_remaining = TRUE, the budget-weight for this depth is
+  # When use_depth_sequential = TRUE, the budget-weight for this depth is
   # spending_fraction * budget_remaining, and budget_remaining is
   # decremented. When switching = TRUE, check if the remaining error
   # load fits within the remaining budget.
@@ -957,7 +967,7 @@ alpha_adaptive_tree_pruned <- function(node_dat, delta_hat,
     }
 
     # --- Remaining-budget sequential spending ---
-    if (use_remaining && is_update) {
+    if (use_depth_sequential && is_update) {
       # Spend a fraction of the remaining budget at this update
       c_ell <- spending_fraction * state$budget_remaining
       state$budget_remaining <- state$budget_remaining - c_ell

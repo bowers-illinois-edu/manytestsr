@@ -71,12 +71,17 @@ configuration that \code{CMRSS::pval_comb_block()} expects.
 
 The \code{k} parameter indexes the k-th largest treatment effect,
 where tau_(1) >= tau_(2) >= ... >= tau_(n). The test asks whether
-tau_(k) exceeds \code{c}. Internally, CMRSS sets the top
-\code{min(m, n-k)} treated units' adjusted outcomes to infinity.
+tau_(k) exceeds \code{c}. Internally, CMRSS sets \code{p = m - cmrss_k}
+of the treated units' adjusted outcomes to infinity, where
+\code{cmrss_k = k - (n - m)} is the CMRSS-internal rank index.
 The test is non-trivial only when \code{k > n - m} (where n is
 total units and m is number treated), because otherwise all
 treated units receive infinity and the test statistic is constant
-across all permutations.
+across all permutations. The wrapper returns p = 1 in that
+degenerate case without calling CMRSS.
+
+Requires an LP solver. Install the open-source HiGHS solver with
+\code{install.packages('highs')}, or Gurobi with a license.
 
 The default \code{k = n} and \code{c = 0} tests Fisher's sharp
 null of no effects for any unit. At k = n no treated units receive
