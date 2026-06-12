@@ -423,6 +423,32 @@ make_results_tree <- function(orig_res, block_id, node_label = NULL, return_what
     }
   }
 
+  ## Propagate block-level truth up the tree. The assignment above labels `nonnull`
+  ## on leaf nodes only (blocks live at the leaves), so an internal node -- a whole
+  ## college or region -- is left NA. Without propagation a false rejection of a
+  ## true internal null (rejecting a null group) is dropped from the node-level FWER
+  ## tally below, even though the top-down procedure tests that internal hypothesis
+  ## and rejecting it is a Type I error. A node is non-null iff some descendant leaf
+  ## is non-null, and a known null iff all its descendant leaves are known nulls; a
+  ## node whose subtree carries no truth stays NA. We sweep depths from deepest to
+  ## shallowest, aggregating each level's children into their parents -- depth is the
+  ## ancestor-chain length, so a parent always sits exactly one level above its
+  ## children and is finalized before it is itself aggregated one level further up.
+  if (any(!is.na(nodes_dt$nonnull))) {
+    child_depths <- sort(unique(nodes_dt[depth > 1L, depth]), decreasing = TRUE)
+    for (d in child_depths) {
+      parent_truth <- nodes_dt[
+        depth == d & !is.na(parent_name) & parent_name != 0,
+        .(prop_nonnull = any(nonnull == TRUE, na.rm = TRUE),
+          any_known    = any(!is.na(nonnull))),
+        by = .(parent_name)
+      ][any_known == TRUE]
+      if (nrow(parent_truth) > 0L) {
+        nodes_dt[parent_truth, nonnull := i.prop_nonnull, on = c("name" = "parent_name")]
+      }
+    }
+  }
+
   nodes_dt[is.na(num_blocks) & node_type == "leaf", num_blocks := 1L]
 
   max_depth <- suppressWarnings(max(nodes_dt$depth, na.rm = TRUE))

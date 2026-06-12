@@ -12,7 +12,7 @@ utils::globalVariables(c(
   "J", "Y", "a", "allnull", "alpha1", "anynotnull", "bF", "batch", "group_id", "block_id", "blocks", "blocksbygroup", "both_ns",
   "closed_testing_reject", "consistent", "dat", "decision.times", "depth", "desc_min_p", "dt",
   "fin_grp", "fin_nodenum", "fin_parent", "fin_parent_p", "from", "g1", "gamma", "group_hit",
-  "group_hit2", "grpsize", "hit", "hit_grp", "i.blocks", "i.node_label_val", "i.nonnull", "i.nodesize", "i.num_leaves", "id",
+  "any_known", "group_hit2", "grpsize", "hit", "hit_grp", "i.blocks", "i.node_label_val", "i.nonnull", "i.nodesize", "i.num_leaves", "i.prop_nonnull", "id", "prop_nonnull",
   "iu_p_intersection", "iu_p_union", "iu_reject_intersection", "iu_reject_union",
   "label", "leaves", "max_alpha", "max_p", "maxate", "maxdepth", "meanate", "medianate", "meinshausen_adjusted_p",
   "meinshausen_level_tested", "meinshausen_reject", "minate", "name", "nb", "newZ", "newZF",
