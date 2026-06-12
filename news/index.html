@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1006</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1007</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,14 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.4.1007" id="manytestsr-0041007">manytestsr 0.0.4.1007<a class="anchor" aria-label="anchor" href="#manytestsr-0041007"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-0-4-1007">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-0-4-1007"></a></h3>
+<ul><li>
+<code><a href="../reference/make_results_tree.html">make_results_tree()</a></code> now propagates block-level truth (<code>nonnull</code>) up the tree instead of labeling leaf nodes only. An internal node is non-null iff a descendant leaf is non-null, and a known null iff all of its descendant leaves are known nulls. Without this, a false rejection of a true internal null hypothesis (rejecting a whole null group/college/region) was dropped from the node-level FWER tally (<code>node_any_false_rejection</code>, <code>node_false_rejection_prop</code>, <code>node_num_false_rejections</code>, <code>node_false_discovery_prop</code>), and correct rejections of non-null ancestors were missing from <code>node_true_discoveries</code> and <code>node_power</code>. The procedure’s rejection decisions are unchanged; only the truth labeling used to score node-level metrics is corrected. New tests in <code>tests/testthat/test_node_truth_propagation.R</code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.4.1005" id="manytestsr-0041005">manytestsr 0.0.4.1005<a class="anchor" aria-label="anchor" href="#manytestsr-0041005"></a></h2>
 <div class="section level3">

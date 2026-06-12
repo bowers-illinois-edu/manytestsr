@@ -1,5 +1,24 @@
 # Changelog
 
+## manytestsr 0.0.4.1007
+
+### Bug fixes
+
+- [`make_results_tree()`](https://bowers-illinois-edu.github.io/manytestsr/reference/make_results_tree.md)
+  now propagates block-level truth (`nonnull`) up the tree instead of
+  labeling leaf nodes only. An internal node is non-null iff a
+  descendant leaf is non-null, and a known null iff all of its
+  descendant leaves are known nulls. Without this, a false rejection of
+  a true internal null hypothesis (rejecting a whole null
+  group/college/region) was dropped from the node-level FWER tally
+  (`node_any_false_rejection`, `node_false_rejection_prop`,
+  `node_num_false_rejections`, `node_false_discovery_prop`), and correct
+  rejections of non-null ancestors were missing from
+  `node_true_discoveries` and `node_power`. The procedure’s rejection
+  decisions are unchanged; only the truth labeling used to score
+  node-level metrics is corrected. New tests in
+  `tests/testthat/test_node_truth_propagation.R`.
+
 ## manytestsr 0.0.4.1005
 
 ### Bug fixes
