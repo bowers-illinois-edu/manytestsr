@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1007</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1008</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,21 @@
 <h2 id="warning-development-stage-package">Warning: development-stage package<a class="anchor" aria-label="anchor" href="#warning-development-stage-package"></a>
 </h2>
 <p><strong>This package is under active development. The API may change without notice, and not all procedures have proven statistical properties yet.</strong> If you use it in applied work, pin a specific commit or version and check back for updates.</p>
-<p>Current version: <strong>0.0.4.1002</strong></p>
+<p>Current version: <strong>0.0.4.1008</strong></p>
+</div>
+<div class="section level2">
+<h2 id="corrections-after-peer-review-2026-08">Corrections after peer review (2026-08)<a class="anchor" aria-label="anchor" href="#corrections-after-peer-review-2026-08"></a>
+</h2>
+<p>An anonymous referee at <em>Annals of Applied Statistics</em> worked through this package alongside our manuscript and identified genuine errors. Version 0.0.4.1008 corrects them; the pre-correction state is tagged <code>pre-referee-fixes</code>. If you used earlier versions, three changes matter:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Error loads from earlier versions are wrong and should be recomputed.</strong> <code><a href="reference/compute_error_load.html">compute_error_load()</a></code> implemented a different quantity from the paper’s definition (it multiplied each node’s own rejection probability back in, included a depth-1 term, and used one-tailed power), and the documented workflow fed it node sizes on a weight scale rather than headcounts. All of these understate the load, so the function could answer “no multiplicity adjustment needed” for designs that require adjustment. The corrected function implements the paper’s Definition 2 with two-tailed power and refuses non-headcount node sizes: pass a count column (e.g. <code>blocksize = "nb"</code>), not the default <code>hwt</code> weights, for any error-load or adaptive-alpha use.</li>
+<li>
+<strong>The branch-pruning alpha schedule’s strong-FWER guarantee is withdrawn.</strong> The theorem behind <code><a href="reference/alpha_adaptive_tree_pruned.html">alpha_adaptive_tree_pruned()</a></code> (pruned load in the denominator, plus its switching rule) is false: an exact counterexample reaches FWER 0.063 at alpha = 0.05 with every stated hypothesis satisfied. The constructor now warns; levels are computed as before so existing analyses can be reproduced, but no strong-FWER claim attaches to them. <code><a href="reference/alpha_adaptive_tree.html">alpha_adaptive_tree()</a></code> with static budget weights retains its guarantee.</li>
+<li>
+<strong>Detection reporting now separates kinds of findings.</strong> <code><a href="reference/report_detections.html">report_detections()</a></code> gains <code>hit_type</code> (“single” = the block’s own test rejected; “group” = an effect was localized to the block’s parent but not attributed to specific blocks; “none” otherwise), reports the rejecting parent’s p-value (<code>group_p</code>) for covered blocks, never returns <code>hit = NA</code>, and computes every quantity at each block’s own final tested depth (earlier versions mishandled branches that stopped above the tree’s maximum depth).</li>
+</ol>
+<p>Details in <code>NEWS.md</code> and <code>FIX_PLAN.md</code>. We thank the referee, whose report improved both the package and the paper.</p>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -82,8 +96,9 @@
 <ul class="task-list">
 <li><label><input type="checkbox" checked>Adaptive alpha adjustment for tree-structured testing (<code>compute_adaptive_alphas</code>, <code>alpha_adaptive</code>)</label></li>
 <li><label><input type="checkbox" checked>Tree-based alpha schedules for irregular trees (<code>compute_adaptive_alphas_tree</code>, <code>alpha_adaptive_tree</code>)</label></li>
-<li><label><input type="checkbox" checked>Branch-pruning adaptive alpha that reallocates alpha from dead branches (<code>alpha_adaptive_tree_pruned</code>)</label></li>
-<li><label><input type="checkbox" checked>Error-load diagnostics (<code>compute_error_load</code>)</label></li>
+<li><label><input type="checkbox" checked>Branch-pruning adaptive alpha that reallocates alpha from dead branches (<code>alpha_adaptive_tree_pruned</code>) — implemented, but its strong-FWER guarantee was withdrawn 2026-08 (see “Corrections after peer review”)</label></li>
+<li><label><input type="checkbox">Replacement pruning schedule with a proof (count-based denominator or an inheritance-style reallocation; requires a conditional-validity condition stated and argued for randomization tests)</label></li>
+<li><label><input type="checkbox" checked>Error-load diagnostics (<code>compute_error_load</code>; corrected to the paper’s Definition 2 in 0.0.4.1008)</label></li>
 <li><label><input type="checkbox">Remove or deprecate the sequential (stream-based) alpha procedures (<code>alpha_investing</code>, <code>alpha_saffron</code>, <code>alpha_addis</code>) from <code>onlineFDR</code>. These treat p-values as a flat stream and do not have provable FWER control properties for tree-structured testing.</label></li>
 </ul>
 </div>
@@ -223,7 +238,7 @@ make build      # build the package</code></pre>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

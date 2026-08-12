@@ -15,7 +15,7 @@ alpha adjustment is required."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1007</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1008</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,7 +92,14 @@ mode; ignored when <code>node_dat</code> is provided.</p></dd>
 <code>nodenum</code>, <code>parent</code>, <code>depth</code>, and <code>nodesize</code>.
 When provided, the function computes per-node power from
 <code>nodesize</code> and aggregates error load by depth. This supports
-irregular trees (e.g., DPP design with unequal splits).</p></dd>
+irregular trees (e.g., DPP design with unequal splits).
+<code>nodesize</code> must be a HEADCOUNT (number of units in the node):
+it enters a power calculation, and weight-scale values – in
+particular node sums of <code>find_blocks</code>'s default
+<code>blocksize = "hwt"</code> harmonic weights – are refused with an
+error. Per-depth loads follow Definition 2 of the paper: the sum of
+path power (product of PROPER-ancestor two-tailed powers) over the
+nodes at each depth, from depth 2; the root contributes nothing.</p></dd>
 
 
 <dt id="arg-max-depth">max_depth<a class="anchor" aria-label="anchor" href="#arg-max-depth"></a></dt>
@@ -157,27 +164,27 @@ which generalizes the regular-tree formula to irregular branching.</p>
 <span class="r-in"><span><span class="fu">compute_error_load</span><span class="op">(</span>k <span class="op">=</span> <span class="fl">3</span>, delta_hat <span class="op">=</span> <span class="fl">0.3</span>, N_total <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $G</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            1            2            3            4            5            6 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9.999990e-01 2.916379e+00 5.326176e+00 4.022713e+00 1.354743e+00 2.562653e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.000000e+00 2.999997e+00 8.749136e+00 1.597888e+01 1.209598e+01 4.197416e+00 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            7            8            9           10           11           12 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3.343749e-02 3.475357e-03 3.153782e-04 2.642414e-05 2.113216e-06 1.644896e-07 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8.999839e-01 1.541699e-01 2.421718e-02 3.689684e-03 5.563519e-04 8.359849e-05 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           13           14           15           16           17           18 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1.260452e-08 9.571413e-10 7.230190e-11 5.445132e-12 4.093620e-13 3.074454e-14 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1.254707e-05 1.882426e-06 2.823821e-07 4.235823e-08 6.353781e-09 9.530694e-10 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           19           20 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2.307679e-15 1.731555e-16 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1.429605e-10 2.144408e-11 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $sum_G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 14.91353</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 45.10412</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $needs_adjustment</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $thetas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          1          2          3          4          5          6          7 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.99999897 0.97212721 0.60876590 0.25175746 0.11225782 0.06305386 0.04349332 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.99999897 0.97212722 0.60877948 0.25233254 0.11566975 0.07147127 0.05710096 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          8          9         10         11         12         13         14 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.03464531 0.03024900 0.02792852 0.02665765 0.02594617 0.02554268 0.02531212 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.05236038 0.05078604 0.05026193 0.05008730 0.05002910 0.05000970 0.05000323 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         15         16         17         18         19         20 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.02517981 0.02510368 0.02505982 0.02503452 0.02501993 0.02501150 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.05000108 0.05000036 0.05000012 0.05000004 0.05000001 0.05000000 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $critical_level</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4</span>
@@ -197,7 +204,7 @@ which generalizes the regular-tree formula to irregular branching.</p>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">compute_error_load</span><span class="op">(</span>k <span class="op">=</span> <span class="fl">10</span>, delta_hat <span class="op">=</span> <span class="fl">0.5</span>, N_total <span class="op">=</span> <span class="fl">5000</span>,</span></span>
 <span class="r-in"><span>                          max_depth <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">sum_G</span>     <span class="co"># likely &gt; 1</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 105.2438</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 110</span>
 <span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">needs_adjustment</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span></span></span>
@@ -212,7 +219,7 @@ which generalizes the regular-tree formula to irregular branching.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

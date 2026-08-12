@@ -49,8 +49,20 @@ report_detections(
 
 ## Value
 
-A data.table adding a column `hit` to the `res` data.table indicating a
-"hit" or detection for that block (or group of blocks)
+A data.table adding columns to the `res` data.table: `hit` (TRUE when
+the block is detected either by its own test or by an unattributed group
+rejection; never NA); `hit_type` ("single" = the block's own singleton
+test rejected; "group" = the block's family parent rejected while no
+child of that parent rejected, so the effect is localized to the parent
+but not attributed to specific blocks; "none" otherwise – including
+blocks under a rejected parent that a sibling's individual rejection
+already explains); `group_p` (for "group" blocks, the rejecting parent's
+p-value; NA otherwise); and `fin_depth` (the block's own final tested
+depth). `pfinalb` from
+[`find_blocks`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)
+is the running maximum of p-values along the block's tested path, so for
+"group" blocks it shows the non-significant child-level p while
+`group_p` shows the parent rejection that constitutes the finding.
 
 ## Examples
 

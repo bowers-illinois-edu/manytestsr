@@ -101,19 +101,22 @@ A list with three components:
 
 ## Details
 
-The FWER guarantee follows from Theorem B.5 in the supplement:
-predictable budget weights with data-dependent denominators. The weights
-are "predictable" because \\w\_\ell\\ depends only on the testing
-history through depth \\\ell - 1\\, not on depth-\\\ell\\ outcomes. The
-union bound across depths gives FWER \\\le \alpha\\ whenever \\\sum
-w\_\ell \le 1\\.
-
-The **switching corollary** (when `switching = TRUE`): after pruning
-narrows the surviving tree, if the remaining error load \\\sum\_{\ell
-\ge s} D\_\ell \le B_s\\ (remaining budget), then \\\alpha\_\ell =
-\alpha\\ for all \\\ell \ge s\\. This works by setting \\w\_\ell =
-D\_\ell\\, so the \\D\_\ell\\ in numerator and denominator cancel,
-leaving nominal alpha.
+**The strong-FWER guarantee claimed for this schedule DOES NOT HOLD
+(2026-08 referee correction; see FIX_PLAN.md).** The former
+justification – predictable budget weights with the pruned load
+\\D\_\ell\\ as a data-dependent denominator – was falsified by exact
+counterexample: with valid tests and conservative power holding, the
+schedule reaches FWER 0.063 at \\\alpha = 0.05\\. The failure is
+structural: \\D\_\ell\\ charges each surviving null its unconditional
+reach probability, but conditional on its parent's rejection a surviving
+null is one full test, so when path powers are small the exposed-null
+count exceeds the charged load. The switching rule (`switching = TRUE`)
+re-spends to nominal alpha exactly in that regime and inherits the
+failure. The constructor warns accordingly. Levels are computed as
+before so that existing analyses remain reproducible; for a schedule
+with a proof, use
+[`alpha_adaptive_tree`](https://bowers-illinois-edu.github.io/manytestsr/reference/alpha_adaptive_tree.md)
+with static budget weights over the full-tree load.
 
 When `find_blocks` detects a list-valued `alphafn`, it extracts these
 three components and calls `reset` at the start of each run and `update`
@@ -129,6 +132,7 @@ nd <- data.frame(
   nodesize = c(500, 250, 250, 125, 125, 100, 150)
 )
 obj <- alpha_adaptive_tree_pruned(node_dat = nd, delta_hat = 0.5)
+#> Warning: alpha_adaptive_tree_pruned(): the strong-FWER guarantee for the pruned-load alpha schedule (and its switching rule) does not hold; the underlying theorem was falsified by exact counterexample (2026-08, see FIX_PLAN.md). Levels are computed as before for reproducibility. For a schedule with a proof, use alpha_adaptive_tree() with static budget weights.
 # obj$alphafn -- pass to find_blocks
 # obj$update(pruned_nd, 0.05) -- recompute on surviving tree
 # obj$reset(0.05) -- restore full-tree schedule

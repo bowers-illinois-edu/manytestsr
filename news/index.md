@@ -1,5 +1,66 @@
 # Changelog
 
+## manytestsr 0.0.4.1008
+
+Corrections responding to an anonymous AOAS referee who worked through
+this package alongside the manuscript and identified genuine errors
+(2026-08; see FIX_PLAN.md for the mapping). The pre-correction state is
+tagged `pre-referee-fixes` so previously published numbers remain
+reproducible.
+
+### Breaking changes
+
+- [`compute_error_load()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_error_load.md)
+  and the adaptive-alpha schedule builders now implement the paper’s
+  Definition 2: per-depth loads sum path power (product of
+  PROPER-ancestor rejection probabilities) over the nodes at each depth,
+  from depth 2. The previous formula multiplied each node’s own theta
+  back in and included a depth-1 term, understating the load and
+  returning `needs_adjustment = FALSE` in designs that require
+  adjustment. The `needs_adjustment` gate and the alpha-schedule
+  denominators now use the same quantity.
+- Power calculations behind the error load are now two-tailed:
+  `theta = pnorm(delta*sqrt(n) - z) + pnorm(-delta*sqrt(n) - z)`, so
+  theta at `delta = 0` equals the size alpha rather than alpha/2.
+- The error-load/power path refuses `nodesize` values below 1 with an
+  error.
+  [`find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)’s
+  default `blocksize = "hwt"` stores harmonic weights whose node sums
+  lie on the unit interval; feeding them to a power formula produced
+  meaningless near-floor thetas. Pass a headcount column
+  (e.g. `blocksize = "nb"`) for any error-load or adaptive-alpha use;
+  `hwt` remains valid for splitting and weighting.
+- [`alpha_adaptive_tree_pruned()`](https://bowers-illinois-edu.github.io/manytestsr/reference/alpha_adaptive_tree_pruned.md)
+  now warns at creation that the strong-FWER guarantee for the
+  pruned-load schedule and its switching rule DOES NOT HOLD: the
+  underlying theorem was falsified by exact counterexample (FWER 0.063
+  at alpha 0.05 with all hypotheses satisfied). Levels are computed as
+  before for reproducibility; for a schedule with a proof use
+  [`alpha_adaptive_tree()`](https://bowers-illinois-edu.github.io/manytestsr/reference/alpha_adaptive_tree.md)
+  with static budget weights.
+
+### Bug fixes
+
+- [`report_detections()`](https://bowers-illinois-edu.github.io/manytestsr/reference/report_detections.md)
+  computed each block’s parent p-value at the GLOBAL maximum depth, so
+  branches whose testing stopped earlier got the wrong parent or NA
+  (surfacing as `hit = NA`, silently dropped by `sum(hit, na.rm = TRUE)`
+  callers), and group coverage was missed on any branch shorter than the
+  deepest one. All quantities now use each block’s own final tested
+  depth, and `hit` is never NA.
+- [`report_detections()`](https://bowers-illinois-edu.github.io/manytestsr/reference/report_detections.md)
+  gains `hit_type` (“single” = the block’s own test rejected; “group” =
+  family parent rejected with no child rejected; “none” otherwise – a
+  sibling’s individual rejection explains the parent, so coverage does
+  not spread to failed siblings) and `group_p` (the rejecting parent’s
+  p-value for covered blocks). `pfinalb` is now the running maximum of
+  p-values along the block’s tested path rather than the deepest p
+  reached.
+- Removed a stray positional argument in five
+  [`coin::approximate()`](https://rdrr.io/pkg/coin/man/NullDistribution.html)
+  calls that bound to coin’s `cl` formal; harmless under
+  `parallel = "no"` but broken under `parallel = "snow"`.
+
 ## manytestsr 0.0.4.1007
 
 ### Bug fixes

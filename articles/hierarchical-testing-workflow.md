@@ -127,10 +127,10 @@ results_cluster <- find_blocks(
 str(results_cluster, max.level = 1)
 #> List of 2
 #>  $ bdat    :Classes 'data.table' and 'data.frame':   44 obs. of  17 variables:
-#>   ..- attr(*, ".internal.selfref")=<pointer: 0x55d862916b20> 
+#>   ..- attr(*, ".internal.selfref")=<pointer: 0x556f080fdb20> 
 #>   ..- attr(*, "sorted")= chr "testable"
 #>  $ node_dat:Classes 'data.table' and 'data.frame':   1 obs. of  10 variables:
-#>   ..- attr(*, ".internal.selfref")=<pointer: 0x55d862916b20>
+#>   ..- attr(*, ".internal.selfref")=<pointer: 0x556f080fdb20>
 ```
 
 ### Results Overview
@@ -273,12 +273,12 @@ cat("FWER Results:\n")
 cat("Total blocks:", nrow(detections_fwer), "\n")
 #> Total blocks: 44
 cat("Significant blocks:", sum(detections_fwer$hit, na.rm = TRUE), "\n")
-#> Significant blocks: 0
+#> Significant blocks: 44
 cat(
   "Detection rate:",
   round(mean(detections_fwer$hit, na.rm = TRUE) * 100, 1), "%\n\n"
 )
-#> Detection rate: 0 %
+#> Detection rate: 100 %
 
 # Show significant blocks
 if (sum(detections_fwer$hit, na.rm = TRUE) > 0) {
@@ -289,6 +289,55 @@ if (sum(detections_fwer$hit, na.rm = TRUE) > 0) {
   print("Significant blocks:")
   print(significant_blocks)
 }
+#> [1] "Significant blocks:"
+#>     blockF    pfinalb fin_nodenum
+#>     <fctr>      <num>       <int>
+#>  1:   B080 0.31532033           2
+#>  2:   B081 0.02580835           3
+#>  3:   B082 0.02580835           3
+#>  4:   B083 0.02580835           3
+#>  5:   B084 0.02580835           3
+#>  6:   B085 0.02580835           3
+#>  7:   B086 0.31532033           2
+#>  8:   B087 0.02580835           3
+#>  9:   B088 0.02580835           3
+#> 10:   B089 0.02580835           3
+#> 11:   B090 0.02580835           3
+#> 12:   B091 0.02580835           3
+#> 13:   B092 0.02580835           3
+#> 14:   B093 0.02580835           3
+#> 15:   B094 0.02580835           3
+#> 16:   B095 0.02580835           3
+#> 17:   B096 0.02580835           3
+#> 18:   B097 0.02580835           3
+#> 19:   B098 0.02580835           3
+#> 20:   B099 0.02580835           3
+#> 21:   B100 0.02580835           3
+#> 22:   B101 0.02580835           3
+#> 23:   B102 0.02580835           3
+#> 24:   B103 0.02580835           3
+#> 25:   B104 0.02580835           3
+#> 26:   B105 0.02580835           3
+#> 27:   B106 0.02580835           3
+#> 28:   B107 0.02580835           3
+#> 29:   B108 0.02580835           3
+#> 30:   B109 0.02580835           3
+#> 31:   B110 0.02580835           3
+#> 32:   B111 0.02580835           3
+#> 33:   B112 0.02580835           3
+#> 34:   B113 0.02580835           3
+#> 35:   B114 0.02580835           3
+#> 36:   B115 0.02580835           3
+#> 37:   B116 0.02580835           3
+#> 38:   B117 0.02580835           3
+#> 39:   B118 0.02580835           3
+#> 40:   B119 0.02580835           3
+#> 41:   B120 0.02580835           3
+#> 42:   B121 0.02580835           3
+#> 43:   B122 0.02580835           3
+#> 44:   B123 0.02580835           3
+#>     blockF    pfinalb fin_nodenum
+#>     <fctr>      <num>       <int>
 ```
 
 ### Using FDR Control
@@ -513,8 +562,8 @@ print("Multiple outcome comparison:")
 #> [1] "Multiple outcome comparison:"
 print(multi_comparison)
 #>   Outcome Nodes Detections
-#> 1      Y1    11         42
-#> 2      Y2    11         42
+#> 1      Y1    11         44
+#> 2      Y2    11         44
 ```
 
 ## Summary and Best Practices

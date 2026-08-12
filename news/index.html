@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1007</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1008</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,27 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.4.1008" id="manytestsr-0041008">manytestsr 0.0.4.1008<a class="anchor" aria-label="anchor" href="#manytestsr-0041008"></a></h2>
+<p>Corrections responding to an anonymous AOAS referee who worked through this package alongside the manuscript and identified genuine errors (2026-08; see FIX_PLAN.md for the mapping). The pre-correction state is tagged <code>pre-referee-fixes</code> so previously published numbers remain reproducible.</p>
+<div class="section level3">
+<h3 id="breaking-changes-0-0-4-1008">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-0-4-1008"></a></h3>
+<ul><li>
+<code><a href="../reference/compute_error_load.html">compute_error_load()</a></code> and the adaptive-alpha schedule builders now implement the paper’s Definition 2: per-depth loads sum path power (product of PROPER-ancestor rejection probabilities) over the nodes at each depth, from depth 2. The previous formula multiplied each node’s own theta back in and included a depth-1 term, understating the load and returning <code>needs_adjustment = FALSE</code> in designs that require adjustment. The <code>needs_adjustment</code> gate and the alpha-schedule denominators now use the same quantity.</li>
+<li>Power calculations behind the error load are now two-tailed: <code>theta = pnorm(delta*sqrt(n) - z) + pnorm(-delta*sqrt(n) - z)</code>, so theta at <code>delta = 0</code> equals the size alpha rather than alpha/2.</li>
+<li>The error-load/power path refuses <code>nodesize</code> values below 1 with an error. <code><a href="../reference/find_blocks.html">find_blocks()</a></code>’s default <code>blocksize = "hwt"</code> stores harmonic weights whose node sums lie on the unit interval; feeding them to a power formula produced meaningless near-floor thetas. Pass a headcount column (e.g. <code>blocksize = "nb"</code>) for any error-load or adaptive-alpha use; <code>hwt</code> remains valid for splitting and weighting.</li>
+<li>
+<code><a href="../reference/alpha_adaptive_tree_pruned.html">alpha_adaptive_tree_pruned()</a></code> now warns at creation that the strong-FWER guarantee for the pruned-load schedule and its switching rule DOES NOT HOLD: the underlying theorem was falsified by exact counterexample (FWER 0.063 at alpha 0.05 with all hypotheses satisfied). Levels are computed as before for reproducibility; for a schedule with a proof use <code><a href="../reference/alpha_adaptive_tree.html">alpha_adaptive_tree()</a></code> with static budget weights.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-0-4-1008">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-0-4-1008"></a></h3>
+<ul><li>
+<code><a href="../reference/report_detections.html">report_detections()</a></code> computed each block’s parent p-value at the GLOBAL maximum depth, so branches whose testing stopped earlier got the wrong parent or NA (surfacing as <code>hit = NA</code>, silently dropped by <code>sum(hit, na.rm = TRUE)</code> callers), and group coverage was missed on any branch shorter than the deepest one. All quantities now use each block’s own final tested depth, and <code>hit</code> is never NA.</li>
+<li>
+<code><a href="../reference/report_detections.html">report_detections()</a></code> gains <code>hit_type</code> (“single” = the block’s own test rejected; “group” = family parent rejected with no child rejected; “none” otherwise – a sibling’s individual rejection explains the parent, so coverage does not spread to failed siblings) and <code>group_p</code> (the rejecting parent’s p-value for covered blocks). <code>pfinalb</code> is now the running maximum of p-values along the block’s tested path rather than the deepest p reached.</li>
+<li>Removed a stray positional argument in five <code><a href="https://rdrr.io/pkg/coin/man/NullDistribution.html" class="external-link">coin::approximate()</a></code> calls that bound to coin’s <code>cl</code> formal; harmless under <code>parallel = "no"</code> but broken under <code>parallel = "snow"</code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.4.1007" id="manytestsr-0041007">manytestsr 0.0.4.1007<a class="anchor" aria-label="anchor" href="#manytestsr-0041007"></a></h2>
 <div class="section level3">
@@ -130,7 +151,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

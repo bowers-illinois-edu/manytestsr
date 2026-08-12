@@ -91,22 +91,22 @@ conservatively large `delta_hat`.
 # Natural gating sufficient: all alphas = 0.05
 compute_adaptive_alphas(k = 3, delta_hat = 0.2, N_total = 100,
                         max_depth = 4)
-#>    1    2    3    4 
-#> 0.05 0.05 0.05 0.05 
+#>          1          2          3          4 
+#> 0.05000000 0.03229941 0.05000000 0.05000000 
 #> attr(,"error_load")
 #> attr(,"error_load")$G
-#>          1          2          3          4 
-#> 0.51596779 0.32557645 0.09567467 0.01653857 
+#>         1         2         3         4 
+#> 0.0000000 1.5480158 0.9810764 0.3009919 
 #> 
 #> attr(,"error_load")$sum_G
-#> [1] 0.9537575
+#> [1] 2.830084
 #> 
 #> attr(,"error_load")$needs_adjustment
-#> [1] FALSE
+#> [1] TRUE
 #> 
 #> attr(,"error_load")$thetas
 #>          1          2          3          4 
-#> 0.51596779 0.21033384 0.09795412 0.05762086 
+#> 0.51600527 0.21125461 0.10226587 0.06713787 
 #> 
 #> attr(,"error_load")$critical_level
 #> [1] 2
@@ -120,21 +120,21 @@ compute_adaptive_alphas(k = 3, delta_hat = 0.2, N_total = 100,
 compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000,
                         max_depth = 5)
 #>            1            2            3            4            5 
-#> 0.0500000000 0.0125000000 0.0031250000 0.0007997540 0.0003946938 
+#> 0.0500000000 0.0125000000 0.0031250000 0.0007997540 0.0003946616 
 #> attr(,"error_load")
 #> attr(,"error_load")$G
-#>        1        2        3        4        5 
-#>  1.00000  4.00000 15.62981 31.67012 20.97663 
+#>         1         2         3         4         5 
+#>   0.00000   4.00000  16.00000  62.51922 126.69082 
 #> 
 #> attr(,"error_load")$sum_G
-#> [1] 73.27656
+#> [1] 209.21
 #> 
 #> attr(,"error_load")$needs_adjustment
 #> [1] TRUE
 #> 
 #> attr(,"error_load")$thetas
 #>         1         2         3         4         5 
-#> 1.0000000 1.0000000 0.9768629 0.5065661 0.1655869 
+#> 1.0000000 1.0000000 0.9768629 0.5066075 0.1671852 
 #> 
 #> attr(,"error_load")$critical_level
 #> [1] 5
@@ -148,21 +148,21 @@ compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000,
 compute_adaptive_alphas(k = 4, delta_hat = 0.5, N_total = 1000,
                         max_depth = 5, budget_weights = "equal")
 #>            1            2            3            4            5 
-#> 5.000000e-02 3.125000e-03 7.812500e-04 1.999385e-04 9.867345e-05 
+#> 5.000000e-02 3.125000e-03 7.812500e-04 1.999385e-04 9.866539e-05 
 #> attr(,"error_load")
 #> attr(,"error_load")$G
-#>        1        2        3        4        5 
-#>  1.00000  4.00000 15.62981 31.67012 20.97663 
+#>         1         2         3         4         5 
+#>   0.00000   4.00000  16.00000  62.51922 126.69082 
 #> 
 #> attr(,"error_load")$sum_G
-#> [1] 73.27656
+#> [1] 209.21
 #> 
 #> attr(,"error_load")$needs_adjustment
 #> [1] TRUE
 #> 
 #> attr(,"error_load")$thetas
 #>         1         2         3         4         5 
-#> 1.0000000 1.0000000 0.9768629 0.5065661 0.1655869 
+#> 1.0000000 1.0000000 0.9768629 0.5066075 0.1671852 
 #> 
 #> attr(,"error_load")$critical_level
 #> [1] 5

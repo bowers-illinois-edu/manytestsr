@@ -15,7 +15,7 @@ scalar alpha OR if fwer=TRUE."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1007</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1008</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,8 +92,20 @@ block (or the groups containing that block). fwer=FALSE to detect blocks (or gro
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data.table adding a column <code>hit</code> to the <code>res</code> data.table
-indicating a "hit" or detection for that block (or group of blocks)</p>
+    <p>A data.table adding columns to the <code>res</code> data.table:
+<code>hit</code> (TRUE when the block is detected either by its own test or by
+an unattributed group rejection; never NA); <code>hit_type</code> ("single" =
+the block's own singleton test rejected; "group" = the block's family
+parent rejected while no child of that parent rejected, so the effect is
+localized to the parent but not attributed to specific blocks; "none"
+otherwise – including blocks under a rejected parent that a sibling's
+individual rejection already explains); <code>group_p</code> (for "group"
+blocks, the rejecting parent's p-value; NA otherwise); and
+<code>fin_depth</code> (the block's own final tested depth). <code>pfinalb</code>
+from <code><a href="find_blocks.html">find_blocks</a></code> is the running maximum of p-values along
+the block's tested path, so for "group" blocks it shows the
+non-significant child-level p while <code>group_p</code> shows the parent
+rejection that constitutes the finding.</p>
     </div>
 
     <div class="section level2">
@@ -145,7 +157,7 @@ indicating a "hit" or detection for that block (or group of blocks)</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

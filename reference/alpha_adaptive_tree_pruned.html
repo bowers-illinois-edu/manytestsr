@@ -15,7 +15,7 @@ to surviving branches when dead branches are removed."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1007</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1008</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -150,18 +150,22 @@ ensure independence across simulation iterations.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The FWER guarantee follows from Theorem B.5 in the supplement:
-predictable budget weights with data-dependent denominators. The
-weights are "predictable" because \(w_\ell\) depends only on the
-testing history through depth \(\ell - 1\), not on depth-\(\ell\)
-outcomes. The union bound across depths gives FWER \(\le \alpha\)
-whenever \(\sum w_\ell \le 1\).</p>
-<p>The <strong>switching corollary</strong> (when <code>switching = TRUE</code>):
-after pruning narrows the surviving tree, if the remaining error load
-\(\sum_{\ell \ge s} D_\ell \le B_s\) (remaining budget), then
-\(\alpha_\ell = \alpha\) for all \(\ell \ge s\). This works
-by setting \(w_\ell = D_\ell\), so the \(D_\ell\) in numerator
-and denominator cancel, leaving nominal alpha.</p>
+    <p><strong>The strong-FWER guarantee claimed for this schedule DOES NOT
+HOLD (2026-08 referee correction; see FIX_PLAN.md).</strong> The former
+justification – predictable budget weights with the pruned load
+\(D_\ell\) as a data-dependent denominator – was falsified by exact
+counterexample: with valid tests and conservative power holding, the
+schedule reaches FWER 0.063 at \(\alpha = 0.05\). The failure is
+structural: \(D_\ell\) charges each surviving null its unconditional
+reach probability, but conditional on its parent's rejection a
+surviving null is one full test, so when path powers are small the
+exposed-null count exceeds the charged load. The switching rule
+(<code>switching = TRUE</code>) re-spends to nominal alpha exactly in that
+regime and inherits the failure. The constructor warns accordingly.
+Levels are computed as before so that existing analyses remain
+reproducible; for a schedule with a proof, use
+<code><a href="alpha_adaptive_tree.html">alpha_adaptive_tree</a></code> with static budget weights over the
+full-tree load.</p>
 <p>When <code>find_blocks</code> detects a list-valued <code>alphafn</code>,
 it extracts these three components and calls <code>reset</code> at
 the start of each run and <code>update</code> after each depth.</p>
@@ -176,6 +180,7 @@ the start of each run and <code>update</code> after each depth.</p>
 <span class="r-in"><span>  nodesize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">500</span>, <span class="fl">250</span>, <span class="fl">250</span>, <span class="fl">125</span>, <span class="fl">125</span>, <span class="fl">100</span>, <span class="fl">150</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">alpha_adaptive_tree_pruned</span><span class="op">(</span>node_dat <span class="op">=</span> <span class="va">nd</span>, delta_hat <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>alpha_adaptive_tree_pruned(): the strong-FWER guarantee for the pruned-load alpha schedule (and its switching rule) does not hold; the underlying theorem was falsified by exact counterexample (2026-08, see FIX_PLAN.md). Levels are computed as before for reproducibility. For a schedule with a proof, use alpha_adaptive_tree() with static budget weights.</span>
 <span class="r-in"><span><span class="co"># obj$alphafn -- pass to find_blocks</span></span></span>
 <span class="r-in"><span><span class="co"># obj$update(pruned_nd, 0.05) -- recompute on surviving tree</span></span></span>
 <span class="r-in"><span><span class="co"># obj$reset(0.05) -- restore full-tree schedule</span></span></span>
@@ -191,7 +196,7 @@ the start of each run and <code>update</code> after each depth.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

@@ -19,7 +19,7 @@ weights."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1007</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1008</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -144,22 +144,22 @@ using a conservatively large <code>delta_hat</code>.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Natural gating sufficient: all alphas = 0.05</span></span></span>
 <span class="r-in"><span><span class="fu">compute_adaptive_alphas</span><span class="op">(</span>k <span class="op">=</span> <span class="fl">3</span>, delta_hat <span class="op">=</span> <span class="fl">0.2</span>, N_total <span class="op">=</span> <span class="fl">100</span>,</span></span>
 <span class="r-in"><span>                        max_depth <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    1    2    3    4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.05 0.05 0.05 0.05 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          1          2          3          4 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.05000000 0.03229941 0.05000000 0.05000000 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          1          2          3          4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.51596779 0.32557645 0.09567467 0.01653857 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         1         2         3         4 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.0000000 1.5480158 0.9810764 0.3009919 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$sum_G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.9537575</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.830084</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$needs_adjustment</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$thetas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          1          2          3          4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.51596779 0.21033384 0.09795412 0.05762086 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.51600527 0.21125461 0.10226587 0.06713787 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$critical_level</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2</span>
@@ -173,21 +173,21 @@ using a conservatively large <code>delta_hat</code>.</p>
 <span class="r-in"><span><span class="fu">compute_adaptive_alphas</span><span class="op">(</span>k <span class="op">=</span> <span class="fl">4</span>, delta_hat <span class="op">=</span> <span class="fl">0.5</span>, N_total <span class="op">=</span> <span class="fl">1000</span>,</span></span>
 <span class="r-in"><span>                        max_depth <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            1            2            3            4            5 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.0500000000 0.0125000000 0.0031250000 0.0007997540 0.0003946938 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.0500000000 0.0125000000 0.0031250000 0.0007997540 0.0003946616 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        1        2        3        4        5 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1.00000  4.00000 15.62981 31.67012 20.97663 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         1         2         3         4         5 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   0.00000   4.00000  16.00000  62.51922 126.69082 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$sum_G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 73.27656</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 209.21</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$needs_adjustment</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$thetas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         1         2         3         4         5 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1.0000000 1.0000000 0.9768629 0.5065661 0.1655869 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1.0000000 1.0000000 0.9768629 0.5066075 0.1671852 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$critical_level</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
@@ -201,21 +201,21 @@ using a conservatively large <code>delta_hat</code>.</p>
 <span class="r-in"><span><span class="fu">compute_adaptive_alphas</span><span class="op">(</span>k <span class="op">=</span> <span class="fl">4</span>, delta_hat <span class="op">=</span> <span class="fl">0.5</span>, N_total <span class="op">=</span> <span class="fl">1000</span>,</span></span>
 <span class="r-in"><span>                        max_depth <span class="op">=</span> <span class="fl">5</span>, budget_weights <span class="op">=</span> <span class="st">"equal"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            1            2            3            4            5 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5.000000e-02 3.125000e-03 7.812500e-04 1.999385e-04 9.867345e-05 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5.000000e-02 3.125000e-03 7.812500e-04 1.999385e-04 9.866539e-05 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        1        2        3        4        5 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1.00000  4.00000 15.62981 31.67012 20.97663 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         1         2         3         4         5 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   0.00000   4.00000  16.00000  62.51922 126.69082 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$sum_G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 73.27656</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 209.21</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$needs_adjustment</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$thetas</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         1         2         3         4         5 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1.0000000 1.0000000 0.9768629 0.5065661 0.1655869 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1.0000000 1.0000000 0.9768629 0.5066075 0.1671852 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"error_load")$critical_level</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
@@ -236,7 +236,7 @@ using a conservatively large <code>delta_hat</code>.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

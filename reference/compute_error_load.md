@@ -44,6 +44,13 @@ compute_error_load(
   `depth`, and `nodesize`. When provided, the function computes per-node
   power from `nodesize` and aggregates error load by depth. This
   supports irregular trees (e.g., DPP design with unequal splits).
+  `nodesize` must be a HEADCOUNT (number of units in the node): it
+  enters a power calculation, and weight-scale values – in particular
+  node sums of `find_blocks`'s default `blocksize = "hwt"` harmonic
+  weights – are refused with an error. Per-depth loads follow Definition
+  2 of the paper: the sum of path power (product of PROPER-ancestor
+  two-tailed powers) over the nodes at each depth, from depth 2; the
+  root contributes nothing.
 
 - max_depth:
 
@@ -110,27 +117,27 @@ the regular-tree formula to irregular branching.
 compute_error_load(k = 3, delta_hat = 0.3, N_total = 500)
 #> $G
 #>            1            2            3            4            5            6 
-#> 9.999990e-01 2.916379e+00 5.326176e+00 4.022713e+00 1.354743e+00 2.562653e-01 
+#> 0.000000e+00 2.999997e+00 8.749136e+00 1.597888e+01 1.209598e+01 4.197416e+00 
 #>            7            8            9           10           11           12 
-#> 3.343749e-02 3.475357e-03 3.153782e-04 2.642414e-05 2.113216e-06 1.644896e-07 
+#> 8.999839e-01 1.541699e-01 2.421718e-02 3.689684e-03 5.563519e-04 8.359849e-05 
 #>           13           14           15           16           17           18 
-#> 1.260452e-08 9.571413e-10 7.230190e-11 5.445132e-12 4.093620e-13 3.074454e-14 
+#> 1.254707e-05 1.882426e-06 2.823821e-07 4.235823e-08 6.353781e-09 9.530694e-10 
 #>           19           20 
-#> 2.307679e-15 1.731555e-16 
+#> 1.429605e-10 2.144408e-11 
 #> 
 #> $sum_G
-#> [1] 14.91353
+#> [1] 45.10412
 #> 
 #> $needs_adjustment
 #> [1] TRUE
 #> 
 #> $thetas
 #>          1          2          3          4          5          6          7 
-#> 0.99999897 0.97212721 0.60876590 0.25175746 0.11225782 0.06305386 0.04349332 
+#> 0.99999897 0.97212722 0.60877948 0.25233254 0.11566975 0.07147127 0.05710096 
 #>          8          9         10         11         12         13         14 
-#> 0.03464531 0.03024900 0.02792852 0.02665765 0.02594617 0.02554268 0.02531212 
+#> 0.05236038 0.05078604 0.05026193 0.05008730 0.05002910 0.05000970 0.05000323 
 #>         15         16         17         18         19         20 
-#> 0.02517981 0.02510368 0.02505982 0.02503452 0.02501993 0.02501150 
+#> 0.05000108 0.05000036 0.05000012 0.05000004 0.05000001 0.05000000 
 #> 
 #> $critical_level
 #> [1] 4
@@ -150,7 +157,7 @@ compute_error_load(k = 3, delta_hat = 0.3, N_total = 500)
 res <- compute_error_load(k = 10, delta_hat = 0.5, N_total = 5000,
                           max_depth = 3)
 res$sum_G     # likely > 1
-#> [1] 105.2438
+#> [1] 110
 res$needs_adjustment
 #> [1] TRUE
 ```

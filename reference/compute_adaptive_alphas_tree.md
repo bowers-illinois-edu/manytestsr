@@ -117,11 +117,11 @@ compute_adaptive_alphas_tree(node_dat = nd, delta_hat = 0.5)
 #> 0.0500 0.0250 0.0125 
 #> attr(,"error_load")
 #> attr(,"error_load")$G
-#>        1        2        3 
-#> 1.000000 2.000000 3.998518 
+#> 1 2 3 
+#> 0 2 4 
 #> 
 #> attr(,"error_load")$sum_G
-#> [1] 6.998518
+#> [1] 6
 #> 
 #> attr(,"error_load")$needs_adjustment
 #> [1] TRUE
