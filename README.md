@@ -5,7 +5,7 @@ Testing to detect and localize heterogeneous effects in block-randomized experim
 This package implements the nesting (top-down) procedures detailed in
 [Bowers and Chen (2020)](https://doi.org/10.1093/pan/mpaa031). It recursively
 splits experimental blocks, tests for treatment effects at each node, and
-controls familywise error using adaptive alpha adjustment — so you can ask
+controls familywise error using adaptive alpha adjustment --- so you can ask
 not just *whether* a treatment worked, but *where* it worked.
 
 ## Warning: development-stage package
@@ -15,7 +15,7 @@ notice, and not all procedures have proven statistical properties yet.** If
 you use it in applied work, pin a specific commit or version and check back
 for updates.
 
-Current version: **0.0.4.1008**
+Current version: **0.0.4.1009**
 
 ## Corrections after peer review (2026-08)
 
@@ -68,7 +68,7 @@ C++ compiler. On macOS, install Xcode Command Line Tools; on Windows, install
 
 ## Public TODO list
 
-Items marked with a check are done. Items without a check are open — they
+Items marked with a check are done. Items without a check are open --- they
 represent known limitations or planned work.
 
 ### Alpha adjustment and error control
@@ -78,7 +78,7 @@ represent known limitations or planned work.
 - [x] Tree-based alpha schedules for irregular trees
       (`compute_adaptive_alphas_tree`, `alpha_adaptive_tree`)
 - [x] Branch-pruning adaptive alpha that reallocates alpha from dead branches
-      (`alpha_adaptive_tree_pruned`) — implemented, but its strong-FWER
+      (`alpha_adaptive_tree_pruned`) --- implemented, but its strong-FWER
       guarantee was withdrawn 2026-08 (see "Corrections after peer review")
 - [ ] Replacement pruning schedule with a proof (count-based denominator or
       an inheritance-style reallocation; requires a conditional-validity
@@ -102,8 +102,10 @@ represent known limitations or planned work.
 
 ### Documentation and usability
 
-- [ ] Complete the vignettes (`getting-started`, `hierarchical-testing-workflow`,
-      `advanced-methodologies`).
+- [ ] Complete the vignettes (`getting-started`, `hierarchical-testing-workflow`).
+      The `advanced-methodologies` vignette was archived in 0.0.4.1009 (see
+      `archive/`): it claimed stronger properties for experimental features
+      than we can support.
 - [ ] Add a worked example to this README.
 
 ## Key functions
@@ -136,7 +138,7 @@ management. Run `make dependencies` to install required packages.
 Distance and transformation calculations use C++ (Rcpp/RcppArmadillo) with
 three code paths selected by dataset size:
 
-- `fast_dists_by_unit_arma2_par` — OpenMP parallel processing (`parallel = "yes"`)
-- `fast_dists_and_trans` — direct matrix computation for small N
-- `fast_dists_and_trans_by_unit_arma` — unit-by-unit computation for N > 20,
+- `fast_dists_by_unit_arma2_par` --- OpenMP parallel processing (`parallel = "yes"`)
+- `fast_dists_and_trans` --- direct matrix computation for small N
+- `fast_dists_and_trans_by_unit_arma` --- unit-by-unit computation for N > 20,
   avoiding large matrices in memory

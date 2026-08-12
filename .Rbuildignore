@@ -48,3 +48,6 @@ debug_local_adj\.R
 debug_nodes\.R
 ^\.claude$
 REFACTOR_PLAN\.md
+^archive$
+FIX_PLAN\.md
+FIXME_pval_permutation_branch\.md

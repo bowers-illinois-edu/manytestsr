@@ -1,6 +1,10 @@
 # Functions for organizing and graphing results
 
-utils::globalVariables(c("num_blocks", "i.num_blocks"))
+utils::globalVariables(c(
+  "num_blocks", "i.num_blocks",
+  # columns created by report_detections() in data.table expressions
+  "hit_type", "group_p", "fin_depth"
+))
 
 #' Return detected blocks plus info
 #'

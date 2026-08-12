@@ -1,3 +1,21 @@
+# manytestsr 0.0.4.1009
+
+## Documentation
+
+* The vignettes now follow the 0.0.4.1008 corrections. The detection
+  sections of `getting-started` and `hierarchical-testing-workflow` show
+  and explain `hit_type` and `group_p`, and both vignettes stop
+  recommending the stream-based sequential alpha procedures
+  (`alpha_investing`, `alpha_saffron`, `alpha_addis`). Those procedures
+  are now labeled experimental in the tree setting -- their guarantees
+  are proven for flat streams of p-values, not for gated tree-structured
+  testing -- and remain slated for deprecation, matching the README.
+* The `advanced-methodologies` vignette is archived to `archive/` and is
+  no longer built into the package or the pkgdown site. It presented
+  experimental features (`use_closed_testing`, `use_meinshausen`,
+  `use_evalues`) with stronger claims than the package can support, and
+  referenced helper functions that do not exist.
+
 # manytestsr 0.0.4.1008
 
 Corrections responding to an anonymous AOAS referee who worked through this
@@ -162,7 +180,7 @@ FIX_PLAN.md for the mapping). The pre-correction state is tagged
   adjusted significance levels from an actual (possibly irregular) tree
   structure. Takes `node_dat` with per-node sample sizes (as returned by
   `find_blocks()`) instead of assuming a regular k-ary tree. The algorithm
-  divides alpha at each depth by the sum of path powers — the expected
+  divides alpha at each depth by the sum of path powers --- the expected
   number of tests conducted at that depth. For regular k-ary trees, this
   produces identical results to the parametric `compute_adaptive_alphas()`.
 
@@ -183,7 +201,7 @@ FIX_PLAN.md for the mapping). The pre-correction state is tagged
 ## New features
 
 * New exported function `compute_error_load()` computes the error load at
-  each tree level — the expected number of all-null sibling groups that
+  each tree level --- the expected number of all-null sibling groups that
   the procedure tests. When the total error load is at most 1, the
   unadjusted procedure controls FWER via natural gating; when it exceeds
   1, adaptive alpha adjustment is required. Supports both a parametric
