@@ -127,10 +127,10 @@ results_cluster <- find_blocks(
 str(results_cluster, max.level = 1)
 #> List of 2
 #>  $ bdat    :Classes 'data.table' and 'data.frame':   44 obs. of  17 variables:
-#>   ..- attr(*, ".internal.selfref")=<pointer: 0x556f080fdb20> 
+#>   ..- attr(*, ".internal.selfref")=<pointer: 0x564d9a94bb20> 
 #>   ..- attr(*, "sorted")= chr "testable"
 #>  $ node_dat:Classes 'data.table' and 'data.frame':   1 obs. of  10 variables:
-#>   ..- attr(*, ".internal.selfref")=<pointer: 0x556f080fdb20>
+#>   ..- attr(*, ".internal.selfref")=<pointer: 0x564d9a94bb20>
 ```
 
 ### Results Overview
@@ -210,22 +210,26 @@ print(paste(
 #> [1] "LOO approach found 1 nodes"
 ```
 
-## Sequential Error Rate Control
+## Sequential Alpha Procedures (Experimental)
 
-### Alpha Investing (FDR Control)
-
-For more powerful testing with FDR control:
+The package wraps sequential alpha procedures from the `onlineFDR`
+package (`alpha_investing`, `alpha_saffron`, `alpha_addis`). These
+procedures treat the tree’s p-values as a flat stream, and their
+guarantees are proven for that stream setting, not for gated
+tree-structured testing. We do not recommend them for applied work and
+plan to deprecate them (see the package README). We run one here only to
+show how the per-node alpha levels adapt as testing proceeds.
 
 ``` r
 
-# Use alpha investing for sequential FDR control
+# Alpha investing: experimental in the tree setting (see caution above)
 results_fdr <- find_blocks(
   idat = idat,
   bdat = bdat,
   blockid = "blockF",
   splitfn = splitCluster,
   pfn = pIndepDist,
-  alphafn = alpha_investing, # Sequential FDR control
+  alphafn = alpha_investing, # Sequential alpha adjustment
   fmla = Y1 ~ trtF | blockF,
   splitby = "hwt",
   parallel = "no",
@@ -267,97 +271,121 @@ detections_fwer <- report_detections(
   blockid = "blockF"
 )
 
-# Summary of detections
+# Summary of detections (hit is never NA, so plain sums work)
 cat("FWER Results:\n")
 #> FWER Results:
 cat("Total blocks:", nrow(detections_fwer), "\n")
 #> Total blocks: 44
-cat("Significant blocks:", sum(detections_fwer$hit, na.rm = TRUE), "\n")
-#> Significant blocks: 44
+cat("Detected blocks:", sum(detections_fwer$hit), "\n")
+#> Detected blocks: 44
 cat(
   "Detection rate:",
-  round(mean(detections_fwer$hit, na.rm = TRUE) * 100, 1), "%\n\n"
+  round(mean(detections_fwer$hit) * 100, 1), "%\n\n"
 )
 #> Detection rate: 100 %
 
-# Show significant blocks
-if (sum(detections_fwer$hit, na.rm = TRUE) > 0) {
+# Detections by type: "single" = the block's own test rejected;
+# "group" = the block's parent group was rejected but the effect could
+# not be attributed to specific blocks within it
+cat("Detections by type:\n")
+#> Detections by type:
+print(table(detections_fwer$hit_type))
+#> 
+#> group 
+#>    44
+
+# Show detected blocks
+if (any(detections_fwer$hit)) {
   significant_blocks <- detections_fwer[
     hit == TRUE,
-    .(blockF, pfinalb, fin_nodenum)
+    .(blockF, hit_type, pfinalb, group_p, fin_nodenum)
   ]
-  print("Significant blocks:")
+  print("Detected blocks:")
   print(significant_blocks)
 }
-#> [1] "Significant blocks:"
-#>     blockF    pfinalb fin_nodenum
-#>     <fctr>      <num>       <int>
-#>  1:   B080 0.31532033           2
-#>  2:   B081 0.02580835           3
-#>  3:   B082 0.02580835           3
-#>  4:   B083 0.02580835           3
-#>  5:   B084 0.02580835           3
-#>  6:   B085 0.02580835           3
-#>  7:   B086 0.31532033           2
-#>  8:   B087 0.02580835           3
-#>  9:   B088 0.02580835           3
-#> 10:   B089 0.02580835           3
-#> 11:   B090 0.02580835           3
-#> 12:   B091 0.02580835           3
-#> 13:   B092 0.02580835           3
-#> 14:   B093 0.02580835           3
-#> 15:   B094 0.02580835           3
-#> 16:   B095 0.02580835           3
-#> 17:   B096 0.02580835           3
-#> 18:   B097 0.02580835           3
-#> 19:   B098 0.02580835           3
-#> 20:   B099 0.02580835           3
-#> 21:   B100 0.02580835           3
-#> 22:   B101 0.02580835           3
-#> 23:   B102 0.02580835           3
-#> 24:   B103 0.02580835           3
-#> 25:   B104 0.02580835           3
-#> 26:   B105 0.02580835           3
-#> 27:   B106 0.02580835           3
-#> 28:   B107 0.02580835           3
-#> 29:   B108 0.02580835           3
-#> 30:   B109 0.02580835           3
-#> 31:   B110 0.02580835           3
-#> 32:   B111 0.02580835           3
-#> 33:   B112 0.02580835           3
-#> 34:   B113 0.02580835           3
-#> 35:   B114 0.02580835           3
-#> 36:   B115 0.02580835           3
-#> 37:   B116 0.02580835           3
-#> 38:   B117 0.02580835           3
-#> 39:   B118 0.02580835           3
-#> 40:   B119 0.02580835           3
-#> 41:   B120 0.02580835           3
-#> 42:   B121 0.02580835           3
-#> 43:   B122 0.02580835           3
-#> 44:   B123 0.02580835           3
-#>     blockF    pfinalb fin_nodenum
-#>     <fctr>      <num>       <int>
+#> [1] "Detected blocks:"
+#>     blockF hit_type    pfinalb    group_p fin_nodenum
+#>     <fctr>   <char>      <num>      <num>       <int>
+#>  1:   B080    group 0.31532033 0.02580835           2
+#>  2:   B081    group 0.02580835 0.02580835           3
+#>  3:   B082    group 0.02580835 0.02580835           3
+#>  4:   B083    group 0.02580835 0.02580835           3
+#>  5:   B084    group 0.02580835 0.02580835           3
+#>  6:   B085    group 0.02580835 0.02580835           3
+#>  7:   B086    group 0.31532033 0.02580835           2
+#>  8:   B087    group 0.02580835 0.02580835           3
+#>  9:   B088    group 0.02580835 0.02580835           3
+#> 10:   B089    group 0.02580835 0.02580835           3
+#> 11:   B090    group 0.02580835 0.02580835           3
+#> 12:   B091    group 0.02580835 0.02580835           3
+#> 13:   B092    group 0.02580835 0.02580835           3
+#> 14:   B093    group 0.02580835 0.02580835           3
+#> 15:   B094    group 0.02580835 0.02580835           3
+#> 16:   B095    group 0.02580835 0.02580835           3
+#> 17:   B096    group 0.02580835 0.02580835           3
+#> 18:   B097    group 0.02580835 0.02580835           3
+#> 19:   B098    group 0.02580835 0.02580835           3
+#> 20:   B099    group 0.02580835 0.02580835           3
+#> 21:   B100    group 0.02580835 0.02580835           3
+#> 22:   B101    group 0.02580835 0.02580835           3
+#> 23:   B102    group 0.02580835 0.02580835           3
+#> 24:   B103    group 0.02580835 0.02580835           3
+#> 25:   B104    group 0.02580835 0.02580835           3
+#> 26:   B105    group 0.02580835 0.02580835           3
+#> 27:   B106    group 0.02580835 0.02580835           3
+#> 28:   B107    group 0.02580835 0.02580835           3
+#> 29:   B108    group 0.02580835 0.02580835           3
+#> 30:   B109    group 0.02580835 0.02580835           3
+#> 31:   B110    group 0.02580835 0.02580835           3
+#> 32:   B111    group 0.02580835 0.02580835           3
+#> 33:   B112    group 0.02580835 0.02580835           3
+#> 34:   B113    group 0.02580835 0.02580835           3
+#> 35:   B114    group 0.02580835 0.02580835           3
+#> 36:   B115    group 0.02580835 0.02580835           3
+#> 37:   B116    group 0.02580835 0.02580835           3
+#> 38:   B117    group 0.02580835 0.02580835           3
+#> 39:   B118    group 0.02580835 0.02580835           3
+#> 40:   B119    group 0.02580835 0.02580835           3
+#> 41:   B120    group 0.02580835 0.02580835           3
+#> 42:   B121    group 0.02580835 0.02580835           3
+#> 43:   B122    group 0.02580835 0.02580835           3
+#> 44:   B123    group 0.02580835 0.02580835           3
+#>     blockF hit_type    pfinalb    group_p fin_nodenum
+#>     <fctr>   <char>      <num>      <num>       <int>
 ```
 
-### Using FDR Control
+The `hit_type` column keeps the two kinds of findings separate. A
+`"single"` hit localizes an effect to that block: its own test rejected.
+A `"group"` hit records a coarser finding: the block’s parent group was
+rejected while no test inside the group rejected, so the effect sits
+somewhere in the group without being attributed to particular blocks.
+For group hits, `group_p` carries the rejecting parent’s p-value; the
+block’s own `pfinalb` stays above alpha, which is exactly why the
+finding remains at the group level. Blocks under a rejected parent do
+not inherit coverage when a sibling’s own detection already explains the
+parent’s rejection; those blocks show `hit_type == "none"`.
+
+### Detections from the Experimental Sequential Run
+
+The alpha-investing run from the previous section can be summarized the
+same way. The caution given there applies to these counts too: no proven
+error-rate guarantee attaches to them in the tree setting.
 
 ``` r
 
-# Detect using FDR control
 detections_fdr <- report_detections(
   results_fdr$bdat,
-  fwer = FALSE, # Use FDR instead
+  fwer = FALSE, # Use each block's final-depth p rather than the path maximum
   alpha = 0.05
 )
 
-cat("FDR Results:\n")
-#> FDR Results:
-cat("Significant blocks:", sum(detections_fdr$hit, na.rm = TRUE), "\n")
-#> Significant blocks: 44
+cat("Alpha-investing (experimental) results:\n")
+#> Alpha-investing (experimental) results:
+cat("Detected blocks:", sum(detections_fdr$hit), "\n")
+#> Detected blocks: 44
 cat(
   "Detection rate:",
-  round(mean(detections_fdr$hit, na.rm = TRUE) * 100, 1), "%\n"
+  round(mean(detections_fdr$hit) * 100, 1), "%\n"
 )
 #> Detection rate: 100 %
 ```
@@ -403,12 +431,15 @@ print(tree_plot_styled)
 
 # Compare detection rates across methods
 detection_summary <- data.frame(
-  Method = c("FWER (Cluster)", "FDR (Alpha Investing)", "FWER (Hierarchical)", "FWER (LOO)"),
+  Method = c(
+    "FWER (Cluster)", "Alpha investing (experimental)",
+    "FWER (Hierarchical)", "FWER (LOO)"
+  ),
   Detections = c(
-    sum(detections_fwer$hit, na.rm = TRUE),
-    sum(detections_fdr$hit, na.rm = TRUE),
-    sum(report_detections(results_hierarchical$bdat, fwer = TRUE)$hit, na.rm = TRUE),
-    sum(report_detections(results_loo$bdat, fwer = TRUE)$hit, na.rm = TRUE)
+    sum(detections_fwer$hit),
+    sum(detections_fdr$hit),
+    sum(report_detections(results_hierarchical$bdat, fwer = TRUE)$hit),
+    sum(report_detections(results_loo$bdat, fwer = TRUE)$hit)
   ),
   Total_Blocks = c(
     nrow(detections_fwer),
@@ -553,8 +584,8 @@ multi_comparison <- data.frame(
   Outcome = c("Y1", "Y2"),
   Nodes = c(nrow(results_multi_Y1$node_dat), nrow(results_multi_Y2$node_dat)),
   Detections = c(
-    sum(report_detections(results_multi_Y1$bdat)$hit, na.rm = TRUE),
-    sum(report_detections(results_multi_Y2$bdat)$hit, na.rm = TRUE)
+    sum(report_detections(results_multi_Y1$bdat)$hit),
+    sum(report_detections(results_multi_Y2$bdat)$hit)
   )
 )
 
@@ -578,9 +609,15 @@ print(multi_comparison)
     - **Leave-one-out (`splitLOO`)**: Focus on highest-power blocks
       first
 2.  **Error Rate Control**:
-    - **Fixed alpha**: Simple FWER control
-    - **Alpha investing**: More powerful FDR control
-    - **SAFFRON/ADDIS**: Alternative sequential procedures
+    - **Fixed alpha**: the recommended default. Use
+      [`compute_error_load()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_error_load.md)
+      (with a headcount `blocksize` such as `nb`, not weights) to check
+      whether the gated procedure needs depth-adjusted alpha levels for
+      your design
+    - **Sequential procedures** (`alpha_investing`, `alpha_saffron`,
+      `alpha_addis`): experimental in the tree setting – their
+      guarantees are proven for flat streams of p-values, not for gated
+      tree-structured testing, and they are slated for deprecation
 3.  **Test Function Selection**:
     - **`pOneway`**: Standard t-tests, good for normal outcomes
     - **`pIndepDist`**: Distance-based tests, robust to distributions
@@ -590,9 +627,10 @@ print(multi_comparison)
 
 ``` r
 
-# 1. Prepare data
+# 1. Prepare data: build the block-level summary (nb, pb, hwt) from the
+#    individual-level data, as in the Data Preparation section above
 idat <- your_individual_data
-bdat <- create_block_summary(idat)
+bdat <- your_block_level_summary
 
 # 2. Choose approach based on data structure
 if (have_hierarchical_structure) {
@@ -603,19 +641,18 @@ if (have_hierarchical_structure) {
   splitby <- "power_variable" # e.g., block size or weights
 }
 
-# 3. Run hierarchical testing
+# 3. Run hierarchical testing with fixed alpha (the recommended default)
 results <- find_blocks(
   idat = idat,
   bdat = bdat,
   splitfn = splitfn,
   pfn = pIndepDist, # Robust choice
-  alphafn = alpha_investing, # For more power
   splitby = splitby,
   thealpha = 0.05
 )
 
-# 4. Detect significant effects
-detections <- report_detections(results$bdat, fwer = FALSE) # FDR control
+# 4. Detect effects; hit_type separates single-block from group findings
+detections <- report_detections(results$bdat, fwer = TRUE)
 
 # 5. Visualize results
 tree <- make_results_tree(results, block_id = "block_variable")
@@ -630,7 +667,15 @@ plot <- make_results_ggraph(tree$graph)
 - Consider `maxtest` to limit tree depth in very large datasets
 - Use `trace = TRUE` during development to monitor progress
 
-This hierarchical testing framework provides a principled approach to
-multiple testing while maintaining interpretability and controlling
-error rates. The flexible design allows adaptation to various
-experimental contexts and research questions.
+By testing groups of blocks before individual blocks,
+[`find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)
+spends few tests at the top of the tree and descends only into groups
+whose tests rejected, retaining power to find the blocks where treatment
+effects concentrate. Whether that gating alone controls the familywise
+error rate depends on the design;
+[`compute_error_load()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_error_load.md)
+diagnoses when depth-adjusted alpha levels are needed. The `hit_type`
+column in
+[`report_detections()`](https://bowers-illinois-edu.github.io/manytestsr/reference/report_detections.md)
+then records how far each finding was localized: to a single block, or
+only to a group.

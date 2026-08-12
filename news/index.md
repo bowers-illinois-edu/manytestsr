@@ -1,5 +1,23 @@
 # Changelog
 
+## manytestsr 0.0.4.1009
+
+### Documentation
+
+- The vignettes now follow the 0.0.4.1008 corrections. The detection
+  sections of `getting-started` and `hierarchical-testing-workflow` show
+  and explain `hit_type` and `group_p`, and both vignettes stop
+  recommending the stream-based sequential alpha procedures
+  (`alpha_investing`, `alpha_saffron`, `alpha_addis`). Those procedures
+  are now labeled experimental in the tree setting – their guarantees
+  are proven for flat streams of p-values, not for gated tree-structured
+  testing – and remain slated for deprecation, matching the README.
+- The `advanced-methodologies` vignette is archived to `archive/` and is
+  no longer built into the package or the pkgdown site. It presented
+  experimental features (`use_closed_testing`, `use_meinshausen`,
+  `use_evalues`) with stronger claims than the package can support, and
+  referenced helper functions that do not exist.
+
 ## manytestsr 0.0.4.1008
 
 Corrections responding to an anonymous AOAS referee who worked through

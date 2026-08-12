@@ -74,26 +74,46 @@ print(paste("Testing created", nrow(results$node_dat), "nodes in the tree"))
 
 ``` r
 
-# Identify blocks with significant treatment effects
+# Identify blocks with detected treatment effects
 detections <- report_detections(results$bdat, fwer = TRUE, alpha = 0.05)
 
-# Summary
+# Summary (hit is never NA, so plain sums work)
 cat("Results Summary:\n")
 #> Results Summary:
 cat("- Total blocks tested:", nrow(detections), "\n")
 #> - Total blocks tested: 44
-cat("- Blocks with significant effects:", sum(detections$hit, na.rm = TRUE), "\n")  
-#> - Blocks with significant effects: 0
-cat("- Detection rate:", round(mean(detections$hit, na.rm = TRUE) * 100, 1), "%\n")
+cat("- Blocks with detected effects:", sum(detections$hit), "\n")
+#> - Blocks with detected effects: 0
+cat("- Detection rate:", round(mean(detections$hit) * 100, 1), "%\n")
 #> - Detection rate: 0 %
 
-# Show significant blocks if any found
-if(sum(detections$hit, na.rm = TRUE) > 0) {
-  sig_blocks <- detections[hit == TRUE, .(blockF, pfinalb)]
-  cat("\nSignificant blocks:\n")
+# Detections come in two kinds (see prose below)
+cat("\nDetections by type:\n")
+#> 
+#> Detections by type:
+print(table(detections$hit_type))
+#> 
+#> none 
+#>   44
+
+# Show detected blocks if any found
+if (any(detections$hit)) {
+  sig_blocks <- detections[hit == TRUE, .(blockF, hit_type, pfinalb, group_p)]
+  cat("\nDetected blocks:\n")
   print(sig_blocks)
 }
 ```
+
+The `hit_type` column separates two kinds of findings. A `"single"` hit
+means the block’s own test rejected: the procedure localized an effect
+to that specific block. A `"group"` hit means the procedure rejected the
+block’s parent group but no test within that group rejected: we know the
+group contains an effect somewhere, yet cannot say which block carries
+it. For group hits, `group_p` reports the rejecting parent’s p-value
+while `pfinalb` shows the (non-significant) result of the block’s own
+test, so the two columns together record both what was found and what
+was not. Blocks with `hit_type == "none"` include those under a rejected
+parent whose rejection a sibling’s own detection already explains.
 
 ## Key Components
 
@@ -129,19 +149,27 @@ pWilcox       # Wilcoxon rank-sum tests (ordinal outcomes)
 
 ### Error Control
 
-Control Type I error rates:
+The recommended setting is a fixed alpha. The gated top-down testing
+limits which hypotheses are ever tested: a group is split and its
+children tested only after the group’s own test rejects. Whether that
+gating alone controls the familywise error rate (FWER) depends on the
+design;
+[`compute_error_load()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_error_load.md)
+(fed a headcount column such as `nb`, not weights) diagnoses whether
+your design needs depth-adjusted alpha levels beyond the gating.
 
 ``` r
-# Fixed alpha (FWER control)
+# Fixed alpha -- the default and recommended setting
 alphafn = NULL, thealpha = 0.05
-
-# Sequential FDR control (more powerful)  
-alphafn = alpha_investing, thealpha = 0.05, thew0 = 0.049
 ```
 
-## Example: Different Approaches
+The package also wraps sequential alpha procedures from the `onlineFDR`
+package (`alpha_investing`, `alpha_saffron`, `alpha_addis`). These treat
+the tree’s p-values as a flat stream; their guarantees are proven for
+that stream setting, not for gated tree-structured testing, so we do not
+recommend them and plan to deprecate them (see the package README).
 
-### Approach 1: Robust Distance-Based Testing
+## Example: Robust Distance-Based Testing
 
 ``` r
 
@@ -157,31 +185,29 @@ results_robust <- find_blocks(
 )
 
 robust_detections <- report_detections(results_robust$bdat)
-cat("Robust approach detections:", sum(robust_detections$hit, na.rm = TRUE), "\n")
+cat("Robust approach detections:", sum(robust_detections$hit), "\n")
 #> Robust approach detections: 8
 ```
 
-### Approach 2: Sequential FDR Control
+The experimental sequential procedures are invoked as follows. We show
+the call without running it: as noted above, their error control is not
+established for tree-structured testing.
 
 ``` r
 
-results_fdr <- find_blocks(
+results_seq <- find_blocks(
   idat = idat,
-  bdat = bdat, 
+  bdat = bdat,
   blockid = "blockF",
   splitfn = splitCluster,
   pfn = pIndepDist,
-  alphafn = alpha_investing,   # Sequential FDR control
+  alphafn = alpha_investing,  # Experimental: no proven guarantee here
   fmla = Y1 ~ trtF | blockF,
   splitby = "hwt",
   parallel = "no",
   thealpha = 0.05,
-  thew0 = 0.049              # Starting "wealth"
+  thew0 = 0.049               # Starting "wealth"
 )
-
-fdr_detections <- report_detections(results_fdr$bdat, fwer = FALSE)
-cat("FDR approach detections:", sum(fdr_detections$hit, na.rm = TRUE), "\n")
-#> FDR approach detections: 44
 ```
 
 ## Visualizing Results
@@ -238,11 +264,12 @@ if(!is.null(summary_table) && is.data.frame(summary_table) && nrow(summary_table
 
 ### 2. Method Selection
 
-- **Start with**: `splitCluster` + `pIndepDist` + `alpha_investing`
-- **For hierarchical data**: Use `splitSpecifiedFactor`
+- **Start with**: `splitCluster` + `pIndepDist` with a fixed alpha (the
+  default)
+- **For pre-specified hierarchies**: Use `splitSpecifiedFactor`
 - **For robustness**: Always consider `pIndepDist`
-- **For power**: Use sequential procedures (`alpha_investing`,
-  `alpha_saffron`)
+- **For multiple outcomes**: Add local p-value adjustment
+  (e.g. `local_simes`)
 
 ### 3. Interpretation
 
@@ -250,65 +277,17 @@ if(!is.null(summary_table) && is.data.frame(summary_table) && nrow(summary_table
 - Consider effect sizes, not just p-values
 - Validate findings with additional data if possible
 
-## Advanced Methodologies
+## Next Steps
 
-The `manytestsr` package also includes state-of-the-art methodologies
-from leading researchers:
+The **Hierarchical Testing with manytestsr** vignette walks through a
+complete analysis: alternative splitting strategies, detection reporting
+under FWER control, and visualization of the testing tree.
 
-### Goeman’s Closed Testing
-
-``` r
-
-# Enhanced FWER control with improved power
-results_goeman <- find_blocks(
-  idat = idat, bdat = bdat,
-  blockid = "blockF", splitfn = splitCluster, pfn = pIndepDist,
-  fmla = Y1 ~ trtF | blockF, splitby = "hwt", parallel = "no",
-  use_closed_testing = TRUE,                    # Enable Goeman's method
-  closed_testing_method = "simes",              # Recommended approach
-  thealpha = 0.05
-)
-```
-
-### Meinshausen’s Hierarchical Testing
-
-``` r
-
-# Hierarchical variable importance testing with sequential rejection
-results_meinshausen <- find_blocks(
-  idat = idat, bdat = bdat,
-  blockid = "blockF", splitfn = splitCluster, pfn = pIndepDist,
-  fmla = Y2 ~ trtF | blockF, splitby = "hwt", parallel = "no",
-  use_meinshausen = TRUE,                       # Enable Meinshausen's method
-  meinshausen_method = "simes",                 # P-value combination
-  meinshausen_sequential = TRUE,                # Sequential rejection enhancement
-  thealpha = 0.05
-)
-```
-
-### E-values for Sequential Testing
-
-``` r
-
-# Always-valid inference for sequential data collection
-results_evalues <- find_blocks(
-  idat = idat, bdat = bdat,
-  blockid = "blockF", splitfn = splitCluster, pfn = pOneway,
-  fmla = Y1 ~ trtF | blockF, splitby = "hwt", parallel = "no",
-  use_evalues = TRUE,                           # Enable e-value methodology
-  evalue_wealth_rule = "kelly",                 # Wealth accumulation rule
-  thealpha = 0.05
-)
-```
-
-### Next Steps
-
-For comprehensive coverage of advanced methodologies, see the
-specialized vignettes: - **Advanced Methodologies**: Goeman,
-Meinshausen, Ramdas, and Rosenbaum approaches - **Hierarchical Testing
-Workflow**: Complete analysis pipelines - **Design Sensitivity
-Analysis**: Robustness to unobserved confounding
-
-The hierarchical testing framework provides a principled way to navigate
-the multiple testing problem while maintaining power to detect
-heterogeneous treatment effects across experimental blocks.
+By testing groups of blocks before individual blocks,
+[`find_blocks()`](https://bowers-illinois-edu.github.io/manytestsr/reference/find_blocks.md)
+spends few tests at the top of the tree and descends only into groups
+whose tests rejected, retaining power to find the blocks where treatment
+effects concentrate. Whether that gating alone controls the familywise
+error rate depends on the design;
+[`compute_error_load()`](https://bowers-illinois-edu.github.io/manytestsr/reference/compute_error_load.md)
+diagnoses when depth-adjusted alpha levels are needed.

@@ -17,7 +17,7 @@ notice, and not all procedures have proven statistical properties yet.**
 If you use it in applied work, pin a specific commit or version and
 check back for updates.
 
-Current version: **0.0.4.1008**
+Current version: **0.0.4.1009**
 
 ## Corrections after peer review (2026-08)
 
@@ -117,7 +117,9 @@ Incorporate a test of the sharp null of no effect for any unit, from the
 ### Documentation and usability
 
 Complete the vignettes (`getting-started`,
-`hierarchical-testing-workflow`, `advanced-methodologies`).
+`hierarchical-testing-workflow`). The `advanced-methodologies` vignette
+was archived in 0.0.4.1009 (see `archive/`): it claimed stronger
+properties for experimental features than we can support.
 
 Add a worked example to this README.
 

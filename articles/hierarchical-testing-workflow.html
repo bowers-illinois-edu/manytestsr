@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1008</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1009</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,8 +35,7 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/advanced-methodologies.html">Advanced Statistical Methodologies in manytestsr</a></li>
-    <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with manytestsr</a></li>
+<li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with manytestsr</a></li>
     <li><a class="dropdown-item" href="../articles/hierarchical-testing-workflow.html">Hierarchical Testing with manytestsr</a></li>
   </ul>
 </li>
@@ -192,10 +191,10 @@
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">results_cluster</span>, max.level <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 2</span></span>
 <span><span class="co">#&gt;  $ bdat    :Classes 'data.table' and 'data.frame':   44 obs. of  17 variables:</span></span>
-<span><span class="co">#&gt;   ..- attr(*, ".internal.selfref")=&lt;pointer: 0x556f080fdb20&gt; </span></span>
+<span><span class="co">#&gt;   ..- attr(*, ".internal.selfref")=&lt;pointer: 0x564d9a94bb20&gt; </span></span>
 <span><span class="co">#&gt;   ..- attr(*, "sorted")= chr "testable"</span></span>
 <span><span class="co">#&gt;  $ node_dat:Classes 'data.table' and 'data.frame':   1 obs. of  10 variables:</span></span>
-<span><span class="co">#&gt;   ..- attr(*, ".internal.selfref")=&lt;pointer: 0x556f080fdb20&gt;</span></span></code></pre></div>
+<span><span class="co">#&gt;   ..- attr(*, ".internal.selfref")=&lt;pointer: 0x564d9a94bb20&gt;</span></span></code></pre></div>
 </div>
 </section><section class="level3"><h3 id="results-overview">Results Overview<a class="anchor" aria-label="anchor" href="#results-overview"></a>
 </h3>
@@ -268,21 +267,19 @@
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "LOO approach found 1 nodes"</span></span></code></pre></div>
 </div>
-</section></section><section class="level2"><h2 id="sequential-error-rate-control">Sequential Error Rate Control<a class="anchor" aria-label="anchor" href="#sequential-error-rate-control"></a>
+</section></section><section class="level2"><h2 id="sequential-alpha-procedures-experimental">Sequential Alpha Procedures (Experimental)<a class="anchor" aria-label="anchor" href="#sequential-alpha-procedures-experimental"></a>
 </h2>
-<section class="level3"><h3 id="alpha-investing-fdr-control">Alpha Investing (FDR Control)<a class="anchor" aria-label="anchor" href="#alpha-investing-fdr-control"></a>
-</h3>
-<p>For more powerful testing with FDR control:</p>
+<p>The package wraps sequential alpha procedures from the <code>onlineFDR</code> package (<code>alpha_investing</code>, <code>alpha_saffron</code>, <code>alpha_addis</code>). These procedures treat the tree’s p-values as a flat stream, and their guarantees are proven for that stream setting, not for gated tree-structured testing. We do not recommend them for applied work and plan to deprecate them (see the package README). We run one here only to show how the per-node alpha levels adapt as testing proceeds.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Use alpha investing for sequential FDR control</span></span>
+<code class="sourceCode R"><span><span class="co"># Alpha investing: experimental in the tree setting (see caution above)</span></span>
 <span><span class="va">results_fdr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_blocks.html">find_blocks</a></span><span class="op">(</span></span>
 <span>  idat <span class="op">=</span> <span class="va">idat</span>,</span>
 <span>  bdat <span class="op">=</span> <span class="va">bdat</span>,</span>
 <span>  blockid <span class="op">=</span> <span class="st">"blockF"</span>,</span>
 <span>  splitfn <span class="op">=</span> <span class="va">splitCluster</span>,</span>
 <span>  pfn <span class="op">=</span> <span class="va">pIndepDist</span>,</span>
-<span>  alphafn <span class="op">=</span> <span class="va">alpha_investing</span>, <span class="co"># Sequential FDR control</span></span>
+<span>  alphafn <span class="op">=</span> <span class="va">alpha_investing</span>, <span class="co"># Sequential alpha adjustment</span></span>
 <span>  fmla <span class="op">=</span> <span class="va">Y1</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>,</span>
 <span>  splitby <span class="op">=</span> <span class="st">"hwt"</span>,</span>
 <span>  parallel <span class="op">=</span> <span class="st">"no"</span>,</span>
@@ -309,7 +306,7 @@
 <span><span class="co">#&gt;   Node Fixed_Alpha Adaptive_Alpha</span></span>
 <span><span class="co">#&gt; 1    1        0.05           0.05</span></span></code></pre></div>
 </div>
-</section></section><section class="level2"><h2 id="detecting-significant-effects">Detecting Significant Effects<a class="anchor" aria-label="anchor" href="#detecting-significant-effects"></a>
+</section><section class="level2"><h2 id="detecting-significant-effects">Detecting Significant Effects<a class="anchor" aria-label="anchor" href="#detecting-significant-effects"></a>
 </h2>
 <section class="level3"><h3 id="using-fwer-control">Using FWER Control<a class="anchor" aria-label="anchor" href="#using-fwer-control"></a>
 </h3>
@@ -323,96 +320,107 @@
 <span>  blockid <span class="op">=</span> <span class="st">"blockF"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Summary of detections</span></span>
+<span><span class="co"># Summary of detections (hit is never NA, so plain sums work)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"FWER Results:\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; FWER Results:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Total blocks:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">detections_fwer</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Total blocks: 44</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Significant blocks:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">detections_fwer</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Significant blocks: 44</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Detected blocks:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">detections_fwer</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Detected blocks: 44</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Detection rate:"</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">detections_fwer</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span>, <span class="st">"%\n\n"</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">detections_fwer</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span>, <span class="st">"%\n\n"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Detection rate: 100 %</span></span>
 <span></span>
-<span><span class="co"># Show significant blocks</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">detections_fwer</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span><span class="co"># Detections by type: "single" = the block's own test rejected;</span></span>
+<span><span class="co"># "group" = the block's parent group was rejected but the effect could</span></span>
+<span><span class="co"># not be attributed to specific blocks within it</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Detections by type:\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Detections by type:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">detections_fwer</span><span class="op">$</span><span class="va">hit_type</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; group </span></span>
+<span><span class="co">#&gt;    44</span></span>
+<span></span>
+<span><span class="co"># Show detected blocks</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/any.html" class="external-link">any</a></span><span class="op">(</span><span class="va">detections_fwer</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">significant_blocks</span> <span class="op">&lt;-</span> <span class="va">detections_fwer</span><span class="op">[</span></span>
 <span>    <span class="va">hit</span> <span class="op">==</span> <span class="cn">TRUE</span>,</span>
-<span>    <span class="fu">.</span><span class="op">(</span><span class="va">blockF</span>, <span class="va">pfinalb</span>, <span class="va">fin_nodenum</span><span class="op">)</span></span>
+<span>    <span class="fu">.</span><span class="op">(</span><span class="va">blockF</span>, <span class="va">hit_type</span>, <span class="va">pfinalb</span>, <span class="va">group_p</span>, <span class="va">fin_nodenum</span><span class="op">)</span></span>
 <span>  <span class="op">]</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Significant blocks:"</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Detected blocks:"</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">significant_blocks</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; [1] "Significant blocks:"</span></span>
-<span><span class="co">#&gt;     blockF    pfinalb fin_nodenum</span></span>
-<span><span class="co">#&gt;     &lt;fctr&gt;      &lt;num&gt;       &lt;int&gt;</span></span>
-<span><span class="co">#&gt;  1:   B080 0.31532033           2</span></span>
-<span><span class="co">#&gt;  2:   B081 0.02580835           3</span></span>
-<span><span class="co">#&gt;  3:   B082 0.02580835           3</span></span>
-<span><span class="co">#&gt;  4:   B083 0.02580835           3</span></span>
-<span><span class="co">#&gt;  5:   B084 0.02580835           3</span></span>
-<span><span class="co">#&gt;  6:   B085 0.02580835           3</span></span>
-<span><span class="co">#&gt;  7:   B086 0.31532033           2</span></span>
-<span><span class="co">#&gt;  8:   B087 0.02580835           3</span></span>
-<span><span class="co">#&gt;  9:   B088 0.02580835           3</span></span>
-<span><span class="co">#&gt; 10:   B089 0.02580835           3</span></span>
-<span><span class="co">#&gt; 11:   B090 0.02580835           3</span></span>
-<span><span class="co">#&gt; 12:   B091 0.02580835           3</span></span>
-<span><span class="co">#&gt; 13:   B092 0.02580835           3</span></span>
-<span><span class="co">#&gt; 14:   B093 0.02580835           3</span></span>
-<span><span class="co">#&gt; 15:   B094 0.02580835           3</span></span>
-<span><span class="co">#&gt; 16:   B095 0.02580835           3</span></span>
-<span><span class="co">#&gt; 17:   B096 0.02580835           3</span></span>
-<span><span class="co">#&gt; 18:   B097 0.02580835           3</span></span>
-<span><span class="co">#&gt; 19:   B098 0.02580835           3</span></span>
-<span><span class="co">#&gt; 20:   B099 0.02580835           3</span></span>
-<span><span class="co">#&gt; 21:   B100 0.02580835           3</span></span>
-<span><span class="co">#&gt; 22:   B101 0.02580835           3</span></span>
-<span><span class="co">#&gt; 23:   B102 0.02580835           3</span></span>
-<span><span class="co">#&gt; 24:   B103 0.02580835           3</span></span>
-<span><span class="co">#&gt; 25:   B104 0.02580835           3</span></span>
-<span><span class="co">#&gt; 26:   B105 0.02580835           3</span></span>
-<span><span class="co">#&gt; 27:   B106 0.02580835           3</span></span>
-<span><span class="co">#&gt; 28:   B107 0.02580835           3</span></span>
-<span><span class="co">#&gt; 29:   B108 0.02580835           3</span></span>
-<span><span class="co">#&gt; 30:   B109 0.02580835           3</span></span>
-<span><span class="co">#&gt; 31:   B110 0.02580835           3</span></span>
-<span><span class="co">#&gt; 32:   B111 0.02580835           3</span></span>
-<span><span class="co">#&gt; 33:   B112 0.02580835           3</span></span>
-<span><span class="co">#&gt; 34:   B113 0.02580835           3</span></span>
-<span><span class="co">#&gt; 35:   B114 0.02580835           3</span></span>
-<span><span class="co">#&gt; 36:   B115 0.02580835           3</span></span>
-<span><span class="co">#&gt; 37:   B116 0.02580835           3</span></span>
-<span><span class="co">#&gt; 38:   B117 0.02580835           3</span></span>
-<span><span class="co">#&gt; 39:   B118 0.02580835           3</span></span>
-<span><span class="co">#&gt; 40:   B119 0.02580835           3</span></span>
-<span><span class="co">#&gt; 41:   B120 0.02580835           3</span></span>
-<span><span class="co">#&gt; 42:   B121 0.02580835           3</span></span>
-<span><span class="co">#&gt; 43:   B122 0.02580835           3</span></span>
-<span><span class="co">#&gt; 44:   B123 0.02580835           3</span></span>
-<span><span class="co">#&gt;     blockF    pfinalb fin_nodenum</span></span>
-<span><span class="co">#&gt;     &lt;fctr&gt;      &lt;num&gt;       &lt;int&gt;</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Detected blocks:"</span></span>
+<span><span class="co">#&gt;     blockF hit_type    pfinalb    group_p fin_nodenum</span></span>
+<span><span class="co">#&gt;     &lt;fctr&gt;   &lt;char&gt;      &lt;num&gt;      &lt;num&gt;       &lt;int&gt;</span></span>
+<span><span class="co">#&gt;  1:   B080    group 0.31532033 0.02580835           2</span></span>
+<span><span class="co">#&gt;  2:   B081    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt;  3:   B082    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt;  4:   B083    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt;  5:   B084    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt;  6:   B085    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt;  7:   B086    group 0.31532033 0.02580835           2</span></span>
+<span><span class="co">#&gt;  8:   B087    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt;  9:   B088    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 10:   B089    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 11:   B090    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 12:   B091    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 13:   B092    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 14:   B093    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 15:   B094    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 16:   B095    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 17:   B096    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 18:   B097    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 19:   B098    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 20:   B099    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 21:   B100    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 22:   B101    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 23:   B102    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 24:   B103    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 25:   B104    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 26:   B105    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 27:   B106    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 28:   B107    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 29:   B108    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 30:   B109    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 31:   B110    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 32:   B111    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 33:   B112    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 34:   B113    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 35:   B114    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 36:   B115    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 37:   B116    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 38:   B117    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 39:   B118    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 40:   B119    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 41:   B120    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 42:   B121    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 43:   B122    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt; 44:   B123    group 0.02580835 0.02580835           3</span></span>
+<span><span class="co">#&gt;     blockF hit_type    pfinalb    group_p fin_nodenum</span></span>
+<span><span class="co">#&gt;     &lt;fctr&gt;   &lt;char&gt;      &lt;num&gt;      &lt;num&gt;       &lt;int&gt;</span></span></code></pre></div>
 </div>
-</section><section class="level3"><h3 id="using-fdr-control">Using FDR Control<a class="anchor" aria-label="anchor" href="#using-fdr-control"></a>
+<p>The <code>hit_type</code> column keeps the two kinds of findings separate. A <code>"single"</code> hit localizes an effect to that block: its own test rejected. A <code>"group"</code> hit records a coarser finding: the block’s parent group was rejected while no test inside the group rejected, so the effect sits somewhere in the group without being attributed to particular blocks. For group hits, <code>group_p</code> carries the rejecting parent’s p-value; the block’s own <code>pfinalb</code> stays above alpha, which is exactly why the finding remains at the group level. Blocks under a rejected parent do not inherit coverage when a sibling’s own detection already explains the parent’s rejection; those blocks show <code>hit_type == "none"</code>.</p>
+</section><section class="level3"><h3 id="detections-from-the-experimental-sequential-run">Detections from the Experimental Sequential Run<a class="anchor" aria-label="anchor" href="#detections-from-the-experimental-sequential-run"></a>
 </h3>
+<p>The alpha-investing run from the previous section can be summarized the same way. The caution given there applies to these counts too: no proven error-rate guarantee attaches to them in the tree setting.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Detect using FDR control</span></span>
-<span><span class="va">detections_fdr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">detections_fdr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span></span>
 <span>  <span class="va">results_fdr</span><span class="op">$</span><span class="va">bdat</span>,</span>
-<span>  fwer <span class="op">=</span> <span class="cn">FALSE</span>, <span class="co"># Use FDR instead</span></span>
+<span>  fwer <span class="op">=</span> <span class="cn">FALSE</span>, <span class="co"># Use each block's final-depth p rather than the path maximum</span></span>
 <span>  alpha <span class="op">=</span> <span class="fl">0.05</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"FDR Results:\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; FDR Results:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Significant blocks:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">detections_fdr</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Significant blocks: 44</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Alpha-investing (experimental) results:\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Alpha-investing (experimental) results:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Detected blocks:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">detections_fdr</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Detected blocks: 44</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Detection rate:"</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">detections_fdr</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span>, <span class="st">"%\n"</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">detections_fdr</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span>, <span class="st">"%\n"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Detection rate: 100 %</span></span></code></pre></div>
 </div>
@@ -460,12 +468,15 @@
 <div class="sourceCode cell-code" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Compare detection rates across methods</span></span>
 <span><span class="va">detection_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  Method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"FWER (Cluster)"</span>, <span class="st">"FDR (Alpha Investing)"</span>, <span class="st">"FWER (Hierarchical)"</span>, <span class="st">"FWER (LOO)"</span><span class="op">)</span>,</span>
+<span>  Method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="st">"FWER (Cluster)"</span>, <span class="st">"Alpha investing (experimental)"</span>,</span>
+<span>    <span class="st">"FWER (Hierarchical)"</span>, <span class="st">"FWER (LOO)"</span></span>
+<span>  <span class="op">)</span>,</span>
 <span>  Detections <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">detections_fwer</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">detections_fdr</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span><span class="va">results_hierarchical</span><span class="op">$</span><span class="va">bdat</span>, fwer <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span><span class="va">results_loo</span><span class="op">$</span><span class="va">bdat</span>, fwer <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">detections_fwer</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">detections_fdr</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span><span class="va">results_hierarchical</span><span class="op">$</span><span class="va">bdat</span>, fwer <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span><span class="va">results_loo</span><span class="op">$</span><span class="va">bdat</span>, fwer <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  Total_Blocks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">detections_fwer</span><span class="op">)</span>,</span>
@@ -615,8 +626,8 @@
 <span>  Outcome <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Y1"</span>, <span class="st">"Y2"</span><span class="op">)</span>,</span>
 <span>  Nodes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">results_multi_Y1</span><span class="op">$</span><span class="va">node_dat</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">results_multi_Y2</span><span class="op">$</span><span class="va">node_dat</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  Detections <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span><span class="va">results_multi_Y1</span><span class="op">$</span><span class="va">bdat</span><span class="op">)</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span><span class="va">results_multi_Y2</span><span class="op">$</span><span class="va">bdat</span><span class="op">)</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span><span class="va">results_multi_Y1</span><span class="op">$</span><span class="va">bdat</span><span class="op">)</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span><span class="va">results_multi_Y2</span><span class="op">$</span><span class="va">bdat</span><span class="op">)</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -647,11 +658,9 @@
 <strong>Error Rate Control</strong>:
 <ul>
 <li>
-<strong>Fixed alpha</strong>: Simple FWER control</li>
+<strong>Fixed alpha</strong>: the recommended default. Use <code><a href="../reference/compute_error_load.html">compute_error_load()</a></code> (with a headcount <code>blocksize</code> such as <code>nb</code>, not weights) to check whether the gated procedure needs depth-adjusted alpha levels for your design</li>
 <li>
-<strong>Alpha investing</strong>: More powerful FDR control</li>
-<li>
-<strong>SAFFRON/ADDIS</strong>: Alternative sequential procedures</li>
+<strong>Sequential procedures</strong> (<code>alpha_investing</code>, <code>alpha_saffron</code>, <code>alpha_addis</code>): experimental in the tree setting – their guarantees are proven for flat streams of p-values, not for gated tree-structured testing, and they are slated for deprecation</li>
 </ul>
 </li>
 <li>
@@ -669,9 +678,10 @@
 </h3>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># 1. Prepare data</span></span>
+<code class="sourceCode R"><span><span class="co"># 1. Prepare data: build the block-level summary (nb, pb, hwt) from the</span></span>
+<span><span class="co">#    individual-level data, as in the Data Preparation section above</span></span>
 <span><span class="va">idat</span> <span class="op">&lt;-</span> <span class="va">your_individual_data</span></span>
-<span><span class="va">bdat</span> <span class="op">&lt;-</span> <span class="fu">create_block_summary</span><span class="op">(</span><span class="va">idat</span><span class="op">)</span></span>
+<span><span class="va">bdat</span> <span class="op">&lt;-</span> <span class="va">your_block_level_summary</span></span>
 <span></span>
 <span><span class="co"># 2. Choose approach based on data structure</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="va">have_hierarchical_structure</span><span class="op">)</span> <span class="op">{</span></span>
@@ -682,19 +692,18 @@
 <span>  <span class="va">splitby</span> <span class="op">&lt;-</span> <span class="st">"power_variable"</span> <span class="co"># e.g., block size or weights</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="co"># 3. Run hierarchical testing</span></span>
+<span><span class="co"># 3. Run hierarchical testing with fixed alpha (the recommended default)</span></span>
 <span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_blocks.html">find_blocks</a></span><span class="op">(</span></span>
 <span>  idat <span class="op">=</span> <span class="va">idat</span>,</span>
 <span>  bdat <span class="op">=</span> <span class="va">bdat</span>,</span>
 <span>  splitfn <span class="op">=</span> <span class="va">splitfn</span>,</span>
 <span>  pfn <span class="op">=</span> <span class="va">pIndepDist</span>, <span class="co"># Robust choice</span></span>
-<span>  alphafn <span class="op">=</span> <span class="va">alpha_investing</span>, <span class="co"># For more power</span></span>
 <span>  splitby <span class="op">=</span> <span class="va">splitby</span>,</span>
 <span>  thealpha <span class="op">=</span> <span class="fl">0.05</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 4. Detect significant effects</span></span>
-<span><span class="va">detections</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">bdat</span>, fwer <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="co"># FDR control</span></span>
+<span><span class="co"># 4. Detect effects; hit_type separates single-block from group findings</span></span>
+<span><span class="va">detections</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">bdat</span>, fwer <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 5. Visualize results</span></span>
 <span><span class="va">tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_results_tree.html">make_results_tree</a></span><span class="op">(</span><span class="va">results</span>, block_id <span class="op">=</span> <span class="st">"block_variable"</span><span class="op">)</span></span>
@@ -708,7 +717,7 @@
 <li>Consider <code>maxtest</code> to limit tree depth in very large datasets</li>
 <li>Use <code>trace = TRUE</code> during development to monitor progress</li>
 </ul>
-<p>This hierarchical testing framework provides a principled approach to multiple testing while maintaining interpretability and controlling error rates. The flexible design allows adaptation to various experimental contexts and research questions.</p>
+<p>By testing groups of blocks before individual blocks, <code><a href="../reference/find_blocks.html">find_blocks()</a></code> spends few tests at the top of the tree and descends only into groups whose tests rejected, retaining power to find the blocks where treatment effects concentrate. Whether that gating alone controls the familywise error rate depends on the design; <code><a href="../reference/compute_error_load.html">compute_error_load()</a></code> diagnoses when depth-adjusted alpha levels are needed. The <code>hit_type</code> column in <code><a href="../reference/report_detections.html">report_detections()</a></code> then records how far each finding was localized: to a single block, or only to a group.</p>
 </section></section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1008</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1009</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,8 +35,7 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/advanced-methodologies.html">Advanced Statistical Methodologies in manytestsr</a></li>
-    <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with manytestsr</a></li>
+<li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with manytestsr</a></li>
     <li><a class="dropdown-item" href="../articles/hierarchical-testing-workflow.html">Hierarchical Testing with manytestsr</a></li>
   </ul>
 </li>
@@ -137,26 +136,36 @@
 </h3>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Identify blocks with significant treatment effects</span></span>
+<code class="sourceCode R"><span><span class="co"># Identify blocks with detected treatment effects</span></span>
 <span><span class="va">detections</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">bdat</span>, fwer <span class="op">=</span> <span class="cn">TRUE</span>, alpha <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Summary</span></span>
+<span><span class="co"># Summary (hit is never NA, so plain sums work)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Results Summary:\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Results Summary:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"- Total blocks tested:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">detections</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; - Total blocks tested: 44</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"- Blocks with significant effects:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">detections</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span>  </span>
-<span><span class="co">#&gt; - Blocks with significant effects: 0</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"- Detection rate:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">detections</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span>, <span class="st">"%\n"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"- Blocks with detected effects:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">detections</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; - Blocks with detected effects: 0</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"- Detection rate:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">detections</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span>, <span class="st">"%\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; - Detection rate: 0 %</span></span>
 <span></span>
-<span><span class="co"># Show significant blocks if any found</span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">detections</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">sig_blocks</span> <span class="op">&lt;-</span> <span class="va">detections</span><span class="op">[</span><span class="va">hit</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="fu">.</span><span class="op">(</span><span class="va">blockF</span>, <span class="va">pfinalb</span><span class="op">)</span><span class="op">]</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\nSignificant blocks:\n"</span><span class="op">)</span></span>
+<span><span class="co"># Detections come in two kinds (see prose below)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\nDetections by type:\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Detections by type:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">detections</span><span class="op">$</span><span class="va">hit_type</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; none </span></span>
+<span><span class="co">#&gt;   44</span></span>
+<span></span>
+<span><span class="co"># Show detected blocks if any found</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/any.html" class="external-link">any</a></span><span class="op">(</span><span class="va">detections</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">sig_blocks</span> <span class="op">&lt;-</span> <span class="va">detections</span><span class="op">[</span><span class="va">hit</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="fu">.</span><span class="op">(</span><span class="va">blockF</span>, <span class="va">hit_type</span>, <span class="va">pfinalb</span>, <span class="va">group_p</span><span class="op">)</span><span class="op">]</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\nDetected blocks:\n"</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">sig_blocks</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 </div>
+<p>The <code>hit_type</code> column separates two kinds of findings. A <code>"single"</code> hit means the block’s own test rejected: the procedure localized an effect to that specific block. A <code>"group"</code> hit means the procedure rejected the block’s parent group but no test within that group rejected: we know the group contains an effect somewhere, yet cannot say which block carries it. For group hits, <code>group_p</code> reports the rejecting parent’s p-value while <code>pfinalb</code> shows the (non-significant) result of the block’s own test, so the two columns together record both what was found and what was not. Blocks with <code>hit_type == "none"</code> include those under a rejected parent whose rejection a sibling’s own detection already explains.</p>
 </section></section><section class="level2"><h2 id="key-components">Key Components<a class="anchor" aria-label="anchor" href="#key-components"></a>
 </h2>
 <section class="level3"><h3 id="splitting-functions">Splitting Functions<a class="anchor" aria-label="anchor" href="#splitting-functions"></a>
@@ -187,18 +196,14 @@
 </div>
 </section><section class="level3"><h3 id="error-control">Error Control<a class="anchor" aria-label="anchor" href="#error-control"></a>
 </h3>
-<p>Control Type I error rates:</p>
+<p>The recommended setting is a fixed alpha. The gated top-down testing limits which hypotheses are ever tested: a group is split and its children tested only after the group’s own test rejects. Whether that gating alone controls the familywise error rate (FWER) depends on the design; <code><a href="../reference/compute_error_load.html">compute_error_load()</a></code> (fed a headcount column such as <code>nb</code>, not weights) diagnoses whether your design needs depth-adjusted alpha levels beyond the gating.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fixed alpha (FWER control)</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>alphafn <span class="ot">=</span> <span class="cn">NULL</span>, thealpha <span class="ot">=</span> <span class="fl">0.05</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Sequential FDR control (more powerful)  </span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>alphafn <span class="ot">=</span> alpha_investing, thealpha <span class="ot">=</span> <span class="fl">0.05</span>, thew0 <span class="ot">=</span> <span class="fl">0.049</span></span></code></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fixed alpha -- the default and recommended setting</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>alphafn <span class="ot">=</span> <span class="cn">NULL</span>, thealpha <span class="ot">=</span> <span class="fl">0.05</span></span></code></pre></div>
 </div>
-</section></section><section class="level2"><h2 id="example-different-approaches">Example: Different Approaches<a class="anchor" aria-label="anchor" href="#example-different-approaches"></a>
+<p>The package also wraps sequential alpha procedures from the <code>onlineFDR</code> package (<code>alpha_investing</code>, <code>alpha_saffron</code>, <code>alpha_addis</code>). These treat the tree’s p-values as a flat stream; their guarantees are proven for that stream setting, not for gated tree-structured testing, so we do not recommend them and plan to deprecate them (see the package README).</p>
+</section></section><section class="level2"><h2 id="example-robust-distance-based-testing">Example: Robust Distance-Based Testing<a class="anchor" aria-label="anchor" href="#example-robust-distance-based-testing"></a>
 </h2>
-<section class="level3"><h3 id="approach-1-robust-distance-based-testing">Approach 1: Robust Distance-Based Testing<a class="anchor" aria-label="anchor" href="#approach-1-robust-distance-based-testing"></a>
-</h3>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results_robust</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_blocks.html">find_blocks</a></span><span class="op">(</span></span>
@@ -213,32 +218,27 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">robust_detections</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span><span class="va">results_robust</span><span class="op">$</span><span class="va">bdat</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Robust approach detections:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">robust_detections</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Robust approach detections:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">robust_detections</span><span class="op">$</span><span class="va">hit</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Robust approach detections: 8</span></span></code></pre></div>
 </div>
-</section><section class="level3"><h3 id="approach-2-sequential-fdr-control">Approach 2: Sequential FDR Control<a class="anchor" aria-label="anchor" href="#approach-2-sequential-fdr-control"></a>
-</h3>
+<p>The experimental sequential procedures are invoked as follows. We show the call without running it: as noted above, their error control is not established for tree-structured testing.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">results_fdr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_blocks.html">find_blocks</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">results_seq</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_blocks.html">find_blocks</a></span><span class="op">(</span></span>
 <span>  idat <span class="op">=</span> <span class="va">idat</span>,</span>
-<span>  bdat <span class="op">=</span> <span class="va">bdat</span>, </span>
+<span>  bdat <span class="op">=</span> <span class="va">bdat</span>,</span>
 <span>  blockid <span class="op">=</span> <span class="st">"blockF"</span>,</span>
 <span>  splitfn <span class="op">=</span> <span class="va">splitCluster</span>,</span>
 <span>  pfn <span class="op">=</span> <span class="va">pIndepDist</span>,</span>
-<span>  alphafn <span class="op">=</span> <span class="va">alpha_investing</span>,   <span class="co"># Sequential FDR control</span></span>
+<span>  alphafn <span class="op">=</span> <span class="va">alpha_investing</span>,  <span class="co"># Experimental: no proven guarantee here</span></span>
 <span>  fmla <span class="op">=</span> <span class="va">Y1</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>,</span>
 <span>  splitby <span class="op">=</span> <span class="st">"hwt"</span>,</span>
 <span>  parallel <span class="op">=</span> <span class="st">"no"</span>,</span>
 <span>  thealpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  thew0 <span class="op">=</span> <span class="fl">0.049</span>              <span class="co"># Starting "wealth"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">fdr_detections</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report_detections.html">report_detections</a></span><span class="op">(</span><span class="va">results_fdr</span><span class="op">$</span><span class="va">bdat</span>, fwer <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"FDR approach detections:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">fdr_detections</span><span class="op">$</span><span class="va">hit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; FDR approach detections: 44</span></span></code></pre></div>
+<span>  thew0 <span class="op">=</span> <span class="fl">0.049</span>               <span class="co"># Starting "wealth"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
-</section></section><section class="level2"><h2 id="visualizing-results">Visualizing Results<a class="anchor" aria-label="anchor" href="#visualizing-results"></a>
+</section><section class="level2"><h2 id="visualizing-results">Visualizing Results<a class="anchor" aria-label="anchor" href="#visualizing-results"></a>
 </h2>
 <section class="level3"><h3 id="tree-structure">Tree Structure<a class="anchor" aria-label="anchor" href="#tree-structure"></a>
 </h3>
@@ -296,73 +296,26 @@
 </h3>
 <ul>
 <li>
-<strong>Start with</strong>: <code>splitCluster</code> + <code>pIndepDist</code> + <code>alpha_investing</code>
-</li>
+<strong>Start with</strong>: <code>splitCluster</code> + <code>pIndepDist</code> with a fixed alpha (the default)</li>
 <li>
-<strong>For hierarchical data</strong>: Use <code>splitSpecifiedFactor</code>
+<strong>For pre-specified hierarchies</strong>: Use <code>splitSpecifiedFactor</code>
 </li>
 <li>
 <strong>For robustness</strong>: Always consider <code>pIndepDist</code>
 </li>
 <li>
-<strong>For power</strong>: Use sequential procedures (<code>alpha_investing</code>, <code>alpha_saffron</code>)</li>
+<strong>For multiple outcomes</strong>: Add local p-value adjustment (e.g. <code>local_simes</code>)</li>
 </ul></section><section class="level3"><h3 id="interpretation">3. Interpretation<a class="anchor" aria-label="anchor" href="#interpretation"></a>
 </h3>
 <ul>
 <li>Focus on blocks identified as significant</li>
 <li>Consider effect sizes, not just p-values</li>
 <li>Validate findings with additional data if possible</li>
-</ul></section></section><section class="level2"><h2 id="advanced-methodologies">Advanced Methodologies<a class="anchor" aria-label="anchor" href="#advanced-methodologies"></a>
+</ul></section></section><section class="level2"><h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
 </h2>
-<p>The <code>manytestsr</code> package also includes state-of-the-art methodologies from leading researchers:</p>
-<section class="level3"><h3 id="goemans-closed-testing">Goeman’s Closed Testing<a class="anchor" aria-label="anchor" href="#goemans-closed-testing"></a>
-</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Enhanced FWER control with improved power</span></span>
-<span><span class="va">results_goeman</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_blocks.html">find_blocks</a></span><span class="op">(</span></span>
-<span>  idat <span class="op">=</span> <span class="va">idat</span>, bdat <span class="op">=</span> <span class="va">bdat</span>,</span>
-<span>  blockid <span class="op">=</span> <span class="st">"blockF"</span>, splitfn <span class="op">=</span> <span class="va">splitCluster</span>, pfn <span class="op">=</span> <span class="va">pIndepDist</span>,</span>
-<span>  fmla <span class="op">=</span> <span class="va">Y1</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>, splitby <span class="op">=</span> <span class="st">"hwt"</span>, parallel <span class="op">=</span> <span class="st">"no"</span>,</span>
-<span>  use_closed_testing <span class="op">=</span> <span class="cn">TRUE</span>,                    <span class="co"># Enable Goeman's method</span></span>
-<span>  closed_testing_method <span class="op">=</span> <span class="st">"simes"</span>,              <span class="co"># Recommended approach</span></span>
-<span>  thealpha <span class="op">=</span> <span class="fl">0.05</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-</section><section class="level3"><h3 id="meinshausens-hierarchical-testing">Meinshausen’s Hierarchical Testing<a class="anchor" aria-label="anchor" href="#meinshausens-hierarchical-testing"></a>
-</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Hierarchical variable importance testing with sequential rejection</span></span>
-<span><span class="va">results_meinshausen</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_blocks.html">find_blocks</a></span><span class="op">(</span></span>
-<span>  idat <span class="op">=</span> <span class="va">idat</span>, bdat <span class="op">=</span> <span class="va">bdat</span>,</span>
-<span>  blockid <span class="op">=</span> <span class="st">"blockF"</span>, splitfn <span class="op">=</span> <span class="va">splitCluster</span>, pfn <span class="op">=</span> <span class="va">pIndepDist</span>,</span>
-<span>  fmla <span class="op">=</span> <span class="va">Y2</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>, splitby <span class="op">=</span> <span class="st">"hwt"</span>, parallel <span class="op">=</span> <span class="st">"no"</span>,</span>
-<span>  use_meinshausen <span class="op">=</span> <span class="cn">TRUE</span>,                       <span class="co"># Enable Meinshausen's method</span></span>
-<span>  meinshausen_method <span class="op">=</span> <span class="st">"simes"</span>,                 <span class="co"># P-value combination</span></span>
-<span>  meinshausen_sequential <span class="op">=</span> <span class="cn">TRUE</span>,                <span class="co"># Sequential rejection enhancement</span></span>
-<span>  thealpha <span class="op">=</span> <span class="fl">0.05</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-</section><section class="level3"><h3 id="e-values-for-sequential-testing">E-values for Sequential Testing<a class="anchor" aria-label="anchor" href="#e-values-for-sequential-testing"></a>
-</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Always-valid inference for sequential data collection</span></span>
-<span><span class="va">results_evalues</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_blocks.html">find_blocks</a></span><span class="op">(</span></span>
-<span>  idat <span class="op">=</span> <span class="va">idat</span>, bdat <span class="op">=</span> <span class="va">bdat</span>,</span>
-<span>  blockid <span class="op">=</span> <span class="st">"blockF"</span>, splitfn <span class="op">=</span> <span class="va">splitCluster</span>, pfn <span class="op">=</span> <span class="va">pOneway</span>,</span>
-<span>  fmla <span class="op">=</span> <span class="va">Y1</span> <span class="op">~</span> <span class="va">trtF</span> <span class="op">|</span> <span class="va">blockF</span>, splitby <span class="op">=</span> <span class="st">"hwt"</span>, parallel <span class="op">=</span> <span class="st">"no"</span>,</span>
-<span>  use_evalues <span class="op">=</span> <span class="cn">TRUE</span>,                           <span class="co"># Enable e-value methodology</span></span>
-<span>  evalue_wealth_rule <span class="op">=</span> <span class="st">"kelly"</span>,                 <span class="co"># Wealth accumulation rule</span></span>
-<span>  thealpha <span class="op">=</span> <span class="fl">0.05</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-</section><section class="level3"><h3 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
-</h3>
-<p>For comprehensive coverage of advanced methodologies, see the specialized vignettes: - <strong>Advanced Methodologies</strong>: Goeman, Meinshausen, Ramdas, and Rosenbaum approaches - <strong>Hierarchical Testing Workflow</strong>: Complete analysis pipelines - <strong>Design Sensitivity Analysis</strong>: Robustness to unobserved confounding</p>
-<p>The hierarchical testing framework provides a principled way to navigate the multiple testing problem while maintaining power to detect heterogeneous treatment effects across experimental blocks.</p>
-</section></section><script id="quarto-html-after-body" type="application/javascript">
+<p>The <strong>Hierarchical Testing with manytestsr</strong> vignette walks through a complete analysis: alternative splitting strategies, detection reporting under FWER control, and visualization of the testing tree.</p>
+<p>By testing groups of blocks before individual blocks, <code><a href="../reference/find_blocks.html">find_blocks()</a></code> spends few tests at the top of the tree and descends only into groups whose tests rejected, retaining power to find the blocks where treatment effects concentrate. Whether that gating alone controls the familywise error rate depends on the design; <code><a href="../reference/compute_error_load.html">compute_error_load()</a></code> diagnoses when depth-adjusted alpha levels are needed.</p>
+</section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
