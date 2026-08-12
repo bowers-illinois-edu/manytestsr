@@ -486,16 +486,23 @@ test_that("budget_weights bypassed when natural gating suffices", {
   # all (Theorem B.1). The budget weights become moot because the
   # procedure returns nominal alpha at every depth. We test that any
   # budget_weights argument is silently ignored in that regime.
+  # (2026-08: delta_hat lowered from 0.2 to 0.05 -- the corrected
+  # Definition-2 load with two-tailed power is larger than the old
+  # formula's, and at 0.2 this design genuinely needs adjustment. The
+  # precondition below keeps the fixture honest.)
+  el <- compute_error_load(k = 3, delta_hat = 0.05, N_total = 100,
+                           max_depth = 4)
+  expect_lte(el$sum_G, 1)
   alphas_null <- compute_adaptive_alphas(
-    k = 3, delta_hat = 0.2, N_total = 100, max_depth = 4,
+    k = 3, delta_hat = 0.05, N_total = 100, max_depth = 4,
     budget_weights = NULL
   )
   alphas_equal <- compute_adaptive_alphas(
-    k = 3, delta_hat = 0.2, N_total = 100, max_depth = 4,
+    k = 3, delta_hat = 0.05, N_total = 100, max_depth = 4,
     budget_weights = "equal"
   )
   alphas_custom <- compute_adaptive_alphas(
-    k = 3, delta_hat = 0.2, N_total = 100, max_depth = 4,
+    k = 3, delta_hat = 0.05, N_total = 100, max_depth = 4,
     budget_weights = c(0.5, 0.3, 0.2)
   )
   expect_true(all(alphas_null == 0.05))

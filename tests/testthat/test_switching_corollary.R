@@ -259,22 +259,33 @@ test_that('budget_weights = "remaining" is a deprecated alias for "depth-sequent
   depth2_nodes <- nd$nodenum[nd$depth == 2L]
   pruned_nd <- prune_tree(nd, depth2_nodes[2:3])
 
-  # The deprecated name must emit a warning at factory time
+  # The deprecated name must emit a warning at factory time. Since the
+  # 2026-08 referee correction the constructor also warns that the
+  # pruned-load guarantee does not hold, so both warnings are expected.
   expect_warning(
-    obj_old_name <- alpha_adaptive_tree_pruned(
-      node_dat = nd, delta_hat = 0.5,
-      budget_weights = "remaining", switching = TRUE
+    expect_warning(
+      obj_old_name <- alpha_adaptive_tree_pruned(
+        node_dat = nd, delta_hat = 0.5,
+        budget_weights = "remaining", switching = TRUE
+      ),
+      regexp = "deprecated"
     ),
-    regexp = "deprecated"
+    regexp = "does not hold"
   )
 
-  # The new name must not warn
-  expect_silent(
+  # The new name must not trigger the DEPRECATION warning. Since the
+  # 2026-08 referee correction the constructor always warns that the
+  # pruned-load guarantee does not hold, so we expect exactly that one
+  # warning and confirm it is not the deprecation message.
+  w <- testthat::capture_warnings(
     obj_new_name <- alpha_adaptive_tree_pruned(
       node_dat = nd, delta_hat = 0.5,
       budget_weights = "depth-sequential", switching = TRUE
     )
   )
+  expect_length(w, 1)
+  expect_match(w, "does not hold")
+  expect_no_match(w, "deprecated")
 
   # Both must produce identical alpha schedules after the same pruning history
   obj_old_name$update(pruned_nd, 0.05)

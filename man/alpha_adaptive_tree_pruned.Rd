@@ -81,19 +81,22 @@ schedule on a pruned subtree after each depth --- giving more alpha
 to surviving branches when dead branches are removed.
 }
 \details{
-The FWER guarantee follows from Theorem B.5 in the supplement:
-predictable budget weights with data-dependent denominators. The
-weights are "predictable" because \eqn{w_\ell} depends only on the
-testing history through depth \eqn{\ell - 1}, not on depth-\eqn{\ell}
-outcomes. The union bound across depths gives FWER \eqn{\le \alpha}
-whenever \eqn{\sum w_\ell \le 1}.
-
-The \strong{switching corollary} (when \code{switching = TRUE}):
-after pruning narrows the surviving tree, if the remaining error load
-\eqn{\sum_{\ell \ge s} D_\ell \le B_s} (remaining budget), then
-\eqn{\alpha_\ell = \alpha} for all \eqn{\ell \ge s}. This works
-by setting \eqn{w_\ell = D_\ell}, so the \eqn{D_\ell} in numerator
-and denominator cancel, leaving nominal alpha.
+\strong{The strong-FWER guarantee claimed for this schedule DOES NOT
+HOLD (2026-08 referee correction; see FIX_PLAN.md).} The former
+justification -- predictable budget weights with the pruned load
+\eqn{D_\ell} as a data-dependent denominator -- was falsified by exact
+counterexample: with valid tests and conservative power holding, the
+schedule reaches FWER 0.063 at \eqn{\alpha = 0.05}. The failure is
+structural: \eqn{D_\ell} charges each surviving null its unconditional
+reach probability, but conditional on its parent's rejection a
+surviving null is one full test, so when path powers are small the
+exposed-null count exceeds the charged load. The switching rule
+(\code{switching = TRUE}) re-spends to nominal alpha exactly in that
+regime and inherits the failure. The constructor warns accordingly.
+Levels are computed as before so that existing analyses remain
+reproducible; for a schedule with a proof, use
+\code{\link{alpha_adaptive_tree}} with static budget weights over the
+full-tree load.
 
 When \code{find_blocks} detects a list-valued \code{alphafn},
 it extracts these three components and calls \code{reset} at

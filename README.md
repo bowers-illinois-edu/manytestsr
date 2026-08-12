@@ -15,7 +15,45 @@ notice, and not all procedures have proven statistical properties yet.** If
 you use it in applied work, pin a specific commit or version and check back
 for updates.
 
-Current version: **0.0.4.1002**
+Current version: **0.0.4.1008**
+
+## Corrections after peer review (2026-08)
+
+An anonymous referee at *Annals of Applied Statistics* worked through this
+package alongside our manuscript and identified genuine errors. Version
+0.0.4.1008 corrects them; the pre-correction state is tagged
+`pre-referee-fixes`. If you used earlier versions, three changes matter:
+
+1. **Error loads from earlier versions are wrong and should be
+   recomputed.** `compute_error_load()` implemented a different quantity
+   from the paper's definition (it multiplied each node's own rejection
+   probability back in, included a depth-1 term, and used one-tailed
+   power), and the documented workflow fed it node sizes on a weight scale
+   rather than headcounts. All of these understate the load, so the
+   function could answer "no multiplicity adjustment needed" for designs
+   that require adjustment. The corrected function implements the paper's
+   Definition 2 with two-tailed power and refuses non-headcount node
+   sizes: pass a count column (e.g. `blocksize = "nb"`), not the default
+   `hwt` weights, for any error-load or adaptive-alpha use.
+2. **The branch-pruning alpha schedule's strong-FWER guarantee is
+   withdrawn.** The theorem behind `alpha_adaptive_tree_pruned()` (pruned
+   load in the denominator, plus its switching rule) is false: an exact
+   counterexample reaches FWER 0.063 at alpha = 0.05 with every stated
+   hypothesis satisfied. The constructor now warns; levels are computed as
+   before so existing analyses can be reproduced, but no strong-FWER claim
+   attaches to them. `alpha_adaptive_tree()` with static budget weights
+   retains its guarantee.
+3. **Detection reporting now separates kinds of findings.**
+   `report_detections()` gains `hit_type` ("single" = the block's own test
+   rejected; "group" = an effect was localized to the block's parent but
+   not attributed to specific blocks; "none" otherwise), reports the
+   rejecting parent's p-value (`group_p`) for covered blocks, never
+   returns `hit = NA`, and computes every quantity at each block's own
+   final tested depth (earlier versions mishandled branches that stopped
+   above the tree's maximum depth).
+
+Details in `NEWS.md` and `FIX_PLAN.md`. We thank the referee, whose report
+improved both the package and the paper.
 
 ## Installation
 
@@ -40,8 +78,13 @@ represent known limitations or planned work.
 - [x] Tree-based alpha schedules for irregular trees
       (`compute_adaptive_alphas_tree`, `alpha_adaptive_tree`)
 - [x] Branch-pruning adaptive alpha that reallocates alpha from dead branches
-      (`alpha_adaptive_tree_pruned`)
-- [x] Error-load diagnostics (`compute_error_load`)
+      (`alpha_adaptive_tree_pruned`) — implemented, but its strong-FWER
+      guarantee was withdrawn 2026-08 (see "Corrections after peer review")
+- [ ] Replacement pruning schedule with a proof (count-based denominator or
+      an inheritance-style reallocation; requires a conditional-validity
+      condition stated and argued for randomization tests)
+- [x] Error-load diagnostics (`compute_error_load`; corrected to the
+      paper's Definition 2 in 0.0.4.1008)
 - [ ] Remove or deprecate the sequential (stream-based) alpha procedures
       (`alpha_investing`, `alpha_saffron`, `alpha_addis`) from `onlineFDR`.
       These treat p-values as a flat stream and do not have provable FWER

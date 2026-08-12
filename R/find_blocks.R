@@ -515,8 +515,14 @@ find_blocks <-
       setnames(pb, "p", pnm)
       setkeyv(pb, "group_id")
       bdat[pb, (pnm) := get(paste0("i.", pnm)), on = "group_id"]
-      # bdat[(testable), pfinalb := pmax(get(pnm), pfinalb)]
-      bdat[(testable), pfinalb := get(pnm)]
+      # Running maximum along the tested path (2026-08 referee correction,
+      # FIX_PLAN.md Fix 3): pfinalb summarizes the WEAKEST evidence on the
+      # block's path, so a block whose deep test came out small while an
+      # ancestor barely rejected does not display the small p as if the
+      # whole path supported it. Under a constant alpha the traversal is
+      # unchanged (a tested node's ancestors all rejected, so the running
+      # max crosses alpha exactly when the deepest p does).
+      bdat[(testable), pfinalb := pmax(get(pnm), pfinalb)]
       # Now decide which blocks (units) can be tested again.
       # If a split contains only one block. We cannot test further.
       bdat[, blocksbygroup := .N, by = group_id]

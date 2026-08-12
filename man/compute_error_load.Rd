@@ -29,7 +29,14 @@ mode; ignored when \code{node_dat} is provided.}
 \code{nodenum}, \code{parent}, \code{depth}, and \code{nodesize}.
 When provided, the function computes per-node power from
 \code{nodesize} and aggregates error load by depth. This supports
-irregular trees (e.g., DPP design with unequal splits).}
+irregular trees (e.g., DPP design with unequal splits).
+\code{nodesize} must be a HEADCOUNT (number of units in the node):
+it enters a power calculation, and weight-scale values -- in
+particular node sums of \code{find_blocks}'s default
+\code{blocksize = "hwt"} harmonic weights -- are refused with an
+error. Per-depth loads follow Definition 2 of the paper: the sum of
+path power (product of PROPER-ancestor two-tailed powers) over the
+nodes at each depth, from depth 2; the root contributes nothing.}
 
 \item{max_depth}{Maximum tree depth to compute. In parametric mode,
 defaults to 20. In tree mode, inferred from \code{node_dat}.}

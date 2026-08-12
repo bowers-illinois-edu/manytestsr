@@ -247,15 +247,20 @@ test_that("budget weights are more conservative than telescoping on regular tree
 # ============================================================================
 
 test_that("budget weights have no effect when natural gating suffices", {
-  # Small effect size so error load < 1 (natural gating regime)
+  # Small effect size so error load < 1 (natural gating regime).
+  # (2026-08: delta_hat lowered from 0.1 to 0.03 -- the corrected
+  # Definition-2 load with two-tailed power puts this design's load above
+  # 1 at 0.1. The precondition keeps the fixture honest.)
   nd <- make_regular_tree(k = 3, max_depth = 3, N_total = 300)
+  el <- compute_error_load(node_dat = nd, delta_hat = 0.03)
+  expect_lte(el$sum_G, 1)
 
   alphas_null <- compute_adaptive_alphas_tree(
-    node_dat = nd, delta_hat = 0.1, budget_weights = NULL
+    node_dat = nd, delta_hat = 0.03, budget_weights = NULL
   )
 
   alphas_equal <- compute_adaptive_alphas_tree(
-    node_dat = nd, delta_hat = 0.1, budget_weights = "equal"
+    node_dat = nd, delta_hat = 0.03, budget_weights = "equal"
   )
 
   # When error load < 1, both should return nominal alpha everywhere

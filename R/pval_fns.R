@@ -62,7 +62,6 @@ pOneway <- function(
       ncpu <- 1
     }
     thedist <- coin::approximate(
-      object,
       nresample = sims,
       parallel = parallel,
       ncpus = ncpu
@@ -135,7 +134,6 @@ pWilcox <- function(
       ncpu <- 1
     }
     thedist <- coin::approximate(
-      object,
       nresample = sims,
       parallel = parallel,
       ncpus = ncpu
@@ -289,7 +287,6 @@ pIndepDist <- function(
       ncpu <- 1
     }
     thedist <- coin::approximate(
-      object,
       nresample = sims,
       parallel = parallel,
       ncpus = ncpu
@@ -413,7 +410,6 @@ pTestTwice <- function(
       ncpu <- 1
     }
     thedist <- coin::approximate(
-      object,
       nresample = sims,
       parallel = parallel,
       ncpus = ncpu
@@ -567,7 +563,6 @@ pCombCauchyDist <- function(
       ncpu <- 1
     }
     thedist <- coin::approximate(
-      object,
       nresample = sims,
       parallel = parallel,
       ncpus = ncpu

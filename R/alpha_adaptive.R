@@ -40,6 +40,13 @@
 #'   When provided, the function computes per-node power from
 #'   \code{nodesize} and aggregates error load by depth. This supports
 #'   irregular trees (e.g., DPP design with unequal splits).
+#'   \code{nodesize} must be a HEADCOUNT (number of units in the node):
+#'   it enters a power calculation, and weight-scale values -- in
+#'   particular node sums of \code{find_blocks}'s default
+#'   \code{blocksize = "hwt"} harmonic weights -- are refused with an
+#'   error. Per-depth loads follow Definition 2 of the paper: the sum of
+#'   path power (product of PROPER-ancestor two-tailed powers) over the
+#'   nodes at each depth, from depth 2; the root contributes nothing.
 #' @param max_depth Maximum tree depth to compute. In parametric mode,
 #'   defaults to 20. In tree mode, inferred from \code{node_dat}.
 #' @param thealpha Nominal significance level (default 0.05).
@@ -124,16 +131,21 @@ compute_error_load <- function(k = NULL, delta_hat, N_total = NULL,
   for (ell in seq_len(max_depth)) {
     n_ell <- N_total / cum_n_divisor
     n_by_level[ell] <- n_ell
-    theta_ell <- pnorm(delta_hat * sqrt(n_ell) - z_crit)
+    # Two-tailed power of a level-alpha z-test. At delta_hat = 0 this equals
+    # the size alpha, not alpha/2: the second tail matters exactly at the
+    # small effects where the load decision is made (AOAS referee, 2026).
+    theta_ell <- pnorm(delta_hat * sqrt(n_ell) - z_crit) +
+      pnorm(-delta_hat * sqrt(n_ell) - z_crit)
     theta_ell <- max(min(theta_ell, 1), 0)
     thetas[ell] <- theta_ell
 
-    # G_ell = k^{ell-1} * prod_{j=0}^{ell-1} theta_j
-    # In 1-indexed terms: cum_k * cum_theta * theta_ell
-    # (cum_k = k^{ell-2} before update, cum_theta = prod thetas through ell-1)
-    # Actually: we update cum_k and cum_theta AFTER using them, so:
-    # G[ell] = cum_k * cum_theta * theta_ell
-    G[ell] <- cum_k * cum_theta * theta_ell
+    # Definition 2: G_ell = k^{ell-1} * prod_{j=1}^{ell-1} theta_j, the
+    # expected number of depth-ell nodes the procedure REACHES (product of
+    # ancestor rejection probabilities; the node's own theta does not
+    # enter, and the root -- always tested -- contributes no reach term).
+    # Before the running-product updates below, cum_k = k^{ell-1} and
+    # cum_theta = prod of thetas through depth ell-1.
+    G[ell] <- if (ell == 1L) 0 else cum_k * cum_theta
 
     # Track critical level: theta < 1/k means error load shrinks
     if (is.na(critical_level) && ell > 1L && theta_ell < 1.0 / k_vec[ell - 1L]) {
@@ -176,8 +188,28 @@ compute_error_load <- function(k = NULL, delta_hat, N_total = NULL,
     stop("node_dat must have columns: ", paste(missing_cols, collapse = ", "))
   }
 
-  # Compute per-node power from nodesize
-  nd$theta <- pnorm(delta_hat * sqrt(nd$nodesize) - z_crit)
+  # nodesize feeds a power calculation, so it must be a headcount. Weight
+  # columns -- in particular find_blocks' default blocksize = "hwt", whose
+  # node sums live on the unit interval -- produce a meaningless 'power at
+  # a sample size of 0.25' that floors every theta near alpha and returns
+  # a false all-clear (the AOAS referee's finding against the published
+  # MDRC error loads). Refuse loudly rather than compute quietly.
+  if (any(nd$nodesize < 1)) {
+    stop(
+      "node_dat$nodesize must be headcounts (units per node); found values ",
+      "below 1. If node_dat came from find_blocks(), its default ",
+      "blocksize = \"hwt\" stores harmonic weights, not counts -- rerun ",
+      "find_blocks() with a count column (e.g. blocksize = \"nb\") or ",
+      "supply nodesize as the number of units in each node."
+    )
+  }
+
+  # Two-tailed power of a level-alpha z-test; at delta_hat = 0 this equals
+  # the size alpha (both tails), which is the floor the FWER accounting
+  # needs -- the one-tailed version understates power by half exactly at
+  # small effects.
+  nd$theta <- pnorm(delta_hat * sqrt(nd$nodesize) - z_crit) +
+    pnorm(-delta_hat * sqrt(nd$nodesize) - z_crit)
   nd$theta <- pmax(pmin(nd$theta, 1), 0)
 
   # Compute path_power for each node: product of theta values along
@@ -205,10 +237,16 @@ compute_error_load <- function(k = NULL, delta_hat, N_total = NULL,
     }
   }
 
-  # Error load at depth d: sum over all nodes at depth d of
-  # path_power * theta (ancestors all rejected AND this node rejects).
-  # This matches G_ell = k^{ell-1} * prod_{j=0}^{ell-1} theta_j
-  # from the supplement definition.
+  # Error load at depth d (Definition 2): sum over nodes at depth d of
+  # path_power alone -- the probability that all PROPER ancestors reject,
+  # i.e. the expected number of depth-d nodes the procedure reaches. The
+  # node's own theta must NOT enter (the FWER bound multiplies each
+  # reached null by its test level; multiplying theta in double-counts the
+  # rejection step), and depth 1 contributes nothing (the root is tested
+  # unconditionally; exposure starts at its children). The previous
+  # version did both and understated the load -- the internal
+  # disagreement with compute_adaptive_alphas_tree's G_by_depth that the
+  # AOAS referee identified.
   max_depth <- max(nd$depth)
   G <- numeric(max_depth)
   thetas_by_level <- numeric(max_depth)
@@ -216,7 +254,7 @@ compute_error_load <- function(k = NULL, delta_hat, N_total = NULL,
 
   for (d in seq_len(max_depth)) {
     rows_at_d <- which(nd$depth == d)
-    G[d] <- sum(nd$path_power[rows_at_d] * nd$theta[rows_at_d])
+    G[d] <- if (d == 1L) 0 else sum(nd$path_power[rows_at_d])
     # Report average theta and n at this level for diagnostics
     thetas_by_level[d] <- mean(nd$theta[rows_at_d])
     n_by_level[d] <- mean(nd$nodesize[rows_at_d])
@@ -384,15 +422,18 @@ compute_adaptive_alphas <- function(k, delta_hat, N_total,
   # which is the expected number of nodes the procedure reaches at depth
   # ell under the regular-tree parametric assumption. This matches
   # G_by_depth in compute_adaptive_alphas_tree (sum of path_power over
-  # nodes at each depth), so the two functions agree on regular k-ary
-  # trees.
+  # nodes at each depth). Since the 2026-08 referee corrections,
+  # compute_error_load's gate uses this same Definition-2 quantity, so the
+  # adjust-or-not decision and the alpha denominators are one number --
+  # the disagreement the AOAS referee found is closed.
   denom <- numeric(max_depth)
   path_power <- 1.0
   cum_n_divisor <- 1.0
   num_tests <- 1.0
   for (ell in seq_len(max_depth)) {
     n_ell <- N_total / cum_n_divisor
-    theta_ell <- pnorm(delta_hat * sqrt(n_ell) - z_crit)
+    theta_ell <- pnorm(delta_hat * sqrt(n_ell) - z_crit) +
+      pnorm(-delta_hat * sqrt(n_ell) - z_crit)
     theta_ell <- max(min(theta_ell, 1), 0)
 
     denom[ell] <- num_tests * path_power
@@ -865,19 +906,22 @@ alpha_adaptive_tree <- function(node_dat, delta_hat, max_depth = NULL,
 #' }
 #'
 #' @details
-#' The FWER guarantee follows from Theorem B.5 in the supplement:
-#' predictable budget weights with data-dependent denominators. The
-#' weights are "predictable" because \eqn{w_\ell} depends only on the
-#' testing history through depth \eqn{\ell - 1}, not on depth-\eqn{\ell}
-#' outcomes. The union bound across depths gives FWER \eqn{\le \alpha}
-#' whenever \eqn{\sum w_\ell \le 1}.
-#'
-#' The \strong{switching corollary} (when \code{switching = TRUE}):
-#' after pruning narrows the surviving tree, if the remaining error load
-#' \eqn{\sum_{\ell \ge s} D_\ell \le B_s} (remaining budget), then
-#' \eqn{\alpha_\ell = \alpha} for all \eqn{\ell \ge s}. This works
-#' by setting \eqn{w_\ell = D_\ell}, so the \eqn{D_\ell} in numerator
-#' and denominator cancel, leaving nominal alpha.
+#' \strong{The strong-FWER guarantee claimed for this schedule DOES NOT
+#' HOLD (2026-08 referee correction; see FIX_PLAN.md).} The former
+#' justification -- predictable budget weights with the pruned load
+#' \eqn{D_\ell} as a data-dependent denominator -- was falsified by exact
+#' counterexample: with valid tests and conservative power holding, the
+#' schedule reaches FWER 0.063 at \eqn{\alpha = 0.05}. The failure is
+#' structural: \eqn{D_\ell} charges each surviving null its unconditional
+#' reach probability, but conditional on its parent's rejection a
+#' surviving null is one full test, so when path powers are small the
+#' exposed-null count exceeds the charged load. The switching rule
+#' (\code{switching = TRUE}) re-spends to nominal alpha exactly in that
+#' regime and inherits the failure. The constructor warns accordingly.
+#' Levels are computed as before so that existing analyses remain
+#' reproducible; for a schedule with a proof, use
+#' \code{\link{alpha_adaptive_tree}} with static budget weights over the
+#' full-tree load.
 #'
 #' When \code{find_blocks} detects a list-valued \code{alphafn},
 #' it extracts these three components and calls \code{reset} at
@@ -906,11 +950,44 @@ alpha_adaptive_tree_pruned <- function(node_dat, delta_hat,
   stopifnot(delta_hat > 0, budget_total > 0, budget_total <= 1,
             spending_fraction > 0, spending_fraction <= 1,
             is.logical(switching))
+
+  # 2026-08 referee correction (see FIX_PLAN.md): the pruned-load schedule
+  # alpha_ell = min(alpha, w_ell * alpha / D_ell) -- and the switching rule
+  # built on it -- was proven NOT to control the FWER by exact
+  # counterexample (FWER 0.063 at alpha = 0.05 with valid tests and
+  # conservative power holding). The pruned load D_ell charges each
+  # surviving null its unconditional reach probability, but conditional on
+  # its parent's rejection the null is a full test; when path powers are
+  # small the exposed-null count exceeds the charged load and the schedule
+  # over-spends. Levels are still computed as before so existing analyses
+  # (including the AOAS-submitted results, tag pre-referee-fixes) remain
+  # reproducible, but no strong-FWER claim may be attached to them.
+  warning(
+    "alpha_adaptive_tree_pruned(): the strong-FWER guarantee for the ",
+    "pruned-load alpha schedule (and its switching rule) does not hold; ",
+    "the underlying theorem was falsified by exact counterexample ",
+    "(2026-08, see FIX_PLAN.md). Levels are computed as before for ",
+    "reproducibility. For a schedule with a proof, use ",
+    "alpha_adaptive_tree() with static budget weights.",
+    call. = FALSE
+  )
   full_nd <- as.data.frame(node_dat)
   required_cols <- c("nodenum", "parent", "depth", "nodesize")
   missing_cols <- setdiff(required_cols, names(full_nd))
   if (length(missing_cols) > 0L) {
     stop("node_dat must have columns: ", paste(missing_cols, collapse = ", "))
+  }
+  # Fail at the factory, not mid-analysis: the schedule's power model needs
+  # headcounts, and the runtime load computation would reject weight-scale
+  # nodesize anyway (see .error_load_from_tree). Same message, earlier.
+  if (any(full_nd$nodesize < 1)) {
+    stop(
+      "node_dat$nodesize must be headcounts (units per node); found values ",
+      "below 1. If node_dat came from find_blocks(), its default ",
+      "blocksize = \"hwt\" stores harmonic weights, not counts -- rerun ",
+      "find_blocks() with a count column (e.g. blocksize = \"nb\") or ",
+      "supply nodesize as the number of units in each node."
+    )
   }
 
   # Determine whether to use the depth-sequential (predictable

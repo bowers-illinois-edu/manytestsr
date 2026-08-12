@@ -15,8 +15,20 @@ utils::globalVariables(c("num_blocks", "i.num_blocks"))
 #' @param alpha Is the false positive rate used for detecting an effect if it is constant (i.e. not an FDR-style approach).
 #' @param only_hits (default FALSE) returns only the detected blocks instead of all of them
 #' @param blockid Name of block variable (the blocking variable is a factor)
-#' @return A data.table adding a column \code{hit} to the \code{res} data.table
-#' indicating a "hit" or detection for that block (or group of blocks)
+#' @return A data.table adding columns to the \code{res} data.table:
+#' \code{hit} (TRUE when the block is detected either by its own test or by
+#' an unattributed group rejection; never NA); \code{hit_type} ("single" =
+#' the block's own singleton test rejected; "group" = the block's family
+#' parent rejected while no child of that parent rejected, so the effect is
+#' localized to the parent but not attributed to specific blocks; "none"
+#' otherwise -- including blocks under a rejected parent that a sibling's
+#' individual rejection already explains); \code{group_p} (for "group"
+#' blocks, the rejecting parent's p-value; NA otherwise); and
+#' \code{fin_depth} (the block's own final tested depth). \code{pfinalb}
+#' from \code{\link{find_blocks}} is the running maximum of p-values along
+#' the block's tested path, so for "group" blocks it shows the
+#' non-significant child-level p while \code{group_p} shows the parent
+#' rejection that constitutes the finding.
 #' @examples
 #' \dontrun{
 #' # Use example data and run find_blocks
@@ -65,66 +77,106 @@ report_detections <- function(orig_res, fwer = TRUE, alpha = .05, only_hits = FA
     # max_p are the adjusted p-values so we can use alpha=.05 for error rate control
     res[, hit := max_p <= alpha]
     res[, hit_grp := nodenum_current]
+    res[, hit_type := fifelse(hit, "single", "none")]
+    res[, group_p := NA_real_]
     if (all(!res$hit)) {
       res[, hit_grp := NA]
     }
   } else {
-    # For the splitting based methods (output  from find_blocks)
+    # For the splitting based methods (output from find_blocks).
+    # 2026-08 referee correction (FIX_PLAN.md Fix 3). The previous version
+    # read every block's 'parent p' at the GLOBAL maximum depth, so any
+    # branch whose testing stopped earlier got the wrong parent (or NA,
+    # surfacing as hit = NA that sum(hit, na.rm = TRUE) callers silently
+    # dropped). Everything below works from each block's OWN final tested
+    # depth. Detection semantics:
+    #   single hit: the block's own (singleton-node) test rejected.
+    #   group hit:  the block's family parent rejected while NO child of
+    #     that parent rejected -- the procedure localized an effect to the
+    #     parent but could not attribute it further. If any child rejected
+    #     (a separated block or a subgroup that kept splitting), the
+    #     parent's rejection is explained by that child -- rejecting a
+    #     subgroup null implies the parent's intersection null -- so
+    #     coverage does not spread to the failed siblings.
     res[, fin_nodenum := nodenum_current]
     res[, fin_parent := nodenum_prev]
-    # Calculate maximum depth from existing depth columns
     depth_cols <- grep("^p[0-9]+$", names(res), value = TRUE)
-    res[, maxdepth := length(depth_cols)]
-    if (all(res$maxdepth == 1)) {
-      # When the algorithm stops at the first level there are no parents.
-      # There is just the root node. This is an attempt at a work around
-      res[, fin_parent_p := p1]
-      res[, parent_alpha := alpha1]
-    } else {
-      res[, fin_parent_p := get(paste0("p", maxdepth - 1)), by = seq_len(nrow(res))]
-      res[, parent_alpha := get(paste0("alpha", maxdepth - 1)), by = seq_len(nrow(res))]
-    }
+    alpha_cols <- sub("^p", "alpha", depth_cols)
+    g_cols <- sub("^p", "g", depth_cols)
+    n_depths <- length(depth_cols)
+    res[, maxdepth := n_depths]
 
-    # If the block is a terminal node and p<=alpha then this is a hit or
-    # detected effect If the block is a terminal node and p>alpha for both it
-    # and all other terminal nodes then we have a hit or detected effect for
-    # *all* terminal nodes but cannot distinguish between them. I think max_p
-    # should be p at maxdepth for the FDR algorithm and maximum p overall (or
-    # pfinalb) for the FWER algo.
+    p_mat <- as.matrix(res[, .SD, .SDcols = depth_cols])
+    a_mat <- as.matrix(res[, .SD, .SDcols = alpha_cols])
+    has_g <- all(g_cols %in% names(res))
+
+    # Each block's final tested depth: the deepest non-NA p on its row.
+    fin_depth_v <- apply(p_mat, 1, function(z) max(which(!is.na(z))))
+    row_ix <- seq_len(nrow(res))
+    res[, fin_depth := fin_depth_v]
+
+    # Parent of the final node, read at the block's own depth. When the
+    # block's testing ended at the root there is no parent; use the root
+    # itself (its rejection status then decides nothing below).
+    parent_ix <- pmax(fin_depth_v - 1L, 1L)
+    res[, fin_parent_p := p_mat[cbind(row_ix, parent_ix)]]
+    res[, parent_alpha := a_mat[cbind(row_ix, parent_ix)]]
 
     if (fwer) {
       res[, max_p := pfinalb]
       res[, max_alpha := alpha]
     } else {
-      res[, max_p := get(paste0("p", maxdepth)), by = seq_len(nrow(res))]
-      res[, max_alpha := get(paste0("alpha", maxdepth)), by = seq_len(nrow(res))]
+      res[, max_p := p_mat[cbind(row_ix, fin_depth_v)]]
+      res[, max_alpha := a_mat[cbind(row_ix, fin_depth_v)]]
     }
 
-    # A detection on a single block is scored if the final p <= alpha for a node containing a single block (i.e. a leaf)
+    # A detection on a single block: the final node contains that block
+    # alone and its test rejected.
     res[, single_hit := (max_p <= max_alpha & blocksbygroup == 1)]
 
-    # A detection is also scored if all descendents have p > alpha but the parent
-    # has p <= alpha: this is a grouped detection with multiple blocks.
+    # Kept for downstream consumers: the least max_p within each final
+    # family.
+    res[, desc_min_p := min(max_p), by = fin_parent]
 
-    ## So, record the minimum p for all descendents of the parents where the splitting has ended
-    if (all(res$group_id == 1)) {
-      ## when there is a single group then fin_parent==0
-      res[, desc_min_p := max_p]
-    } else {
-      res[, desc_min_p := {
-        # Find descendant nodes by checking if they are children of this parent
-        current_parent <- unique(fin_parent)
-        desc_nodes <- res[fin_parent == current_parent, fin_nodenum]
-        min(res[fin_nodenum %in% desc_nodes, max_p])
-      }, by = fin_parent]
+    # Group coverage, family by family. A family is identified by the
+    # parent node's (depth, group id); its members are the blocks that
+    # belonged to that group when the parent was tested. The parent's own
+    # p-value sits in every member's row at the parent's depth.
+    res[, group_hit := FALSE]
+    res[, group_p := NA_real_]
+    if (has_g) {
+      g_mat <- as.matrix(res[, .SD, .SDcols = g_cols])
+      rows_deep <- which(fin_depth_v >= 2L)
+      if (length(rows_deep) > 0L) {
+        parent_key <- paste0(
+          fin_depth_v[rows_deep] - 1L, ".",
+          g_mat[cbind(rows_deep, fin_depth_v[rows_deep] - 1L)]
+        )
+        for (key in unique(parent_key)) {
+          krows <- rows_deep[parent_key == key]
+          d_par <- fin_depth_v[krows[1]] - 1L
+          g_val <- g_mat[krows[1], d_par]
+          members <- which(!is.na(g_mat[, d_par]) & g_mat[, d_par] == g_val)
+          parent_rejected <-
+            p_mat[krows[1], d_par] <= a_mat[krows[1], d_par]
+          # A rejected child of this parent = any member whose test at the
+          # child depth rejected (blocks that went deeper passed through
+          # exactly such a rejection).
+          child_p <- p_mat[members, d_par + 1L]
+          child_a <- a_mat[members, d_par + 1L]
+          child_rejected <- any(child_p <= child_a, na.rm = TRUE)
+          if (parent_rejected && !child_rejected) {
+            res[krows, group_hit := TRUE]
+            res[krows, group_p := p_mat[krows[1], d_par]]
+          }
+        }
+      }
     }
 
-    res[, group_hit := fifelse(!single_hit & (all(max_p > max_alpha) &
-      (fin_parent_p <= parent_alpha) & desc_min_p > max_alpha), TRUE, FALSE),
-    by = fin_parent
-    ]
-
     res[, hit := single_hit | group_hit]
+    res[, hit_type := fifelse(single_hit, "single",
+      fifelse(group_hit, "group", "none")
+    )]
     if (any(res$hit)) {
       res[(hit), fin_grp := fifelse(single_hit, fin_nodenum, fin_parent)]
       res[(hit), hit_grp := fin_grp]

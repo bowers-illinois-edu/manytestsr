@@ -25,8 +25,20 @@ block (or the groups containing that block). fwer=FALSE to detect blocks (or gro
 \item{blockid}{Name of block variable (the blocking variable is a factor)}
 }
 \value{
-A data.table adding a column \code{hit} to the \code{res} data.table
-indicating a "hit" or detection for that block (or group of blocks)
+A data.table adding columns to the \code{res} data.table:
+\code{hit} (TRUE when the block is detected either by its own test or by
+an unattributed group rejection; never NA); \code{hit_type} ("single" =
+the block's own singleton test rejected; "group" = the block's family
+parent rejected while no child of that parent rejected, so the effect is
+localized to the parent but not attributed to specific blocks; "none"
+otherwise -- including blocks under a rejected parent that a sibling's
+individual rejection already explains); \code{group_p} (for "group"
+blocks, the rejecting parent's p-value; NA otherwise); and
+\code{fin_depth} (the block's own final tested depth). \code{pfinalb}
+from \code{\link{find_blocks}} is the running maximum of p-values along
+the block's tested path, so for "group" blocks it shows the
+non-significant child-level p while \code{group_p} shows the parent
+rejection that constitutes the finding.
 }
 \description{
 Given the results of the splitting and testing algorithm, report on the
