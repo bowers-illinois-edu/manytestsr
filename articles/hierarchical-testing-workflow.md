@@ -127,10 +127,10 @@ results_cluster <- find_blocks(
 str(results_cluster, max.level = 1)
 #> List of 2
 #>  $ bdat    :Classes 'data.table' and 'data.frame':   44 obs. of  17 variables:
-#>   ..- attr(*, ".internal.selfref")=<pointer: 0x55d8a54ffb20> 
+#>   ..- attr(*, ".internal.selfref")=<pointer: 0x5580d510fb20> 
 #>   ..- attr(*, "sorted")= chr "testable"
 #>  $ node_dat:Classes 'data.table' and 'data.frame':   1 obs. of  10 variables:
-#>   ..- attr(*, ".internal.selfref")=<pointer: 0x55d8a54ffb20>
+#>   ..- attr(*, ".internal.selfref")=<pointer: 0x5580d510fb20>
 ```
 
 ### Results Overview

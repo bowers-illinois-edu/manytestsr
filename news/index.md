@@ -1,5 +1,43 @@
 # Changelog
 
+## manytestsr 0.0.4.1010
+
+### Bug fixes
+
+- **Monte Carlo p-values can no longer be zero.** Below `simthresh` the
+  p-value functions draw their reference distribution with
+  `coin::approximate(nresample = sims)`, and `coin` reports
+  `count/sims`, which is exactly zero when no resample beats the
+  observed statistic. Verified directly: with perfect separation `coin`
+  returns `p = 0` at `sims = 9` and `sims = 49`. A zero p-value sits at
+  or below every threshold, so such a node always rejects. Under the
+  null the observed statistic is the most extreme of the `sims + 1`
+  exchangeable values with probability about `1/(sims + 1)`, so any
+  critical value below that had realized size about `1/(sims + 1)`
+  rather than its nominal value.
+
+  The functions now report `(count + 1)/(sims + 1)`, the standard
+  convention (Davison and Hinkley 1997; Phipson and Smyth 2010,
+  “Permutation P-values should never be zero”). The observed assignment
+  is itself a draw from the null and belongs in both numerator and
+  denominator. The correction is applied in
+  [`pOneway()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pOneway.md),
+  [`pWilcox()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pWilcox.md),
+  [`pIndepDist()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pIndepDist.md),
+  [`pTestTwice()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pTestTwice.md),
+  [`pPolyRank()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pPolyRank.md),
+  and to each component of
+  [`pCombCauchyDist()`](https://bowers-illinois-edu.github.io/manytestsr/reference/pCombCauchyDist.md)
+  before the Cauchy combination. The asymptotic branch is untouched.
+
+  This matters most for the smallest thresholds, which is to say for
+  `alpha/m`-style corrections, so the old behavior favoured procedures
+  testing near nominal alpha – this package’s own top-down procedure
+  included – over bottom-up competitors. It had to be fixed before any
+  head-to-head benchmark. New tests in
+  `tests/testthat/test_mc_pvalue_floor.R` (59 assertions), verified
+  failing before the fix.
+
 ## manytestsr 0.0.4.1009
 
 ### Documentation

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">manytestsr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1009</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4.1010</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,17 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.4.1010" id="manytestsr-0041010">manytestsr 0.0.4.1010<a class="anchor" aria-label="anchor" href="#manytestsr-0041010"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-0-4-1010">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-0-4-1010"></a></h3>
+<ul><li>
+<p><strong>Monte Carlo p-values can no longer be zero.</strong> Below <code>simthresh</code> the p-value functions draw their reference distribution with <code>coin::approximate(nresample = sims)</code>, and <code>coin</code> reports <code>count/sims</code>, which is exactly zero when no resample beats the observed statistic. Verified directly: with perfect separation <code>coin</code> returns <code>p = 0</code> at <code>sims = 9</code> and <code>sims = 49</code>. A zero p-value sits at or below every threshold, so such a node always rejects. Under the null the observed statistic is the most extreme of the <code>sims + 1</code> exchangeable values with probability about <code>1/(sims + 1)</code>, so any critical value below that had realized size about <code>1/(sims + 1)</code> rather than its nominal value.</p>
+<p>The functions now report <code>(count + 1)/(sims + 1)</code>, the standard convention (Davison and Hinkley 1997; Phipson and Smyth 2010, “Permutation P-values should never be zero”). The observed assignment is itself a draw from the null and belongs in both numerator and denominator. The correction is applied in <code><a href="../reference/pOneway.html">pOneway()</a></code>, <code><a href="../reference/pWilcox.html">pWilcox()</a></code>, <code><a href="../reference/pIndepDist.html">pIndepDist()</a></code>, <code><a href="../reference/pTestTwice.html">pTestTwice()</a></code>, <code><a href="../reference/pPolyRank.html">pPolyRank()</a></code>, and to each component of <code><a href="../reference/pCombCauchyDist.html">pCombCauchyDist()</a></code> before the Cauchy combination. The asymptotic branch is untouched.</p>
+<p>This matters most for the smallest thresholds, which is to say for <code>alpha/m</code>-style corrections, so the old behavior favoured procedures testing near nominal alpha – this package’s own top-down procedure included – over bottom-up competitors. It had to be fixed before any head-to-head benchmark. New tests in <code>tests/testthat/test_mc_pvalue_floor.R</code> (59 assertions), verified failing before the fix.</p>
+</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.4.1009" id="manytestsr-0041009">manytestsr 0.0.4.1009<a class="anchor" aria-label="anchor" href="#manytestsr-0041009"></a></h2>
 <div class="section level3">
