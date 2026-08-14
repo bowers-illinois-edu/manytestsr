@@ -69,6 +69,7 @@ pOneway <- function(
   }
 
   thep <- pvalue(oneway_test(fmla, data = dat, distribution = thedist))[[1]]
+  thep <- adjust_mc_pvalue(thep, sims, thedist)
   return(as.numeric(thep))
 }
 
@@ -141,6 +142,7 @@ pWilcox <- function(
   }
 
   thep <- pvalue(wilcox_test(fmla, data = dat, distribution = thedist))[[1]]
+  thep <- adjust_mc_pvalue(thep, sims, thedist)
 
   return(as.numeric(thep))
 }
@@ -303,6 +305,7 @@ pIndepDist <- function(
     teststat = "quadratic",
     distribution = thedist
   ))[[1]]
+  thep <- adjust_mc_pvalue(thep, sims, thedist)
   return(as.numeric(thep))
 }
 
@@ -422,6 +425,7 @@ pTestTwice <- function(
     distribution = thedist,
     teststat = "quadratic"
   ))[[1]]
+  thep <- adjust_mc_pvalue(thep, sims, thedist)
   return(as.numeric(thep))
 }
 
@@ -576,6 +580,9 @@ pCombCauchyDist <- function(
       teststat = "quadratic",
       distribution = thedist
     ))[[1]]
+    ## Correct each component before combining: ACAT is sensitive near 0 and 1,
+    ## and a zero component is exactly what the old convention produced.
+    p_tmp <- adjust_mc_pvalue(p_tmp, sims, thedist)
     return(p_tmp)
   })
 
@@ -761,6 +768,7 @@ pPolyRank <- function(
     teststat = teststat,
     distribution = thedist
   ))[[1]]
+  thep <- adjust_mc_pvalue(thep, sims, thedist)
   return(as.numeric(thep))
 }
 
